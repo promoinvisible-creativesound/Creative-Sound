@@ -165,11 +165,12 @@ body.no-boot #boot-overlay{ display:none; }
 }
 .nav-dropdown:hover .nav-dropdown-caret,
 .nav-dropdown.open .nav-dropdown-caret{ transform:rotate(180deg); }
+/* padding-top (not margin) keeps the gap between trigger and card part of
+   this element's own hoverable box — no dead zone for the mouse to fall
+   through while moving diagonally from trigger to card. */
 .nav-dropdown-menu{
-  position:absolute; top:100%; left:50%; margin-top:18px; padding:8px;
-  min-width:230px; border-radius:12px;
-  background:var(--panel); border:1px solid var(--border-strong);
-  box-shadow:0 24px 48px -20px rgba(0,0,0,0.85);
+  position:absolute; top:100%; left:50%; padding-top:14px;
+  min-width:230px;
   opacity:0; pointer-events:none;
   transform:translate(-50%, 6px);
   transition:opacity 0.2s var(--ease), transform 0.2s var(--ease);
@@ -177,6 +178,11 @@ body.no-boot #boot-overlay{ display:none; }
 .nav-dropdown:hover .nav-dropdown-menu,
 .nav-dropdown.open .nav-dropdown-menu{
   opacity:1; pointer-events:auto; transform:translate(-50%, 0);
+}
+.nav-dropdown-menu-inner{
+  padding:8px; border-radius:12px;
+  background:var(--panel); border:1px solid var(--border-strong);
+  box-shadow:0 24px 48px -20px rgba(0,0,0,0.85);
 }
 .nav-dropdown-item{
   display:flex; flex-direction:column; gap:3px; padding:10px 12px; border-radius:7px;
@@ -569,8 +575,8 @@ body.no-boot #boot-overlay{ display:none; }
   .nav-dropdown{ display:flex; flex-direction:column; align-items:center; gap:18px; }
   .nav-dropdown-trigger{ font-size:20px; justify-content:center; }
   .nav-dropdown-menu{
-    position:static; opacity:1; pointer-events:auto; transform:none;
-    margin-top:0; box-shadow:none; border-color:var(--border);
+    position:static; opacity:1; pointer-events:auto; transform:none; padding-top:0;
   }
+  .nav-dropdown-menu-inner{ box-shadow:none; border-color:var(--border); }
   .nav-dropdown-caret{ display:none; }
 }

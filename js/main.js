@@ -55,11 +55,29 @@
   /* ---------------------------- Plugin dropdown ---------------------------- */
   document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
     const trigger = dropdown.querySelector('.nav-dropdown-trigger');
+    let closeTimer = null;
+
+    const open = () => {
+      clearTimeout(closeTimer);
+      dropdown.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    };
+    // Small grace period before closing so a mouse crossing the gap between
+    // the trigger and the card (or briefly leaving) doesn't slam it shut.
+    const scheduleClose = () => {
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(() => {
+        dropdown.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }, 300);
+    };
+
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = dropdown.classList.toggle('open');
-      trigger.setAttribute('aria-expanded', String(isOpen));
+      dropdown.classList.contains('open') ? scheduleClose() : open();
     });
+    dropdown.addEventListener('mouseenter', open);
+    dropdown.addEventListener('mouseleave', scheduleClose);
   });
   document.addEventListener('click', () => {
     document.querySelectorAll('.nav-dropdown.open').forEach((dropdown) => {

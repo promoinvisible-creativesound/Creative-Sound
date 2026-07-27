@@ -505,6 +505,14 @@ body.no-boot #boot-overlay{ display:none; }
   .feature-reverse .feature-text{ order:1; }
   .section{ padding:110px 24px; }
 }
+@media (max-width:600px){
+  .chain-diagram{ flex-direction:column; }
+  .chain-arrow{
+    width:1px; height:22px; margin:2px 0;
+    background:linear-gradient(180deg, var(--border-strong), var(--accent-dim));
+  }
+  .chain-slots{ justify-content:center; }
+}
 @media (max-width:760px){
   #site-nav{
     position:fixed; top:64px; left:0; right:0; bottom:0; z-index:90;

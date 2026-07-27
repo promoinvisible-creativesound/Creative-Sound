@@ -1,5 +1,6 @@
-/* Animated amber "equalizer" bars background — a skyline of glowing bars
-   pulsing at different speeds, for sections below the hero. */
+/* Smooth, filled amber "skyline" background — a couple of soft layered
+   waves drifting behind sections below the hero, gradient-filled so they
+   read as glowing shapes rather than dry lines. */
 (() => {
   'use strict';
 
@@ -7,8 +8,12 @@
   if (!canvases.length) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const BAR_WIDTH = 3;
-  const GAP = 20;
+
+  const LAYERS = [
+    { amp: 0.22, base: 0.3, speed: 0.55, freq: 1.6, blur: 22, top: 'rgba(255,179,71,0.5)', bottom: 'rgba(232,134,44,0)' },
+    { amp: 0.16, base: 0.18, speed: 0.35, freq: 2.3, blur: 14, top: 'rgba(255,140,0,0.4)', bottom: 'rgba(232,134,44,0)' },
+    { amp: 0.1, base: 0.1, speed: 0.8, freq: 3.1, blur: 8, top: 'rgba(255,215,0,0.35)', bottom: 'rgba(232,134,44,0)' },
+  ];
 
   canvases.forEach(initBars);
 
@@ -18,20 +23,9 @@
     let width = 0;
     let height = 0;
     let dpr = 1;
-    let bars = [];
     let animId = null;
     let t = Math.random() * 100;
-
-    function seedBars() {
-      const count = Math.max(1, Math.floor(width / (BAR_WIDTH + GAP)));
-      bars = Array.from({ length: count }, (_, i) => ({
-        x: i * (BAR_WIDTH + GAP) + GAP / 2,
-        base: 0.08 + Math.random() * 0.14,
-        amp: 0.08 + Math.random() * 0.2,
-        speed: 0.3 + Math.random() * 0.6,
-        phase: Math.random() * Math.PI * 2,
-      }));
-    }
+    const seeds = LAYERS.map(() => Math.random() * 1000);
 
     function resize() {
       const rect = container.getBoundingClientRect();
@@ -43,30 +37,44 @@
       canvas.style.width = width + 'px';
       canvas.style.height = height + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      seedBars();
+    }
+
+    function waveY(layer, seed, x) {
+      const nx = x / width;
+      const wobble =
+        Math.sin(nx * Math.PI * layer.freq + t * layer.speed + seed) * 0.6 +
+        Math.sin(nx * Math.PI * layer.freq * 1.9 + t * layer.speed * 1.3 + seed * 1.7) * 0.4;
+      return height * (1 - layer.base - layer.amp * (0.5 + 0.5 * wobble));
+    }
+
+    function drawLayer(layer, seed) {
+      const step = 14;
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      for (let x = 0; x <= width; x += step) {
+        ctx.lineTo(x, waveY(layer, seed, x));
+      }
+      ctx.lineTo(width, waveY(layer, seed, width));
+      ctx.lineTo(width, height);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, height * (1 - layer.base - layer.amp), 0, height);
+      grad.addColorStop(0, layer.top);
+      grad.addColorStop(1, layer.bottom);
+      ctx.fillStyle = grad;
+      ctx.shadowColor = layer.top;
+      ctx.shadowBlur = layer.blur;
+      ctx.fill();
     }
 
     function draw() {
       ctx.clearRect(0, 0, width, height);
-      bars.forEach((b) => {
-        const h = (b.base + b.amp * (0.5 + 0.5 * Math.sin(t * b.speed + b.phase))) * height;
-        const y = height - h;
-        // Thin outline + a slightly brighter tip, no fill/glow — a flatter,
-        // more geometric read than a solid glowing bar.
-        ctx.strokeStyle = 'rgba(232,134,44,0.55)';
-        ctx.lineWidth = BAR_WIDTH;
-        ctx.beginPath();
-        ctx.moveTo(b.x + BAR_WIDTH / 2, height);
-        ctx.lineTo(b.x + BAR_WIDTH / 2, y);
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255,179,71,0.85)';
-        ctx.fillRect(b.x - 0.5, y - 1, BAR_WIDTH + 1, 2.5);
-      });
+      LAYERS.forEach((layer, i) => drawLayer(layer, seeds[i]));
+      ctx.shadowBlur = 0;
     }
 
     function step() {
-      t += 0.016;
+      t += 0.006;
       draw();
       animId = requestAnimationFrame(step);
     }
@@ -90,7 +98,10 @@
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 200);
+      resizeTimer = setTimeout(() => {
+        resize();
+        draw();
+      }, 200);
     });
 
     document.addEventListener('visibilitychange', () => {

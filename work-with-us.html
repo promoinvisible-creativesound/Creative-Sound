@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body class="no-boot">
 
@@ -70,18 +70,54 @@
     <h2>Want to be first in line?</h2>
     <p>
       If you're a DSP developer, audio plugin designer, or sound designer who wants
-      to be on the radar for when Creative Sound does start bringing people in,
-      <a href="contact.html">send a short note</a> with what you do and a couple of
-      links to your work. No formal applications needed at this stage.
+      to be on the radar for when Creative Sound does start bringing people in, use
+      the form below — tell us what you do, and attach a CV if you have one handy.
+      Nothing formal, just enough for us to get in touch when the time is right.
     </p>
 
     <h2>Beta testers</h2>
     <p>
       Creative Dist is still being finished up — if you want early access in exchange
-      for feedback, that's the fastest way to get involved right now. Reach out through
-      the <a href="contact.html">contact page</a>.
+      for feedback, that's the fastest way to get involved right now. Mention it in
+      the form below.
     </p>
   </article>
+
+  <div class="glass-panel auth-card reveal-up" style="max-width:560px;">
+    <p class="auth-card-title">Get on our radar</p>
+    <p id="apply-error" class="auth-error" role="alert"></p>
+    <p id="apply-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
+    <form id="apply-form" novalidate>
+      <div class="auth-field">
+        <label for="apply-name">Name</label>
+        <input type="text" id="apply-name" name="name" autocomplete="name" required>
+      </div>
+      <div class="auth-field">
+        <label for="apply-email">Email</label>
+        <input type="email" id="apply-email" name="email" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="apply-role">Area of interest</label>
+        <select id="apply-role" name="role">
+          <option value="">Select one (optional)</option>
+          <option value="DSP Development">DSP Development</option>
+          <option value="GUI / Design">GUI / Design</option>
+          <option value="Sound Design">Sound Design</option>
+          <option value="Beta Testing">Beta Testing</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="auth-field">
+        <label for="apply-message">Tell us about yourself</label>
+        <textarea id="apply-message" name="message" rows="5" required></textarea>
+      </div>
+      <div class="auth-field">
+        <label for="apply-cv">CV (optional — PDF or Word, max 5MB)</label>
+        <input type="file" id="apply-cv" name="cv" accept=".pdf,.doc,.docx">
+      </div>
+      <button type="submit" class="btn btn-primary auth-submit">Send</button>
+    </form>
+  </div>
 </main>
 
 <footer id="site-footer">
@@ -105,5 +141,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=6"></script>
+<script src="js/auth.js?v=3"></script>
 </body>
 </html>

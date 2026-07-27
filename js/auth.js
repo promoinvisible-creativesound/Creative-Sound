@@ -207,4 +207,46 @@
       });
     }
   }
+
+  /* -------------------------------- Apply form -------------------------------- */
+  const applyForm = document.getElementById('apply-form');
+  if (applyForm) {
+    const errorEl = document.getElementById('apply-error');
+    const successEl = document.getElementById('apply-success');
+    const cvInput = document.getElementById('apply-cv');
+    const MAX_CV_BYTES = 5 * 1024 * 1024;
+
+    applyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError(errorEl);
+      successEl.classList.remove('visible');
+
+      if (cvInput.files[0] && cvInput.files[0].size > MAX_CV_BYTES) {
+        showError(errorEl, 'Your CV is over 5MB — try a smaller file.');
+        return;
+      }
+
+      const btn = applyForm.querySelector('button[type="submit"]');
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/apply', {
+          method: 'POST',
+          body: new FormData(applyForm),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        successEl.textContent = "Thanks — your note is in. We'll reach out if it's a fit.";
+        successEl.classList.add('visible');
+        applyForm.reset();
+      } catch (err) {
+        showError(errorEl, err.message);
+      } finally {
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+      }
+    });
+  }
 })();

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creative Sound — Sound tools by Invisible</title>
-<meta name="description" content="Creative Sound builds creative audio plugins. Starting with Creative Dist, a modular distortion engine.">
+<title>About — Creative Sound</title>
+<meta name="description" content="Creative Sound is a small studio building creative audio plugins, started by Invisible.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
 
 <div id="grain"></div>
 
-<header id="site-header">
+<header id="site-header" class="scrolled">
   <div class="header-inner">
     <a href="index.html" class="brand">
       <span class="brand-product">CREATIVE SOUND</span>
@@ -51,49 +51,42 @@
   </div>
 </header>
 
-<main id="top">
-  <section id="hero">
-    <div class="hero-glow" aria-hidden="true"></div>
-    <canvas class="plexus-bg" aria-hidden="true"></canvas>
-    <div class="hero-inner">
-      <p class="eyebrow reveal-up">SOUND TOOLS BY INVISIBLE</p>
-      <h1 class="hero-title reveal-up">
-        <span class="hero-title-line">CREATIVE</span>
-        <span class="hero-title-line hero-title-accent">SOUND</span>
-      </h1>
-      <p class="hero-sub reveal-up">
-        A small studio building plugins for people who'd rather break the rules
-        of sound than follow them.
-      </p>
-      <div class="hero-cta reveal-up">
-        <a href="creative-dist.html" class="btn btn-primary">Explore Creative Dist</a>
-      </div>
-    </div>
-    <div class="scroll-cue" aria-hidden="true"><span></span></div>
-  </section>
+<main>
+  <div class="page-hero">
+    <p class="kicker reveal-up">ABOUT</p>
+    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(30px,5vw,44px); margin-bottom:18px;">
+      Sound tools by <span class="hero-title-accent" style="background:linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 60%, var(--amber-dim) 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">Invisible</span>.
+    </h1>
+    <p class="section-lede reveal-up" style="margin:0 auto;">
+      Creative Sound is a small studio with one focus: plugins for people who'd rather
+      bend a sound out of shape than leave it alone.
+    </p>
+  </div>
 
-  <section id="plugins" class="section">
-    <div class="section-head">
-      <p class="kicker reveal-up">OUR PLUGINS</p>
-      <h2 class="reveal-up">One plugin so far. More coming.</h2>
-    </div>
+  <article class="prose reveal-up">
+    <h2>Why Creative Sound exists</h2>
+    <p>
+      Most processing plugins are built to be transparent — to get out of the way.
+      Creative Sound builds the opposite kind: tools designed to be heard, to add
+      character on purpose, for sound designers, mixers and producers who want their
+      chain to sound like <em>them</em>, not like a preset.
+    </p>
 
-    <a href="creative-dist.html" class="plugin-card reveal-up">
-      <div class="plugin-card-shot">
-        <img src="assets/img/gui-full.png" alt="Creative Dist plugin interface" loading="lazy">
-      </div>
-      <div class="plugin-card-info">
-        <div class="plugin-card-text">
-          <span class="plugin-card-name">Creative Dist</span>
-          <span class="plugin-card-tagline">Modular distortion engine — Saturation, Noise, Bode Shifter</span>
-        </div>
-        <span class="plugin-card-cta">
-          Explore
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-      </div>
-    </a>
-  </section>
+    <h2>Invisible</h2>
+    <p>
+      Creative Sound is built by Invisible — one person handling design, DSP and code,
+      starting with <a href="creative-dist.html">Creative Dist</a>, a modular
+      distortion engine born out of wanting a saturator that didn't just add
+      warmth, but let you reorder, reshape and break the signal on your own terms.
+    </p>
+
+    <h2>What's next</h2>
+    <p>
+      Creative Dist is the first plugin, not the last. More tools are in development —
+      if you want to know when something new ships, the best way is to
+      <a href="contact.html">get in touch</a>.
+    </p>
+  </article>
 </main>
 
 <footer id="site-footer">
@@ -116,7 +109,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/plexus.js?v=1"></script>
 <script src="js/main.js?v=4"></script>
 </body>
 </html>

@@ -469,56 +469,57 @@ body.no-boot #boot-overlay{ display:none; }
 .dice-card:hover{ border-color:var(--accent-dim); transform:translateY(-3px); }
 .dice-icon{ font-size:22px; color:var(--amber-text); }
 
-/* -------------------------------- Demo player ---------------------------- */
-.demo-tracks{
-  display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:24px;
+/* -------------------------------- Demo list ------------------------------- */
+/* No outer frame by design — each row is independently playable, no need to
+   pick a track first and then hit a separate shared play button. */
+.demo-list{ display:flex; flex-direction:column; gap:8px; max-width:820px; margin:0 auto; }
+.demo-row{
+  display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:10px;
+  border:1px solid transparent; transition:border-color 0.25s var(--ease), background 0.25s var(--ease);
 }
-.demo-track{
-  font-family:var(--mono); font-size:12px; letter-spacing:1px; color:var(--text-secondary);
-  background:var(--panel); border:1px solid var(--border-strong); border-radius:20px;
-  padding:9px 18px; transition:all 0.25s var(--ease);
+.demo-row:hover{ border-color:var(--border); background:var(--accent-glow); }
+.demo-row-play{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(180deg, var(--accent), #c96f1f); border:none;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 1px rgba(232,134,44,0.5);
+  transition:transform 0.25s var(--ease);
 }
-.demo-track:hover{ border-color:var(--accent-dim); color:var(--text); }
-.demo-track.active{
-  background:var(--accent); color:#0a0a09; border-color:var(--accent);
-  box-shadow:0 0 16px -4px var(--accent);
+.demo-row-play:hover{ transform:scale(1.08); }
+.demo-row-play svg{ width:15px; height:15px; fill:#0a0a09; }
+.demo-row-name{
+  font-family:var(--font-display); font-size:12.5px; letter-spacing:0.5px; color:var(--text);
+  flex-shrink:0; width:64px;
 }
-.demo-player{ padding:32px; }
-.demo-waveform{
-  height:110px; border-radius:10px; margin-bottom:24px; background:var(--bg-alt);
-  border:1px solid var(--border);
-  background-image:repeating-linear-gradient(90deg, var(--accent-dim) 0 2px, transparent 2px 8px);
+.demo-row-waveform{
+  flex:1; height:34px; border-radius:6px; min-width:60px;
+  background-image:repeating-linear-gradient(90deg, var(--accent-dim) 0 2px, transparent 2px 7px);
   background-size:100% 2px; background-position:center; background-repeat:no-repeat;
   position:relative; overflow:hidden;
 }
-.demo-waveform::before{
+.demo-row-waveform::before{
   content:''; position:absolute; inset:0;
-  background:linear-gradient(90deg, transparent, rgba(232,134,44,0.12), transparent);
-  width:40%; animation:demoSweep 6s ease-in-out infinite;
+  background:linear-gradient(90deg, transparent, rgba(232,134,44,0.18), transparent);
+  width:30%; opacity:0;
 }
+.demo-row.is-playing .demo-row-waveform::before{ opacity:1; animation:demoSweep 3.2s ease-in-out infinite; }
 @keyframes demoSweep{
-  0%{ transform:translateX(-100%); } 50%{ transform:translateX(220%); } 100%{ transform:translateX(220%); }
+  0%{ transform:translateX(-120%); } 50%{ transform:translateX(320%); } 100%{ transform:translateX(320%); }
 }
-.demo-controls{ display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
-.demo-play-btn{
-  width:56px; height:56px; border-radius:50%; flex-shrink:0;
-  background:linear-gradient(180deg, var(--accent), #c96f1f); border:none;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 0 0 1px rgba(232,134,44,0.5), 0 10px 26px -10px rgba(232,134,44,0.8);
-  transition:transform 0.25s var(--ease);
+.demo-row-toggle{
+  display:flex; border:1px solid var(--border-strong); border-radius:6px; overflow:hidden; flex-shrink:0;
 }
-.demo-play-btn:hover{ transform:scale(1.06); }
-.demo-play-btn svg{ width:22px; height:22px; fill:#0a0a09; }
-.demo-toggle{
-  display:flex; border:1px solid var(--border-strong); border-radius:8px; overflow:hidden;
-}
-.demo-toggle-btn{
+.demo-row-toggle-btn{
   background:var(--bg-alt); border:none; color:var(--text-muted);
-  font-family:var(--mono); font-size:12px; letter-spacing:1px; padding:10px 20px;
+  font-family:var(--mono); font-size:10px; letter-spacing:1px; padding:7px 11px;
   transition:all 0.25s var(--ease);
 }
-.demo-toggle-btn.active{ background:var(--accent); color:#0a0a09; }
+.demo-row-toggle-btn.active{ background:var(--accent); color:#0a0a09; }
 .demo-note{ font-size:12px; color:var(--text-muted); font-style:italic; }
+@media (max-width:640px){
+  .demo-row{ flex-wrap:wrap; }
+  .demo-row-waveform{ order:1; flex-basis:100%; }
+}
 
 /* --------------------------- Bars ambient background ------------------------ */
 /* Used on sections below the hero (never the hero itself, which has its own

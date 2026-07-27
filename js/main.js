@@ -149,75 +149,73 @@
     });
   }
 
-  /* -------------------------------- Demo player ---------------------------- */
-  // Only present on the Creative Dist product page.
-  const playBtn = document.getElementById('demo-play');
-  if (playBtn) {
-    const iconPlay = document.getElementById('icon-play');
-    const iconPause = document.getElementById('icon-pause');
-    const audioDry = document.getElementById('audio-dry');
-    const audioWet = document.getElementById('audio-wet');
-    const toggleBtns = document.querySelectorAll('.demo-toggle-btn');
+  /* --------------------------------- Demo list ------------------------------ */
+  // Only present on the Creative Dist product page. Each row is a fully
+  // independent player — no shared "pick a track then hit play" step — but
+  // only one plays at a time so they don't overlap.
+  const demoRows = document.querySelectorAll('.demo-row');
+  if (demoRows.length) {
+    let activeRow = null;
 
-    let currentMode = 'wet';
-    let isPlaying = false;
+    demoRows.forEach((row) => {
+      const rowPlayBtn = row.querySelector('.demo-row-play');
+      const iconPlay = row.querySelector('.icon-play');
+      const iconPause = row.querySelector('.icon-pause');
+      const audioDry = row.querySelector('.demo-row-audio-dry');
+      const audioWet = row.querySelector('.demo-row-audio-wet');
+      const toggleBtns = row.querySelectorAll('.demo-row-toggle-btn');
+      const name = row.dataset.name || 'demo';
 
-    const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
-    const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
+      let currentMode = 'wet';
+      let isPlaying = false;
 
-    function setMode(mode) {
-      if (mode === currentMode) return;
-      const wasPlaying = isPlaying;
-      const t = activeAudio().currentTime;
-      if (wasPlaying) activeAudio().pause();
-      currentMode = mode;
-      toggleBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
-      activeAudio().currentTime = t;
-      if (wasPlaying) activeAudio().play().catch(() => {});
-    }
+      const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
+      const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
 
-    toggleBtns.forEach((btn) => {
-      btn.addEventListener('click', () => setMode(btn.dataset.mode));
-    });
+      function setMode(mode) {
+        if (mode === currentMode) return;
+        const wasPlaying = isPlaying;
+        const t = activeAudio().currentTime;
+        if (wasPlaying) activeAudio().pause();
+        currentMode = mode;
+        toggleBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+        activeAudio().currentTime = t;
+        if (wasPlaying) activeAudio().play().catch(() => {});
+      }
 
-    // Track selector: several dry/wet pairs to showcase different material.
-    const trackBtns = document.querySelectorAll('.demo-track');
-    trackBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        if (btn.classList.contains('active')) return;
-        audioDry.pause();
-        audioWet.pause();
+      function stop() {
+        activeAudio().pause();
         isPlaying = false;
         iconPlay.hidden = false;
         iconPause.hidden = true;
-        playBtn.setAttribute('aria-label', 'Play demo');
+        row.classList.remove('is-playing');
+        rowPlayBtn.setAttribute('aria-label', `Play ${name} demo`);
+      }
 
-        audioDry.src = btn.dataset.dry;
-        audioWet.src = btn.dataset.wet;
-        trackBtns.forEach((b) => b.classList.toggle('active', b === btn));
+      toggleBtns.forEach((btn) => {
+        btn.addEventListener('click', () => setMode(btn.dataset.mode));
       });
-    });
 
-    playBtn.addEventListener('click', () => {
-      if (isPlaying) {
-        activeAudio().pause();
-        isPlaying = false;
-      } else {
+      rowPlayBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          stop();
+          activeRow = null;
+          return;
+        }
+        if (activeRow && activeRow !== row) activeRow.dispatchEvent(new Event('cd:stop'));
+
         idleAudio().pause();
         activeAudio().play().catch(() => {});
         isPlaying = true;
-      }
-      iconPlay.hidden = isPlaying;
-      iconPause.hidden = !isPlaying;
-      playBtn.setAttribute('aria-label', isPlaying ? 'Pause demo' : 'Play demo');
-    });
-
-    [audioDry, audioWet].forEach((audio) => {
-      audio.addEventListener('ended', () => {
-        isPlaying = false;
-        iconPlay.hidden = false;
-        iconPause.hidden = true;
+        iconPlay.hidden = true;
+        iconPause.hidden = false;
+        row.classList.add('is-playing');
+        rowPlayBtn.setAttribute('aria-label', `Pause ${name} demo`);
+        activeRow = row;
       });
+
+      row.addEventListener('cd:stop', stop);
+      [audioDry, audioWet].forEach((audio) => audio.addEventListener('ended', stop));
     });
   }
 

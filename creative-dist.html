@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css?v=17">
+<link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
 
@@ -283,34 +283,83 @@
       </p>
     </div>
 
-    <div class="demo-tracks reveal-up" role="tablist" aria-label="Demo track">
-      <button class="demo-track active" data-dry="assets/audio/drums-dry.wav" data-wet="assets/audio/drums-wet.wav">Drums</button>
-      <button class="demo-track" data-dry="assets/audio/bass-dry.wav" data-wet="assets/audio/bass-wet.wav">Bass</button>
-      <button class="demo-track" data-dry="assets/audio/synth-dry.wav" data-wet="assets/audio/synth-wet.wav">Synth</button>
-      <button class="demo-track" data-dry="assets/audio/vocal-dry.wav" data-wet="assets/audio/vocal-wet.wav">Vocal</button>
-      <button class="demo-track" data-dry="assets/audio/fullmix-dry.wav" data-wet="assets/audio/fullmix-wet.wav">Full Mix</button>
-    </div>
-
-    <div class="demo-player glass-panel reveal-up">
-      <div class="demo-waveform" aria-hidden="true" id="demo-waveform"></div>
-
-      <div class="demo-controls">
-        <button id="demo-play" class="demo-play-btn" aria-label="Play demo">
-          <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+    <div class="demo-list">
+      <div class="demo-row reveal-up" data-name="Drums">
+        <button class="demo-row-play" aria-label="Play Drums demo">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
         </button>
-
-        <div class="demo-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-toggle-btn" data-mode="dry">DRY</button>
-          <button class="demo-toggle-btn active" data-mode="wet">WET</button>
+        <span class="demo-row-name">Drums</span>
+        <div class="demo-row-waveform" aria-hidden="true"></div>
+        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
+          <button class="demo-row-toggle-btn" data-mode="dry">DRY</button>
+          <button class="demo-row-toggle-btn active" data-mode="wet">WET</button>
         </div>
-
-        <span class="demo-note">Placeholder audio — real demo clips coming soon</span>
+        <audio class="demo-row-audio-dry" src="assets/audio/drums-dry.wav" preload="none" loop></audio>
+        <audio class="demo-row-audio-wet" src="assets/audio/drums-wet.wav" preload="none" loop></audio>
       </div>
 
-      <audio id="audio-dry" src="assets/audio/drums-dry.wav" preload="none" loop></audio>
-      <audio id="audio-wet" src="assets/audio/drums-wet.wav" preload="none" loop></audio>
+      <div class="demo-row reveal-up" data-name="Bass">
+        <button class="demo-row-play" aria-label="Play Bass demo">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <span class="demo-row-name">Bass</span>
+        <div class="demo-row-waveform" aria-hidden="true"></div>
+        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
+          <button class="demo-row-toggle-btn" data-mode="dry">DRY</button>
+          <button class="demo-row-toggle-btn active" data-mode="wet">WET</button>
+        </div>
+        <audio class="demo-row-audio-dry" src="assets/audio/bass-dry.wav" preload="none" loop></audio>
+        <audio class="demo-row-audio-wet" src="assets/audio/bass-wet.wav" preload="none" loop></audio>
+      </div>
+
+      <div class="demo-row reveal-up" data-name="Synth">
+        <button class="demo-row-play" aria-label="Play Synth demo">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <span class="demo-row-name">Synth</span>
+        <div class="demo-row-waveform" aria-hidden="true"></div>
+        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
+          <button class="demo-row-toggle-btn" data-mode="dry">DRY</button>
+          <button class="demo-row-toggle-btn active" data-mode="wet">WET</button>
+        </div>
+        <audio class="demo-row-audio-dry" src="assets/audio/synth-dry.wav" preload="none" loop></audio>
+        <audio class="demo-row-audio-wet" src="assets/audio/synth-wet.wav" preload="none" loop></audio>
+      </div>
+
+      <div class="demo-row reveal-up" data-name="Vocal">
+        <button class="demo-row-play" aria-label="Play Vocal demo">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <span class="demo-row-name">Vocal</span>
+        <div class="demo-row-waveform" aria-hidden="true"></div>
+        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
+          <button class="demo-row-toggle-btn" data-mode="dry">DRY</button>
+          <button class="demo-row-toggle-btn active" data-mode="wet">WET</button>
+        </div>
+        <audio class="demo-row-audio-dry" src="assets/audio/vocal-dry.wav" preload="none" loop></audio>
+        <audio class="demo-row-audio-wet" src="assets/audio/vocal-wet.wav" preload="none" loop></audio>
+      </div>
+
+      <div class="demo-row reveal-up" data-name="Full Mix">
+        <button class="demo-row-play" aria-label="Play Full Mix demo">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <span class="demo-row-name">Full Mix</span>
+        <div class="demo-row-waveform" aria-hidden="true"></div>
+        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
+          <button class="demo-row-toggle-btn" data-mode="dry">DRY</button>
+          <button class="demo-row-toggle-btn active" data-mode="wet">WET</button>
+        </div>
+        <audio class="demo-row-audio-dry" src="assets/audio/fullmix-dry.wav" preload="none" loop></audio>
+        <audio class="demo-row-audio-wet" src="assets/audio/fullmix-wet.wav" preload="none" loop></audio>
+      </div>
     </div>
+    <p class="demo-note reveal-up" style="display:block;text-align:center;margin-top:20px;">Placeholder audio — real demo clips coming soon</p>
   </section>
 
   <!-- ============ COMPATIBILITY ============ -->
@@ -380,6 +429,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/plexus.js?v=1"></script>
-<script src="js/main.js?v=7"></script>
+<script src="js/main.js?v=8"></script>
 </body>
 </html>

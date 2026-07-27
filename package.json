@@ -4,7 +4,10 @@
   "private": true,
   "description": "Creative Sound — Creative Dist product site",
   "dependencies": {
-    "stripe": "^17.4.0",
-    "resend": "^4.0.1"
+    "@neondatabase/serverless": "^1.1.0",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "resend": "^4.0.1",
+    "stripe": "^17.4.0"
   }
 }

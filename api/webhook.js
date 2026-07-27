@@ -1,5 +1,6 @@
 const Stripe = require('stripe');
 const { Resend } = require('resend');
+const { sql } = require('./_lib/db');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -34,6 +35,11 @@ function buildEmailHtml(licenseKey) {
       <p>Your license key:</p>
       <p style="font-family:monospace;font-size:18px;letter-spacing:1px;background:#0d0d0c;border:1px solid rgba(255,255,255,0.18);padding:12px 16px;border-radius:8px;display:inline-block;">${licenseKey}</p>
       <p style="margin-top:28px;">${downloadBlock}</p>
+      <p style="margin-top:24px;">
+        Create an account with this same email to find your license and download
+        link any time from your profile:
+        <a href="${process.env.SITE_URL || ''}/signup.html" style="color:#FFB347;">${process.env.SITE_URL || ''}/signup.html</a>
+      </p>
       <p style="margin-top:32px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
     </div>
   `;
@@ -62,7 +68,26 @@ module.exports = async (req, res) => {
     const email = session.customer_details && session.customer_details.email;
 
     if (email) {
-      const licenseKey = generateLicenseKey();
+      const normalizedEmail = email.trim().toLowerCase();
+      let licenseKey;
+      try {
+        // Idempotent against Stripe webhook retries: reuse the license
+        // already tied to this checkout session instead of minting a new one.
+        const [existing] = await sql`SELECT license_key FROM licenses WHERE stripe_session_id = ${session.id}`;
+        if (existing) {
+          licenseKey = existing.license_key;
+        } else {
+          licenseKey = generateLicenseKey();
+          await sql`
+            INSERT INTO licenses (email, license_key, stripe_session_id)
+            VALUES (${normalizedEmail}, ${licenseKey}, ${session.id})
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to persist license:', err);
+        licenseKey = generateLicenseKey(); // still email something rather than nothing
+      }
+
       try {
         await resend.emails.send({
           from: process.env.FROM_EMAIL,

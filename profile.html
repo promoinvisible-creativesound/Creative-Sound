@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contact — Creative Sound</title>
-<meta name="description" content="Get in touch with Creative Sound.">
+<title>Your account — Creative Sound</title>
+<meta name="description" content="Your Creative Sound account — license and download.">
+<meta name="robots" content="noindex">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +43,6 @@
     </nav>
 
     <div class="header-actions">
-      <a href="creative-dist.html" class="btn btn-buy">Get Creative Dist</a>
       <button id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-nav">
         <span></span><span></span><span></span>
       </button>
@@ -51,34 +51,18 @@
 </header>
 
 <main>
-  <div class="page-hero">
-    <p class="kicker reveal-up">CONTACT</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(30px,5vw,44px); margin-bottom:18px;">Talk to us.</h1>
-    <p class="section-lede reveal-up" style="margin:0 auto;">
-      Questions about Creative Dist, a bug to report, a partnership idea, or just
-      feedback — all of it lands in the same inbox and gets read.
-    </p>
+  <div class="page-hero" style="padding-bottom:0;">
+    <p class="kicker reveal-up">ACCOUNT</p>
+    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Your account</h1>
   </div>
 
-  <article class="prose reveal-up">
-    <h2>General &amp; support</h2>
-    <p>
-      <strong>Email:</strong> <a href="mailto:hello@creativesound.example">hello@creativesound.example</a>
-      <br><em style="font-size:13px;color:var(--text-muted);">(placeholder address — will be updated once the studio's own domain is live)</em>
-    </p>
-    <p>For order or license issues, include the email address you used at checkout so we can find your purchase faster.</p>
-
-    <h2>Response time</h2>
-    <p>
-      Creative Sound is a small, one-person studio — expect a reply within a couple of
-      business days, not instantly.
-    </p>
-
-    <h2>Press &amp; partnerships</h2>
-    <p>
-      Same address as above — mention what you're working on and we'll get back to you.
-    </p>
-  </article>
+  <div id="profile-root">
+    <div class="glass-panel profile-card reveal-up">
+      <p class="profile-email" id="profile-email">Loading…</p>
+      <div id="profile-licenses"></div>
+      <button id="logout-btn" class="btn btn-ghost profile-logout">Sign out</button>
+    </div>
+  </div>
 </main>
 
 <footer id="site-footer">
@@ -102,5 +86,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=5"></script>
+<script src="js/auth.js?v=1"></script>
 </body>
 </html>

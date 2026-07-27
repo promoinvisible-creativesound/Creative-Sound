@@ -1,0 +1,10 @@
+{
+  "name": "creative-dist-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Creative Sound — Creative Dist product site",
+  "dependencies": {
+    "stripe": "^17.4.0",
+    "resend": "^4.0.1"
+  }
+}

@@ -7,8 +7,8 @@
   if (!canvases.length) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const BAR_WIDTH = 2;
-  const GAP = 26;
+  const BAR_WIDTH = 3;
+  const GAP = 20;
 
   canvases.forEach(initBars);
 
@@ -53,15 +53,15 @@
         const y = height - h;
         // Thin outline + a slightly brighter tip, no fill/glow — a flatter,
         // more geometric read than a solid glowing bar.
-        ctx.strokeStyle = 'rgba(232,134,44,0.28)';
+        ctx.strokeStyle = 'rgba(232,134,44,0.55)';
         ctx.lineWidth = BAR_WIDTH;
         ctx.beginPath();
         ctx.moveTo(b.x + BAR_WIDTH / 2, height);
         ctx.lineTo(b.x + BAR_WIDTH / 2, y);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(255,179,71,0.55)';
-        ctx.fillRect(b.x, y - 1, BAR_WIDTH, 2);
+        ctx.fillStyle = 'rgba(255,179,71,0.85)';
+        ctx.fillRect(b.x - 0.5, y - 1, BAR_WIDTH + 1, 2.5);
       });
     }
 

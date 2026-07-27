@@ -31,20 +31,40 @@
   const navToggle = document.getElementById('nav-toggle');
   const siteNav = document.getElementById('site-nav');
 
-  const onScroll = () => {
-    header.classList.toggle('scrolled', window.scrollY > 20);
-  };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
+  if (header) {
+    const onScroll = () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
-  navToggle.addEventListener('click', () => {
-    const isOpen = siteNav.classList.toggle('open');
-    navToggle.setAttribute('aria-expanded', String(isOpen));
+  if (navToggle && siteNav) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = siteNav.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+    siteNav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        siteNav.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  /* ---------------------------- Plugin dropdown ---------------------------- */
+  document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
+    const trigger = dropdown.querySelector('.nav-dropdown-trigger');
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdown.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', String(isOpen));
+    });
   });
-  siteNav.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => {
-      siteNav.classList.remove('open');
-      navToggle.setAttribute('aria-expanded', 'false');
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-dropdown.open').forEach((dropdown) => {
+      dropdown.classList.remove('open');
+      dropdown.querySelector('.nav-dropdown-trigger').setAttribute('aria-expanded', 'false');
     });
   });
 
@@ -107,75 +127,81 @@
   }
 
   /* -------------------------------- Demo player ---------------------------- */
+  // Only present on the Creative Dist product page.
   const playBtn = document.getElementById('demo-play');
-  const iconPlay = document.getElementById('icon-play');
-  const iconPause = document.getElementById('icon-pause');
-  const audioDry = document.getElementById('audio-dry');
-  const audioWet = document.getElementById('audio-wet');
-  const toggleBtns = document.querySelectorAll('.demo-toggle-btn');
+  if (playBtn) {
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const audioDry = document.getElementById('audio-dry');
+    const audioWet = document.getElementById('audio-wet');
+    const toggleBtns = document.querySelectorAll('.demo-toggle-btn');
 
-  let currentMode = 'wet';
-  let isPlaying = false;
+    let currentMode = 'wet';
+    let isPlaying = false;
 
-  const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
-  const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
+    const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
+    const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
 
-  function setMode(mode) {
-    if (mode === currentMode) return;
-    const wasPlaying = isPlaying;
-    const t = activeAudio().currentTime;
-    if (wasPlaying) activeAudio().pause();
-    currentMode = mode;
-    toggleBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
-    activeAudio().currentTime = t;
-    if (wasPlaying) activeAudio().play().catch(() => {});
+    function setMode(mode) {
+      if (mode === currentMode) return;
+      const wasPlaying = isPlaying;
+      const t = activeAudio().currentTime;
+      if (wasPlaying) activeAudio().pause();
+      currentMode = mode;
+      toggleBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+      activeAudio().currentTime = t;
+      if (wasPlaying) activeAudio().play().catch(() => {});
+    }
+
+    toggleBtns.forEach((btn) => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        activeAudio().pause();
+        isPlaying = false;
+      } else {
+        idleAudio().pause();
+        activeAudio().play().catch(() => {});
+        isPlaying = true;
+      }
+      iconPlay.hidden = isPlaying;
+      iconPause.hidden = !isPlaying;
+      playBtn.setAttribute('aria-label', isPlaying ? 'Pause demo' : 'Play demo');
+    });
+
+    [audioDry, audioWet].forEach((audio) => {
+      audio.addEventListener('ended', () => {
+        isPlaying = false;
+        iconPlay.hidden = false;
+        iconPause.hidden = true;
+      });
+    });
   }
 
-  toggleBtns.forEach((btn) => {
-    btn.addEventListener('click', () => setMode(btn.dataset.mode));
-  });
-
-  playBtn.addEventListener('click', () => {
-    if (isPlaying) {
-      activeAudio().pause();
-      isPlaying = false;
-    } else {
-      idleAudio().pause();
-      activeAudio().play().catch(() => {});
-      isPlaying = true;
-    }
-    iconPlay.hidden = isPlaying;
-    iconPause.hidden = !isPlaying;
-    playBtn.setAttribute('aria-label', isPlaying ? 'Pause demo' : 'Play demo');
-  });
-
-  [audioDry, audioWet].forEach((audio) => {
-    audio.addEventListener('ended', () => {
-      isPlaying = false;
-      iconPlay.hidden = false;
-      iconPause.hidden = true;
-    });
-  });
-
   /* --------------------------------- Buy button ------------------------------ */
+  // Only present on the Creative Dist product page.
   const buyButton = document.getElementById('buy-button');
-  buyButton.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const originalLabel = buyButton.textContent;
-    buyButton.textContent = 'Redirecting to checkout…';
-    buyButton.setAttribute('aria-disabled', 'true');
+  if (buyButton) {
+    buyButton.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const originalLabel = buyButton.textContent;
+      buyButton.textContent = 'Redirecting to checkout…';
+      buyButton.setAttribute('aria-disabled', 'true');
 
-    try {
-      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
-      if (!res.ok) throw new Error('Checkout session request failed');
-      const { url } = await res.json();
-      if (!url) throw new Error('No checkout URL returned');
-      window.location.href = url;
-    } catch (err) {
-      console.error(err);
-      buyButton.textContent = originalLabel;
-      buyButton.removeAttribute('aria-disabled');
-      alert('Checkout is not available right now — please try again in a moment.');
-    }
-  });
+      try {
+        const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+        if (!res.ok) throw new Error('Checkout session request failed');
+        const { url } = await res.json();
+        if (!url) throw new Error('No checkout URL returned');
+        window.location.href = url;
+      } catch (err) {
+        console.error(err);
+        buyButton.textContent = originalLabel;
+        buyButton.removeAttribute('aria-disabled');
+        alert('Checkout is not available right now — please try again in a moment.');
+      }
+    });
+  }
 })();

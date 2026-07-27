@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { Resend } = require('resend');
-const formidable = require('formidable');
+const { formidable } = require('formidable');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

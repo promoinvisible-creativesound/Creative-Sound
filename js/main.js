@@ -180,6 +180,24 @@
       btn.addEventListener('click', () => setMode(btn.dataset.mode));
     });
 
+    // Track selector: several dry/wet pairs to showcase different material.
+    const trackBtns = document.querySelectorAll('.demo-track');
+    trackBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
+        audioDry.pause();
+        audioWet.pause();
+        isPlaying = false;
+        iconPlay.hidden = false;
+        iconPause.hidden = true;
+        playBtn.setAttribute('aria-label', 'Play demo');
+
+        audioDry.src = btn.dataset.dry;
+        audioWet.src = btn.dataset.wet;
+        trackBtns.forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+
     playBtn.addEventListener('click', () => {
       if (isPlaying) {
         activeAudio().pause();

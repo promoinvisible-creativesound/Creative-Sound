@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css?v=16">
+<link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 
@@ -283,6 +283,14 @@
       </p>
     </div>
 
+    <div class="demo-tracks reveal-up" role="tablist" aria-label="Demo track">
+      <button class="demo-track active" data-dry="assets/audio/drums-dry.wav" data-wet="assets/audio/drums-wet.wav">Drums</button>
+      <button class="demo-track" data-dry="assets/audio/bass-dry.wav" data-wet="assets/audio/bass-wet.wav">Bass</button>
+      <button class="demo-track" data-dry="assets/audio/synth-dry.wav" data-wet="assets/audio/synth-wet.wav">Synth</button>
+      <button class="demo-track" data-dry="assets/audio/vocal-dry.wav" data-wet="assets/audio/vocal-wet.wav">Vocal</button>
+      <button class="demo-track" data-dry="assets/audio/fullmix-dry.wav" data-wet="assets/audio/fullmix-wet.wav">Full Mix</button>
+    </div>
+
     <div class="demo-player glass-panel reveal-up">
       <div class="demo-waveform" aria-hidden="true" id="demo-waveform"></div>
 
@@ -300,8 +308,8 @@
         <span class="demo-note">Placeholder audio — real demo clips coming soon</span>
       </div>
 
-      <audio id="audio-dry" src="assets/audio/dry-placeholder.wav" preload="none" loop></audio>
-      <audio id="audio-wet" src="assets/audio/wet-placeholder.wav" preload="none" loop></audio>
+      <audio id="audio-dry" src="assets/audio/drums-dry.wav" preload="none" loop></audio>
+      <audio id="audio-wet" src="assets/audio/drums-wet.wav" preload="none" loop></audio>
     </div>
   </section>
 
@@ -372,6 +380,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/plexus.js?v=1"></script>
-<script src="js/main.js?v=6"></script>
+<script src="js/main.js?v=7"></script>
 </body>
 </html>

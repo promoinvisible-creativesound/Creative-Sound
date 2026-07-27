@@ -81,6 +81,85 @@
     });
   }
 
+  /* ------------------------------ Forgot password form ----------------------- */
+  const forgotForm = document.getElementById('forgot-form');
+  if (forgotForm) {
+    const errorEl = document.getElementById('auth-error');
+    const successEl = document.getElementById('auth-success');
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError(errorEl);
+      successEl.classList.remove('visible');
+
+      const email = document.getElementById('forgot-email').value.trim();
+      const btn = forgotForm.querySelector('button[type="submit"]');
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        successEl.textContent = "If there's an account with that email, a reset link is on its way.";
+        successEl.classList.add('visible');
+        forgotForm.reset();
+      } catch (err) {
+        showError(errorEl, err.message);
+      } finally {
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  /* ------------------------------- Reset password form ------------------------ */
+  const resetForm = document.getElementById('reset-form');
+  if (resetForm) {
+    const errorEl = document.getElementById('auth-error');
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) {
+      showError(errorEl, 'This reset link is missing its token — request a new one from the forgot password page.');
+      resetForm.querySelector('button[type="submit"]').disabled = true;
+    }
+
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError(errorEl);
+
+      const password = document.getElementById('reset-password').value;
+      const confirm = document.getElementById('reset-confirm').value;
+      if (password !== confirm) {
+        showError(errorEl, "Passwords don't match.");
+        return;
+      }
+
+      const btn = resetForm.querySelector('button[type="submit"]');
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Saving…';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        window.location.href = 'profile.html';
+      } catch (err) {
+        showError(errorEl, err.message);
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+      }
+    });
+  }
+
   /* ----------------------------------- Profile ------------------------------- */
   const profileRoot = document.getElementById('profile-root');
   if (profileRoot) {

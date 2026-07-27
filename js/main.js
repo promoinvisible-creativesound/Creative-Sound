@@ -227,4 +227,19 @@
       }
     });
   }
+
+  /* --------------------------- Header account status ------------------------ */
+  // Swaps "Log in" for "My Account" if the visitor already has a session.
+  const headerAccountLink = document.getElementById('header-account-link');
+  if (headerAccountLink) {
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          headerAccountLink.textContent = 'My Account';
+          headerAccountLink.href = 'profile.html';
+        }
+      })
+      .catch(() => {});
+  }
 })();

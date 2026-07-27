@@ -7,8 +7,8 @@
   if (!canvases.length) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const BAR_WIDTH = 6;
-  const GAP = 11;
+  const BAR_WIDTH = 2;
+  const GAP = 26;
 
   canvases.forEach(initBars);
 
@@ -26,9 +26,9 @@
       const count = Math.max(1, Math.floor(width / (BAR_WIDTH + GAP)));
       bars = Array.from({ length: count }, (_, i) => ({
         x: i * (BAR_WIDTH + GAP) + GAP / 2,
-        base: 0.12 + Math.random() * 0.22,
-        amp: 0.14 + Math.random() * 0.34,
-        speed: 0.35 + Math.random() * 0.75,
+        base: 0.08 + Math.random() * 0.14,
+        amp: 0.08 + Math.random() * 0.2,
+        speed: 0.3 + Math.random() * 0.6,
         phase: Math.random() * Math.PI * 2,
       }));
     }
@@ -51,15 +51,18 @@
       bars.forEach((b) => {
         const h = (b.base + b.amp * (0.5 + 0.5 * Math.sin(t * b.speed + b.phase))) * height;
         const y = height - h;
-        const grad = ctx.createLinearGradient(0, y, 0, height);
-        grad.addColorStop(0, 'rgba(255,179,71,0.85)');
-        grad.addColorStop(1, 'rgba(232,134,44,0.04)');
-        ctx.fillStyle = grad;
-        ctx.shadowColor = 'rgba(232,134,44,0.55)';
-        ctx.shadowBlur = 7;
-        ctx.fillRect(b.x, y, BAR_WIDTH, h);
+        // Thin outline + a slightly brighter tip, no fill/glow — a flatter,
+        // more geometric read than a solid glowing bar.
+        ctx.strokeStyle = 'rgba(232,134,44,0.28)';
+        ctx.lineWidth = BAR_WIDTH;
+        ctx.beginPath();
+        ctx.moveTo(b.x + BAR_WIDTH / 2, height);
+        ctx.lineTo(b.x + BAR_WIDTH / 2, y);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,179,71,0.55)';
+        ctx.fillRect(b.x, y - 1, BAR_WIDTH, 2);
       });
-      ctx.shadowBlur = 0;
     }
 
     function step() {

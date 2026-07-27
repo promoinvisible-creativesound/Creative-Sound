@@ -118,24 +118,29 @@
       });
     });
 
-    // Hero always plays immediately on load, not on scroll.
-    const heroEls = document.querySelectorAll('#hero .reveal-up');
-    gsap.set(heroEls, { opacity: 0, y: 28 });
-    gsap.to(heroEls, {
-      opacity: 1,
-      y: 0,
-      duration: 1,
-      ease: 'power3.out',
-      stagger: 0.1,
-      delay: prefersReducedMotion ? 0 : 0.7,
-    });
+    // Hero always plays immediately on load, not on scroll — only on pages
+    // that actually have the full hero (product pages, not simple content pages).
+    if (document.getElementById('hero')) {
+      const heroEls = document.querySelectorAll('#hero .reveal-up');
+      gsap.set(heroEls, { opacity: 0, y: 28 });
+      gsap.to(heroEls, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: 'power3.out',
+        stagger: 0.1,
+        delay: prefersReducedMotion ? 0 : 0.7,
+      });
+    }
 
     // Subtle parallax drift on the hero glow.
-    gsap.to('.hero-glow', {
-      yPercent: 12,
-      ease: 'none',
-      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
-    });
+    if (document.querySelector('.hero-glow')) {
+      gsap.to('.hero-glow', {
+        yPercent: 12,
+        ease: 'none',
+        scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+      });
+    }
   } else {
     // Fallback: no animation library loaded, just show everything.
     document.querySelectorAll('.reveal-up').forEach((el) => {

@@ -106,7 +106,11 @@
         resendBtn.textContent = 'Sending…';
 
         try {
-          const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+          const res = await fetch('/api/auth/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resend: true }),
+          });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Something went wrong.');
           successEl.textContent = 'New code sent — check your inbox.';
@@ -503,7 +507,7 @@
         btn.disabled = true;
 
         try {
-          const res = await fetch('/api/auth/change-password', {
+          const res = await fetch('/api/auth/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ currentPassword, newPassword }),

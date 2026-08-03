@@ -44,6 +44,51 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+        const signupStep = document.getElementById('signup-step');
+        const verifyStep = document.getElementById('verify-step');
+        if (data.needsVerification && verifyStep) {
+          document.getElementById('verify-email-display').textContent = data.email;
+          signupStep.style.display = 'none';
+          verifyStep.style.display = 'block';
+          document.getElementById('verify-code').focus();
+        } else {
+          window.location.href = 'profile.html';
+        }
+      } catch (err) {
+        showError(errorEl, err.message);
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  /* ------------------------------- Verify email form ------------------------- */
+  const verifyForm = document.getElementById('verify-form');
+  if (verifyForm) {
+    const errorEl = document.getElementById('verify-error');
+    const successEl = document.getElementById('verify-success');
+    const resendBtn = document.getElementById('resend-code-btn');
+
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError(errorEl);
+      successEl.classList.remove('visible');
+
+      const code = document.getElementById('verify-code').value.trim();
+      const btn = verifyForm.querySelector('button[type="submit"]');
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Confirming…';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
         window.location.href = 'profile.html';
       } catch (err) {
         showError(errorEl, err.message);
@@ -51,6 +96,29 @@
         btn.disabled = false;
       }
     });
+
+    if (resendBtn) {
+      resendBtn.addEventListener('click', async () => {
+        hideError(errorEl);
+        successEl.classList.remove('visible');
+        resendBtn.disabled = true;
+        const originalLabel = resendBtn.textContent;
+        resendBtn.textContent = 'Sending…';
+
+        try {
+          const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+          successEl.textContent = 'New code sent — check your inbox.';
+          successEl.classList.add('visible');
+        } catch (err) {
+          showError(errorEl, err.message);
+        } finally {
+          resendBtn.textContent = originalLabel;
+          setTimeout(() => { resendBtn.disabled = false; }, 20000);
+        }
+      });
+    }
   }
 
   /* ---------------------------------- Login form ---------------------------- */

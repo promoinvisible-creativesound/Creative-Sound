@@ -14,7 +14,11 @@ async function sendVerificationCode(userId, email) {
     WHERE id = ${userId}
   `;
 
-  await resend.emails.send({
+  // The Resend SDK returns { data, error } instead of throwing on API-level
+  // failures (e.g. an unverified sending domain) — without this check a
+  // failed send looks identical to a successful one and the caller has no
+  // way to know the code never actually reached the user.
+  const { error } = await resend.emails.send({
     from: process.env.FROM_EMAIL,
     to: email,
     subject: `${code} — confirm your Creative Sound account`,
@@ -27,6 +31,10 @@ async function sendVerificationCode(userId, email) {
       </div>
     `,
   });
+  if (error) {
+    console.error('resend send error:', error);
+    throw new Error('Could not send the confirmation email. Please try again shortly.');
+  }
 }
 
 module.exports = { sendVerificationCode };

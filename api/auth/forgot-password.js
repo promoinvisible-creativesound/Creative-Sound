@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
       const siteUrl = process.env.SITE_URL || `https://${req.headers.host}`;
       const resetUrl = `${siteUrl}/reset-password.html?token=${token}`;
 
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: process.env.FROM_EMAIL,
         to: user.email,
         subject: 'Reset your Creative Sound password',
@@ -50,6 +50,14 @@ module.exports = async (req, res) => {
           </div>
         `,
       });
+      // Resend returns { data, error } rather than throwing on API-level
+      // failures (e.g. an unverified sending domain), so this has to be
+      // checked explicitly or a failed send silently looks successful.
+      if (error) {
+        console.error('resend send error:', error);
+        res.status(500).json({ error: 'Something went wrong, please try again.' });
+        return;
+      }
     }
 
     res.status(200).json({ ok: true });

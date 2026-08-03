@@ -79,8 +79,8 @@ module.exports = async (req, res) => {
         } else {
           licenseKey = generateLicenseKey();
           await sql`
-            INSERT INTO licenses (email, license_key, stripe_session_id)
-            VALUES (${normalizedEmail}, ${licenseKey}, ${session.id})
+            INSERT INTO licenses (email, license_key, stripe_session_id, amount_total, currency)
+            VALUES (${normalizedEmail}, ${licenseKey}, ${session.id}, ${session.amount_total || null}, ${session.currency || null})
           `;
         }
       } catch (err) {

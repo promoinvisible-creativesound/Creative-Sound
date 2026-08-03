@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Refund Policy — Creative Sound</title>
-<meta name="description" content="Creative Sound's refund policy for Creative Dist.">
+<title>Settings — Creative Sound</title>
+<meta name="description" content="Update your name or change your password.">
+<meta name="robots" content="noindex">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,46 +80,51 @@
 </header>
 
 <main>
-  <div class="page-hero">
-    <p class="kicker reveal-up">LEGAL</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(30px,5vw,44px);">Refund Policy</h1>
+  <div class="page-hero" style="padding-bottom:0;">
+    <a href="profile.html" class="account-back reveal-up">← Back to account</a>
+    <p class="kicker reveal-up">ACCOUNT</p>
+    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Settings</h1>
   </div>
 
-  <article class="prose reveal-up">
-    <span class="updated">Last updated: July 2026</span>
+  <div id="settings-root" class="account-detail">
+    <section class="account-section glass-panel reveal-up">
+      <h2 class="account-section-title">Your name</h2>
+      <form id="profile-form" novalidate>
+        <p id="profile-error" class="auth-error" role="alert"></p>
+        <p id="profile-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
+        <div class="auth-field">
+          <label for="profile-first-name">First name</label>
+          <input type="text" id="profile-first-name" name="firstName" autocomplete="given-name">
+        </div>
+        <div class="auth-field">
+          <label for="profile-last-name">Last name</label>
+          <input type="text" id="profile-last-name" name="lastName" autocomplete="family-name">
+        </div>
+        <button type="submit" class="btn btn-ghost">Save name</button>
+      </form>
+    </section>
 
-    <h2>All sales are final, by default</h2>
-    <p>
-      Creative Dist is a digital product delivered instantly by email after purchase.
-      Because the license and download become available right away, refunds are not
-      automatic once an order is complete — the same standard most software and
-      plugin makers use for digital goods.
-    </p>
+    <section class="account-section glass-panel reveal-up">
+      <h2 class="account-section-title">Change password</h2>
+      <form id="password-form" novalidate>
+        <p id="password-error" class="auth-error" role="alert"></p>
+        <p id="password-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
+        <div class="auth-field">
+          <label for="password-current">Current password</label>
+          <input type="password" id="password-current" name="currentPassword" autocomplete="current-password" required>
+        </div>
+        <div class="auth-field">
+          <label for="password-new">New password</label>
+          <input type="password" id="password-new" name="newPassword" autocomplete="new-password" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-ghost">Change password</button>
+      </form>
+    </section>
 
-    <h2>Requesting an exception</h2>
-    <p>
-      That said, we'd rather look at each situation than hide behind a blanket rule.
-      If you have a genuine reason to ask for a refund — a technical problem we
-      can't resolve, a duplicate charge, a purchase made by mistake, or anything
-      else — <a href="contact.html">email us</a> and put the reason in the subject
-      line (for example, "Refund request — plugin won't load"). Include the email
-      address and, if you have it, the order or license reference you used at
-      checkout.
-    </p>
-    <p>
-      We review every request individually and reply personally. This isn't a
-      guarantee that a refund will be issued, but every case is read and considered
-      on its own merits, not auto-rejected.
-    </p>
-
-    <h2>Before you buy</h2>
-    <p>
-      If you're unsure whether Creative Dist fits your workflow, listen to the demo
-      and check the compatibility requirements on the
-      <a href="creative-dist.html">product page</a> first, or
-      <a href="contact.html">ask us</a> directly.
-    </p>
-  </article>
+    <section class="account-section glass-panel reveal-up">
+      <button id="logout-btn" class="btn btn-ghost profile-logout">Sign out</button>
+    </section>
+  </div>
 </main>
 
 <footer id="site-footer">
@@ -142,5 +148,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=17"></script>
+<script src="js/auth.js?v=5"></script>
 </body>
 </html>

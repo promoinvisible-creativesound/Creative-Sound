@@ -18,17 +18,28 @@ module.exports = async (req, res) => {
   const normalizedEmail = String(email).trim().toLowerCase();
 
   try {
-    const existing = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;
-    if (existing.length) {
+    const [existing] = await sql`SELECT id, email_verified FROM users WHERE email = ${normalizedEmail}`;
+    if (existing && existing.email_verified) {
       res.status(409).json({ error: 'An account with this email already exists.' });
       return;
     }
 
     const passwordHash = await bcrypt.hash(String(password), 10);
-    const [user] = await sql`
-      INSERT INTO users (email, password_hash) VALUES (${normalizedEmail}, ${passwordHash})
-      RETURNING id, email
-    `;
+    let user;
+    if (existing) {
+      // A previous signup attempt got as far as creating the row but never
+      // got verified (e.g. the confirmation email failed to send) — retry
+      // in place instead of permanently locking that email out.
+      [user] = await sql`
+        UPDATE users SET password_hash = ${passwordHash} WHERE id = ${existing.id}
+        RETURNING id, email
+      `;
+    } else {
+      [user] = await sql`
+        INSERT INTO users (email, password_hash) VALUES (${normalizedEmail}, ${passwordHash})
+        RETURNING id, email
+      `;
+    }
 
     await sendVerificationCode(user.id, user.email);
 

@@ -234,9 +234,12 @@ body.no-boot #boot-overlay{ display:none; }
   transition:color 0.25s var(--ease); position:relative; padding-bottom:4px;
 }
 /* Small dot marker gives the rail an obvious "these are jump points, click
-   one" read at a glance, rather than reading as plain static labels. */
+   one" read at a glance, rather than reading as plain static labels.
+   order:2 pushes it after the label text (labels vary in length, right-
+   aligned) so every dot lines up in the same column instead of trailing
+   each label at a different x position. */
 .side-rail-link::before{
-  content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0;
+  content:''; order:2; width:6px; height:6px; border-radius:50%; flex-shrink:0;
   border:1px solid var(--text-muted); background:transparent;
   transition:background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
 }

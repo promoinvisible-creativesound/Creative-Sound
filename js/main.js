@@ -290,8 +290,9 @@
       const name = row.dataset.name || 'demo';
       const heights = waveHeights(name, 64);
 
-      let currentMode = 'wet';
+      let currentMode = 'dry';
       let isPlaying = false;
+      let pendingPlay = false;
 
       const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
       const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
@@ -320,8 +321,8 @@
       function stop() {
         activeAudio().pause();
         isPlaying = false;
-        iconPlay.hidden = false;
-        iconPause.hidden = true;
+        iconPlay.removeAttribute('hidden');
+        iconPause.setAttribute('hidden', '');
         row.classList.remove('is-playing');
         rowPlayBtn.setAttribute('aria-label', `Play ${name} demo`);
         redraw();
@@ -339,6 +340,7 @@
       });
 
       rowPlayBtn.addEventListener('click', () => {
+        if (pendingPlay) return; // a play() request is still resolving, ignore rapid re-clicks
         if (isPlaying) {
           stop();
           activeRow = null;
@@ -347,13 +349,28 @@
         if (activeRow && activeRow !== row) activeRow.dispatchEvent(new Event('cd:stop'));
 
         idleAudio().pause();
-        activeAudio().play().catch(() => {});
+        const audio = activeAudio();
         isPlaying = true;
-        iconPlay.hidden = true;
-        iconPause.hidden = false;
+        iconPlay.setAttribute('hidden', '');
+        iconPause.removeAttribute('hidden');
         row.classList.add('is-playing');
         rowPlayBtn.setAttribute('aria-label', `Pause ${name} demo`);
         activeRow = row;
+
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          pendingPlay = true;
+          playPromise
+            .catch(() => {
+              // Playback failed to start (blocked, interrupted, network hiccup) — don't
+              // leave the button stuck showing "pause" while nothing is actually playing.
+              if (activeRow === row) {
+                stop();
+                activeRow = null;
+              }
+            })
+            .finally(() => { pendingPlay = false; });
+        }
       });
 
       canvas.addEventListener('click', (e) => {

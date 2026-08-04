@@ -126,7 +126,7 @@ body.no-boot #boot-overlay{ display:none; }
   display:flex; align-items:center; justify-content:space-between; gap:24px;
 }
 .brand{ display:flex; flex-direction:column; gap:2px; line-height:1; }
-.brand-logo{ display:block; height:22px; width:auto; }
+.brand-logo{ display:block; height:30px; width:auto; }
 .brand-product{
   font-family:var(--font-display); font-size:14px; font-weight:700;
   letter-spacing:1.5px; color:var(--text);

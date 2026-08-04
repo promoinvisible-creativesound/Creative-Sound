@@ -312,6 +312,7 @@ body.no-boot #boot-overlay{ display:none; }
 .site-search-empty{ padding:24px 16px; text-align:center; color:var(--text-muted); font-size:13px; }
 
 /* --------------------------------- Buttons ------------------------------ */
+.btn:disabled{ opacity:0.45; cursor:not-allowed; filter:grayscale(0.4); }
 .btn{
   display:inline-flex; align-items:center; justify-content:center;
   padding:12px 24px; border-radius:6px; font-size:13px; font-weight:600;

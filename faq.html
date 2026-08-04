@@ -1,11 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reset password — Creative Sound</title>
-<meta name="description" content="Reset your Creative Sound account password.">
-<meta name="robots" content="noindex">
+<title>FAQ — Creative Sound</title>
+<meta name="description" content="Frequently asked questions about Creative Dist: licensing, installation, compatibility and support.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,25 +78,79 @@
 </header>
 
 <main>
-  <div class="page-hero" style="padding-bottom:0;">
-    <p class="kicker reveal-up">ACCOUNT</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Reset your password</h1>
-    <p class="section-lede reveal-up" style="margin:12px auto 0;">
-      Enter the email on your account and we'll send you a link to choose a new password.
+  <div class="page-hero">
+    <p class="kicker reveal-up">SUPPORT</p>
+    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(30px,5vw,44px);">Frequently asked questions</h1>
+    <p class="section-lede reveal-up" style="margin:0 auto;">
+      Licensing, installation, compatibility, and what to do when something doesn't work.
     </p>
   </div>
 
-  <div class="glass-panel auth-card reveal-up">
-    <p id="auth-error" class="auth-error" role="alert"></p>
-    <p id="auth-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
-    <form id="forgot-form" novalidate>
-      <div class="auth-field">
-        <label for="forgot-email">Email</label>
-        <input type="email" id="forgot-email" name="email" autocomplete="email" required>
-      </div>
-      <button type="submit" class="btn btn-primary auth-submit">Send reset link</button>
-    </form>
-    <p class="auth-switch"><a href="login.html">Back to sign in</a></p>
+  <div class="faq-list reveal-up">
+    <details class="faq-item">
+      <summary>How many devices can I use with the same license?</summary>
+      <p class="faq-answer">Up to 2 devices.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Are updates free? Even ones that add new modules?</summary>
+      <p class="faq-answer">Yes, all updates are free.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>My license isn't working. What should I do?</summary>
+      <p class="faq-answer">Contact support directly from your profile and we'll get back to you as soon as possible.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How can I contact you?</summary>
+      <p class="faq-answer">Open a support ticket and we'll reply as soon as possible.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>I'm having issues, I can't hear the plugin working.</summary>
+      <p class="faq-answer">This is usually a small DAW issue. Try updating the plugin, running a rescan, or simply closing and reopening your DAW, that should fix it.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Where can I find my order?</summary>
+      <p class="faq-answer">You'll find it in your profile under Order History, or in the email you received right after your purchase.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How does Creative Dist work?</summary>
+      <p class="faq-answer">The installer includes a PDF covering all the plugin's main features, and we'll also be releasing videos showing how to get the most out of it.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I install Creative Dist?</summary>
+      <p class="faq-answer">The installer includes everything the plugin needs, including presets and a PDF with all the plugin info.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I install it on Mac?</summary>
+      <p class="faq-answer">Just allow the installation: go to Settings, then Privacy, and grant permission at the bottom of the page using your Mac password.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Which versions are supported on Mac?</summary>
+      <p class="faq-answer">VST3 and AU are both available on Mac.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Which versions are supported on Windows?</summary>
+      <p class="faq-answer">Only VST3 is available on Windows.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is there an AAX version?</summary>
+      <p class="faq-answer">Not at the moment, it hasn't been implemented yet.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Where can I find the Creative Dist manual?</summary>
+      <p class="faq-answer">It's downloaded automatically into the plugin folder during installation.</p>
+    </details>
   </div>
 </main>
 
@@ -123,6 +176,5 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=17"></script>
-<script src="js/auth.js?v=7"></script>
 </body>
 </html>

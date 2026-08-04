@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Creative Dist — Modular Distortion Engine | Creative Sound</title>
-<meta name="description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band dual EQ. VST3 / AU.">
+<meta name="description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band EQ. VST3 / AU.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
   <section id="chain" class="section">
     <div class="section-head">
       <p class="kicker reveal-up">THE ENGINE</p>
-      <h2 class="reveal-up">Three slots. Any order.<br>Total control.</h2>
+      <h2 class="reveal-up">Three modules. Any order.</h2>
       <p class="section-lede reveal-up">
         Creative Dist gives you three assignable effect slots — Saturation, Noise and Bode
         Shifter — plus an EQ and Output stage that are always present. Drag to reorder.
@@ -180,18 +180,19 @@
     <div class="feature-index reveal-up">01</div>
     <div class="feature-text">
       <h3 class="reveal-up">Saturation</h3>
-      <p class="feature-tagline reveal-up">14 distortion algorithms, one input.</p>
+      <p class="feature-tagline reveal-up">14 saturation modes.</p>
       <p class="reveal-up">
         From glowing tube warmth to brutal bitcrushed digital decay. Drive reacts to your
         signal's loudness with DYN, Asymmetry adds tube-like imbalance between half-cycles,
-        and low end below ~150Hz always stays protected — even at maximum Drive.
+        and BassProtect quietly shields your low end from the heaviest settings — even at
+        maximum Drive.
       </p>
       <ul class="feature-specs reveal-up">
         <li>Tube · Soft Clip · Asym · Diode · Overdrive · Hard Clip</li>
         <li>Linear · Digital · Foldback · Sine · Bitcrush · Downsample</li>
         <li>X-Shaper · Dual Shaper</li>
-        <li>Drive, DYN, Asymmetry, Mix</li>
-        <li>Oversampling Off / 2X / 4X</li>
+        <li>Drive, Mix, DYN, Asymmetry</li>
+        <li>PAR — hear this module isolated from the rest of the chain</li>
       </ul>
     </div>
     <div class="feature-visual reveal-up">
@@ -207,19 +208,18 @@
     <div class="feature-index reveal-up">02</div>
     <div class="feature-text">
       <h3 class="reveal-up">Noise</h3>
-      <p class="feature-tagline reveal-up">Texture that breathes with your signal.</p>
+      <p class="feature-tagline reveal-up">Procedural noise texture.</p>
       <p class="reveal-up">
-        Five procedural noise types layered underneath — or on top of — your sound. Its
-        volume always follows the input envelope, so it's never "always on," only heard
-        when there's actual signal coming through. Switch to 1-Shot and it retriggers on
-        every transient, locked to the rhythm of what you play.
+        Five procedural noise types layered underneath — or on top of — your sound, shaped
+        with its own high-pass/low-pass filtering and pitch up to ±32 semitones. Leave it
+        on Loop for a continuous bed, or switch to 1-Shot and it retriggers on every
+        incoming transient, locked to the rhythm of what you play.
       </p>
       <ul class="feature-specs reveal-up">
         <li>White · Pink · Brown · Vinyl Crackle · Digital</li>
-        <li>Amount, High-Pass, Pitch, Selector</li>
+        <li>Amount, H.P. / L.P., Pitch (±32 st)</li>
         <li>Loop / 1-Shot (transient-triggered)</li>
-        <li>Envelope-follows-input by design</li>
-        <li>PAR — parallel bypass, stays clean and unprocessed</li>
+        <li>PAR — hear this module isolated from the rest of the chain</li>
       </ul>
     </div>
     <div class="feature-visual reveal-up">
@@ -235,7 +235,7 @@
     <div class="feature-index reveal-up">03</div>
     <div class="feature-text">
       <h3 class="reveal-up">Bode Shifter</h3>
-      <p class="feature-tagline reveal-up">Frequency shifting for otherworldly motion.</p>
+      <p class="feature-tagline reveal-up">Spectral frequency shifting.</p>
       <p class="reveal-up">
         Shift the whole signal up or down in frequency — not pitch — for metallic,
         inharmonic, unmistakably synthetic textures. Delay Time syncs to your DAW's tempo,
@@ -247,6 +247,7 @@
         <li>Delay Time — free or tempo-synced</li>
         <li>Feedback</li>
         <li>Mix</li>
+        <li>PAR — hear this module isolated from the rest of the chain</li>
       </ul>
     </div>
     <div class="feature-visual reveal-up">
@@ -262,17 +263,21 @@
     <div class="feature-index reveal-up">04</div>
     <div class="feature-text">
       <h3 class="reveal-up">Equalizer</h3>
-      <p class="feature-tagline reveal-up">5 bands, twice.</p>
+      <p class="feature-tagline reveal-up">A 5-band EQ, pre or post.</p>
       <p class="reveal-up">
-        Two fully independent EQ banks — Pre and Post — sit before and after the
-        creative chain, each with Low Cut, three parametric bells and High Cut. Switch
-        both banks together to Linear Phase for a zero-coloration FIR engine when
-        transparency matters more than a few extra milliseconds of latency.
+        A 5-band EQ — Low Cut, three parametric bells and High Cut, all draggable
+        directly on the curve — that never switches off. One click moves it Pre or Post
+        the creative chain, each position remembering its own settings. Switch to
+        Linear Phase for a zero-coloration FIR engine when transparency matters more
+        than a few extra milliseconds of latency, and push Oversampling to 2X or 4X if
+        the more aggressive Saturation modes start aliasing.
       </p>
       <ul class="feature-specs reveal-up">
-        <li>Pre / Post banks, independent of each other</li>
         <li>Low Cut, 3× parametric Bell, High Cut</li>
+        <li>Pre / Post position — one-click switch</li>
         <li>Linear Phase (IIR ↔ FIR) switch</li>
+        <li>Mix — dry/wet for the whole EQ section</li>
+        <li>Oversampling Off / 2X / 4X</li>
       </ul>
     </div>
     <div class="feature-visual reveal-up">
@@ -288,23 +293,23 @@
     <div class="feature-index reveal-up">05</div>
     <div class="feature-text">
       <h3 class="reveal-up">Output</h3>
-      <p class="feature-tagline reveal-up">Auto Gain that thinks for you.</p>
+      <p class="feature-tagline reveal-up">Automatic gain compensation.</p>
       <p class="reveal-up">
         Auto Gain is always on, silently compensating for the level added by the
-        creative chain — no chasing volume every time you tweak a knob. LINK mirrors
-        Level to Input Gain for honest before/after comparisons at matched loudness,
-        and a built-in soft-clip keeps Level from ever slamming past 0 dBFS.
+        creative chain — no chasing volume every time you tweak a knob. Input Gain sets
+        the level going into the chain, Level sets what comes out, and an asymptotic
+        Soft Clip lights up whenever it steps in to keep you under 0dBFS.
       </p>
       <ul class="feature-specs reveal-up">
-        <li>Input Gain / Level with safety soft-clip</li>
-        <li>LINK — mirrors Level to Input Gain</li>
+        <li>Input Gain — level into the chain</li>
+        <li>Level — the plugin's output volume</li>
         <li>Auto Gain — always on</li>
-        <li>Real-time L/R output metering</li>
+        <li>Soft Clip indicator + real-time L/R metering</li>
       </ul>
     </div>
     <div class="feature-visual reveal-up">
       <div class="glass-panel gui-crop" style="aspect-ratio:251/864;width:170px;max-width:100%;margin:0 auto;">
-        <img src="assets/img/gui-full.png?v=2" alt="Output section in Creative Dist with Input, Output, LINK and L/R meter" loading="lazy"
+        <img src="assets/img/gui-full.png?v=2" alt="Output section in Creative Dist with Input, Output and L/R meter" loading="lazy"
              style="width:717.13%;left:-598.01%;height:138.89%;top:-16.67%;">
       </div>
     </div>
@@ -314,7 +319,7 @@
   <section id="demo" class="section">
     <div class="section-head">
       <p class="kicker reveal-up">LISTEN</p>
-      <h2 class="reveal-up">Hear it in action.</h2>
+      <h2 class="reveal-up">Hear the difference.</h2>
       <p class="section-lede reveal-up">
         Same loop, before and after Creative Dist. Flip between Dry and Wet — no
         level tricks, just the plugin doing its thing.
@@ -403,18 +408,20 @@
   <section class="section section-tight" id="presets">
     <div class="section-head">
       <p class="kicker reveal-up">WORKFLOW</p>
-      <h2 class="reveal-up">Save your chaos. Or roll the dice.</h2>
+      <h2 class="reveal-up">Presets and randomization.</h2>
       <p class="section-lede reveal-up">
         Full preset management with a customizable folder and one-click import of any
-        .xml preset from anywhere on disk. And when you're stuck — every slot has its
-        own dice, randomizing only that module's character while leaving the rest of
-        your chain untouched.
+        .xml preset from anywhere on disk. Step back with Undo if a change doesn't work
+        out, or hit Bypass to compare against your original signal. Each module has its
+        own dice to reroll just that one's character — or hit the dice in the top bar
+        to randomize every active module at once.
       </p>
     </div>
     <div class="dice-row reveal-up">
       <div class="dice-card"><span class="dice-icon">⚄</span><span>Saturation</span></div>
       <div class="dice-card"><span class="dice-icon">⚄</span><span>Noise</span></div>
       <div class="dice-card"><span class="dice-icon">⚄</span><span>Bode Shifter</span></div>
+      <div class="dice-card"><span class="dice-icon">⚄</span><span>All — top bar dice, every module at once</span></div>
     </div>
   </section>
 
@@ -422,7 +429,7 @@
   <section id="compatibility" class="section section-tight">
     <div class="section-head">
       <p class="kicker reveal-up">COMPATIBILITY</p>
-      <h2 class="reveal-up">Runs where you work.</h2>
+      <h2 class="reveal-up">Runs on your system.</h2>
     </div>
     <div class="compat-badges reveal-up">
       <div class="compat-badge">
@@ -440,7 +447,7 @@
   <section id="pricing" class="section">
     <div class="section-head">
       <p class="kicker reveal-up">GET IT</p>
-      <h2 class="reveal-up">One plugin. One price.</h2>
+      <h2 class="reveal-up">Simple, one-time pricing.</h2>
     </div>
 
     <div class="pricing-card glass-panel reveal-up">
@@ -455,7 +462,7 @@
       </div>
       <ul class="pricing-features">
         <li>3 assignable slots — Saturation, Noise, Bode Shifter</li>
-        <li>Dual 5-band EQ with Linear Phase mode</li>
+        <li>5-band EQ, switchable Pre/Post, with Linear Phase mode</li>
         <li>Auto Gain output stage</li>
         <li>Full preset management + randomization</li>
         <li>VST3 / AU · Windows &amp; macOS</li>

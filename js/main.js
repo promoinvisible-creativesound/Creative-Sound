@@ -385,6 +385,16 @@
           headerAccountLink.href = 'profile.html';
           headerAccountLink.setAttribute('aria-label', data.firstName ? `Account — ${data.firstName}` : 'My Account');
           headerAccountLink.title = data.firstName || 'My Account';
+
+          // Prefill the Stripe checkout email for signed-in visitors so the
+          // purchase lands on the same email their license lookup uses.
+          if (data.email) {
+            document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
+              const url = new URL(a.href);
+              url.searchParams.set('prefilled_email', data.email);
+              a.href = url.toString();
+            });
+          }
         }
       })
       .catch(() => {});

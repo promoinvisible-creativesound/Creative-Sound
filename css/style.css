@@ -126,6 +126,7 @@ body.no-boot #boot-overlay{ display:none; }
   display:flex; align-items:center; justify-content:space-between; gap:24px;
 }
 .brand{ display:flex; flex-direction:column; gap:2px; line-height:1; }
+.brand-logo{ display:block; height:22px; width:auto; }
 .brand-product{
   font-family:var(--font-display); font-size:14px; font-weight:700;
   letter-spacing:1.5px; color:var(--text);
@@ -136,7 +137,7 @@ body.no-boot #boot-overlay{ display:none; }
 }
 #site-nav{ display:flex; gap:36px; }
 #site-nav a{
-  font-size:13px; letter-spacing:0.5px; color:var(--text-secondary);
+  font-size:13px; letter-spacing:0.5px; color:var(--text); text-shadow:0 0 10px rgba(245,243,238,0.55);
   transition:color 0.25s var(--ease);
   position:relative;
 }
@@ -145,7 +146,7 @@ body.no-boot #boot-overlay{ display:none; }
   background:var(--accent); transform:scaleX(0); transform-origin:left;
   transition:transform 0.3s var(--ease);
 }
-#site-nav a:hover{ color:var(--text); }
+#site-nav a:hover{ color:var(--amber-text); text-shadow:0 0 10px rgba(255,179,71,0.6); }
 #site-nav a:hover::after{ transform:scaleX(1); }
 
 /* ----------------------------- Plugin dropdown ---------------------------- */
@@ -153,11 +154,11 @@ body.no-boot #boot-overlay{ display:none; }
 .nav-dropdown-trigger{
   display:flex; align-items:center; gap:6px;
   background:none; border:none; padding:0; font-family:inherit;
-  font-size:13px; letter-spacing:0.5px; color:var(--text-secondary);
+  font-size:13px; letter-spacing:0.5px; color:var(--text); text-shadow:0 0 10px rgba(245,243,238,0.55);
   transition:color 0.25s var(--ease);
 }
 .nav-dropdown:hover .nav-dropdown-trigger,
-.nav-dropdown.open .nav-dropdown-trigger{ color:var(--text); }
+.nav-dropdown.open .nav-dropdown-trigger{ color:var(--amber-text); text-shadow:0 0 10px rgba(255,179,71,0.6); }
 .nav-dropdown-caret{
   width:9px; height:6px; fill:none; stroke:currentColor; stroke-width:1.6;
   stroke-linecap:round; stroke-linejoin:round;
@@ -633,17 +634,17 @@ body.no-boot #boot-overlay{ display:none; }
   .demo-row-waveform{ order:1; flex-basis:100%; }
 }
 
-/* --------------------------- Bars ambient background ------------------------ */
-/* Used on sections below the hero (never the hero itself, which has its own
-   .plexus-bg) — add class="bars-bg-host" to any section + a <canvas
-   class="bars-bg"> as its first child to extend this to more sections later. */
-.bars-bg-host{ position:relative; overflow:hidden; }
-.bars-bg{
-  position:absolute; inset:0; z-index:0; pointer-events:none; opacity:0.9;
-  mask-image:linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
-  -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+/* ------------------------ Plexus background, full page ---------------------- */
+/* The home page runs the plexus particle network behind its entire content
+   instead of scoping it to the hero — #top is the positioning context and
+   its direct children sit above the canvas. */
+#top{ position:relative; }
+#top > .plexus-bg-page{ position:absolute; inset:0; z-index:0; }
+#top > *:not(.plexus-bg-page){ position:relative; z-index:1; }
+.plexus-bg-page{
+  mask-image:linear-gradient(180deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
 }
-.bars-bg-host > *:not(.bars-bg){ position:relative; z-index:1; }
 
 /* -------------------------------- Plugin card ------------------------------ */
 .plugins-grid{

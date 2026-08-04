@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css?v=36">
+<link rel="stylesheet" href="css/style.css?v=39">
 </head>
 <body class="no-boot">
 
@@ -19,8 +19,7 @@
 <header id="site-header">
   <div class="header-inner">
     <a href="index.html" class="brand">
-      <span class="brand-product">CREATIVE SOUND</span>
-      <span class="brand-maker">Sound tools by Invisible</span>
+      <img class="brand-logo" src="assets/img/logo.png?v=1" alt="Creative Sound">
     </a>
 
     <nav id="site-nav" aria-label="Primary">
@@ -79,9 +78,9 @@
 </header>
 
 <main id="top">
+  <canvas class="plexus-bg plexus-bg-page" aria-hidden="true"></canvas>
   <section id="hero" class="hero-home">
     <div class="hero-glow" aria-hidden="true"></div>
-    <canvas class="plexus-bg" aria-hidden="true"></canvas>
     <div class="hero-inner">
       <h1 class="hero-title reveal-up">
         <span class="hero-title-line">CREATIVE</span>
@@ -98,8 +97,7 @@
     </div>
   </section>
 
-  <section id="plugins" class="bars-bg-host">
-    <canvas class="bars-bg" aria-hidden="true"></canvas>
+  <section id="plugins">
     <div class="section">
       <div class="section-head">
         <p class="kicker kicker-hero reveal-up">OUR PLUGINS</p>
@@ -171,7 +169,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/plexus.js?v=1"></script>
-<script src="js/bars.js?v=4"></script>
 <script src="js/main.js?v=17"></script>
 </body>
 </html>

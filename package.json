@@ -5,6 +5,7 @@
   "description": "Creative Sound — Creative Dist product site",
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",

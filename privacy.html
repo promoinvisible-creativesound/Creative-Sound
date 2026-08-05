@@ -118,10 +118,14 @@
 
     <h2>Cookies &amp; tracking</h2>
     <p>
-      We don't run analytics, advertising pixels, or tracking cookies on this site.
-      The only client-side storage used is <code>localStorage</code>/<code>sessionStorage</code>
-      for small interface preferences (like not repeating an intro animation on every visit) —
-      nothing that identifies you.
+      We use Vercel Web Analytics to see how many people visit and which pages are
+      popular. It doesn't use cookies and doesn't track you individually — it only
+      reports anonymous, aggregated numbers (like page views and general location by
+      country), and it can't identify who you are. We don't run advertising pixels or
+      any other tracking. The only client-side storage used is
+      <code>localStorage</code>/<code>sessionStorage</code> for small interface
+      preferences (like not repeating an intro animation on every visit) — nothing
+      that identifies you.
     </p>
 
     <h2>How long we keep it</h2>
@@ -168,5 +172,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=19"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -89,12 +89,18 @@ module.exports = async (req, res) => {
       }
 
       try {
-        await resend.emails.send({
+        // The Resend SDK returns { data, error } instead of throwing on
+        // API-level failures (bad key, unverified domain, ...) — without
+        // this check a failed send looked identical to a successful one.
+        const { error } = await resend.emails.send({
           from: process.env.FROM_EMAIL,
           to: email,
           subject: 'Your Creative Dist license',
           html: buildEmailHtml(licenseKey),
         });
+        if (error) {
+          console.error('Resend rejected the license email:', error);
+        }
       } catch (err) {
         // Payment already succeeded — log for manual follow-up rather than
         // failing the webhook (Stripe would otherwise retry the charge event).

@@ -84,8 +84,13 @@ module.exports = async (req, res) => {
           `;
         }
       } catch (err) {
-        console.error('Failed to persist license:', err);
-        licenseKey = generateLicenseKey(); // still email something rather than nothing
+        // Don't email a license key that was never actually saved — that
+        // leaves the customer holding a key their account can't find. Fail
+        // the webhook instead so Stripe retries it (its own idempotent
+        // "existing" lookup above means a retry is safe and self-healing).
+        console.error('Failed to persist license, asking Stripe to retry:', err);
+        res.status(500).json({ error: 'Temporary error, please retry.' });
+        return;
       }
 
       try {

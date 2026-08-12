@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
+const { generateLicenseKey } = require('./_lib/license');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -16,11 +17,6 @@ function readRawBody(req) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
-}
-
-function generateLicenseKey() {
-  const segment = () => Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `CD-${segment()}-${segment()}-${segment()}`;
 }
 
 function buildEmailHtml(licenseKey) {
@@ -85,7 +81,17 @@ module.exports = async (req, res) => {
         }
       } catch (err) {
         console.error('Failed to persist license:', err);
-        licenseKey = generateLicenseKey(); // still email something rather than nothing
+        try {
+          licenseKey = generateLicenseKey(); // still email something rather than nothing
+        } catch (signErr) {
+          console.error('Failed to sign fallback license:', signErr);
+        }
+      }
+
+      if (!licenseKey) {
+        console.error('No license key to send for session:', session.id);
+        res.status(200).json({ received: true });
+        return;
       }
 
       try {

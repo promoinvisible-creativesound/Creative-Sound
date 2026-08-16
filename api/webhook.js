@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
+const { generateLicenseKey } = require('./_lib/license');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -16,11 +17,6 @@ function readRawBody(req) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
-}
-
-function generateLicenseKey() {
-  const segment = () => Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `CD-${segment()}-${segment()}-${segment()}`;
 }
 
 function buildEmailHtml(licenseKey) {

@@ -402,20 +402,41 @@
           headerAccountLink.href = 'profile.html';
           headerAccountLink.setAttribute('aria-label', data.firstName ? `Account — ${data.firstName}` : 'My Account');
           headerAccountLink.title = data.firstName || 'My Account';
-
-          // Prefill the Stripe checkout email for signed-in visitors so the
-          // purchase lands on the same email their license lookup uses.
-          if (data.email) {
-            document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
-              const url = new URL(a.href);
-              url.searchParams.set('prefilled_email', data.email);
-              a.href = url.toString();
-            });
-          }
         }
       })
       .catch(() => {});
   }
+
+  /* ------------------------- Require an account before buying ---------------- */
+  // Guest checkout would leave a purchase with no site account attached, so
+  // every Buy/Cart link is gated on being signed in first — that's the only
+  // way a license reliably ends up tied to a profile instead of hoping the
+  // buyer signs up afterwards with the exact same email. A fresh check runs
+  // at click time (not cached from page load) so this can't go stale.
+  document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = a.href;
+      fetch('/api/auth/me')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.email) {
+            const url = new URL(target);
+            url.searchParams.set('prefilled_email', data.email);
+            window.location.href = url.toString();
+          } else if (data) {
+            window.location.href = target;
+          } else {
+            window.location.href = 'signup.html?next=' + encodeURIComponent(target);
+          }
+        })
+        .catch(() => {
+          // Can't confirm they're signed in — require an account rather
+          // than silently letting a guest through to checkout.
+          window.location.href = 'signup.html?next=' + encodeURIComponent(target);
+        });
+    });
+  });
 
   /* ------------------------------- Site search -------------------------------- */
   // Lightweight client-side search over the site's own pages/sections — no

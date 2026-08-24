@@ -14,6 +14,29 @@
     }[c]));
   }
 
+  // Where to send someone once they're signed in. Only ever a Stripe
+  // checkout URL (set by the Buy-link gate in main.js when it sends someone
+  // here to create an account first) or the default profile page — never an
+  // arbitrary redirect target, so a crafted ?next= can't be used to phish.
+  function getNextUrl() {
+    const next = new URLSearchParams(location.search).get('next');
+    if (next && /^https:\/\/buy\.stripe\.com\//.test(next)) return next;
+    return 'profile.html';
+  }
+
+  // Carry a pending checkout across to the other form if someone lands on
+  // signup but already has an account (or vice versa), so switching between
+  // "Sign in" / "Create one" doesn't drop them back into guest checkout.
+  const rawNext = new URLSearchParams(location.search).get('next');
+  if (rawNext) {
+    const switchLink = document.querySelector('.auth-switch a');
+    if (switchLink) {
+      const url = new URL(switchLink.href, location.href);
+      url.searchParams.set('next', rawNext);
+      switchLink.href = url.toString();
+    }
+  }
+
   /* --------------------------------- Signup form --------------------------- */
   const signupForm = document.getElementById('signup-form');
   if (signupForm) {
@@ -53,7 +76,7 @@
           verifyStep.style.display = 'block';
           document.getElementById('verify-code').focus();
         } else {
-          window.location.href = 'profile.html';
+          window.location.href = getNextUrl();
         }
       } catch (err) {
         showError(errorEl, err.message);
@@ -89,7 +112,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = 'profile.html';
+        window.location.href = getNextUrl();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -149,7 +172,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = 'profile.html';
+        window.location.href = getNextUrl();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;

@@ -63,12 +63,17 @@
       <h1 class="hero-title" style="font-size:clamp(36px,6vw,64px);">
         <span class="hero-title-line hero-title-accent">You're in.</span>
       </h1>
-      <p class="hero-sub">
+      <p class="hero-sub" id="success-message">
         Check your inbox — we've sent your license key to the email you used at
         checkout. It can take a couple of minutes to land, and it's worth a peek
-        in spam just in case. You can also grab the installer right here.
+        in spam just in case. Create your account with that same email to pull
+        up your license and download any time from your profile.
       </p>
-      <div class="hero-cta">
+      <div class="hero-cta" id="account-gate">
+        <a href="signup.html" class="btn btn-primary">Create your account</a>
+        <a href="login.html" class="btn btn-ghost">I already have one</a>
+      </div>
+      <div class="hero-cta" id="download-buttons" style="display:none;">
         <a href="assets/downloads/Creative-Dist-Mac.zip" download class="btn btn-primary">Download for macOS</a>
         <a href="assets/downloads/Creative-Dist-Windows.zip" download class="btn btn-primary">Download for Windows</a>
       </div>
@@ -78,6 +83,23 @@
     </div>
   </section>
 </main>
+
+<script>
+  // Purchasing is guest checkout (Stripe Payment Link), so this page can't
+  // know who just paid — but if they're already signed in (same session as
+  // an account matching their checkout email), skip the signup prompt and
+  // hand them the installer directly instead of asking them to sign up twice.
+  fetch('/api/auth/me')
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (!data) return;
+      document.getElementById('account-gate').style.display = 'none';
+      document.getElementById('download-buttons').style.display = '';
+      document.getElementById('success-message').textContent =
+        "Check your inbox — we've sent your license key to the email you used at checkout. You're signed in, so you can also grab the installer right here, or find it any time from your profile.";
+    })
+    .catch(() => {});
+</script>
 
 <footer id="site-footer">
   <div class="footer-inner">

@@ -1036,11 +1036,23 @@ body.no-boot #boot-overlay{ display:none; }
 .reveal-up{ opacity:0; transform:translateY(28px); }
 
 /* --------------------------------- Responsive ------------------------------ */
+/* Module shot sizing — desktop only. Below 900px the <img> has no max-width
+   in its inline style, so it just fills the single-column layout at 100%;
+   changing these numbers never affects the mobile stack. */
+@media (min-width:901px){
+  #saturation .feature-visual img{ max-width:595px; }
+  #noise .feature-visual img{ max-width:575px; }
+  #bode .feature-visual img{ max-width:575px; }
+  #eq .feature-visual img{ max-width:575px; }
+  #output .feature-visual img{ max-width:500px; }
+}
 @media (max-width:900px){
   .feature{ grid-template-columns:1fr; gap:24px; }
   .feature-index{ writing-mode:horizontal-tb; }
-  .feature-reverse .feature-visual{ order:0; }
-  .feature-reverse .feature-text{ order:1; }
+  /* Module screenshot always before the description on mobile, regardless
+     of .feature-reverse (which only swaps the side-by-side order on desktop). */
+  .feature-visual{ order:0; }
+  .feature-text{ order:1; }
   .section{ padding:110px 24px; }
 }
 @media (max-width:600px){

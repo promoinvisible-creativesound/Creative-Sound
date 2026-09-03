@@ -89,31 +89,33 @@ a:active, button:active{
 /* A tiny inline script (right before this markup, in every page's <body>)
    sets body.no-boot on every page load after the first one in a browser
    session, so this only ever plays once per visit — not on every internal
-   link click. Total runtime 1.8s, well under the 3s ceiling. Three
-   staggered rings expand outward like a sound pulse (on brand for an
-   audio company) while the mark itself scales in with a slight
-   overshoot/settle instead of a flat fade, before the whole thing clears. */
+   link click. Total runtime 5.8s (extended from an earlier 1.8s at the
+   site owner's request — the 3D version needs the extra time to actually
+   read as spinning, not a blink). Three staggered rings expand outward
+   like a sound pulse (on brand for an audio company) while the mark
+   itself scales in with a slight overshoot/settle instead of a flat
+   fade, before the whole thing clears. */
 #boot-overlay{
   position:fixed; inset:0; z-index:9999; background:#030201;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; pointer-events:none;
-  animation: bootOverlayFade 1.8s ease-out forwards;
+  animation: bootOverlayFade 5.8s ease-out forwards;
 }
 .boot-ring{
   position:absolute; top:50%; left:50%; border-radius:50%;
   width:60px; height:60px; margin:-30px 0 0 -30px;
   border:1.5px solid var(--amber-bright);
   opacity:0;
-  animation: bootRing 1.8s var(--ease) forwards;
+  animation: bootRing 5.8s var(--ease) forwards;
 }
-.boot-ring:nth-child(2){ animation-delay:0.16s; }
-.boot-ring:nth-child(3){ animation-delay:0.32s; }
+.boot-ring:nth-child(2){ animation-delay:0.5s; }
+.boot-ring:nth-child(3){ animation-delay:1s; }
 #boot-mark{
   position:relative; z-index:1;
   width:26vw; min-width:120px; max-width:220px; height:auto;
   opacity:0; transform:scale(0.55) rotate(-6deg);
   filter:drop-shadow(0 0 0 rgba(232,134,44,0));
-  animation: bootMarkIn 1.8s var(--ease) forwards;
+  animation: bootMarkIn 5.8s var(--ease) forwards;
 }
 @keyframes bootMarkIn{
   0%{ opacity:0; transform:scale(0.55) rotate(-6deg); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }

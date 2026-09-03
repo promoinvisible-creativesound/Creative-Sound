@@ -27,72 +27,51 @@
   const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
 
   try {
-    const THREE = await Promise.race([
-      import('https://unpkg.com/three@0.184.0/build/three.module.js'),
-      timeout(TIMEOUT_MS),
+    const [THREE, { SVGLoader }] = await Promise.all([
+      Promise.race([
+        import('https://unpkg.com/three@0.184.0/build/three.module.js'),
+        timeout(TIMEOUT_MS),
+      ]),
+      Promise.race([
+        import('https://unpkg.com/three@0.184.0/examples/jsm/loaders/SVGLoader.js'),
+        timeout(TIMEOUT_MS),
+      ]),
     ]);
 
-    // Same path data as assets/img/logo-mark.svg.
+    // Same path data as assets/img/logo-mark.svg. It's a single compound
+    // path (3 subpaths) that only reads as the actual mark — a badge with
+    // two cut-out notches — when those subpaths combine via the SVG
+    // nonzero fill rule. Extruding each subpath as its own solid (an
+    // earlier version of this file did that with a hand-rolled parser)
+    // throws the holes away and renders as disconnected chunks. SVGLoader's
+    // createShapes() resolves the real solid/hole relationships, same as
+    // the browser does when it paints the flat logo.
     const D = 'M1017.09,1395.56c19.9,20.43,47.22,31.96,75.75,31.96h-299.82c-43.2,0-78.23-35.02-78.23-78.23v-263.94l302.29,310.21ZM1366.97,697.12h-118.66c23.68,0,46.45,9.09,63.63,25.4l90.41,85.78h-98.71c-30.27-.01-59.27-12.14-80.55-33.67-9.17-9.27-21.68-14.51-34.72-14.51h-.16l-15.67.04c-12.71.03-19.02,15.44-9.96,24.38l282.62,278.4v-287.59c0-43.2-35.02-78.23-78.23-78.23ZM1445.2,1349.3v-189.11h-128.76c-44.52,0-80.62,36.1-80.62,80.64l.06,153.32-298.17-299.12,223.85,1.12c63.66.26,95.74-76.67,50.77-121.72l-276.79-277.29h-142.51c-43.2,0-78.23,35.02-78.23,78.23v189.11h104.14c46.17,0,83.58-37.45,83.55-83.62l-.13-150.45,273.47,272.74c17.27,17.22,5.11,46.75-19.28,46.82l-327.59,1.02c-.5,0-.76.62-.4.96l375.72,375.6h162.69c43.2,0,78.23-35.02,78.23-78.23Z';
 
-    // Minimal SVG path -> THREE.Shape list (subset of commands the mark
-    // actually uses: M/L/C/Z). y is negated (SVG is y-down, three is y-up).
-    function parsePath(d) {
-      const tokens = d.match(/[MmLlHhVvCcSsQqTtZz]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) || [];
-      const shapes = [];
-      let path = null, cmd = null, x = 0, y = 0, sx = 0, sy = 0;
-      let i = 0;
-      const num = () => parseFloat(tokens[i++]);
-      const start = () => { path = new THREE.Shape(); path.curveSegments = 20; shapes.push(path); };
-      while (i < tokens.length) {
-        if (/[a-z]/i.test(tokens[i])) { cmd = tokens[i++]; }
-        switch (cmd) {
-          case 'M': case 'm': {
-            let nx = num(), ny = num();
-            if (cmd === 'm') { nx += x; ny += y; }
-            x = sx = nx; y = sy = ny;
-            start(); path.moveTo(x, -y);
-            cmd = (cmd === 'M') ? 'L' : 'l';
-            break;
-          }
-          case 'L': case 'l': {
-            let nx = num(), ny = num();
-            if (cmd === 'l') { nx += x; ny += y; }
-            x = nx; y = ny; path.lineTo(x, -y); break;
-          }
-          case 'C': case 'c': {
-            let a = num(), b = num(), cc = num(), dd = num(), e = num(), f = num();
-            if (cmd === 'c') { a += x; b += y; cc += x; dd += y; e += x; f += y; }
-            path.bezierCurveTo(a, -b, cc, -dd, e, -f);
-            x = e; y = f; break;
-          }
-          case 'Z': case 'z': { path.closePath(); x = sx; y = sy; cmd = null; break; }
-          default: i++;
-        }
-      }
-      return shapes;
-    }
+    const svgData = new SVGLoader().parse('<svg xmlns="http://www.w3.org/2000/svg"><path d="' + D + '"/></svg>');
+    const shapes = [];
+    svgData.paths.forEach((p) => shapes.push(...SVGLoader.createShapes(p)));
 
-    const shapes = parsePath(D);
-    const amber = new THREE.MeshStandardMaterial({ color: 0xe8862c, roughness: 0.32, metalness: 0.4 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x141312, roughness: 0.6, metalness: 0.12 });
+    const amber = new THREE.MeshStandardMaterial({ color: 0xe8862c, roughness: 0.32, metalness: 0.4, side: THREE.DoubleSide });
 
+    // Just the extruded mark — no backing plate behind it (the site owner
+    // asked for the dark rectangle to go).
     const model = new THREE.Group();
     const extrudeOpts = { depth: 130, bevelEnabled: true, bevelThickness: 3, bevelSize: 2.5, bevelSegments: 3, curveSegments: 20 };
     shapes.forEach((s) => model.add(new THREE.Mesh(new THREE.ExtrudeGeometry(s, extrudeOpts), amber)));
 
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
-    const pad = 90;
-    const plate = new THREE.Mesh(new THREE.BoxGeometry(size.x + pad * 2, size.y + pad * 2, 46), dark);
-    plate.position.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, -23 - 1);
-    model.add(plate);
-
+    // Center in the shape's native (unflipped) space — flipping the sign
+    // of scale.y afterwards keeps it centered either way.
     const full = new THREE.Box3().setFromObject(model);
     const center = full.getCenter(new THREE.Vector3());
     model.children.forEach((m) => m.position.sub(center));
     const modelScale = 1.7 / full.getSize(new THREE.Vector3()).y;
-    model.scale.setScalar(modelScale);
+
+    // SVGLoader keeps SVG's y-down coordinates; flip to three's y-up via a
+    // negative y scale. (Mirroring inverts triangle winding, which is why
+    // the material above is double-sided — otherwise the now-inward-facing
+    // normals go dark.)
+    model.scale.set(modelScale, -modelScale, modelScale);
 
     const scene = new THREE.Scene();
     scene.add(model);
@@ -124,19 +103,32 @@
     // overlay with neither version visible.
     mark2d.style.display = 'none';
 
-    const DURATION = 1500;
+    // Entrance settle, then a real continuous turntable spin (not an
+    // ease that stalls out), then fade — long enough to actually look at
+    // the lit surface turning, not just a blink.
+    const DURATION = 5500;
+    const ENTRANCE_END = 0.10;
+    const HOLD_END = 0.88;
+    const HOLD_ROTATIONS = 2.5;
     const startTime = performance.now();
-    function ease(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
     function frame(now) {
       const t = Math.min((now - startTime) / DURATION, 1);
-      const eased = ease(t);
-      const fadeIn = Math.min(t / 0.18, 1);
-      const fadeOut = t > 0.82 ? Math.max(1 - (t - 0.82) / 0.18, 0) : 1;
+      let rotY;
+      if (t < ENTRANCE_END) {
+        rotY = -1.3 * (1 - easeOut(t / ENTRANCE_END));
+      } else if (t < HOLD_END) {
+        rotY = ((t - ENTRANCE_END) / (HOLD_END - ENTRANCE_END)) * HOLD_ROTATIONS * Math.PI * 2;
+      } else {
+        rotY = HOLD_ROTATIONS * Math.PI * 2 + ((t - HOLD_END) / (1 - HOLD_END)) * (Math.PI * 0.6);
+      }
+      const fadeIn = Math.min(t / 0.08, 1);
+      const fadeOut = t > HOLD_END ? Math.max(1 - (t - HOLD_END) / (1 - HOLD_END), 0) : 1;
       canvas.style.opacity = String(fadeIn * fadeOut);
-      model.rotation.y = -1.1 + eased * (Math.PI * 2 + 1.1);
-      model.rotation.x = 0.15 - eased * 0.15;
-      const s = modelScale * (0.55 + eased * 0.45);
-      model.scale.setScalar(s);
+      model.rotation.y = rotY;
+      const scaleT = t < ENTRANCE_END ? easeOut(t / ENTRANCE_END) : 1;
+      const s = modelScale * (0.55 + scaleT * 0.45);
+      model.scale.set(s, -s, s); // keep the y-flip (SVG y-down -> three y-up)
       renderer.render(scene, camera);
       if (t < 1) requestAnimationFrame(frame);
     }

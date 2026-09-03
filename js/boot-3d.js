@@ -27,25 +27,21 @@
   const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
 
   try {
+    // SVGLoader's own source imports THREE via the bare specifier "three",
+    // which only resolves because index.html declares an import map right
+    // before this script tag. No import map (very old browser) means this
+    // import rejects, which is caught below same as any other failure.
     const [THREE, { SVGLoader }] = await Promise.all([
-      Promise.race([
-        import('https://unpkg.com/three@0.184.0/build/three.module.js'),
-        timeout(TIMEOUT_MS),
-      ]),
-      Promise.race([
-        import('https://unpkg.com/three@0.184.0/examples/jsm/loaders/SVGLoader.js'),
-        timeout(TIMEOUT_MS),
-      ]),
+      Promise.race([import('three'), timeout(TIMEOUT_MS)]),
+      Promise.race([import('three/addons/loaders/SVGLoader.js'), timeout(TIMEOUT_MS)]),
     ]);
 
     // Same path data as assets/img/logo-mark.svg. It's a single compound
     // path (3 subpaths) that only reads as the actual mark — a badge with
     // two cut-out notches — when those subpaths combine via the SVG
-    // nonzero fill rule. Extruding each subpath as its own solid (an
-    // earlier version of this file did that with a hand-rolled parser)
-    // throws the holes away and renders as disconnected chunks. SVGLoader's
-    // createShapes() resolves the real solid/hole relationships, same as
-    // the browser does when it paints the flat logo.
+    // nonzero fill rule. SVGLoader's createShapes() resolves that solid/hole
+    // relationship the same way the browser does when it paints the flat
+    // logo, so extruding its output can't lose or misplace any part of it.
     const D = 'M1017.09,1395.56c19.9,20.43,47.22,31.96,75.75,31.96h-299.82c-43.2,0-78.23-35.02-78.23-78.23v-263.94l302.29,310.21ZM1366.97,697.12h-118.66c23.68,0,46.45,9.09,63.63,25.4l90.41,85.78h-98.71c-30.27-.01-59.27-12.14-80.55-33.67-9.17-9.27-21.68-14.51-34.72-14.51h-.16l-15.67.04c-12.71.03-19.02,15.44-9.96,24.38l282.62,278.4v-287.59c0-43.2-35.02-78.23-78.23-78.23ZM1445.2,1349.3v-189.11h-128.76c-44.52,0-80.62,36.1-80.62,80.64l.06,153.32-298.17-299.12,223.85,1.12c63.66.26,95.74-76.67,50.77-121.72l-276.79-277.29h-142.51c-43.2,0-78.23,35.02-78.23,78.23v189.11h104.14c46.17,0,83.58-37.45,83.55-83.62l-.13-150.45,273.47,272.74c17.27,17.22,5.11,46.75-19.28,46.82l-327.59,1.02c-.5,0-.76.62-.4.96l375.72,375.6h162.69c43.2,0,78.23-35.02,78.23-78.23Z';
 
     const svgData = new SVGLoader().parse('<svg xmlns="http://www.w3.org/2000/svg"><path d="' + D + '"/></svg>');
@@ -53,19 +49,74 @@
     svgData.paths.forEach((p) => shapes.push(...SVGLoader.createShapes(p)));
 
     const amber = new THREE.MeshStandardMaterial({ color: 0xe8862c, roughness: 0.32, metalness: 0.4, side: THREE.DoubleSide });
-
-    // Just the extruded mark — no backing plate behind it (the site owner
-    // asked for the dark rectangle to go).
-    const model = new THREE.Group();
     const extrudeOpts = { depth: 130, bevelEnabled: true, bevelThickness: 3, bevelSize: 2.5, bevelSegments: 3, curveSegments: 20 };
-    shapes.forEach((s) => model.add(new THREE.Mesh(new THREE.ExtrudeGeometry(s, extrudeOpts), amber)));
+    const partGeoms = shapes.map((s) => new THREE.ExtrudeGeometry(s, extrudeOpts));
 
-    // Center in the shape's native (unflipped) space — flipping the sign
-    // of scale.y afterwards keeps it centered either way.
-    const full = new THREE.Box3().setFromObject(model);
-    const center = full.getCenter(new THREE.Vector3());
-    model.children.forEach((m) => m.position.sub(center));
-    const modelScale = 1.7 / full.getSize(new THREE.Vector3()).y;
+    // The "assembled" transform every fragment below converges to — worked
+    // out from the whole, correct mark before it gets cut into pieces, so
+    // the rest pose can never end up wrong no matter how it's fragmented.
+    const wholeBox = new THREE.Box3();
+    partGeoms.forEach((g) => { g.computeBoundingBox(); wholeBox.union(g.boundingBox); });
+    const center = wholeBox.getCenter(new THREE.Vector3());
+    const modelScale = 1.7 / wholeBox.getSize(new THREE.Vector3()).y;
+
+    // Cut each part's geometry into a handful of pieces by where its faces
+    // sit in the plane — a spatial split of the SAME verified-correct
+    // triangles, never a re-derived outline. So once every fragment reaches
+    // offset zero, the result is pixel-identical to the merged shape;
+    // fragmentation can only change how it arrives, not what it looks like
+    // at rest.
+    function splitIntoFragments(geometry, grid) {
+      const box = geometry.boundingBox;
+      const sizeX = (box.max.x - box.min.x) || 1;
+      const sizeY = (box.max.y - box.min.y) || 1;
+      const pos = geometry.attributes.position;
+      const norm = geometry.attributes.normal;
+      const index = geometry.index;
+      const triCount = index ? index.count / 3 : pos.count / 3;
+      const buckets = new Map();
+      const vi = (t, k) => (index ? index.getX(t * 3 + k) : t * 3 + k);
+      for (let t = 0; t < triCount; t++) {
+        const a = vi(t, 0), b = vi(t, 1), c = vi(t, 2);
+        const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3;
+        const cy = (pos.getY(a) + pos.getY(b) + pos.getY(c)) / 3;
+        const gx = Math.min(grid - 1, Math.floor(((cx - box.min.x) / sizeX) * grid));
+        const gy = Math.min(grid - 1, Math.floor(((cy - box.min.y) / sizeY) * grid));
+        const key = gx + '_' + gy;
+        if (!buckets.has(key)) buckets.set(key, { positions: [], normals: [] });
+        const bucket = buckets.get(key);
+        [a, b, c].forEach((i) => {
+          bucket.positions.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+          bucket.normals.push(norm.getX(i), norm.getY(i), norm.getZ(i));
+        });
+      }
+      return [...buckets.values()].map((bucket) => {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(bucket.positions, 3));
+        geo.setAttribute('normal', new THREE.Float32BufferAttribute(bucket.normals, 3));
+        return geo;
+      });
+    }
+
+    const model = new THREE.Group();
+    const fragments = [];
+    partGeoms.forEach((geo) => {
+      splitIntoFragments(geo, 3).forEach((fragGeo) => {
+        const mesh = new THREE.Mesh(fragGeo, amber);
+        mesh.position.sub(center);
+        model.add(mesh);
+        const dir = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+        if (dir.lengthSq() < 1e-6) dir.set(1, 0, 0);
+        dir.normalize().multiplyScalar(1.3 + Math.random() * 1.7);
+        fragments.push({
+          mesh,
+          assembledPos: mesh.position.clone(),
+          startOffset: dir,
+          startRot: new THREE.Euler((Math.random() * 2 - 1) * 1.4, (Math.random() * 2 - 1) * 1.4, (Math.random() * 2 - 1) * 1.4),
+          delay: Math.random() * 0.55,
+        });
+      });
+    });
 
     // SVGLoader keeps SVG's y-down coordinates; flip to three's y-up via a
     // negative y scale. (Mirroring inverts triangle winding, which is why
@@ -103,32 +154,43 @@
     // overlay with neither version visible.
     mark2d.style.display = 'none';
 
-    // Entrance settle, then a real continuous turntable spin (not an
-    // ease that stalls out), then fade — long enough to actually look at
-    // the lit surface turning, not just a blink.
+    // Pieces fly in and lock together (ENTRANCE), then a real continuous
+    // turntable spin once fully assembled (HOLD), then fade — long enough
+    // to actually look at the lit surface turning, not just a blink.
     const DURATION = 5500;
-    const ENTRANCE_END = 0.10;
+    const ENTRANCE_END = 0.24;
     const HOLD_END = 0.88;
-    const HOLD_ROTATIONS = 2.5;
+    const HOLD_ROTATIONS = 2.2;
     const startTime = performance.now();
     function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
     function frame(now) {
       const t = Math.min((now - startTime) / DURATION, 1);
-      let rotY;
+
       if (t < ENTRANCE_END) {
-        rotY = -1.3 * (1 - easeOut(t / ENTRANCE_END));
-      } else if (t < HOLD_END) {
-        rotY = ((t - ENTRANCE_END) / (HOLD_END - ENTRANCE_END)) * HOLD_ROTATIONS * Math.PI * 2;
+        const globalT = t / ENTRANCE_END;
+        fragments.forEach((f) => {
+          const localT = Math.min(Math.max((globalT - f.delay) / (1 - f.delay), 0), 1);
+          const eased = easeOut(localT);
+          const k = 1 - eased;
+          f.mesh.position.set(
+            f.assembledPos.x + f.startOffset.x * k,
+            f.assembledPos.y + f.startOffset.y * k,
+            f.assembledPos.z + f.startOffset.z * k
+          );
+          f.mesh.rotation.set(f.startRot.x * k, f.startRot.y * k, f.startRot.z * k);
+        });
+        model.rotation.y = -0.35 * (1 - easeOut(globalT));
       } else {
-        rotY = HOLD_ROTATIONS * Math.PI * 2 + ((t - HOLD_END) / (1 - HOLD_END)) * (Math.PI * 0.6);
+        model.rotation.y = ((t - ENTRANCE_END) / (HOLD_END - ENTRANCE_END)) * HOLD_ROTATIONS * Math.PI * 2;
+        if (t >= HOLD_END) {
+          model.rotation.y += ((t - HOLD_END) / (1 - HOLD_END)) * (Math.PI * 0.6);
+        }
       }
-      const fadeIn = Math.min(t / 0.08, 1);
+
+      const fadeIn = Math.min(t / 0.1, 1);
       const fadeOut = t > HOLD_END ? Math.max(1 - (t - HOLD_END) / (1 - HOLD_END), 0) : 1;
       canvas.style.opacity = String(fadeIn * fadeOut);
-      model.rotation.y = rotY;
-      const scaleT = t < ENTRANCE_END ? easeOut(t / ENTRANCE_END) : 1;
-      const s = modelScale * (0.55 + scaleT * 0.45);
-      model.scale.set(s, -s, s); // keep the y-flip (SVG y-down -> three y-up)
+
       renderer.render(scene, camera);
       if (t < 1) requestAnimationFrame(frame);
     }

@@ -16,10 +16,15 @@
 <link rel="stylesheet" href="css/style.css?v=44">
 </head>
 <body>
+<script>
+  try {
+    if (sessionStorage.getItem('cs-booted')) { document.body.classList.add('no-boot'); }
+    else { sessionStorage.setItem('cs-booted', '1'); }
+  } catch (e) {}
+</script>
 
-<!-- Power-on intro, echoes the plugin's own CRT boot animation -->
 <div id="boot-overlay" aria-hidden="true">
-  <div id="boot-bar"></div>
+  <img id="boot-mark" src="assets/img/logo-mark.svg" alt="">
 </div>
 
 <div id="grain"></div>

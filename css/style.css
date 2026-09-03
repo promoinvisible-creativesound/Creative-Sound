@@ -85,29 +85,37 @@ a:active, button:active{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ---------- Boot overlay (nod to the plugin's own CRT power-on) --------- */
+/* ---------- Boot overlay: logo-mark power-on, plays once per session ---- */
+/* A tiny inline script (right before this markup, in every page's <body>)
+   sets body.no-boot on every page load after the first one in a browser
+   session, so this only ever plays once per visit — not on every internal
+   link click. Total runtime 1.6s, well under the 3s ceiling. */
 #boot-overlay{
   position:fixed; inset:0; z-index:9999; background:#030201;
+  display:flex; align-items:center; justify-content:center;
   pointer-events:none;
-  animation: bootOverlay 0.9s ease-out forwards;
+  animation: bootOverlayFade 1.6s ease-out forwards;
 }
-#boot-bar{
-  position:absolute; left:0; right:0; top:50%; height:3px; margin-top:-1.5px;
-  background:linear-gradient(90deg, transparent 0%, #fff5e0 15%, var(--amber-bright) 50%, #fff5e0 85%, transparent 100%);
-  box-shadow:0 0 24px 6px rgba(255,220,160,0.85), 0 0 90px 20px rgba(232,134,44,0.5);
-  transform-origin:center;
-  animation: bootBar 0.9s var(--ease) forwards;
+#boot-mark{
+  width:15vw; min-width:64px; max-width:120px; height:auto;
+  opacity:0; transform:scale(0.7);
+  filter:drop-shadow(0 0 0 rgba(232,134,44,0));
+  animation: bootMarkIn 1.6s var(--ease) forwards;
 }
-@keyframes bootOverlay{
-  0%{opacity:1;} 55%{opacity:1;} 100%{opacity:0;}
+@keyframes bootMarkIn{
+  0%{ opacity:0; transform:scale(0.7); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
+  30%{ opacity:1; transform:scale(1); filter:drop-shadow(0 0 24px rgba(232,134,44,0.9)); }
+  65%{ opacity:1; transform:scale(1); filter:drop-shadow(0 0 32px rgba(232,134,44,1)); }
+  88%{ opacity:1; transform:scale(1.05); filter:drop-shadow(0 0 12px rgba(232,134,44,0.5)); }
+  100%{ opacity:0; transform:scale(1.15); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
 }
-@keyframes bootBar{
-  0%{ transform:scaleX(0) scaleY(1); opacity:1; }
-  45%{ transform:scaleX(1) scaleY(1); opacity:1; }
-  85%{ transform:scaleX(1) scaleY(260); opacity:1; }
-  100%{ transform:scaleX(1) scaleY(260); opacity:0; }
+@keyframes bootOverlayFade{
+  0%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;}
 }
 body.no-boot #boot-overlay{ display:none; }
+@media (prefers-reduced-motion: reduce){
+  #boot-overlay{ display:none; }
+}
 
 /* ------------------------------- Header ------------------------------- */
 #site-header{
@@ -363,9 +371,27 @@ body.no-boot #boot-overlay{ display:none; }
 /* Sections without a side image (no .feature-visual) get their heading
    block centered on the page instead of hugging the left edge. */
 .section-head{ max-width:680px; margin:0 auto 64px; text-align:center; }
+/* A small pulsing status LED ahead of the label reads as a terminal/HUD
+   indicator rather than plain eyebrow text — the glow ties it back to the
+   amber accent used everywhere else (plexus dots, boot mark, etc). */
 .kicker{
+  display:inline-flex; align-items:center; gap:10px;
   font-family:var(--mono); font-size:12px; letter-spacing:3px;
   color:var(--accent); margin-bottom:18px;
+  text-shadow:0 0 14px var(--accent-glow);
+}
+.kicker::before{
+  content:''; flex-shrink:0; width:6px; height:6px; border-radius:50%;
+  background:var(--amber-bright);
+  box-shadow:0 0 8px 2px rgba(255,215,0,0.7);
+  animation:kickerPulse 2.4s ease-in-out infinite;
+}
+@keyframes kickerPulse{
+  0%, 100%{ opacity:0.5; transform:scale(0.85); }
+  50%{ opacity:1; transform:scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce){
+  .kicker::before{ animation:none; }
 }
 /* Standalone oversized kicker, used where it replaces the section h2
    entirely instead of introducing one. */
@@ -1127,17 +1153,27 @@ body.no-boot #boot-overlay{ display:none; }
 @media (max-width:1000px){ .packs-grid{ grid-template-columns:repeat(2, 1fr); } }
 @media (max-width:560px){ .packs-grid{ grid-template-columns:1fr; max-width:380px; } }
 
+/* No clip-path here on purpose — the cover art must always render as a
+   plain, uncropped-looking rectangle. The futuristic accent instead comes
+   from a pair of HUD-style corner brackets layered on top (::before/::after),
+   which sit clear of the artwork rather than cutting into it. */
 .pack-tile{
   display:block; position:relative; background:var(--panel);
   border:1px solid var(--border-strong); overflow:hidden;
-  clip-path:polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
   box-shadow:0 30px 60px -30px rgba(0,0,0,0.8);
   transition:border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
 }
+.pack-tile::before, .pack-tile::after{
+  content:''; position:absolute; z-index:3; width:20px; height:20px; pointer-events:none;
+  border-color:var(--border-strong); transition:border-color 0.3s var(--ease), width 0.3s var(--ease), height 0.3s var(--ease);
+}
+.pack-tile::before{ top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; }
+.pack-tile::after{ bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid; }
 .pack-tile:hover{
   border-color:var(--accent-dim); transform:translateY(-4px);
   box-shadow:0 40px 90px -30px rgba(0,0,0,0.85), 0 0 60px -20px var(--accent-glow);
 }
+.pack-tile:hover::before, .pack-tile:hover::after{ border-color:var(--amber-bright); width:28px; height:28px; }
 .pack-tile-shot{ position:relative; overflow:hidden; background:#020201; aspect-ratio:3/4; }
 .pack-tile-shot img{
   width:100%; height:100%; object-fit:cover; display:block;
@@ -1193,10 +1229,16 @@ body.no-boot #boot-overlay{ display:none; }
 }
 @media (max-width:820px){ .pack-hero{ grid-template-columns:1fr; padding:0 24px 60px; } }
 .pack-hero-art{
-  position:relative; border-radius:16px; overflow:hidden; aspect-ratio:1/1;
+  position:relative; overflow:hidden; aspect-ratio:3/4;
   background:#020201; border:1px solid var(--border-strong);
   box-shadow:0 30px 60px -30px rgba(0,0,0,0.8);
 }
+.pack-hero-art::before, .pack-hero-art::after{
+  content:''; position:absolute; z-index:3; width:26px; height:26px; pointer-events:none;
+  border-color:var(--accent-dim);
+}
+.pack-hero-art::before{ top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; }
+.pack-hero-art::after{ bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid; }
 .pack-hero-art img{ width:100%; height:100%; object-fit:cover; display:block; }
 .pack-hero-genre{
   font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;

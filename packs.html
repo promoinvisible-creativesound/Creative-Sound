@@ -94,50 +94,48 @@
   </div>
 
   <section class="section section-tight">
-    <div class="plugins-grid">
+    <div class="packs-grid">
 
       <!-- ================================================================
-           TEMPLATE CARD — duplicate this <a> block for every real pack.
+           TEMPLATE TILE — duplicate this <a> block for every real pack.
            Swap the image, genre tag, name and price, and point href at
            that pack's own pack-*.html page (copy pack-example.html).
       ================================================================= -->
-      <a href="pack-example.html" class="plugin-card pack-card reveal-up">
-        <div class="plugin-card-shot">
-          <span class="pack-card-genre">Genre</span>
+      <a href="pack-example.html" class="pack-tile reveal-up">
+        <div class="pack-tile-shot">
+          <span class="pack-tile-genre">Genre</span>
+          <span class="pack-tile-price">€19</span>
           <img src="assets/img/gui-full.png" alt="Example Pack cover art">
         </div>
-        <div class="plugin-card-info">
-          <div class="plugin-card-text">
-            <span class="plugin-card-name">Example Pack <span class="pack-todo">placeholder</span></span>
-            <span class="plugin-card-tagline">One-line pitch for the pack goes here</span>
-          </div>
-          <span class="pack-card-price">€19</span>
+        <div class="pack-tile-body">
+          <span class="pack-tile-name">Example Pack <span class="pack-todo">placeholder</span></span>
+          <span class="pack-tile-tagline">One-line pitch for the pack goes here</span>
+          <span class="pack-tile-cta">
+            View pack
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
         </div>
       </a>
 
       <!-- Placeholder tiles so the grid doesn't look empty with just one
            pack live — delete these once there are real packs to fill the
            space, or keep the pattern going for genuinely unannounced ones. -->
-      <div class="plugin-card pack-card plugin-card-soon reveal-up" aria-hidden="true">
-        <div class="plugin-card-shot">
+      <div class="pack-tile pack-tile-soon reveal-up" aria-hidden="true">
+        <div class="pack-tile-shot">
           <img src="assets/img/gui-full.png" alt="" loading="lazy">
-          <span class="plugin-card-soon-tag">Coming Soon</span>
+          <span class="pack-tile-soon-tag">Coming Soon</span>
         </div>
-        <div class="plugin-card-info">
-          <div class="plugin-card-text">
-            <span class="plugin-card-name">In development</span>
-          </div>
+        <div class="pack-tile-body">
+          <span class="pack-tile-name">In development</span>
         </div>
       </div>
-      <div class="plugin-card pack-card plugin-card-soon reveal-up" aria-hidden="true">
-        <div class="plugin-card-shot">
+      <div class="pack-tile pack-tile-soon reveal-up" aria-hidden="true">
+        <div class="pack-tile-shot">
           <img src="assets/img/gui-full.png" alt="" loading="lazy">
-          <span class="plugin-card-soon-tag">Coming Soon</span>
+          <span class="pack-tile-soon-tag">Coming Soon</span>
         </div>
-        <div class="plugin-card-info">
-          <div class="plugin-card-text">
-            <span class="plugin-card-name">In development</span>
-          </div>
+        <div class="pack-tile-body">
+          <span class="pack-tile-name">In development</span>
         </div>
       </div>
 

@@ -313,16 +313,31 @@ body.no-boot #boot-overlay{ display:none; }
 .site-search-empty{ padding:24px 16px; text-align:center; color:var(--text-muted); font-size:13px; }
 
 /* --------------------------------- Buttons ------------------------------ */
+/* Cut corners (clip-path) instead of a rounded rect, plus a light sweep that
+   travels across on hover — same angular, sci-fi-panel language as the
+   pack tiles below. The clip only bites 7px off two corners, well inside
+   every button's padding, so no label ever gets clipped. */
 .btn:disabled{ opacity:0.45; cursor:not-allowed; filter:grayscale(0.4); }
 .btn{
   display:inline-flex; align-items:center; justify-content:center;
-  padding:12px 24px; border-radius:6px; font-size:13px; font-weight:600;
+  padding:12px 24px; font-size:13px; font-weight:600;
   letter-spacing:0.5px; border:1px solid transparent; transition:all 0.3s var(--ease);
   white-space:nowrap; background:none; font-family:inherit;
+  position:relative; overflow:hidden; isolation:isolate;
+  clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }
+.btn::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
+  transform:translateX(-140%);
+  transition:transform 0.65s var(--ease);
+}
+.btn:hover::before{ transform:translateX(140%); }
+.btn > *{ position:relative; z-index:2; }
 .btn-buy{
   border-color:var(--border-strong); color:var(--text);
   padding:9px 18px; font-size:12px;
+  clip-path:polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
 .btn-buy:hover{ border-color:var(--accent); color:var(--amber-text); }
 .btn-primary{
@@ -1100,19 +1115,76 @@ body.no-boot #boot-overlay{ display:none; }
    ===================================================================== */
 
 /* ------------------------------- Catalog grid ----------------------------- */
-.pack-card{ position:relative; }
-.pack-card-genre{
-  position:absolute; top:14px; left:14px; z-index:2;
+/* Its own tile system rather than reusing .plugin-card — vertical/portrait
+   shot instead of a landscape screenshot, angular cut corners, and a
+   diagonal light sweep across the artwork on hover to match the button
+   treatment above. Kept fully separate so it never touches the homepage's
+   plugin cards. */
+.packs-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:22px;
+  max-width:1180px; margin:0 auto;
+}
+@media (max-width:1000px){ .packs-grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:560px){ .packs-grid{ grid-template-columns:1fr; max-width:380px; } }
+
+.pack-tile{
+  display:block; position:relative; background:var(--panel);
+  border:1px solid var(--border-strong); overflow:hidden;
+  clip-path:polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,0.8);
+  transition:border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.pack-tile:hover{
+  border-color:var(--accent-dim); transform:translateY(-4px);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,0.85), 0 0 60px -20px var(--accent-glow);
+}
+.pack-tile-shot{ position:relative; overflow:hidden; background:#020201; aspect-ratio:3/4; }
+.pack-tile-shot img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  transition:transform 0.6s var(--ease);
+}
+.pack-tile:hover .pack-tile-shot img{ transform:scale(1.06); }
+.pack-tile-shot::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(115deg, transparent 42%, rgba(232,134,44,0.25) 50%, transparent 58%);
+  transform:translateX(-130%);
+  transition:transform 0.75s var(--ease);
+}
+.pack-tile:hover .pack-tile-shot::after{ transform:translateX(130%); }
+.pack-tile-genre{
+  position:absolute; top:12px; left:12px; z-index:2;
   font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--amber-text); background:rgba(8,8,7,0.75); border:1px solid var(--border-strong);
-  padding:5px 10px; border-radius:20px;
+  color:var(--amber-text); background:rgba(8,8,7,0.8); border:1px solid var(--border-strong);
+  padding:5px 10px;
 }
-.pack-card-price{
-  font-family:var(--font-display); font-size:15px; color:var(--amber-text); flex-shrink:0;
+.pack-tile-price{
+  position:absolute; top:12px; right:12px; z-index:2;
+  font-family:var(--font-display); font-size:14px; font-weight:800; color:#0a0a09;
+  background:var(--accent); padding:4px 10px;
 }
-.pack-card-soon-note{
-  font-size:12px; color:var(--text-muted); padding:0 28px 20px; margin-top:-14px;
+.pack-tile-body{ padding:20px 20px 18px; border-top:1px solid var(--border); }
+.pack-tile-name{ display:block; font-family:var(--font-display); font-size:16px; color:var(--text); margin-bottom:6px; letter-spacing:0.3px; }
+.pack-tile-tagline{ display:block; font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:16px; }
+.pack-tile-cta{
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--amber-text); transition:color 0.3s var(--ease);
 }
+.pack-tile-cta svg{ width:14px; height:14px; flex-shrink:0; transition:transform 0.35s var(--ease); }
+.pack-tile:hover .pack-tile-cta{ color:var(--amber-bright); }
+.pack-tile:hover .pack-tile-cta svg{ transform:translateX(7px); }
+
+/* Coming-soon variant — same shape, screenshot blurred/dimmed, not a link. */
+.pack-tile-soon{ cursor:default; }
+.pack-tile-soon:hover{ border-color:var(--border-strong); box-shadow:0 30px 60px -30px rgba(0,0,0,0.8); transform:none; }
+.pack-tile-soon:hover .pack-tile-shot img{ transform:scale(1.1); }
+.pack-tile-soon .pack-tile-shot img{ filter:blur(9px) brightness(0.55) saturate(0.7); transform:scale(1.1); }
+.pack-tile-soon-tag{
+  position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:12px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--text); text-shadow:0 2px 12px rgba(0,0,0,0.6);
+}
+.pack-tile-soon .pack-tile-name{ color:var(--text-muted); }
 
 /* --------------------------------- Pack hero ------------------------------ */
 .pack-hero{

@@ -89,28 +89,49 @@ a:active, button:active{
 /* A tiny inline script (right before this markup, in every page's <body>)
    sets body.no-boot on every page load after the first one in a browser
    session, so this only ever plays once per visit — not on every internal
-   link click. Total runtime 1.6s, well under the 3s ceiling. */
+   link click. Total runtime 1.8s, well under the 3s ceiling. Three
+   staggered rings expand outward like a sound pulse (on brand for an
+   audio company) while the mark itself scales in with a slight
+   overshoot/settle instead of a flat fade, before the whole thing clears. */
 #boot-overlay{
   position:fixed; inset:0; z-index:9999; background:#030201;
   display:flex; align-items:center; justify-content:center;
-  pointer-events:none;
-  animation: bootOverlayFade 1.6s ease-out forwards;
+  overflow:hidden; pointer-events:none;
+  animation: bootOverlayFade 1.8s ease-out forwards;
 }
+.boot-ring{
+  position:absolute; top:50%; left:50%; border-radius:50%;
+  width:60px; height:60px; margin:-30px 0 0 -30px;
+  border:1.5px solid var(--amber-bright);
+  opacity:0;
+  animation: bootRing 1.8s var(--ease) forwards;
+}
+.boot-ring:nth-child(2){ animation-delay:0.16s; }
+.boot-ring:nth-child(3){ animation-delay:0.32s; }
 #boot-mark{
-  width:15vw; min-width:64px; max-width:120px; height:auto;
-  opacity:0; transform:scale(0.7);
+  position:relative; z-index:1;
+  width:26vw; min-width:120px; max-width:220px; height:auto;
+  opacity:0; transform:scale(0.55) rotate(-6deg);
   filter:drop-shadow(0 0 0 rgba(232,134,44,0));
-  animation: bootMarkIn 1.6s var(--ease) forwards;
+  animation: bootMarkIn 1.8s var(--ease) forwards;
 }
 @keyframes bootMarkIn{
-  0%{ opacity:0; transform:scale(0.7); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
-  30%{ opacity:1; transform:scale(1); filter:drop-shadow(0 0 24px rgba(232,134,44,0.9)); }
-  65%{ opacity:1; transform:scale(1); filter:drop-shadow(0 0 32px rgba(232,134,44,1)); }
-  88%{ opacity:1; transform:scale(1.05); filter:drop-shadow(0 0 12px rgba(232,134,44,0.5)); }
-  100%{ opacity:0; transform:scale(1.15); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
+  0%{ opacity:0; transform:scale(0.55) rotate(-6deg); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
+  22%{ opacity:1; transform:scale(1.12) rotate(3deg); filter:drop-shadow(0 0 34px rgba(232,134,44,0.95)); }
+  38%{ transform:scale(0.95) rotate(-1.5deg); }
+  55%{ transform:scale(1.04) rotate(0.5deg); filter:drop-shadow(0 0 46px rgba(232,134,44,1)); }
+  72%{ opacity:1; transform:scale(1) rotate(0deg); }
+  90%{ opacity:1; transform:scale(1.06); filter:drop-shadow(0 0 16px rgba(232,134,44,0.5)); }
+  100%{ opacity:0; transform:scale(1.22); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
+}
+@keyframes bootRing{
+  0%{ width:60px; height:60px; margin:-30px 0 0 -30px; opacity:0; border-width:2px; }
+  14%{ opacity:0.9; }
+  75%{ width:640px; height:640px; margin:-320px 0 0 -320px; opacity:0; border-width:0.5px; }
+  100%{ width:680px; height:680px; margin:-340px 0 0 -340px; opacity:0; }
 }
 @keyframes bootOverlayFade{
-  0%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;}
+  0%{opacity:1;} 82%{opacity:1;} 100%{opacity:0;}
 }
 body.no-boot #boot-overlay{ display:none; }
 @media (prefers-reduced-motion: reduce){

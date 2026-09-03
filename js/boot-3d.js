@@ -155,12 +155,13 @@
     mark2d.style.display = 'none';
 
     // Pieces fly in and lock together (ENTRANCE), then a real continuous
-    // turntable spin once fully assembled (HOLD), then fade — long enough
-    // to actually look at the lit surface turning, not just a blink.
-    const DURATION = 5500;
+    // turntable spin once fully assembled (HOLD), then the spin stops dead
+    // — rest on that frame — and only then fades, instead of still turning
+    // as it disappears.
+    const DURATION = 3500;
     const ENTRANCE_END = 0.24;
     const HOLD_END = 0.88;
-    const HOLD_ROTATIONS = 2.2;
+    const HOLD_ROTATIONS = 1.4;
     const startTime = performance.now();
     function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
     function frame(now) {
@@ -180,11 +181,13 @@
           f.mesh.rotation.set(f.startRot.x * k, f.startRot.y * k, f.startRot.z * k);
         });
         model.rotation.y = -0.35 * (1 - easeOut(globalT));
-      } else {
+      } else if (t < HOLD_END) {
         model.rotation.y = ((t - ENTRANCE_END) / (HOLD_END - ENTRANCE_END)) * HOLD_ROTATIONS * Math.PI * 2;
-        if (t >= HOLD_END) {
-          model.rotation.y += ((t - HOLD_END) / (1 - HOLD_END)) * (Math.PI * 0.6);
-        }
+      } else {
+        // Frozen at exactly the angle the HOLD phase ended on (no jump) —
+        // it stops turning before the fade below ever starts, rather than
+        // still spinning as it vanishes.
+        model.rotation.y = HOLD_ROTATIONS * Math.PI * 2;
       }
 
       const fadeIn = Math.min(t / 0.1, 1);

@@ -288,6 +288,11 @@ body.no-boot #boot-overlay{ display:none; }
 /* Overlay + panel are injected once into <body> by js/main.js, shared by
    every page — only the trigger button (.header-icon-btn#header-search-btn)
    lives in each page's header markup. */
+/* js/main.js adds this to <body> while the search overlay is open — the
+   overlay is fixed/full-screen but that alone doesn't stop the page
+   behind it from scrolling under the mouse wheel, so the body itself
+   needs locking too. */
+body.search-open{ overflow:hidden; }
 .site-search-overlay{
   position:fixed; inset:0; z-index:200; display:flex; align-items:flex-start; justify-content:center;
   padding:12vh 20px 20px; background:rgba(5,5,4,0.7); backdrop-filter:blur(4px);
@@ -379,45 +384,30 @@ body.no-boot #boot-overlay{ display:none; }
 /* Sections without a side image (no .feature-visual) get their heading
    block centered on the page instead of hugging the left edge. */
 .section-head{ max-width:680px; margin:0 auto 64px; text-align:center; }
-/* A small pulsing status LED ahead of the label reads as a terminal/HUD
-   indicator rather than plain eyebrow text — the glow ties it back to the
-   amber accent used everywhere else (plexus dots, boot mark, etc). */
+/* Gradient-filled label flanked by thin HUD tick lines — same treatment
+   as the hero's "SOUND" accent, used here as every section's small
+   eyebrow instead of a status dot, so the whole site reads as one
+   consistent visual system. */
 .kicker{
-  display:inline-flex; align-items:center; gap:10px;
+  position:relative; display:inline-flex; align-items:center; gap:14px;
   font-family:var(--mono); font-size:12px; letter-spacing:3px;
-  color:var(--accent); margin-bottom:18px;
-  text-shadow:0 0 14px var(--accent-glow);
-}
-.kicker::before{
-  content:''; flex-shrink:0; width:6px; height:6px; border-radius:50%;
-  background:var(--amber-bright);
-  box-shadow:0 0 8px 2px rgba(255,215,0,0.7);
-  animation:kickerPulse 2.4s ease-in-out infinite;
-}
-@keyframes kickerPulse{
-  0%, 100%{ opacity:0.5; transform:scale(0.85); }
-  50%{ opacity:1; transform:scale(1.15); }
-}
-@media (prefers-reduced-motion: reduce){
-  .kicker::before{ animation:none; }
-}
-/* Standalone oversized section title, used where it replaces the section
-   h2 entirely instead of introducing one. Its own treatment rather than a
-   bigger kicker — no status dot, gradient-filled like the hero's "SOUND"
-   accent, flanked by thin HUD tick lines instead. */
-.hud-title{
-  position:relative; display:inline-flex; align-items:center; gap:20px;
-  font-family:var(--font-display); font-weight:700; text-transform:uppercase;
-  font-size:clamp(32px, 5vw, 52px); letter-spacing:5px; margin-bottom:0;
+  margin-bottom:18px;
   background:linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 60%, var(--amber-dim) 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 0 30px rgba(232,134,44,0.3));
+  filter:drop-shadow(0 0 14px var(--accent-glow));
 }
-.hud-title::before, .hud-title::after{
-  content:''; width:44px; height:1px; flex-shrink:0;
+.kicker::before, .kicker::after{
+  content:''; height:1px; flex-shrink:0; width:20px;
   background:linear-gradient(90deg, transparent, var(--accent-dim));
 }
-.hud-title::after{ background:linear-gradient(90deg, var(--accent-dim), transparent); }
+.kicker::after{ background:linear-gradient(90deg, var(--accent-dim), transparent); }
+/* Oversized variant — combine as class="kicker hud-title", used where it
+   replaces the section h2 entirely instead of introducing one. */
+.hud-title{
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase;
+  font-size:clamp(32px, 5vw, 52px); letter-spacing:5px; margin-bottom:0; gap:20px;
+}
+.hud-title::before, .hud-title::after{ width:44px; }
 @media (max-width:640px){
   .hud-title{ gap:12px; }
   .hud-title::before, .hud-title::after{ width:20px; }

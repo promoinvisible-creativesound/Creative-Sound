@@ -525,12 +525,14 @@
 
     function openSearch() {
       overlay.classList.add('open');
+      document.body.classList.add('search-open');
       input.value = '';
       runSearch('');
       requestAnimationFrame(() => input.focus());
     }
     function closeSearch() {
       overlay.classList.remove('open');
+      document.body.classList.remove('search-open');
       searchBtn.focus();
     }
 

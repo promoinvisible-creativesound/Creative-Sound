@@ -23,7 +23,14 @@
   }
   if (!hasWebGL()) return;
 
-  const TIMEOUT_MS = 900;
+  // Generous enough to cover a cold DNS/TLS handshake to a CDN this page
+  // has never talked to before (the common cause of the 3D version
+  // randomly not showing up on an otherwise-fine connection) while still
+  // bailing out on anything actually broken. Safe to be generous: once
+  // the load succeeds, below we hand the overlay's fade-out entirely to
+  // this script's own clock, so a slow start no longer costs the reveal
+  // any of its visible time.
+  const TIMEOUT_MS = 1800;
   const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
 
   try {
@@ -154,6 +161,16 @@
     // overlay with neither version visible.
     mark2d.style.display = 'none';
 
+    // #boot-overlay's own CSS fade-out (bootOverlayFade) has been running
+    // on its own clock since page load, independent of how long the CDN
+    // load above just took. Left alone, a slow-but-successful load could
+    // start this reveal with only a sliver of that budget left, cutting
+    // the animation off mid-spin. Cancel it and hand the overlay to this
+    // script's own clock instead, alongside the canvas below, so the
+    // reveal always gets its full, uninterrupted duration.
+    overlay.style.animation = 'none';
+    overlay.style.opacity = '1';
+
     // Pieces fly in and lock together (ENTRANCE), then a real continuous
     // turntable spin once fully assembled (HOLD), then the spin stops dead
     // — rest on that frame — and only then fades, instead of still turning
@@ -193,6 +210,7 @@
       const fadeIn = Math.min(t / 0.1, 1);
       const fadeOut = t > HOLD_END ? Math.max(1 - (t - HOLD_END) / (1 - HOLD_END), 0) : 1;
       canvas.style.opacity = String(fadeIn * fadeOut);
+      overlay.style.opacity = String(fadeOut);
 
       renderer.render(scene, camera);
       if (t < 1) requestAnimationFrame(frame);

@@ -3,15 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Payment available soon | Creative Sound</title>
-<meta name="description" content="Purchases for Creative Dist will open shortly.">
+<!-- TEMPLATE: this is the confirmation page a pack's Stripe Payment Link
+     should redirect to after payment. One page can serve every pack (it
+     doesn't need to know which one — Stripe's own receipt email is the
+     record of what was bought); it just needs the right download link
+     wired in per pack via that pack's Payment Link redirect settings, or
+     duplicate this file per pack if each needs a different download. -->
+<title>You're in | Creative Sound</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
-<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
-<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=44">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=4">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
+<link rel="stylesheet" href="css/style.css?v=45">
 </head>
 <body class="no-boot">
 
@@ -22,27 +29,6 @@
     <a href="index.html" class="brand">
       <img class="brand-logo" src="assets/img/logo.svg?v=2" alt="Creative Sound">
     </a>
-
-    <nav id="site-nav" aria-label="Primary">
-      <div class="nav-dropdown">
-        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
-          Plugin
-          <svg class="nav-dropdown-caret" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
-        </button>
-        <div class="nav-dropdown-menu">
-          <div class="nav-dropdown-menu-inner">
-            <a href="creative-dist.html" class="nav-dropdown-item">
-              <span class="nav-dropdown-item-name">Creative Dist</span>
-              <span class="nav-dropdown-item-desc">Modular distortion engine</span>
-            </a>
-          </div>
-        </div>
-      </div>
-      <a href="packs.html">Packs</a>
-      <a href="tutorial.html">Tutorial</a>
-      <a href="faq.html">Support</a>
-      <a href="work-with-us.html">Work with us</a>
-    </nav>
 
     <div class="header-actions">
       <div class="header-utils">
@@ -59,23 +45,14 @@
             <rect x="16.5" y="14" width="5" height="7" rx="2"></rect>
           </svg>
         </a>
-        <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="header-icon-btn" aria-label="Cart / Checkout">
+        <a href="packs.html" class="header-icon-btn" aria-label="Packs">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1.4"></circle>
             <circle cx="18" cy="21" r="1.4"></circle>
             <path d="M2.5 3h2.4l2.3 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6l1.4-7.6H6"></path>
           </svg>
         </a>
-        <a href="login.html" class="header-icon-btn" id="header-account-link" aria-label="Account">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="8" r="3.6"></circle>
-            <path d="M4.5 20.2a7.5 7.5 0 0 1 15 0"></path>
-          </svg>
-        </a>
       </div>
-      <button id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-nav">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </div>
 </header>
@@ -84,18 +61,20 @@
   <section id="hero" style="min-height:90vh;">
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-inner">
-      <p class="eyebrow">PURCHASES</p>
-      <h1 class="hero-title" style="font-size:clamp(32px,5.5vw,58px); line-height:1.25; padding-bottom:0.15em;">
-        <span class="hero-title-line hero-title-accent">Payment available soon.</span>
+      <p class="eyebrow">ORDER CONFIRMED</p>
+      <h1 class="hero-title" style="font-size:clamp(36px,6vw,64px);">
+        <span class="hero-title-line hero-title-accent">You're in.</span>
       </h1>
       <p class="hero-sub">
-        Creative Dist isn't open for purchase just yet, we're putting the final
-        touches in place. Check back shortly, or open a ticket if you'd like to
-        be notified the moment it's ready.
+        Your download is ready below. Stripe has also emailed you a receipt —
+        worth keeping in case you ever need to re-download.
       </p>
       <div class="hero-cta">
-        <a href="profile-tickets.html" class="btn btn-primary">Get notified</a>
-        <a href="creative-dist.html" class="btn btn-ghost">Back to Creative Dist</a>
+        <!-- TODO: point at the real pack .zip once it's uploaded to assets/downloads/ -->
+        <a href="#" download class="btn btn-primary">Download Example Pack <span class="pack-todo">placeholder link</span></a>
+      </div>
+      <div class="hero-cta">
+        <a href="packs.html" class="btn btn-ghost">Browse more packs</a>
       </div>
     </div>
   </section>
@@ -119,10 +98,6 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/main.js?v=19"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

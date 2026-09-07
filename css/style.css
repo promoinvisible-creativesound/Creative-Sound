@@ -560,7 +560,7 @@ body.search-open{ overflow:hidden; }
    whole hero closer to the header/ticker. */
 #hero.hero-launch{ padding-top:calc(100px + var(--announce-h)); }
 #hero.hero-launch .hero-inner{
-  max-width:1320px; display:grid; grid-template-columns:0.7fr 1.3fr;
+  max-width:1440px; display:grid; grid-template-columns:0.58fr 1.42fr;
   align-items:center; gap:32px; text-align:left;
 }
 /* Smaller than the base hero-title clamp — the product shot carries the
@@ -575,7 +575,7 @@ body.search-open{ overflow:hidden; }
   filter:blur(24px); pointer-events:none;
 }
 .hero-launch-visual img{
-  position:relative; z-index:1; width:100%; max-width:1080px; height:auto;
+  position:relative; z-index:1; width:100%; max-width:1300px; height:auto;
   filter:drop-shadow(0 30px 70px rgba(0,0,0,0.65));
 }
 @media (max-width:900px){
@@ -583,7 +583,7 @@ body.search-open{ overflow:hidden; }
   #hero.hero-launch .hero-title{ font-size:clamp(38px, 11vw, 64px); }
   #hero.hero-launch .hero-sub{ margin:22px auto 0; }
   #hero.hero-launch .hero-cta{ justify-content:center; }
-  .hero-launch-visual img{ max-width:600px; }
+  .hero-launch-visual img{ max-width:720px; }
 }
 
 .scroll-cue{

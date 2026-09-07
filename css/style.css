@@ -147,12 +147,11 @@ body.no-boot #boot-overlay{ display:none; }
 }
 .update-ticker-row{ display:flex; flex-shrink:0; }
 .update-ticker-item{
-  display:inline-flex; align-items:center; gap:10px;
+  display:inline-flex; align-items:center;
   font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
   color:var(--amber-text); text-transform:uppercase; white-space:nowrap;
   padding:0 22px; text-shadow:0 0 10px rgba(232,134,44,0.5);
 }
-.update-ticker-item::before{ content:'–'; font-size:11px; color:var(--amber-bright); }
 @keyframes updateTickerScroll{
   from{ transform:translateX(0); }
   to{ transform:translateX(-50%); }

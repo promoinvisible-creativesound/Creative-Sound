@@ -560,12 +560,12 @@ body.search-open{ overflow:hidden; }
    whole hero closer to the header/ticker. */
 #hero.hero-launch{ padding-top:calc(100px + var(--announce-h)); }
 #hero.hero-launch .hero-inner{
-  max-width:1440px; display:grid; grid-template-columns:0.58fr 1.42fr;
+  max-width:1520px; display:grid; grid-template-columns:minmax(0, 0.46fr) minmax(0, 1.54fr);
   align-items:center; gap:32px; text-align:left;
 }
 /* Smaller than the base hero-title clamp — the product shot carries the
    visual weight here instead of the wordmark. */
-#hero.hero-launch .hero-title{ font-size:clamp(38px, 5.2vw, 76px); }
+#hero.hero-launch .hero-title{ font-size:clamp(30px, 3.6vw, 58px); white-space:nowrap; }
 #hero.hero-launch .hero-sub{ text-align:left; max-width:460px; margin:22px 0 0; }
 #hero.hero-launch .hero-cta{ justify-content:flex-start; }
 .hero-launch-visual{ position:relative; display:flex; justify-content:center; align-items:center; }
@@ -575,7 +575,7 @@ body.search-open{ overflow:hidden; }
   filter:blur(24px); pointer-events:none;
 }
 .hero-launch-visual img{
-  position:relative; z-index:1; width:100%; max-width:1300px; height:auto;
+  position:relative; z-index:1; width:100%; max-width:1500px; height:auto;
   filter:drop-shadow(0 30px 70px rgba(0,0,0,0.65));
 }
 @media (max-width:900px){
@@ -583,7 +583,7 @@ body.search-open{ overflow:hidden; }
   #hero.hero-launch .hero-title{ font-size:clamp(38px, 11vw, 64px); }
   #hero.hero-launch .hero-sub{ margin:22px auto 0; }
   #hero.hero-launch .hero-cta{ justify-content:center; }
-  .hero-launch-visual img{ max-width:720px; }
+  .hero-launch-visual img{ max-width:830px; }
 }
 
 .scroll-cue{

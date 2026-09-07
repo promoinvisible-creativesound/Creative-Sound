@@ -37,7 +37,7 @@
   /* Height of the site-wide announcement ticker — the fixed header (and
      everything sized to clear it) reads off this one value, so it's the
      only number to touch if the ticker's height ever changes. */
-  --announce-h: 34px;
+  --announce-h: 26px;
 }
 
 *{ box-sizing:border-box; }
@@ -556,8 +556,11 @@ body.search-open{ overflow:hidden; }
 @media (prefers-reduced-motion: reduce){
   .hero-new-badge{ animation:none; box-shadow:0 0 0 1px rgba(255,215,0,0.5), 0 0 20px rgba(232,134,44,0.5); }
 }
+/* Tighter top padding than the shared .hero-home value — pulls the
+   whole hero closer to the header/ticker. */
+#hero.hero-launch{ padding-top:calc(100px + var(--announce-h)); }
 #hero.hero-launch .hero-inner{
-  max-width:1240px; display:grid; grid-template-columns:0.82fr 1.18fr;
+  max-width:1320px; display:grid; grid-template-columns:0.7fr 1.3fr;
   align-items:center; gap:32px; text-align:left;
 }
 /* Smaller than the base hero-title clamp — the product shot carries the
@@ -572,7 +575,7 @@ body.search-open{ overflow:hidden; }
   filter:blur(24px); pointer-events:none;
 }
 .hero-launch-visual img{
-  position:relative; z-index:1; width:100%; max-width:920px; height:auto;
+  position:relative; z-index:1; width:100%; max-width:1080px; height:auto;
   filter:drop-shadow(0 30px 70px rgba(0,0,0,0.65));
 }
 @media (max-width:900px){
@@ -580,7 +583,7 @@ body.search-open{ overflow:hidden; }
   #hero.hero-launch .hero-title{ font-size:clamp(38px, 11vw, 64px); }
   #hero.hero-launch .hero-sub{ margin:22px auto 0; }
   #hero.hero-launch .hero-cta{ justify-content:center; }
-  .hero-launch-visual img{ max-width:520px; }
+  .hero-launch-visual img{ max-width:600px; }
 }
 
 .scroll-cue{

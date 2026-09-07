@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Creative Dist | Modular Distortion Engine | Creative Sound</title>
-<meta name="description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band EQ. VST3 / AU.">
+<meta name="description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise, Bode and the new Flux module across three reorderable slots, plus a 5-band EQ. VST3 / AU.">
 <link rel="canonical" href="https://creativesound.io/creative-dist.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Creative Sound">
 <meta property="og:title" content="Creative Dist | Modular Distortion Engine | Creative Sound">
-<meta property="og:description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band EQ. VST3 / AU.">
+<meta property="og:description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise, Bode and the new Flux module across three reorderable slots, plus a 5-band EQ. VST3 / AU.">
 <meta property="og:url" content="https://creativesound.io/creative-dist.html">
-<meta property="og:image" content="https://creativesound.io/assets/img/gui-full.png">
+<meta property="og:image" content="https://creativesound.io/assets/img/gui-flux.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Creative Dist | Modular Distortion Engine | Creative Sound">
-<meta name="twitter:description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band EQ. VST3 / AU.">
-<meta name="twitter:image" content="https://creativesound.io/assets/img/gui-full.png">
+<meta name="twitter:description" content="Creative Dist: a modular creative distortion plugin with Saturation, Noise, Bode and the new Flux module across three reorderable slots, plus a 5-band EQ. VST3 / AU.">
+<meta name="twitter:image" content="https://creativesound.io/assets/img/gui-flux.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=44">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Creative Dist","applicationCategory":"MusicApplication","operatingSystem":"Windows, macOS","description":"Creative Dist: a modular creative distortion plugin with Saturation, Noise and Bode Shifter in three reorderable slots, plus a 5-band EQ. VST3 / AU.","url":"https://creativesound.io/creative-dist.html","brand":{"@type":"Organization","name":"Creative Sound"},"offers":{"@type":"Offer","price":"25","priceCurrency":"EUR","url":"https://creativesound.io/creative-dist.html","availability":"https://schema.org/InStock"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Creative Dist","applicationCategory":"MusicApplication","operatingSystem":"Windows, macOS","description":"Creative Dist: a modular creative distortion plugin with Saturation, Noise, Bode and the new Flux module across three reorderable slots, plus a 5-band EQ. VST3 / AU.","url":"https://creativesound.io/creative-dist.html","brand":{"@type":"Organization","name":"Creative Sound"},"offers":{"@type":"Offer","price":"25","priceCurrency":"EUR","url":"https://creativesound.io/creative-dist.html","availability":"https://schema.org/InStock"}}</script>
 </head>
 <body>
 <script>
@@ -43,6 +43,26 @@
 
 <div id="grain"></div>
 
+<a href="creative-dist.html" class="update-ticker" aria-label="Creative Dist update out now">
+  <div class="update-ticker-track">
+    <div class="update-ticker-row">
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+    </div>
+    <div class="update-ticker-row" aria-hidden="true">
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+      <span class="update-ticker-item">Creative Dist Update Out Now</span>
+    </div>
+  </div>
+</a>
 <header id="site-header">
   <div class="header-inner">
     <a href="index.html" class="brand">
@@ -53,6 +73,7 @@
       <div class="nav-dropdown">
         <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
           Plugin
+          <span class="nav-new-badge">NEW</span>
           <svg class="nav-dropdown-caret" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
         </button>
         <div class="nav-dropdown-menu">
@@ -114,6 +135,7 @@
   <a href="#saturation" class="side-rail-link" data-section="saturation">Saturation</a>
   <a href="#noise" class="side-rail-link" data-section="noise">Noise</a>
   <a href="#bode" class="side-rail-link" data-section="bode">Bode Shifter</a>
+  <a href="#flux" class="side-rail-link" data-section="flux">Flux</a>
   <a href="#eq" class="side-rail-link" data-section="eq">EQ</a>
   <a href="#output" class="side-rail-link" data-section="output">Output</a>
   <a href="#demo" class="side-rail-link" data-section="demo">Sound</a>
@@ -167,22 +189,23 @@
   </section>
 
   <div class="gui-shot reveal-up">
-    <img src="assets/img/gui-full.png?v=3" alt="Creative Dist plugin interface — Saturation, Noise and Bode Shifter mounted together with the EQ and Output panel" loading="lazy">
+    <img src="assets/img/gui-flux.png" alt="Creative Dist plugin interface with the new Flux module, alongside Saturation, Noise and Bode Shifter" loading="lazy">
   </div>
 
   <!-- ============ CHAIN CONCEPT ============ -->
   <section id="chain" class="section">
     <div class="section-head">
       <p class="kicker reveal-up">THE ENGINE</p>
-      <h2 class="reveal-up">Three modules. Any order.</h2>
+      <h2 class="reveal-up">Four modules. Any order.</h2>
       <p class="section-lede reveal-up">
-        Creative Dist gives you three assignable effect slots, Saturation, Noise and Bode
-        Shifter, plus an EQ and Output stage that are always present. Drag to reorder.
-        Switch anything on or off. Roll the dice when you're out of ideas.
+        Creative Dist gives you three assignable effect slots — any slot can hold any of
+        four modules: Saturation, Noise, Bode and the new Flux — plus an EQ and Output
+        stage that are always present. Drag to reorder. Switch anything on or off. Roll
+        the dice when you're out of ideas.
       </p>
     </div>
 
-    <div class="chain-diagram reveal-up" role="img" aria-label="Signal chain: Input, three reorderable slots for Saturation, Noise and Bode Shifter, EQ, Output">
+    <div class="chain-diagram reveal-up" role="img" aria-label="Signal chain: Input, three reorderable slots for Saturation, Noise, Bode and Flux, EQ, Output">
       <div class="chain-node chain-io">INPUT</div>
       <div class="chain-arrow"></div>
       <div class="chain-slots">
@@ -275,9 +298,39 @@
     </div>
   </section>
 
-  <!-- ============ FEATURE 04 — EQ ============ -->
-  <section class="feature feature-reverse" id="eq">
+  <!-- ============ FEATURE 04 — FLUX (new) ============ -->
+  <section class="feature feature-reverse" id="flux">
     <div class="feature-index reveal-up">04</div>
+    <div class="feature-text">
+      <span class="feature-new-tag reveal-up">New module</span>
+      <h3 class="reveal-up">Flux</h3>
+      <p class="feature-tagline reveal-up">Two algorithms, one continuous morph.</p>
+      <p class="reveal-up">
+        Instead of picking one effect, Flux blends two — Algo A and Algo B, each chosen
+        independently from nine algorithms — and lets you morph continuously between
+        them instead of just switching. Mix crossfades from one to the other (drag it
+        right on the display), Rate drives whichever algorithm uses tempo, like Tremolo,
+        synced to your DAW. Start from one of 14 built-in Algo A/B combinations, or build
+        your own.
+      </p>
+      <ul class="feature-specs reveal-up">
+        <li>Sweep · Ring · Flanger</li>
+        <li>Tremolo · Cloud · Shimmer</li>
+        <li>Resonator · Doubler · Formant</li>
+        <li>Mix (Algo A ↔ Algo B), Rate (tempo-synced)</li>
+        <li>14 built-in presets</li>
+        <li>PAR (hear this module isolated from the rest of the chain)</li>
+      </ul>
+    </div>
+    <div class="feature-visual reveal-up">
+      <img src="assets/img/gui-flux.png" alt="Flux module in Creative Dist, morphing between two algorithms" loading="lazy"
+           style="display:block;width:100%;height:auto;margin:0 auto;">
+    </div>
+  </section>
+
+  <!-- ============ FEATURE 05 — EQ ============ -->
+  <section class="feature" id="eq">
+    <div class="feature-index reveal-up">05</div>
     <div class="feature-text">
       <h3 class="reveal-up">Equalizer</h3>
       <p class="feature-tagline reveal-up">Shapes the chaos, doesn't just clean it up.</p>
@@ -305,9 +358,9 @@
     </div>
   </section>
 
-  <!-- ============ FEATURE 05 — OUTPUT ============ -->
-  <section class="feature" id="output">
-    <div class="feature-index reveal-up">05</div>
+  <!-- ============ FEATURE 06 — OUTPUT ============ -->
+  <section class="feature feature-reverse" id="output">
+    <div class="feature-index reveal-up">06</div>
     <div class="feature-text">
       <h3 class="reveal-up">Output</h3>
       <p class="feature-tagline reveal-up">Automatic gain compensation.</p>

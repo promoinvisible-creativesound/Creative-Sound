@@ -34,6 +34,10 @@
 
   --container: 1180px;
   --ease: cubic-bezier(.22,.85,.35,1);
+  /* Height of the site-wide announcement ticker — the fixed header (and
+     everything sized to clear it) reads off this one value, so it's the
+     only number to touch if the ticker's height ever changes. */
+  --announce-h: 34px;
 }
 
 *{ box-sizing:border-box; }
@@ -125,9 +129,41 @@ body.no-boot #boot-overlay{ display:none; }
   #boot-overlay{ display:none; }
 }
 
+/* --------------------------- Announcement ticker ----------------------- */
+/* A thin fixed strip above the header, on every page, linking straight to
+   the product page. Two identical rows of repeated copy inside one flex
+   track — animating the track exactly -50% loops seamlessly regardless of
+   how wide the text ends up, no matter the viewport. */
+.update-ticker{
+  position:fixed; top:0; left:0; right:0; height:var(--announce-h); z-index:101;
+  display:flex; align-items:center; overflow:hidden;
+  background:linear-gradient(90deg, #1a0f04, #241407 50%, #1a0f04);
+  border-bottom:1px solid var(--accent-dim);
+  text-decoration:none; cursor:pointer;
+}
+.update-ticker-track{
+  display:flex; width:max-content;
+  animation:updateTickerScroll 22s linear infinite;
+}
+.update-ticker-row{ display:flex; flex-shrink:0; }
+.update-ticker-item{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:2px;
+  color:var(--amber-text); text-transform:uppercase; white-space:nowrap;
+  padding:0 22px; text-shadow:0 0 10px rgba(232,134,44,0.5);
+}
+.update-ticker-item::before{ content:'●'; font-size:5px; color:var(--amber-bright); }
+@keyframes updateTickerScroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce){
+  .update-ticker-track{ animation:none; }
+}
+
 /* ------------------------------- Header ------------------------------- */
 #site-header{
-  position:fixed; top:0; left:0; right:0; z-index:100;
+  position:fixed; top:var(--announce-h); left:0; right:0; z-index:100;
   background:rgba(8,8,7,0.55);
   backdrop-filter:blur(14px) saturate(140%);
   -webkit-backdrop-filter:blur(14px) saturate(140%);
@@ -176,6 +212,24 @@ body.no-boot #boot-overlay{ display:none; }
 }
 .nav-dropdown:hover .nav-dropdown-trigger,
 .nav-dropdown.open .nav-dropdown-trigger{ color:var(--amber-text); text-shadow:0 0 10px rgba(255,179,71,0.6); }
+/* Flickers gently like an unstable projection, rather than a flat
+   pulse — reads as "hologram" instead of just "blinking badge". */
+.nav-new-badge{
+  font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.5px;
+  color:var(--amber-bright); text-transform:uppercase; line-height:1;
+  position:relative; top:-9px; margin-left:-2px;
+  text-shadow:0 0 5px rgba(255,215,0,0.95), 0 0 10px rgba(232,134,44,0.7);
+  animation:navNewFlicker 3s ease-in-out infinite;
+}
+@keyframes navNewFlicker{
+  0%, 22%, 24%, 62%, 64%, 100%{ opacity:1; }
+  23%{ opacity:0.3; }
+  63%{ opacity:0.5; }
+  80%{ opacity:0.85; }
+}
+@media (prefers-reduced-motion: reduce){
+  .nav-new-badge{ animation:none; }
+}
 .nav-dropdown-caret{
   width:9px; height:6px; fill:none; stroke:currentColor; stroke-width:1.6;
   stroke-linecap:round; stroke-linejoin:round;
@@ -431,12 +485,12 @@ body.search-open{ overflow:hidden; }
 #hero{
   position:relative; min-height:100vh; display:flex; flex-direction:column;
   align-items:center; justify-content:center; text-align:center;
-  padding:120px 24px 80px; overflow:hidden;
+  padding:calc(120px + var(--announce-h)) 24px 80px; overflow:hidden;
 }
 /* Homepage hero only — sized to its content instead of the full viewport,
    so "Our Plugins" follows right after it instead of a screen of empty
    space. The full-height treatment stays on the product page hero. */
-#hero.hero-home{ min-height:0; padding:160px 24px 40px; }
+#hero.hero-home{ min-height:0; padding:calc(160px + var(--announce-h)) 24px 40px; }
 .hero-glow{
   position:absolute; top:50%; left:50%; width:1100px; height:1100px;
   transform:translate(-50%,-55%);
@@ -476,6 +530,33 @@ body.search-open{ overflow:hidden; }
   color:var(--text-muted);
 }
 .hero-formats .dot{ margin:0 12px; color:var(--accent-dim); }
+
+/* Homepage launch hero — text left, product shot right, everything left-
+   aligned instead of the centered single-column treatment other heroes
+   use. Scoped under #hero.hero-launch so it only ever touches this one
+   hero, never the shared .hero-inner/.hero-cta/.hero-sub rules above. */
+.hero-new-badge{
+  display:inline-block; background:var(--accent); color:#0a0a09;
+  font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:1px;
+  padding:4px 10px; border-radius:3px; margin-bottom:20px; text-transform:uppercase;
+}
+#hero.hero-launch .hero-inner{
+  max-width:1180px; display:grid; grid-template-columns:1.05fr 1fr;
+  align-items:center; gap:48px; text-align:left;
+}
+#hero.hero-launch .hero-sub{ text-align:left; max-width:480px; margin:24px 0 0; }
+#hero.hero-launch .hero-cta{ justify-content:flex-start; }
+.hero-launch-visual{ display:flex; justify-content:center; align-items:center; }
+.hero-launch-visual img{
+  width:100%; max-width:640px; height:auto;
+  filter:drop-shadow(0 30px 70px rgba(0,0,0,0.65));
+}
+@media (max-width:900px){
+  #hero.hero-launch .hero-inner{ grid-template-columns:1fr; text-align:center; gap:40px; }
+  #hero.hero-launch .hero-sub{ margin:24px auto 0; }
+  #hero.hero-launch .hero-cta{ justify-content:center; }
+  .hero-launch-visual img{ max-width:480px; }
+}
 
 .scroll-cue{
   position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
@@ -527,6 +608,11 @@ body.search-open{ overflow:hidden; }
 .feature-index{
   font-family:var(--font-display); font-size:15px; font-weight:700;
   color:var(--accent-dim); writing-mode:vertical-rl; letter-spacing:2px;
+}
+.feature-new-tag{
+  display:inline-block; background:var(--accent); color:#0a0a09;
+  font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:1px;
+  padding:3px 8px; border-radius:3px; text-transform:uppercase; margin-bottom:14px;
 }
 .feature-text h3{ font-size:clamp(26px, 3vw, 36px); margin-bottom:10px; }
 .feature-tagline{ color:var(--amber-text); font-size:16px; font-weight:400; margin-bottom:20px; font-style:italic; font-family:var(--font-sans); }
@@ -1056,7 +1142,7 @@ body.search-open{ overflow:hidden; }
 
 /* --------------------------- Simple content pages -------------------------- */
 .page-hero{
-  padding:160px 24px 60px; text-align:center; max-width:720px; margin:0 auto;
+  padding:calc(160px + var(--announce-h)) 24px 60px; text-align:center; max-width:720px; margin:0 auto;
 }
 .page-hero .kicker{ display:block; }
 .prose{ max-width:720px; margin:0 auto; padding:0 24px 140px; text-align:left; }
@@ -1129,7 +1215,7 @@ body.search-open{ overflow:hidden; }
 }
 @media (max-width:760px){
   #site-nav{
-    position:fixed; top:64px; left:0; right:0; bottom:0; height:calc(100vh - 64px); z-index:90;
+    position:fixed; top:calc(64px + var(--announce-h)); left:0; right:0; bottom:0; height:calc(100vh - 64px - var(--announce-h)); z-index:90;
     background:rgba(8,8,7,0.98); flex-direction:column; align-items:center;
     justify-content:center; gap:32px; overflow-y:auto;
     transform:translateY(-8px); opacity:0; pointer-events:none;
@@ -1144,6 +1230,7 @@ body.search-open{ overflow:hidden; }
   .header-icon-btn{ width:30px; height:30px; }
   .header-icon-btn svg{ width:15px; height:15px; }
   .footer-inner{ flex-direction:column; align-items:flex-start; }
+  .nav-new-badge{ font-size:11px; top:-14px; }
 
   .nav-dropdown{ display:flex; flex-direction:column; align-items:center; gap:18px; }
   .nav-dropdown-trigger{ font-size:20px; justify-content:center; }

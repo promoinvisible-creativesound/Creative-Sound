@@ -20,10 +20,10 @@ function readRawBody(req) {
 }
 
 function buildEmailHtml(licenseKey) {
-  const downloadUrl = process.env.DOWNLOAD_URL;
-  const downloadBlock = downloadUrl
-    ? `<a href="${downloadUrl}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Download Creative Dist</a>`
-    : `<p>We're finishing up your build — you'll get a separate email with the download link very shortly. If you don't hear from us within 24h, just reply to this email.</p>`;
+  const siteUrl = process.env.SITE_URL || '';
+  const btn = (href, label) => `<a href="${href}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;margin:0 8px 8px 0;">${label}</a>`;
+  const downloadBlock = btn(`${siteUrl}/assets/downloads/Creative-Dist-Mac.zip`, 'Download for macOS')
+    + btn(`${siteUrl}/assets/downloads/Creative-Dist-Windows.zip`, 'Download for Windows');
 
   return `
     <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">

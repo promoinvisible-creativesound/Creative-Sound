@@ -22,10 +22,6 @@ module.exports = async (req, res) => {
       lastName: (user && user.last_name) || '',
       licenses,
       orders: licenses,
-      downloadUrl: process.env.DOWNLOAD_URL || null,
-      latestVersion: process.env.LATEST_VERSION_URL
-        ? { label: process.env.LATEST_VERSION_LABEL || 'Latest build', url: process.env.LATEST_VERSION_URL }
-        : null,
     });
   } catch (err) {
     console.error('me error:', err);

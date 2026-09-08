@@ -278,12 +278,10 @@
       <div class="profile-license">
         <div class="profile-license-key">${lic.license_key}</div>
         <div class="profile-license-date">Issued ${new Date(lic.created_at).toLocaleDateString()}</div>
-        ${data.downloadUrl
-          ? `<a href="${data.downloadUrl}" class="btn btn-primary" style="margin-top:14px;">Download Creative Dist</a>`
-          : '<p class="profile-license-date" style="margin-top:10px;">Download link coming soon — we\'ll email you when the build is ready.</p>'}
-        ${data.latestVersion
-          ? `<a href="${data.latestVersion.url}" class="btn btn-ghost" style="margin-top:10px;">Download ${data.latestVersion.label}</a>`
-          : ''}
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          <a href="assets/downloads/Creative-Dist-Mac.zip" download class="btn btn-primary">Download for macOS</a>
+          <a href="assets/downloads/Creative-Dist-Windows.zip" download class="btn btn-primary">Download for Windows</a>
+        </div>
       </div>
     `).join('');
   }

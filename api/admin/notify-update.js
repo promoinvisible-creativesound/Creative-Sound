@@ -9,9 +9,9 @@ function buildUpdateEmailHtml() {
 
   return `
     <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
-      <h1 style="color:#FFB347;font-size:22px;">Creative Dist 2.0 is here</h1>
-      <p>Creative Dist just got a major free update. Version 2.0 adds <strong>Flux</strong> &mdash; a new module that blends two algorithms into one and morphs between them in real time &mdash; plus refinements across Saturation and Bode Shifter.</p>
-      <p>If you downloaded before, you're still on the older build. Grab the updated installer below, free of charge, with your existing license key:</p>
+      <h1 style="color:#FFB347;font-size:22px;">Important fix for your Creative Dist 2.0 build</h1>
+      <p>The installer you downloaded was missing the latest 2.0 update. It's fixed now &mdash; the current build includes <strong>Flux</strong>, a new module that blends two algorithms into one and morphs between them in real time, plus refinements across Saturation and Bode Shifter.</p>
+      <p>Please re-download and reinstall using the links below, free of charge, with your existing license key:</p>
       <p style="margin-top:20px;">
         ${btn(`${siteUrl}/assets/downloads/Creative-Dist-Mac.zip`, 'Download for macOS')}
         ${btn(`${siteUrl}/assets/downloads/Creative-Dist-Windows.zip`, 'Download for Windows')}
@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         const { error } = await resend.emails.send({
           from: process.env.FROM_EMAIL,
           to: email,
-          subject: 'Creative Dist 2.0 is here — free update with the new Flux module',
+          subject: 'Important fix for Creative Dist 2.0 — update your installer now',
           html: buildUpdateEmailHtml(),
         });
         results.push({ email, ok: !error, error: error ? error.message : null });

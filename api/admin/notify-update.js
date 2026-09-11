@@ -37,10 +37,15 @@ module.exports = async (req, res) => {
   }
 
   const dryRun = req.query && req.query.dryRun === '1';
+  // Optional { "only": ["a@b.com", ...] } body to re-target a retry at just
+  // the addresses that failed on a previous run, instead of re-sending to
+  // everyone (Resend's send is not idempotent/deduped on our side).
+  const only = req.body && Array.isArray(req.body.only) ? req.body.only : null;
 
   try {
     const rows = await sql`SELECT DISTINCT email FROM licenses ORDER BY email`;
-    const emails = rows.map((r) => r.email);
+    let emails = rows.map((r) => r.email);
+    if (only) emails = emails.filter((e) => only.includes(e));
 
     if (dryRun) {
       res.status(200).json({ dryRun: true, count: emails.length, emails });
@@ -60,6 +65,9 @@ module.exports = async (req, res) => {
       } catch (err) {
         results.push({ email, ok: false, error: err.message });
       }
+      // Resend caps sends at 10/sec — space these out so a bigger list
+      // never trips that limit like the first send of this batch did.
+      await new Promise((r) => setTimeout(r, 150));
     }
 
     const failures = results.filter((r) => !r.ok);

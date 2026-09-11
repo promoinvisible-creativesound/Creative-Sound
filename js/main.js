@@ -111,6 +111,23 @@
     });
   });
 
+  /* ----------------------------- Code block copy ----------------------------- */
+  document.querySelectorAll('.code-block-copy').forEach((btn) => {
+    const code = btn.closest('.code-block').querySelector('code');
+    if (!code) return;
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code.textContent);
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1800);
+      } catch (err) {
+        // Clipboard API unavailable (older browser, non-HTTPS, permission
+        // denied) — the command is still fully selectable by hand.
+      }
+    });
+  });
+
   /* -------------------------------- Side rail nav ---------------------------- */
   // Only present on the Creative Dist product page. Always visible, plain
   // text links — highlights whichever section is currently in view.

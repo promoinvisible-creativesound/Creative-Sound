@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         const { error } = await resend.emails.send({
           from: process.env.FROM_EMAIL,
           to: email,
-          subject: 'Important fix for Creative Dist 2.0 — update your installer now',
+          subject: 'Creative Dist — Fix 2.0',
           html: buildUpdateEmailHtml(),
         });
         results.push({ email, ok: !error, error: error ? error.message : null });

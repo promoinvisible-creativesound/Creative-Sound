@@ -201,16 +201,7 @@ body.no-boot #boot-overlay{ display:none; }
 #site-nav a:hover{ color:var(--amber-text); text-shadow:0 0 10px rgba(255,179,71,0.6); }
 #site-nav a:hover::after{ transform:scaleX(1); }
 
-/* ----------------------------- Plugin dropdown ---------------------------- */
-.nav-dropdown{ position:relative; }
-.nav-dropdown-trigger{
-  display:flex; align-items:center; gap:6px;
-  background:none; border:none; padding:0; font-family:inherit;
-  font-size:13px; letter-spacing:0.5px; color:var(--text); text-shadow:0 0 10px rgba(245,243,238,0.55);
-  transition:color 0.25s var(--ease);
-}
-.nav-dropdown:hover .nav-dropdown-trigger,
-.nav-dropdown.open .nav-dropdown-trigger{ color:var(--amber-text); text-shadow:0 0 10px rgba(255,179,71,0.6); }
+/* ------------------------------- Nav badge -------------------------------- */
 /* Flickers gently like an unstable projection, rather than a flat
    pulse — reads as "hologram" instead of just "blinking badge". */
 .nav-new-badge{
@@ -229,39 +220,14 @@ body.no-boot #boot-overlay{ display:none; }
 @media (prefers-reduced-motion: reduce){
   .nav-new-badge{ animation:none; }
 }
+/* Chevron glyph shared with .demo-download-trigger's own dropdown (the nav
+   no longer has one of its own — kept the name to avoid re-touching every
+   inline <svg class="nav-dropdown-caret"> that still points at it). */
 .nav-dropdown-caret{
   width:9px; height:6px; fill:none; stroke:currentColor; stroke-width:1.6;
   stroke-linecap:round; stroke-linejoin:round;
   transition:transform 0.25s var(--ease);
 }
-.nav-dropdown:hover .nav-dropdown-caret,
-.nav-dropdown.open .nav-dropdown-caret{ transform:rotate(180deg); }
-/* padding-top (not margin) keeps the gap between trigger and card part of
-   this element's own hoverable box — no dead zone for the mouse to fall
-   through while moving diagonally from trigger to card. */
-.nav-dropdown-menu{
-  position:absolute; top:100%; left:50%; padding-top:14px;
-  min-width:230px;
-  opacity:0; pointer-events:none;
-  transform:translate(-50%, 6px);
-  transition:opacity 0.2s var(--ease), transform 0.2s var(--ease);
-}
-.nav-dropdown:hover .nav-dropdown-menu,
-.nav-dropdown.open .nav-dropdown-menu{
-  opacity:1; pointer-events:auto; transform:translate(-50%, 0);
-}
-.nav-dropdown-menu-inner{
-  padding:8px; border-radius:12px;
-  background:var(--panel); border:1px solid var(--border-strong);
-  box-shadow:0 24px 48px -20px rgba(0,0,0,0.85);
-}
-.nav-dropdown-item{
-  display:flex; flex-direction:column; gap:3px; padding:10px 12px; border-radius:7px;
-}
-.nav-dropdown-item:hover{ background:var(--accent-glow); }
-.nav-dropdown-item::after{ display:none; }
-.nav-dropdown-item-name{ font-size:13px; color:var(--text); font-weight:600; letter-spacing:0.3px; }
-.nav-dropdown-item-desc{ font-size:10.5px; color:var(--text-muted); font-family:var(--mono); }
 
 .header-actions{ display:flex; align-items:center; gap:16px; justify-self:end; }
 /* Fixed cluster of utility icons (search, support, cart, account) that
@@ -273,6 +239,9 @@ body.no-boot #boot-overlay{ display:none; }
   color:var(--text-secondary); flex-shrink:0; background:none; padding:0; cursor:pointer;
   transition:color 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
 }
+/* Desktop shows the "Buy Now" pill instead; mobile hides that pill (see the
+   .btn-buy rule below) and shows this icon so buying still fits the header. */
+.header-cart-icon{ display:none; }
 .header-icon-btn svg{ width:16px; height:16px; }
 .header-icon-btn:hover{ color:var(--amber-text); border-color:var(--accent); background:var(--accent-glow); }
 
@@ -1367,24 +1336,13 @@ body.search-open{ overflow:hidden; }
   #site-nav a{ font-size:20px; }
   #nav-toggle{ display:flex; }
   .header-actions .btn-buy{ display:none; }
+  .header-cart-icon{ display:flex; }
   .header-inner{ padding:14px 16px; }
   .header-utils{ gap:6px; }
   .header-icon-btn{ width:30px; height:30px; }
   .header-icon-btn svg{ width:15px; height:15px; }
   .footer-inner{ flex-direction:column; align-items:flex-start; }
   .nav-new-badge{ font-size:11px; top:-14px; }
-
-  .nav-dropdown{ display:flex; flex-direction:column; align-items:center; gap:18px; }
-  .nav-dropdown-trigger{ font-size:20px; justify-content:center; }
-  .nav-dropdown-menu{
-    position:static; opacity:1; pointer-events:auto; transform:none; padding-top:0;
-  }
-  /* The desktop open/hover rule's translate(-50%, 0) is meant to re-center an
-     absolutely positioned card — on mobile the element is static, so that
-     same transform instead shifts it sideways by half its own width. */
-  .nav-dropdown:hover .nav-dropdown-menu,
-  .nav-dropdown.open .nav-dropdown-menu{ transform:none; }
-  .nav-dropdown-menu-inner{ box-shadow:none; border-color:var(--border); }
   .nav-dropdown-caret{ display:none; }
 }
 

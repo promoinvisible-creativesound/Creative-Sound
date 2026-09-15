@@ -32,7 +32,7 @@
   --font-sans:'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono:'DejaVu Sans Mono', 'Consolas', 'SF Mono', ui-monospace, monospace;
 
-  --container: 1180px;
+  --container: 1800px;
   --ease: cubic-bezier(.22,.85,.35,1);
   /* Height of the site-wide announcement ticker — the fixed header (and
      everything sized to clear it) reads off this one value, so it's the
@@ -752,13 +752,24 @@ body.search-open{ overflow:hidden; }
 .dice-icon{ font-size:22px; color:var(--amber-text); }
 
 /* --------------------------------- Artists -------------------------------- */
-.artist-row{
-  display:flex; gap:20px; overflow-x:auto; padding:8px 4px 24px;
-  scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+/* Continuous marquee, same two-copies-of-the-track trick as the header's
+   .update-ticker: the set of cards is duplicated once, and the track
+   animates exactly -50% so it loops with no visible seam. Pauses on
+   hover since, unlike the ticker, every card here is itself a link. */
+.artist-row{ overflow:hidden; padding:8px 4px 24px; -webkit-mask-image:linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); mask-image:linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); }
+.artist-track{
+  display:flex; gap:20px; width:max-content;
+  animation:artistMarquee 55s linear infinite;
 }
-.artist-row::-webkit-scrollbar{ height:6px; }
-.artist-row::-webkit-scrollbar-track{ background:transparent; }
-.artist-row::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:3px; }
+.artist-row:hover .artist-track{ animation-play-state:paused; }
+.artist-set{ display:flex; gap:20px; flex-shrink:0; }
+@keyframes artistMarquee{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce){
+  .artist-track{ animation:none; }
+}
 /* Full-bleed photo card — the artist's own picture fills the whole card,
    name/credit sit on a bottom scrim over it, matching limoseries' artist
    cards instead of a small circular avatar with text underneath. */
@@ -1013,6 +1024,21 @@ body.search-open{ overflow:hidden; }
 .compat-note{ margin-top:16px; text-align:center; font-size:12.5px; color:var(--text-muted); }
 
 /* --------------------------------- Pricing -------------------------------- */
+/* Homepage-only variant: the plugin shot sits beside the pricing card
+   instead of the card alone, since this section now doubles as the
+   home page's main "buy" moment. */
+.pricing-with-visual{
+  max-width:1300px; margin:0 auto; display:grid;
+  grid-template-columns:minmax(0, 0.85fr) minmax(0, 1.35fr); align-items:center; gap:48px;
+}
+.pricing-with-visual .pricing-card{ margin:0; }
+.pricing-visual img{
+  width:100%; height:auto;
+  filter:drop-shadow(0 30px 60px rgba(0,0,0,0.6));
+}
+@media (max-width:900px){
+  .pricing-with-visual{ grid-template-columns:1fr; gap:32px; }
+}
 .pricing-card{ max-width:480px; margin:0 auto; padding:44px; text-align:center; }
 .pricing-top{ margin-bottom:32px; }
 .pricing-name{ display:block; font-family:var(--mono); letter-spacing:2px; font-size:13px; color:var(--text-muted); margin-bottom:14px; }

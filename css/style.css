@@ -751,6 +751,36 @@ body.search-open{ overflow:hidden; }
 .dice-card:hover{ border-color:var(--accent-dim); transform:translateY(-3px); }
 .dice-icon{ font-size:22px; color:var(--amber-text); }
 
+/* --------------------------------- Artists -------------------------------- */
+.artist-row{
+  display:flex; gap:16px; overflow-x:auto; padding:8px 4px 24px;
+  scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+}
+.artist-row::-webkit-scrollbar{ height:6px; }
+.artist-row::-webkit-scrollbar-track{ background:transparent; }
+.artist-row::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:3px; }
+.artist-card{
+  flex:0 0 auto; width:180px; scroll-snap-align:start;
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;
+  padding:26px 16px; border:1px solid var(--border-strong); border-radius:14px;
+  background:var(--panel); color:inherit;
+  transition:border-color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.artist-card:hover{ border-color:var(--accent-dim); transform:translateY(-3px); }
+.artist-avatar{ position:relative; width:72px; height:72px; flex-shrink:0; }
+.artist-avatar img{
+  width:100%; height:100%; border-radius:50%; object-fit:cover;
+  border:2px solid var(--border-strong); display:block;
+}
+.artist-ig{
+  position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--panel);
+  display:flex; align-items:center; justify-content:center; color:var(--amber-text);
+}
+.artist-ig svg{ width:12px; height:12px; }
+.artist-name{ font-weight:700; font-size:14px; color:var(--text); }
+.artist-credit{ font-size:11.5px; color:var(--text-muted); line-height:1.5; }
+
 /* -------------------------------- Demo list ------------------------------- */
 /* No outer frame by design — each row is independently playable, no need to
    pick a track first and then hit a separate shared play button. */

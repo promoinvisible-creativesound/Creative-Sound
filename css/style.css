@@ -500,6 +500,13 @@ body.search-open{ overflow:hidden; }
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 40px rgba(232,134,44,0.35));
 }
+/* Trailing "2.0." reads as a version tag riding the big wordmark, not a
+   second equally-weighted word — same trick the pricing card's title uses. */
+.hero-title-version{
+  font-size:0.32em; font-weight:700; color:var(--text); vertical-align:super;
+  margin-left:0.16em; letter-spacing:0;
+}
+.hero-title-dot{ color:var(--accent); }
 .hero-sub{
   font-size:19px; color:var(--text-secondary); font-weight:300;
   max-width:600px; margin:32px auto 0; line-height:1.7;

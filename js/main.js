@@ -128,6 +128,47 @@
     });
   });
 
+  /* ------------------------------- Plan selector ------------------------------- */
+  // Pricing card's Full License / Demo radio pair — swaps which CTA shows
+  // (Buy button vs the two OS demo links) instead of a separate dropdown.
+  // The swap cross-fades: the incoming CTA is un-hidden a frame before its
+  // fade-in starts, and the outgoing one is only re-hidden once its fade-out
+  // transition actually finishes (not on a guessed timeout).
+  document.querySelectorAll('.plan-options').forEach((group) => {
+    const card = group.closest('.pricing-card');
+    if (!card) return;
+    const options = [...group.querySelectorAll('.plan-option')];
+    const ctas = [...card.querySelectorAll('[data-plan-cta]')];
+    ctas.forEach((cta) => { if (cta.hidden) cta.classList.add('is-hiding'); });
+
+    options.forEach((opt) => {
+      opt.addEventListener('click', () => {
+        const plan = opt.dataset.plan;
+        if (opt.classList.contains('plan-option-selected')) return;
+        options.forEach((o) => {
+          o.classList.toggle('plan-option-selected', o === opt);
+          o.querySelector('input').checked = (o === opt);
+        });
+        ctas.forEach((cta) => {
+          const isTarget = cta.dataset.planCta === plan;
+          if (isTarget) {
+            cta.hidden = false;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              cta.classList.remove('is-hiding');
+            }));
+          } else {
+            cta.classList.add('is-hiding');
+            cta.addEventListener('transitionend', function onEnd(e) {
+              if (e.propertyName !== 'opacity') return;
+              cta.removeEventListener('transitionend', onEnd);
+              if (cta.classList.contains('is-hiding')) cta.hidden = true;
+            });
+          }
+        });
+      });
+    });
+  });
+
   /* -------------------------------- Side rail nav ---------------------------- */
   // Only present on the Creative Dist product page. Always visible, plain
   // text links — highlights whichever section is currently in view.

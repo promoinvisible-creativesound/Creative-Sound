@@ -395,7 +395,8 @@ body.search-open{ overflow:hidden; }
 .btn{
   display:inline-flex; align-items:center; justify-content:center;
   padding:12px 24px; font-size:13px; font-weight:600;
-  letter-spacing:0.5px; border:1px solid transparent; transition:all 0.3s var(--ease);
+  letter-spacing:0.5px; border:1px solid transparent;
+  transition:transform 0.15s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease), background 0.3s var(--ease);
   white-space:nowrap; background:none; font-family:inherit;
   position:relative; overflow:hidden; isolation:isolate;
   clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
@@ -407,6 +408,16 @@ body.search-open{ overflow:hidden; }
   transition:transform 0.65s var(--ease);
 }
 .btn:hover::before{ transform:translateX(140%); }
+/* Press "flash" — a quick radial glow that snaps in on press and only fades
+   out once released, like a hardware button's LED catching the click. */
+.btn::after{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(circle, var(--amber-bright) 0%, transparent 68%);
+  opacity:0; transform:scale(0.6);
+  transition:opacity 0.45s var(--ease), transform 0.45s var(--ease);
+}
+.btn:active{ transform:scale(0.96); }
+.btn:active::after{ opacity:0.55; transform:scale(1.2); transition:opacity 0s, transform 0s; }
 .btn > *{ position:relative; z-index:2; }
 .btn-buy{
   border-color:var(--border-strong); color:var(--text);
@@ -419,9 +430,10 @@ body.search-open{ overflow:hidden; }
   color:#0a0a09; box-shadow:0 0 0 1px rgba(232,134,44,0.5);
 }
 .btn-primary:hover{
-  box-shadow:0 0 0 1px var(--amber-bright);
-  transform:translateY(-1px);
+  box-shadow:0 0 0 1px var(--amber-bright), 0 8px 22px -8px var(--accent-dim);
+  transform:translateY(-2px);
 }
+.btn-primary:active{ transform:translateY(0) scale(0.96); box-shadow:0 0 0 1px var(--amber-bright), inset 0 2px 8px rgba(0,0,0,0.3); }
 .btn-ghost{
   border-color:var(--border-strong); color:var(--text);
 }
@@ -1001,6 +1013,69 @@ body.search-open{ overflow:hidden; }
 .pricing-currency{ font-size:32px; vertical-align:top; color:var(--accent); }
 .pricing-note{ display:block; font-size:13px; color:var(--text-secondary); margin-top:10px; }
 .pricing-note-small{ margin-top:18px; font-size:11.5px; color:var(--text-muted); }
+
+/* ----------------------------- Plan selector ----------------------------- */
+.plan-head{ text-align:center; margin-bottom:24px; }
+.plan-title{
+  font-family:var(--font-display); font-size:clamp(22px, 3.2vw, 28px); font-weight:800;
+  letter-spacing:0.3px; color:var(--text);
+}
+.plan-title-dot{ color:var(--accent); }
+
+.plan-options{ display:flex; flex-direction:column; gap:10px; margin-bottom:28px; text-align:left; }
+.plan-option{
+  display:flex; align-items:center; gap:12px; padding:16px 18px; position:relative;
+  border:1px solid var(--border-strong); border-radius:10px; cursor:pointer;
+  transition:border-color 0.25s var(--ease), background 0.25s var(--ease), box-shadow 0.25s var(--ease), transform 0.15s var(--ease);
+}
+.plan-option:hover{ border-color:var(--accent-dim); }
+.plan-option:active{ transform:scale(0.99); }
+.plan-option input{ position:absolute; opacity:0; pointer-events:none; }
+.plan-option-radio{
+  flex-shrink:0; width:18px; height:18px; border-radius:50%; border:2px solid var(--border-strong);
+  position:relative; transition:border-color 0.25s var(--ease);
+}
+.plan-option-radio::after{
+  content:''; position:absolute; inset:3px; border-radius:50%; background:var(--accent);
+  transform:scale(0); transition:transform 0.25s cubic-bezier(.34,1.56,.64,1);
+}
+.plan-option-selected{
+  border-color:var(--accent); background:var(--accent-glow);
+  box-shadow:0 0 0 1px var(--accent-dim), 0 8px 24px -12px var(--accent-dim);
+}
+.plan-option-selected .plan-option-radio{ border-color:var(--accent); }
+.plan-option-selected .plan-option-radio::after{ transform:scale(1); }
+.plan-option-body{ flex:1; display:flex; flex-direction:column; gap:3px; }
+.plan-option-name{ font-weight:700; font-size:14px; color:var(--text); }
+.plan-option-desc{ font-size:12px; color:var(--text-muted); transition:color 0.25s var(--ease); }
+.plan-option-selected .plan-option-desc{ color:var(--text-secondary); }
+.plan-option-price{ font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text); white-space:nowrap; }
+.plan-option-original{ font-size:13px; color:var(--text-muted); text-decoration:line-through; margin-right:6px; }
+.plan-option-discount{
+  display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:0.5px;
+  color:#0a0a09; background:var(--accent); padding:2px 6px; border-radius:10px;
+  vertical-align:middle; margin-left:6px;
+}
+.plan-option-free{ color:var(--led-green); font-size:15px; }
+
+.plan-compat-badges{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:4px 0 22px; }
+.plan-compat-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:0.5px; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:20px; padding:5px 12px;
+}
+.plan-compat-icon{ width:11px; height:11px; fill:var(--text-secondary); flex-shrink:0; }
+
+/* Both live in the DOM; swapping plans cross-fades between them instead of
+   an abrupt display toggle (main.js un-hides the target first, then flips
+   .is-hiding a frame later so the opacity/transform transition can run). */
+.plan-cta{ transition:opacity 0.22s var(--ease), transform 0.22s var(--ease); }
+.plan-cta.is-hiding{ opacity:0; transform:translateY(6px); }
+.plan-demo-links{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.plan-demo-links[hidden]{ display:none; }
+.demo-download-left{ display:flex; align-items:center; gap:8px; }
+.demo-download-icon{ width:14px; height:14px; fill:currentColor; flex-shrink:0; }
+
 .mac-warning-note{
   display:flex; gap:8px; align-items:flex-start; margin:14px auto 0; padding:12px 14px;
   max-width:520px; background:rgba(255,179,71,0.08); border:1px solid rgba(255,179,71,0.25); border-radius:8px;
@@ -1029,6 +1104,10 @@ body.search-open{ overflow:hidden; }
 }
 .pricing-features li:last-child{ border-bottom:1px solid var(--border); }
 .pricing-features li::before{ content:'—'; color:var(--accent); }
+.pricing-features-check li::before{ content:'✓'; color:var(--led-green); font-weight:700; }
+.pricing-features-check li.feature-no{ color:var(--text-muted); }
+.pricing-features-check li.feature-no::before{ content:'✕'; color:var(--error); font-weight:700; }
+.feature-no-note{ font-size:11.5px; color:var(--text-muted); }
 .btn-buy-large{ width:100%; padding:16px; font-size:14px; }
 
 /* ----------------------------- Demo download ----------------------------- */
@@ -1056,10 +1135,11 @@ body.search-open{ overflow:hidden; }
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:10px 12px; border-radius:6px; border:1px solid var(--border);
   color:var(--text); font-size:13px; font-weight:600; margin-bottom:8px;
-  transition:border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+  transition:border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease), transform 0.15s var(--ease);
 }
 .demo-download-link:last-child{ margin-bottom:0; }
 .demo-download-link:hover{ border-color:var(--accent); background:var(--accent-glow); color:var(--amber-text); }
+.demo-download-link:active{ transform:scale(0.98); }
 .demo-download-fmt{ font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:0.5px; }
 
 /* --------------------------------- Footer --------------------------------- */

@@ -360,6 +360,9 @@ body.search-open{ overflow:hidden; }
 .section-tight{ padding:100px 32px; }
 /* Right under the compact homepage hero — no need for the usual top gap. */
 #plugins .section{ padding-top:20px; }
+/* Artists now follows the hero directly on the homepage — tighten the gap
+   between them instead of the full .section-tight top padding. */
+#hero.hero-home + #artists{ padding-top:56px; }
 /* Sections without a side image (no .feature-visual) get their heading
    block centered on the page instead of hugging the left edge. */
 .section-head{ max-width:680px; margin:0 auto 64px; text-align:center; }
@@ -1122,18 +1125,25 @@ body.search-open{ overflow:hidden; }
 .demo-download-fmt{ font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:0.5px; }
 
 /* --------------------------------- Footer --------------------------------- */
-#site-footer{ border-top:1px solid var(--border); padding:48px 32px; }
+#site-footer{ border-top:1px solid var(--border); padding:64px 32px 32px; }
 .footer-inner{
   max-width:var(--container); margin:0 auto;
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;
+  display:grid; grid-template-columns:1.6fr repeat(3, 1fr); gap:40px;
+  padding-bottom:36px; border-bottom:1px solid var(--border);
 }
-.footer-brand{ display:flex; flex-direction:column; gap:4px; }
+.footer-col{ display:flex; flex-direction:column; gap:12px; }
+.footer-col-brand{ gap:16px; }
+.footer-col-title{
+  font-family:var(--mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted);
+  text-transform:uppercase;
+}
+.footer-col a{ font-size:13.5px; color:var(--text-secondary); }
+.footer-col a:hover{ color:var(--amber-text); }
 .footer-brand-name{ font-family:var(--font-display); font-size:14px; letter-spacing:2px; color:var(--text-secondary); }
 .footer-brand-sub{ font-family:var(--font-sans); font-size:11px; font-style:italic; color:var(--text-muted); }
-.footer-links{ display:flex; gap:26px; flex-wrap:wrap; }
-.footer-links a{ font-size:13px; color:var(--text-secondary); }
-.footer-links a:hover{ color:var(--amber-text); }
-.footer-copy{ font-size:11.5px; color:var(--text-muted); }
+.footer-credit{ font-size:12px; color:var(--text-muted); }
+.footer-credit a{ color:var(--text-secondary); }
+.footer-credit a:hover{ color:var(--amber-text); }
 .footer-social{ display:flex; gap:10px; }
 .footer-social-link{
   display:flex; align-items:center; justify-content:center;
@@ -1143,6 +1153,13 @@ body.search-open{ overflow:hidden; }
 }
 .footer-social-link svg{ width:16px; height:16px; }
 .footer-social-link:hover{ color:var(--amber-text); border-color:var(--accent); }
+.footer-bottom{
+  max-width:var(--container); margin:20px auto 0;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.footer-copy{ font-size:11.5px; color:var(--text-muted); }
+.footer-email{ font-size:11.5px; color:var(--text-muted); }
+.footer-email:hover{ color:var(--amber-text); }
 
 /* --------------------------------- Auth forms ------------------------------- */
 .auth-card{ max-width:420px; margin:64px auto 140px; padding:40px; }
@@ -1352,7 +1369,9 @@ body.search-open{ overflow:hidden; }
   .header-utils{ gap:6px; }
   .header-icon-btn{ width:30px; height:30px; }
   .header-icon-btn svg{ width:15px; height:15px; }
-  .footer-inner{ flex-direction:column; align-items:flex-start; }
+  .footer-inner{ grid-template-columns:1fr 1fr; }
+  .footer-col-brand{ grid-column:1 / -1; }
+  .footer-bottom{ flex-direction:column; align-items:flex-start; }
   .nav-new-badge{ font-size:11px; top:-14px; }
   .nav-dropdown-caret{ display:none; }
 }

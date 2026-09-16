@@ -498,4 +498,21 @@
       if (e.key === 'Escape' && lightbox.classList.contains('open')) closeVideo();
     });
   }
+
+  /* -------------------------- Pack sound picker ----------------------------- */
+  // No audio is wired in yet — selecting a tile just toggles a real
+  // play/pause state (icon swap + the tile animating forward) so it feels
+  // alive rather than dead, without pretending a track actually plays.
+  const soundPicker = document.querySelector('.pack-sound-picker');
+  if (soundPicker) {
+    const tiles = soundPicker.querySelectorAll('.pack-sound-tile');
+    tiles.forEach((tile) => {
+      tile.addEventListener('click', () => {
+        const wasActive = tile.classList.contains('is-active');
+        tiles.forEach((t) => t.classList.remove('is-active'));
+        if (!wasActive) tile.classList.add('is-active');
+        soundPicker.classList.toggle('has-active', !wasActive);
+      });
+    });
+  }
 })();

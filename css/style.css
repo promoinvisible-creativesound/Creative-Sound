@@ -1337,9 +1337,16 @@ body.search-open{ overflow:hidden; }
   .section{ padding:110px 24px; }
 }
 @media (max-width:760px){
+  /* 100vh alone is unreliable on mobile browsers (the address bar showing
+     or hiding changes it), which was leaving a sliver of page content
+     visible under the overlay instead of a clean, fully opaque menu. 100dvh
+     tracks the real visible viewport; the plain vh line is a fallback for
+     browsers that don't support dvh yet. */
   #site-nav{
-    position:fixed; top:calc(64px + var(--announce-h)); left:0; right:0; bottom:0; height:calc(100vh - 64px - var(--announce-h)); z-index:90;
-    background:rgba(8,8,7,0.98); flex-direction:column; align-items:center;
+    position:fixed; top:calc(64px + var(--announce-h)); left:0; right:0; z-index:90;
+    height:calc(100vh - 64px - var(--announce-h));
+    height:calc(100dvh - 64px - var(--announce-h));
+    background:rgb(8,8,7); flex-direction:column; align-items:center;
     justify-content:center; gap:32px; overflow-y:auto;
     transform:translateY(-8px); opacity:0; pointer-events:none;
     transition:opacity 0.3s var(--ease), transform 0.3s var(--ease);
@@ -1350,7 +1357,11 @@ body.search-open{ overflow:hidden; }
   .header-actions .btn-buy{ display:none; }
   .header-cart-icon{ display:flex; }
   .header-inner{ padding:14px 16px; }
+  /* Decluttered to a single obvious menu button in the top-right corner —
+     search, support and account move into the open nav instead of sitting
+     in a crowded row of five icons next to the hamburger. */
   .header-utils{ gap:6px; }
+  #header-search-btn, .header-utils a[aria-label="Support"], #header-account-link{ display:none; }
   .header-icon-btn{ width:30px; height:30px; }
   .header-icon-btn svg{ width:15px; height:15px; }
   .footer-inner{ grid-template-columns:1fr 1fr; }
@@ -1376,6 +1387,86 @@ body.search-open{ overflow:hidden; }
 }
 @media (max-width:1000px){ .packs-grid{ grid-template-columns:repeat(2, 1fr); } }
 @media (max-width:560px){ .packs-grid{ grid-template-columns:1fr; max-width:380px; } }
+
+/* ---------------------------- Category hub cards --------------------------- */
+/* packs.html itself is just a hub pointing at the two category pages
+   (preset-packs.html / sample-packs.html) — a plain link card each,
+   no product-tile chrome since these aren't purchasable items. */
+.pack-category-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:24px;
+  max-width:900px; margin:0 auto;
+}
+@media (max-width:700px){ .pack-category-grid{ grid-template-columns:1fr; max-width:420px; } }
+/* Full-bleed "poster" cards — an animated scene fills the whole rectangle,
+   the copy sits over a bottom scrim like a movie or app-store category
+   card, instead of a small boxed icon above plain text. */
+/* Clean, static product-style card — a cover-art shot, a status pill, a
+   title and a plain checklist of what's inside. No price or CTA button:
+   this hub isn't a bundle deal, just a fork pointing at the two catalogs. */
+.pack-simple-card{
+  display:block; padding:24px; background:var(--panel);
+  border:1px solid var(--border-strong); border-radius:16px;
+  box-shadow:0 30px 60px -30px rgba(0,0,0,0.8);
+  transition:border-color 0.3s var(--ease), transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.pack-simple-card:hover{
+  border-color:var(--accent-dim); transform:translateY(-4px);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,0.85), 0 0 60px -20px var(--accent-glow);
+}
+.pack-simple-art{
+  position:relative; aspect-ratio:16/10; margin-bottom:22px; border-radius:10px;
+  background:radial-gradient(circle at 50% 35%, rgba(232,134,44,0.1) 0%, transparent 60%), #020201;
+  overflow:hidden; display:flex; align-items:center; justify-content:center;
+}
+.pack-simple-art::after{
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:2;
+  background:linear-gradient(115deg, transparent 42%, rgba(232,134,44,0.2) 50%, transparent 58%);
+  transform:translateX(-130%); transition:transform 0.75s var(--ease);
+}
+.pack-simple-card:hover .pack-simple-art::after{ transform:translateX(130%); }
+.pack-simple-art img{
+  max-width:78%; max-height:78%; object-fit:contain; display:block;
+  animation:packSimpleFloat 5s ease-in-out infinite;
+}
+.pack-simple-art-soon img{ filter:blur(9px) brightness(0.55) saturate(0.7); max-width:100%; max-height:100%; animation:none; }
+.pack-simple-art-soon .pack-tile-soon-tag{ position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; }
+@keyframes packSimpleFloat{
+  0%,100%{ transform:translateY(0) rotate(0deg); }
+  50%{ transform:translateY(-6px) rotate(-0.6deg); }
+}
+@media (prefers-reduced-motion: reduce){ .pack-simple-art img{ animation:none; } }
+
+.pack-simple-badge{
+  display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10.5px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; color:var(--amber-text);
+  background:var(--accent-glow); border:1px solid var(--accent-dim); border-radius:999px;
+  padding:7px 14px 7px 11px; margin-bottom:16px;
+}
+.pack-simple-badge-dot{
+  width:6px; height:6px; border-radius:50%; background:var(--amber-bright); flex-shrink:0;
+  animation:packBadgePulse 2.2s ease-in-out infinite;
+}
+@keyframes packBadgePulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(255,215,0,0.55); }
+  50%{ box-shadow:0 0 0 5px rgba(255,215,0,0); }
+}
+@media (prefers-reduced-motion: reduce){ .pack-simple-badge-dot{ animation:none; } }
+.pack-simple-card h3{ font-family:var(--font-display); font-size:22px; color:var(--text); margin-bottom:14px; }
+.pack-simple-list{ margin:0 0 22px; padding:0; list-style:none; }
+.pack-simple-list li{
+  display:flex; align-items:center; gap:10px; padding:8px 0;
+  font-size:13.5px; color:var(--text-secondary);
+}
+.pack-simple-list svg{ width:15px; height:15px; color:var(--amber-text); flex-shrink:0; }
+
+.pack-category-cta{
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--amber-text); transition:color 0.3s var(--ease);
+}
+.pack-category-cta svg{ width:14px; height:14px; flex-shrink:0; transition:transform 0.35s var(--ease); }
+.pack-simple-card:hover .pack-category-cta{ color:var(--amber-bright); }
+.pack-simple-card:hover .pack-category-cta svg{ transform:translateX(7px); }
 
 /* No clip-path here on purpose — the cover art must always render as a
    plain, uncropped-looking rectangle. The futuristic accent instead comes
@@ -1404,6 +1495,13 @@ body.search-open{ overflow:hidden; }
   transition:transform 0.6s var(--ease);
 }
 .pack-tile:hover .pack-tile-shot img{ transform:scale(1.06); }
+
+/* A render with its own transparent padding (product art, not a full-bleed
+   screenshot) sits smaller within the frame with a bit of matting around it
+   instead of stretching edge-to-edge. */
+.pack-tile-shot-inset{ padding:20px; }
+.pack-tile-shot-inset img{ object-fit:contain; }
+.pack-tile:hover .pack-tile-shot-inset img{ transform:scale(1.03); }
 .pack-tile-shot::after{
   content:''; position:absolute; inset:0; pointer-events:none;
   background:linear-gradient(115deg, transparent 42%, rgba(232,134,44,0.25) 50%, transparent 58%);
@@ -1425,6 +1523,13 @@ body.search-open{ overflow:hidden; }
 .pack-tile-body{ padding:20px 20px 18px; border-top:1px solid var(--border); }
 .pack-tile-name{ display:block; font-family:var(--font-display); font-size:16px; color:var(--text); margin-bottom:6px; letter-spacing:0.3px; }
 .pack-tile-tagline{ display:block; font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:16px; }
+.pack-tile-points{ margin:0 0 16px; padding:0; list-style:none; }
+.pack-tile-points li{
+  position:relative; padding-left:14px; margin-bottom:6px;
+  font-size:12px; color:var(--text-secondary); line-height:1.45;
+}
+.pack-tile-points li:last-child{ margin-bottom:0; }
+.pack-tile-points li::before{ content:'–'; position:absolute; left:0; color:var(--amber-text); }
 .pack-tile-cta{
   display:flex; align-items:center; gap:8px;
   font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
@@ -1464,6 +1569,31 @@ body.search-open{ overflow:hidden; }
 .pack-hero-art::before{ top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; }
 .pack-hero-art::after{ bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid; }
 .pack-hero-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.pack-hero-art-portrait{
+  aspect-ratio:3/4; border-radius:0; overflow:visible;
+  background:none; border:none; box-shadow:none; position:relative;
+}
+.pack-hero-art-portrait::after{ display:none; }
+.pack-hero-art-portrait::before{
+  content:''; position:absolute; z-index:-1; left:50%; top:50%;
+  width:135%; height:135%; transform:translate(-50%,-50%); border:none;
+  background:radial-gradient(circle, var(--accent-glow) 0%, rgba(232,134,44,0.05) 45%, transparent 72%);
+  animation:packHeroGlowPulse 5s ease-in-out infinite; pointer-events:none;
+}
+.pack-hero-art-portrait img{ animation:packHeroFloat 6s ease-in-out infinite; transition:filter 0.4s var(--ease); }
+.pack-hero-art-portrait:hover img{ filter:drop-shadow(0 0 24px rgba(232,134,44,0.35)); }
+@keyframes packHeroFloat{
+  0%,100%{ transform:translateY(0) rotate(0deg); }
+  50%{ transform:translateY(-12px) rotate(-0.7deg); }
+}
+@keyframes packHeroGlowPulse{
+  0%,100%{ opacity:0.65; transform:translate(-50%,-50%) scale(1); }
+  50%{ opacity:1; transform:translate(-50%,-50%) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .pack-hero-art-portrait img, .pack-hero-art-portrait::before{ animation:none; }
+}
 .pack-hero-genre{
   font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
   color:var(--amber-text); margin-bottom:12px; display:block;
@@ -1505,6 +1635,95 @@ body.search-open{ overflow:hidden; }
   text-align:center; color:var(--text-muted); font-size:13px; padding:40px 20px;
   border:1px dashed var(--border-strong); border-radius:10px;
 }
+
+/* --------------------------- USB drive preview cards ----------------------- */
+/* Each category previews as a small glass USB stick — a play button and the
+   category name sit inside the translucent body, with soft glowing "liquid"
+   blobs drifting behind them for continuous, ambient motion. No audio is
+   wired in yet (see the note below the grid); a tap still toggles a real
+   play/pause state so it feels alive rather than dead. */
+/* ------------------------------ Sound picker ------------------------------- */
+/* A small square tile per category — selecting one animates it up and
+   forward, above and ahead of the rest, where its play control lives. No
+   audio is wired in yet (see the note below); a tap still swaps a real
+   play/pause icon and lights the tile so it feels alive, not dead. */
+.pack-sound-picker{
+  display:flex; align-items:flex-end; justify-content:center; flex-wrap:wrap;
+  gap:16px; max-width:640px; margin:0 auto 18px; padding:22px 10px 0; border:none; background:none;
+}
+.pack-sound-tile{
+  position:relative; width:86px; height:86px; flex-shrink:0; border-radius:20px;
+  background:linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 45%, rgba(0,0,0,0.2) 100%), var(--panel);
+  border:1px solid rgba(255,255,255,0.3);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  cursor:pointer; overflow:hidden; padding:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 26px -18px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.03);
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s var(--ease), border-color 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+.pack-sound-tile::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, transparent 35%);
+}
+.pack-sound-tile:hover{ transform:translateY(-5px); border-color:var(--accent-dim); }
+.pack-sound-picker.has-active .pack-sound-tile:not(.is-active){ transform:scale(0.86); opacity:0.45; }
+.pack-sound-tile.is-active{
+  transform:translateY(-20px) scale(1.2); z-index:5;
+  border-color:var(--amber-bright);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 24px 44px -18px rgba(0,0,0,0.75), 0 0 44px -8px rgba(255,215,0,0.55);
+}
+
+/* Soft glow that blooms behind the tile once selected, plus a sharp on/off
+   blink layered on top — reads as a real "recording" light, not just a
+   smooth breathing glow. */
+.pack-sound-glow{
+  position:absolute; inset:-40%; z-index:0; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,215,0,0.35) 0%, transparent 65%);
+  opacity:0; transition:opacity 0.4s var(--ease);
+}
+.pack-sound-tile.is-active .pack-sound-glow{ opacity:1; animation:packSoundPulse 2.2s ease-in-out infinite; }
+@keyframes packSoundPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }
+
+.pack-sound-blink{
+  position:absolute; top:9px; right:9px; z-index:2; width:6px; height:6px; border-radius:50%;
+  background:var(--amber-bright); opacity:0; pointer-events:none;
+  box-shadow:0 0 6px 1px rgba(255,215,0,0.8);
+}
+.pack-sound-tile.is-active .pack-sound-blink{ animation:packSoundBlink 1s linear infinite; }
+@keyframes packSoundBlink{ 0%,49%{ opacity:1; } 50%,100%{ opacity:0.15; } }
+
+@media (prefers-reduced-motion: reduce){
+  .pack-sound-tile.is-active .pack-sound-glow{ animation:none; }
+  .pack-sound-tile.is-active .pack-sound-blink{ animation:none; opacity:1; }
+}
+
+.pack-sound-icon{
+  position:relative; z-index:1; width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(255,179,71,0.5); color:var(--amber-text);
+  transition:width 0.3s var(--ease), height 0.3s var(--ease), background 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.pack-sound-tile.is-active .pack-sound-icon{
+  width:34px; height:34px; background:var(--amber-bright); color:#0a0a09; border-color:var(--amber-bright);
+}
+.pack-sound-icon svg{ width:11px; height:11px; }
+.pack-sound-icon .icon-pause{ display:none; }
+.pack-sound-tile.is-active .pack-sound-icon .icon-play{ display:none; }
+.pack-sound-tile.is-active .pack-sound-icon .icon-pause{ display:block; }
+
+.pack-sound-name{
+  position:relative; z-index:1; font-family:var(--mono); font-size:10px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; color:var(--text-secondary);
+  transition:color 0.3s var(--ease);
+}
+.pack-sound-tile.is-active .pack-sound-name{ color:var(--text); }
+
+@media (max-width:460px){
+  .pack-sound-picker{ gap:10px; }
+  .pack-sound-tile{ width:72px; height:72px; }
+  .pack-sound-tile.is-active{ transform:translateY(-14px) scale(1.15); }
+}
+
+.pack-preview-note{ text-align:center; font-size:12.5px; color:var(--text-secondary); }
 
 /* ------------------------------ Dev placeholder note ----------------------- */
 /* Marks copy/data that still needs the real pack info swapped in — not

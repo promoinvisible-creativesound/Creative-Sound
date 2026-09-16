@@ -135,6 +135,54 @@
     });
   });
 
+  /* --------------------------------- Stories ---------------------------------- */
+  // Every clip autoplays muted+looped so the marquee is always moving — a
+  // video's src attaches lazily (just before it scrolls into view) so none
+  // of the 8 clips downloads until it's actually about to be seen. Hovering
+  // a card is what "plays" it visually (CSS scales it up over the rest);
+  // right-clicking the hovered card toggles its sound, muting every other
+  // card first so only one is ever audible.
+  const storyCards = document.querySelectorAll('.story-card');
+  const loadStory = (card) => {
+    const video = card.querySelector('.story-video');
+    if (video && !video.src) {
+      video.src = video.dataset.src;
+      video.play().catch(() => {});
+    }
+  };
+  if (storyCards.length) {
+    if (window.IntersectionObserver) {
+      const lazyLoad = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          loadStory(entry.target);
+          lazyLoad.unobserve(entry.target);
+        });
+      }, { rootMargin: '400px 200px' });
+      storyCards.forEach((card) => lazyLoad.observe(card));
+    } else {
+      storyCards.forEach(loadStory);
+    }
+
+    storyCards.forEach((card) => {
+      const video = card.querySelector('.story-video');
+      if (!video) return;
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const turningOn = video.muted;
+        storyCards.forEach((other) => {
+          const otherVideo = other.querySelector('.story-video');
+          if (otherVideo) otherVideo.muted = true;
+          other.classList.remove('is-unmuted');
+        });
+        if (turningOn) {
+          video.muted = false;
+          card.classList.add('is-unmuted');
+        }
+      });
+    });
+  }
+
   /* -------------------------------- Side rail nav ---------------------------- */
   // Only present on the Creative Dist product page. Always visible, plain
   // text links — highlights whichever section is currently in view.

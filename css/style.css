@@ -497,6 +497,24 @@ body.search-open{ overflow:hidden; }
   .hero-launch-visual img{ max-width:830px; }
 }
 
+/* Product-page hero: same grid as above, but mirrored — the plugin shot
+   sits in a compact frame on the left, title/CTAs take the wide column on
+   the right, matching the reference product page's proportions instead of
+   a hero shot dominating the layout. Visual/text swap places in the markup
+   (grid auto-places by DOM order); this only adjusts the column split and
+   caps the shot's size so it reads as a thumbnail, not the focal point. */
+#hero.hero-launch-mirror .hero-inner{ grid-template-columns:minmax(0, 0.36fr) minmax(0, 0.64fr); }
+#hero.hero-launch-mirror .hero-launch-visual img{ max-width:520px; }
+@media (max-width:900px){
+  /* Higher specificity than the shared #hero.hero-launch mobile rule above
+     (extra .hero-launch-mirror class), so it must repeat the 1fr reset here
+     or the desktop 0.36/0.64 split would win and squeeze both columns. */
+  #hero.hero-launch-mirror .hero-inner{ grid-template-columns:1fr; }
+  #hero.hero-launch-mirror .hero-launch-text{ order:0; }
+  #hero.hero-launch-mirror .hero-launch-visual{ order:1; }
+  #hero.hero-launch-mirror .hero-launch-visual img{ max-width:380px; }
+}
+
 .scroll-cue{
   position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
   width:22px; height:36px; border:1px solid var(--border-strong); border-radius:12px;

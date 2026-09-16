@@ -123,15 +123,26 @@
   /* ------------------------------- Plan selector ------------------------------- */
   // Pricing card's Full License / Demo radio pair — swaps which CTA shows
   // (Buy button vs the two OS demo links) instead of a separate dropdown.
-  // The swap cross-fades: the incoming CTA is un-hidden a frame before its
-  // fade-in starts, and the outgoing one is only re-hidden once its fade-out
-  // transition actually finishes (not on a guessed timeout).
+  // The two candidates share one grid cell (.plan-cta-stack) so there's no
+  // layout jump, but that also means a simultaneous cross-fade would show
+  // them overlapping mid-transition — the solid Buy button ghosting through
+  // the outlined demo-download cards, for instance. So the swap runs in two
+  // steps instead: the outgoing CTA fades out completely first, and only
+  // once that transition actually finishes (not a guessed timeout) does the
+  // matching incoming CTA in that same stack get revealed and fade in.
   document.querySelectorAll('.plan-options').forEach((group) => {
     const card = group.closest('.pricing-card');
     if (!card) return;
     const options = [...group.querySelectorAll('.plan-option')];
     const ctas = [...card.querySelectorAll('[data-plan-cta]')];
     ctas.forEach((cta) => { if (cta.hidden) cta.classList.add('is-hiding'); });
+
+    function revealCta(cta) {
+      cta.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        cta.classList.remove('is-hiding');
+      }));
+    }
 
     options.forEach((opt) => {
       opt.addEventListener('click', () => {
@@ -142,20 +153,16 @@
           o.querySelector('input').checked = (o === opt);
         });
         ctas.forEach((cta) => {
-          const isTarget = cta.dataset.planCta === plan;
-          if (isTarget) {
-            cta.hidden = false;
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-              cta.classList.remove('is-hiding');
-            }));
-          } else {
-            cta.classList.add('is-hiding');
-            cta.addEventListener('transitionend', function onEnd(e) {
-              if (e.propertyName !== 'opacity') return;
-              cta.removeEventListener('transitionend', onEnd);
-              if (cta.classList.contains('is-hiding')) cta.hidden = true;
-            });
-          }
+          if (cta.dataset.planCta === plan || cta.hidden) return; // already the target, or already gone
+          const stack = cta.closest('.plan-cta-stack') || card;
+          const target = stack.querySelector(`[data-plan-cta="${plan}"]`);
+          cta.classList.add('is-hiding');
+          cta.addEventListener('transitionend', function onEnd(e) {
+            if (e.propertyName !== 'opacity') return;
+            cta.removeEventListener('transitionend', onEnd);
+            cta.hidden = true;
+            if (target) revealCta(target);
+          });
         });
       });
     });

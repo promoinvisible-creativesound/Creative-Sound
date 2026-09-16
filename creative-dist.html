@@ -121,10 +121,8 @@
   <a href="#flux" class="side-rail-link" data-section="flux">Flux</a>
   <a href="#eq" class="side-rail-link" data-section="eq">EQ</a>
   <a href="#output" class="side-rail-link" data-section="output">Output</a>
-  <a href="#demo" class="side-rail-link" data-section="demo">Sound</a>
   <a href="#artists" class="side-rail-link" data-section="artists">Artists</a>
   <a href="#stories" class="side-rail-link" data-section="stories">Stories</a>
-  <a href="#compatibility" class="side-rail-link" data-section="compatibility">Compatibility</a>
   <a href="#pricing" class="side-rail-link" data-section="pricing">Pricing</a>
 </nav>
 
@@ -145,7 +143,7 @@
         You just found the plugin.
       </p>
       <div class="hero-cta reveal-up">
-        <a href="#demo" class="btn btn-primary">Listen to the demo</a>
+        <a href="#pricing" class="btn btn-primary">Get Creative Dist</a>
         <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="btn btn-ghost">Buy €25</a>
         <div class="demo-download">
           <button type="button" class="btn btn-ghost demo-download-trigger" aria-haspopup="true" aria-expanded="false">
@@ -368,116 +366,6 @@
     <div class="feature-visual reveal-up">
       <img src="assets/img/module-output.png?v=2" alt="Output section in Creative Dist 2.0 with Input, Output and L/R meter" loading="lazy"
            style="display:block;width:100%;height:auto;margin:0 auto;">
-    </div>
-  </section>
-
-  <!-- ============ SOUND DEMO ============ -->
-  <section id="demo" class="section">
-    <div class="section-head">
-      <p class="kicker reveal-up">LISTEN</p>
-      <h2 class="reveal-up">Hear the difference.</h2>
-      <p class="section-lede reveal-up">
-        Same loop, before and after Creative Dist 2.0. Flip between Dry and Wet: no
-        level tricks, just the plugin doing its thing.
-      </p>
-    </div>
-
-    <div class="demo-list">
-      <div class="demo-row reveal-up" data-name="Drums">
-        <button class="demo-row-play" aria-label="Play Drums demo">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="demo-row-name">Drums</span>
-        <canvas class="demo-row-waveform" aria-hidden="true"></canvas>
-        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-row-toggle-btn active" data-mode="dry">DRY</button>
-          <button class="demo-row-toggle-btn" data-mode="wet">WET</button>
-        </div>
-        <audio class="demo-row-audio-dry" src="assets/audio/drums-dry.wav" preload="metadata" loop></audio>
-        <audio class="demo-row-audio-wet" src="assets/audio/drums-wet.wav" preload="metadata" loop></audio>
-      </div>
-
-      <div class="demo-row reveal-up" data-name="Bass">
-        <button class="demo-row-play" aria-label="Play Bass demo">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="demo-row-name">Bass</span>
-        <canvas class="demo-row-waveform" aria-hidden="true"></canvas>
-        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-row-toggle-btn active" data-mode="dry">DRY</button>
-          <button class="demo-row-toggle-btn" data-mode="wet">WET</button>
-        </div>
-        <audio class="demo-row-audio-dry" src="assets/audio/bass-dry.wav" preload="metadata" loop></audio>
-        <audio class="demo-row-audio-wet" src="assets/audio/bass-wet.wav" preload="metadata" loop></audio>
-      </div>
-
-      <div class="demo-row reveal-up" data-name="Synth">
-        <button class="demo-row-play" aria-label="Play Synth demo">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="demo-row-name">Synth</span>
-        <canvas class="demo-row-waveform" aria-hidden="true"></canvas>
-        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-row-toggle-btn active" data-mode="dry">DRY</button>
-          <button class="demo-row-toggle-btn" data-mode="wet">WET</button>
-        </div>
-        <audio class="demo-row-audio-dry" src="assets/audio/synth-dry.wav" preload="metadata" loop></audio>
-        <audio class="demo-row-audio-wet" src="assets/audio/synth-wet.wav" preload="metadata" loop></audio>
-      </div>
-
-      <div class="demo-row reveal-up" data-name="Vocal">
-        <button class="demo-row-play" aria-label="Play Vocal demo">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="demo-row-name">Vocal</span>
-        <canvas class="demo-row-waveform" aria-hidden="true"></canvas>
-        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-row-toggle-btn active" data-mode="dry">DRY</button>
-          <button class="demo-row-toggle-btn" data-mode="wet">WET</button>
-        </div>
-        <audio class="demo-row-audio-dry" src="assets/audio/vocal-dry.wav" preload="metadata" loop></audio>
-        <audio class="demo-row-audio-wet" src="assets/audio/vocal-wet.wav" preload="metadata" loop></audio>
-      </div>
-
-      <div class="demo-row reveal-up" data-name="Melody">
-        <button class="demo-row-play" aria-label="Play Melody demo">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="demo-row-name">Melody</span>
-        <canvas class="demo-row-waveform" aria-hidden="true"></canvas>
-        <div class="demo-row-toggle" role="group" aria-label="Dry or wet signal">
-          <button class="demo-row-toggle-btn active" data-mode="dry">DRY</button>
-          <button class="demo-row-toggle-btn" data-mode="wet">WET</button>
-        </div>
-        <audio class="demo-row-audio-dry" src="assets/audio/melody-dry.wav" preload="metadata" loop></audio>
-        <audio class="demo-row-audio-wet" src="assets/audio/melody-wet.wav" preload="metadata" loop></audio>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ PRESETS & RANDOM ============ -->
-  <section class="section section-tight" id="presets">
-    <div class="section-head">
-      <p class="kicker reveal-up">WORKFLOW</p>
-      <h2 class="reveal-up">Presets and randomization.</h2>
-      <p class="section-lede reveal-up">
-        Full preset management with a customizable folder and one-click import of any
-        .xml preset from anywhere on disk. Step back with Undo if a change doesn't work
-        out, or hit Bypass to compare against your original signal. Each module has its
-        own dice to reroll just that one's character, or hit the dice in the top bar
-        to randomize every active module at once.
-      </p>
-    </div>
-    <div class="dice-row reveal-up">
-      <div class="dice-card"><span class="dice-icon">⚄</span><span>Saturation</span></div>
-      <div class="dice-card"><span class="dice-icon">⚄</span><span>Noise</span></div>
-      <div class="dice-card"><span class="dice-icon">⚄</span><span>Bode Shifter</span></div>
-      <div class="dice-card"><span class="dice-icon">⚄</span><span>All (top bar dice, every module at once)</span></div>
     </div>
   </section>
 
@@ -778,29 +666,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ============ COMPATIBILITY ============ -->
-  <section id="compatibility" class="section section-tight">
-    <div class="section-head">
-      <p class="kicker reveal-up">COMPATIBILITY</p>
-      <h2 class="reveal-up">Runs on your system.</h2>
-    </div>
-    <div class="compat-badges reveal-up">
-      <div class="compat-badge">
-        <span class="compat-badge-label">VST3</span>
-        <span class="compat-badge-sub">Windows 11+ · macOS</span>
-      </div>
-      <div class="compat-badge">
-        <span class="compat-badge-label">AU</span>
-        <span class="compat-badge-sub">macOS</span>
-      </div>
-    </div>
-    <p class="compat-note reveal-up">Windows 11 or later required.</p>
-    <div class="mac-warning-note reveal-up">
-      <span aria-hidden="true">⚠️</span>
-      <span>Mac users: Creative Dist isn't Apple-notarized, so Logic, Studio One or another DAW may not find it right after install. Quick one-command fix in our <a href="faq.html#mac-plugin-not-found">FAQ</a>.</span>
     </div>
   </section>
 

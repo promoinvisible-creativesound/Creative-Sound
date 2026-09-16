@@ -15,6 +15,32 @@
     document.body.classList.add('no-boot');
   }
 
+  /* --------------------------- Announcement ticker ------------------------ */
+  // Each row ships with a handful of copies of the same item, which is only
+  // ever enough to outrun very wide viewports by luck — on an ultra-wide or
+  // 4K screen the row could run out before the -50% loop wrapped, leaving a
+  // visible blank gap. Clone the row's own first item into itself until it's
+  // comfortably wider than the viewport, so it always has enough copy to
+  // loop seamlessly no matter the screen.
+  document.querySelectorAll('.update-ticker-track').forEach((track) => {
+    const rows = track.querySelectorAll('.update-ticker-row');
+    if (rows.length < 2) return;
+    const fill = () => {
+      const target = window.innerWidth * 1.5;
+      rows.forEach((row) => {
+        const template = row.firstElementChild;
+        if (!template) return;
+        let guard = 0;
+        while (row.scrollWidth < target && guard < 40) {
+          row.appendChild(template.cloneNode(true));
+          guard++;
+        }
+      });
+    };
+    fill();
+    window.addEventListener('resize', fill);
+  });
+
   /* ------------------------------ Smooth scroll -------------------------- */
   let lenis = null;
   if (!prefersReducedMotion && window.Lenis) {
@@ -292,176 +318,6 @@
     });
   }
 
-  /* --------------------------------- Demo list ------------------------------ */
-  // Only present on the Creative Dist product page. Each row is a fully
-  // independent player — no shared "pick a track then hit play" step — but
-  // only one plays at a time so they don't overlap.
-  const demoRows = document.querySelectorAll('.demo-row');
-  if (demoRows.length) {
-    let activeRow = null;
-
-    // Deterministic pseudo-random bar heights (0..1) per track name, smoothed
-    // so it reads like a real waveform rather than noise.
-    function waveHeights(seed, n) {
-      let s = 0;
-      for (let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
-      const rand = () => {
-        s = (s * 1664525 + 1013904223) >>> 0;
-        return s / 4294967296;
-      };
-      const raw = [];
-      for (let i = 0; i < n; i++) raw.push(0.12 + rand() * 0.88);
-      return raw.map((v, i) => {
-        const prev = raw[i - 1] ?? v;
-        const next = raw[i + 1] ?? v;
-        return (prev + v * 2 + next) / 4;
-      });
-    }
-
-    function drawWave(canvas, heights, progress) {
-      const rect = canvas.getBoundingClientRect();
-      if (!rect.width) return;
-      const dpr = window.devicePixelRatio || 1;
-      const w = rect.width, h = rect.height;
-      const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
-      if (canvas.width !== pw || canvas.height !== ph) {
-        canvas.width = pw;
-        canvas.height = ph;
-      }
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      const n = heights.length;
-      const gap = 2;
-      const barW = Math.max(1.5, (w - gap * (n - 1)) / n);
-      const mid = h / 2;
-      const playedBars = Math.round(progress * n);
-      for (let i = 0; i < n; i++) {
-        const barH = Math.max(2, heights[i] * h);
-        const x = i * (barW + gap);
-        const y = mid - barH / 2;
-        ctx.fillStyle = i < playedBars ? '#FFD700' : 'rgba(232,134,44,0.32)';
-        if (ctx.roundRect) {
-          ctx.beginPath();
-          ctx.roundRect(x, y, barW, barH, barW / 2);
-          ctx.fill();
-        } else {
-          ctx.fillRect(x, y, barW, barH);
-        }
-      }
-    }
-
-    demoRows.forEach((row) => {
-      const rowPlayBtn = row.querySelector('.demo-row-play');
-      const iconPlay = row.querySelector('.icon-play');
-      const iconPause = row.querySelector('.icon-pause');
-      const audioDry = row.querySelector('.demo-row-audio-dry');
-      const audioWet = row.querySelector('.demo-row-audio-wet');
-      const toggleBtns = row.querySelectorAll('.demo-row-toggle-btn');
-      const canvas = row.querySelector('.demo-row-waveform');
-      const name = row.dataset.name || 'demo';
-      const heights = waveHeights(name, 64);
-
-      let currentMode = 'dry';
-      let isPlaying = false;
-      let pendingPlay = false;
-
-      const activeAudio = () => (currentMode === 'dry' ? audioDry : audioWet);
-      const idleAudio = () => (currentMode === 'dry' ? audioWet : audioDry);
-
-      function redraw() {
-        const audio = activeAudio();
-        const progress = isPlaying && audio.duration ? audio.currentTime / audio.duration : 0;
-        drawWave(canvas, heights, progress);
-      }
-
-      row._cdRedraw = redraw;
-      redraw();
-      if (window.ResizeObserver) new ResizeObserver(redraw).observe(canvas);
-
-      function setMode(mode) {
-        if (mode === currentMode) return;
-        const wasPlaying = isPlaying;
-        const t = activeAudio().currentTime;
-        if (wasPlaying) activeAudio().pause();
-        currentMode = mode;
-        toggleBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
-        activeAudio().currentTime = t;
-        if (wasPlaying) activeAudio().play().catch(() => {});
-      }
-
-      function stop() {
-        activeAudio().pause();
-        isPlaying = false;
-        iconPlay.removeAttribute('hidden');
-        iconPause.setAttribute('hidden', '');
-        row.classList.remove('is-playing');
-        rowPlayBtn.setAttribute('aria-label', `Play ${name} demo`);
-        redraw();
-      }
-
-      function seekTo(ratio) {
-        const audio = activeAudio();
-        const apply = () => { if (audio.duration) audio.currentTime = ratio * audio.duration; redraw(); };
-        if (audio.readyState >= 1) apply();
-        else audio.addEventListener('loadedmetadata', apply, { once: true });
-      }
-
-      toggleBtns.forEach((btn) => {
-        btn.addEventListener('click', () => setMode(btn.dataset.mode));
-      });
-
-      rowPlayBtn.addEventListener('click', () => {
-        if (pendingPlay) return; // a play() request is still resolving, ignore rapid re-clicks
-        if (isPlaying) {
-          stop();
-          activeRow = null;
-          return;
-        }
-        if (activeRow && activeRow !== row) activeRow.dispatchEvent(new Event('cd:stop'));
-
-        idleAudio().pause();
-        const audio = activeAudio();
-        isPlaying = true;
-        iconPlay.setAttribute('hidden', '');
-        iconPause.removeAttribute('hidden');
-        row.classList.add('is-playing');
-        rowPlayBtn.setAttribute('aria-label', `Pause ${name} demo`);
-        activeRow = row;
-
-        const playPromise = audio.play();
-        if (playPromise && typeof playPromise.then === 'function') {
-          pendingPlay = true;
-          playPromise
-            .catch(() => {
-              // Playback failed to start (blocked, interrupted, network hiccup) — don't
-              // leave the button stuck showing "pause" while nothing is actually playing.
-              if (activeRow === row) {
-                stop();
-                activeRow = null;
-              }
-            })
-            .finally(() => { pendingPlay = false; });
-        }
-      });
-
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-        if (!isPlaying) rowPlayBtn.click();
-        seekTo(ratio);
-      });
-
-      row.addEventListener('cd:stop', stop);
-      [audioDry, audioWet].forEach((audio) => audio.addEventListener('ended', stop));
-    });
-
-    (function tick() {
-      if (activeRow && activeRow._cdRedraw) activeRow._cdRedraw();
-      requestAnimationFrame(tick);
-    })();
-  }
-
   /* --------------------------- Header account status ------------------------ */
   // Points the fixed account icon at the profile page (and labels it with
   // the visitor's name) once we know they already have a session.
@@ -521,8 +377,6 @@
     { name: 'Bode Shifter', desc: 'Frequency shifting for otherworldly motion', url: 'creative-dist.html#bode' },
     { name: 'EQ', desc: '5-band dual EQ', url: 'creative-dist.html#eq' },
     { name: 'Output', desc: 'Final gain stage', url: 'creative-dist.html#output' },
-    { name: 'Hear it in action', desc: 'Audio demos for each module', url: 'creative-dist.html#demo' },
-    { name: 'Compatibility', desc: 'VST3 / AU, macOS / Windows', url: 'creative-dist.html#compatibility' },
     { name: 'Pricing', desc: 'Buy Creative Dist', url: 'creative-dist.html#pricing' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },

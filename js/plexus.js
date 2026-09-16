@@ -24,8 +24,10 @@
     let animId = null;
 
     function particleCount() {
+      // Cap raised from 90 so ultra-wide/4K monitors (much larger area, same
+      // old cap) don't end up with a visibly sparser network than a laptop.
       const area = width * height;
-      return Math.min(90, Math.max(28, Math.round(area / 14000)));
+      return Math.min(160, Math.max(28, Math.round(area / 14000)));
     }
 
     function seedParticles() {

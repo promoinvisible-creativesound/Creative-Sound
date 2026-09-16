@@ -209,52 +209,6 @@
     });
   }
 
-  /* -------------------------------- Side rail nav ---------------------------- */
-  // Only present on the Creative Dist product page. Always visible, plain
-  // text links — highlights whichever section is currently in view.
-  const sideRail = document.querySelector('.side-rail');
-  if (sideRail && window.IntersectionObserver) {
-    const railLinks = sideRail.querySelectorAll('.side-rail-link');
-    const sections = Array.from(railLinks)
-      .map((link) => document.getElementById(link.dataset.section))
-      .filter(Boolean);
-
-    railLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
-        const section = document.getElementById(link.dataset.section);
-        if (section) {
-          e.preventDefault();
-          // Center the section's graphic (or the whole section, for rows
-          // without one) in the viewport instead of the browser default of
-          // snapping its top edge to the top of the screen.
-          const focusEl = section.querySelector('.feature-visual') || section;
-          const rect = focusEl.getBoundingClientRect();
-          const targetY = Math.max(0, window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2);
-          if (lenis) {
-            lenis.scrollTo(targetY, { duration: 1.1 });
-          } else {
-            window.scrollTo({ top: targetY, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-          }
-          history.pushState(null, '', `#${link.dataset.section}`);
-        }
-        railLinks.forEach((l) => l.classList.toggle('active', l === link));
-      });
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          railLinks.forEach((link) => {
-            link.classList.toggle('active', link.dataset.section === entry.target.id);
-          });
-        });
-      },
-      { rootMargin: '-45% 0px -45% 0px' }
-    );
-    sections.forEach((section) => observer.observe(section));
-  }
-
   /* ------------------------------ Scroll reveals -------------------------- */
   if (window.gsap && window.ScrollTrigger) {
     gsap.registerPlugin(ScrollTrigger);
@@ -372,11 +326,11 @@
   // overlay itself is built once here and shared.
   const SEARCH_INDEX = [
     { name: 'Creative Dist', desc: 'Modular distortion plugin — overview & pricing', url: 'creative-dist.html' },
-    { name: 'Saturation', desc: '14 distortion algorithms, one input', url: 'creative-dist.html#saturation' },
-    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'creative-dist.html#noise' },
-    { name: 'Bode Shifter', desc: 'Frequency shifting for otherworldly motion', url: 'creative-dist.html#bode' },
-    { name: 'EQ', desc: '5-band dual EQ', url: 'creative-dist.html#eq' },
-    { name: 'Output', desc: 'Final gain stage', url: 'creative-dist.html#output' },
+    { name: 'Saturation', desc: '14 distortion algorithms, one input', url: 'index.html#saturation' },
+    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'index.html#noise' },
+    { name: 'Bode Shifter', desc: 'Frequency shifting for otherworldly motion', url: 'index.html#bode' },
+    { name: 'EQ', desc: '5-band dual EQ', url: 'index.html#eq' },
+    { name: 'Output', desc: 'Final gain stage', url: 'index.html#output' },
     { name: 'Pricing', desc: 'Buy Creative Dist', url: 'creative-dist.html#pricing' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },

@@ -251,61 +251,6 @@ body.no-boot #boot-overlay{ display:none; }
 }
 #nav-toggle span{ display:block; height:1.5px; background:var(--text); border-radius:2px; }
 
-/* ------------------------------- Side rail nav ---------------------------- */
-/* Desktop-only vertical jump-nav for in-page sections, replacing the inline
-   Engine/Sound/Compatibility/Pricing links in the header on wide screens.
-   Always visible, no box/border/background — just floating text, styled
-   like the main nav links (secondary color, amber underline on hover/click).
-   Mobile keeps those links in the hamburger menu instead (see
-   .nav-section-link below), so nothing is lost there. */
-.side-rail{
-  position:fixed; top:50%; right:28px; transform:translateY(-50%); z-index:60;
-  display:flex; flex-direction:column; align-items:flex-end; gap:14px;
-  opacity:0; animation:sideRailIn 0.6s var(--ease) 0.4s forwards;
-  max-height:88vh; justify-content:center;
-}
-@keyframes sideRailIn{
-  from{ opacity:0; transform:translateY(-50%) translateX(16px); }
-  to{ opacity:1; transform:translateY(-50%) translateX(0); }
-}
-.side-rail-link{
-  display:flex; align-items:center; gap:10px;
-  font-size:13px; letter-spacing:0.5px; color:var(--text-secondary);
-  transition:color 0.25s var(--ease); position:relative; padding-bottom:4px;
-}
-/* Small dot marker gives the rail an obvious "these are jump points, click
-   one" read at a glance, rather than reading as plain static labels.
-   order:2 pushes it after the label text (labels vary in length, right-
-   aligned) so every dot lines up in the same column instead of trailing
-   each label at a different x position. */
-.side-rail-link::before{
-  content:''; order:2; width:6px; height:6px; border-radius:50%; flex-shrink:0;
-  border:1px solid var(--text-muted); background:transparent;
-  transition:background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
-}
-.side-rail-link::after{
-  content:''; position:absolute; left:16px; right:0; bottom:0; height:1px;
-  background:var(--accent); transform:scaleX(0); transform-origin:right;
-  transition:transform 0.3s var(--ease);
-}
-.side-rail-link:hover{ color:var(--text); }
-.side-rail-link:hover::before{ border-color:var(--text); background:var(--text); transform:scale(1.2); }
-.side-rail-link:hover::after{ transform:scaleX(1); }
-.side-rail-link.active{ color:var(--amber-text); }
-.side-rail-link.active::before{
-  border-color:var(--amber-text); background:var(--amber-text); transform:scale(1.3);
-  box-shadow:0 0 8px -1px var(--amber-text);
-}
-.side-rail-link.active::after{ transform:scaleX(1); background:var(--amber-text); }
-@media (max-width:760px){
-  .side-rail{ display:none; }
-}
-/* On desktop those same section links live in the side rail instead — the
-   mobile hamburger menu (#site-nav) keeps them untouched below 760px. */
-@media (min-width:761px){
-  .nav-section-link{ display:none; }
-}
-
 /* -------------------------------- Site search ------------------------------ */
 /* Overlay + panel are injected once into <body> by js/main.js, shared by
    every page — only the trigger button (.header-icon-btn#header-search-btn)

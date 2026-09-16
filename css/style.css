@@ -516,6 +516,7 @@ body.search-open{ overflow:hidden; }
   color:var(--text-muted);
 }
 .hero-formats .dot{ margin:0 12px; color:var(--accent-dim); }
+.hero-formats a:hover{ color:var(--amber-text); text-decoration:underline; text-underline-offset:3px; }
 
 /* Homepage launch hero — text left, product shot right, everything left-
    aligned instead of the centered single-column treatment other heroes
@@ -603,13 +604,6 @@ body.search-open{ overflow:hidden; }
 .gui-crop img{
   position:absolute; max-width:none; display:block;
 }
-
-.gui-shot{
-  max-width:920px; margin:64px auto 0; border-radius:18px; overflow:hidden;
-  border:1px solid var(--border-strong);
-  box-shadow:0 40px 100px -40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 120px -40px var(--accent-glow);
-}
-.gui-shot img{ display:block; width:100%; height:auto; }
 
 /* -------------------------- Module mock visuals --------------------------- */
 .module-mock{ padding:22px; }

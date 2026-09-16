@@ -271,7 +271,7 @@
     const list = document.getElementById('profile-licenses');
     if (!list) return;
     if (!data.licenses.length) {
-      list.innerHTML = '<p class="profile-empty">No Creative Dist license on this account yet — buy it from the <a href="creative-dist.html">product page</a>, using this same email.</p>';
+      list.innerHTML = '<p class="profile-empty">No Creative Dist license on this account yet — buy it from the <a href="index.html">product page</a>, using this same email.</p>';
       return;
     }
     list.innerHTML = data.licenses.map((lic) => `

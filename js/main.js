@@ -325,13 +325,13 @@
   // backend involved. The trigger button lives in every page's header; the
   // overlay itself is built once here and shared.
   const SEARCH_INDEX = [
-    { name: 'Creative Dist', desc: 'Modular distortion plugin — overview & pricing', url: 'creative-dist.html' },
+    { name: 'Creative Dist', desc: 'Modular distortion plugin — overview & pricing', url: 'index.html' },
     { name: 'Saturation', desc: '14 distortion algorithms, one input', url: 'index.html#saturation' },
     { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'index.html#noise' },
     { name: 'Bode Shifter', desc: 'Frequency shifting for otherworldly motion', url: 'index.html#bode' },
     { name: 'EQ', desc: '5-band dual EQ', url: 'index.html#eq' },
     { name: 'Output', desc: 'Final gain stage', url: 'index.html#output' },
-    { name: 'Pricing', desc: 'Buy Creative Dist', url: 'creative-dist.html#pricing' },
+    { name: 'Pricing', desc: 'Buy Creative Dist', url: 'index.html#pricing' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },
     { name: 'License & Download', desc: 'Your license key and download links', url: 'profile-license.html' },

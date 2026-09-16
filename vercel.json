@@ -5,6 +5,11 @@
       "has": [{ "type": "host", "value": "www.creativesound.io" }],
       "destination": "https://creativesound.io/:path*",
       "permanent": true
+    },
+    {
+      "source": "/creative-dist.html",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }

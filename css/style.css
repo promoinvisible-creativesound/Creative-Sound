@@ -515,6 +515,21 @@ body.search-open{ overflow:hidden; }
   #hero.hero-launch-mirror .hero-launch-visual img{ max-width:380px; }
 }
 
+/* The hero's own story tile — same .story-card component as the Stories
+   marquee (autoplays muted+looped once visible, hover features it, right-
+   click toggles sound), just sized up and given a caption underneath,
+   matching the reference hero's compact "how to use" video thumbnail. */
+.hero-story-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+.hero-story-card.story-card{ width:240px; }
+.hero-story-caption{
+  max-width:240px; text-align:center; font-size:12px; line-height:1.6;
+  color:var(--text-muted);
+}
+@media (max-width:900px){
+  .hero-story-card.story-card{ width:190px; }
+  .hero-story-caption{ max-width:190px; }
+}
+
 .scroll-cue{
   position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
   width:22px; height:36px; border:1px solid var(--border-strong); border-radius:12px;
@@ -554,6 +569,26 @@ body.search-open{ overflow:hidden; }
   padding:9px 0; border-top:1px solid var(--border);
 }
 .feature-specs li:last-child{ border-bottom:1px solid var(--border); }
+
+/* -------------------------------- Module grid ------------------------------ */
+/* Compact 4-across overview of the assignable modules, each just a heading,
+   tagline and one line of copy — the short-form counterpart to the deep
+   per-module sections on the homepage, matching the reference product
+   page's short mode columns instead of repeating the full write-up here. */
+.module-grid{
+  display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:32px;
+  max-width:1180px; margin:0 auto;
+}
+.module-col{ border-top:1px solid var(--border-strong); padding-top:22px; }
+.module-col h3{ font-size:19px; margin-bottom:6px; }
+.module-tagline{ color:var(--amber-text); font-size:13.5px; font-weight:500; margin-bottom:12px; }
+.module-col p:not(.module-tagline){ color:var(--text-secondary); font-size:14px; line-height:1.7; font-weight:300; }
+@media (max-width:900px){
+  .module-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width:520px){
+  .module-grid{ grid-template-columns:1fr; }
+}
 
 /* ----------------------- Real GUI crops (screen captures) ------------------ */
 /* Each .gui-crop is a fixed-aspect window onto assets/img/gui-full.png or

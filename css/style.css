@@ -1304,6 +1304,15 @@ body.search-open{ overflow:hidden; }
   padding:0 24px 20px; margin:0; color:var(--text-secondary);
   font-size:14.5px; line-height:1.8; font-weight:300;
 }
+/* Inline "before you buy" teaser on the product page — same accordion,
+   without the standalone FAQ page's own large page-end padding. */
+.faq-list-compact{ padding:0; }
+.faq-teaser-more{ text-align:center; margin-top:28px; }
+.faq-teaser-more a{
+  font-family:var(--mono); font-size:12.5px; letter-spacing:1px; color:var(--text-muted);
+  transition:color 0.25s var(--ease);
+}
+.faq-teaser-more a:hover{ color:var(--amber-text); }
 
 /* ------------------------------ Reveal states ------------------------------ */
 .reveal-up{ opacity:0; transform:translateY(28px); }

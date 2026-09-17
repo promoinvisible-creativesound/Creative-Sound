@@ -1649,7 +1649,7 @@ body.search-open{ overflow:hidden; }
    play/pause icon and lights the tile so it feels alive, not dead. */
 .pack-sound-picker{
   display:flex; align-items:flex-end; justify-content:center; flex-wrap:wrap;
-  gap:16px; max-width:640px; margin:0 auto 18px; padding:22px 10px 0; border:none; background:none;
+  gap:16px; max-width:720px; margin:0 auto 18px; padding:22px 10px 0; border:none; background:none;
 }
 .pack-sound-tile{
   position:relative; width:86px; height:86px; flex-shrink:0; border-radius:20px;

@@ -500,18 +500,36 @@
   }
 
   /* -------------------------- Pack sound picker ----------------------------- */
-  // No audio is wired in yet — selecting a tile just toggles a real
-  // play/pause state (icon swap + the tile animating forward) so it feels
-  // alive rather than dead, without pretending a track actually plays.
+  // Each tile carries its own preview clip in data-audio. One shared Audio
+  // instance is reused across tiles — selecting a tile stops whatever else
+  // is playing and starts its clip; the clip ending (or re-tapping the
+  // active tile) resets the UI the same way a manual pause would.
   const soundPicker = document.querySelector('.pack-sound-picker');
   if (soundPicker) {
     const tiles = soundPicker.querySelectorAll('.pack-sound-tile');
+    const player = new Audio();
+
+    function deactivateAll() {
+      tiles.forEach((t) => t.classList.remove('is-active'));
+      soundPicker.classList.remove('has-active');
+    }
+
+    player.addEventListener('ended', deactivateAll);
+
     tiles.forEach((tile) => {
+      const src = tile.dataset.audio;
       tile.addEventListener('click', () => {
         const wasActive = tile.classList.contains('is-active');
-        tiles.forEach((t) => t.classList.remove('is-active'));
-        if (!wasActive) tile.classList.add('is-active');
-        soundPicker.classList.toggle('has-active', !wasActive);
+        player.pause();
+        deactivateAll();
+        if (wasActive) return;
+        if (src) {
+          player.src = src;
+          player.currentTime = 0;
+          player.play().catch(() => {});
+        }
+        tile.classList.add('is-active');
+        soundPicker.classList.add('has-active');
       });
     });
   }

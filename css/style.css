@@ -89,15 +89,12 @@ a:active, button:active{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ---------- Boot overlay: intro video, plays once per session ---- */
-/* A tiny inline script (right before this markup, in every page's <body>)
-   sets body.no-boot on every page load after the first one in a browser
-   session, so this only ever plays once per visit — not on every internal
-   link click. The overlay's own lifetime follows the video's real
-   duration (a second inline script listens for its "ended" event and
-   adds .boot-done, with a timeout fallback if the video never fires one)
-   instead of a hardcoded CSS animation length, so it always matches
-   whatever clip is dropped in here. */
+/* ---------- Boot overlay: intro video, plays on every page load ---- */
+/* The overlay's own lifetime follows the video's real duration (an
+   inline script listens for its "ended" event and adds .boot-done, with
+   a timeout fallback if the video never fires one) instead of a
+   hardcoded CSS animation length, so it always matches whatever clip is
+   dropped in here. */
 #boot-overlay{
   position:fixed; inset:0; z-index:9999; background:#030201;
   display:flex; align-items:center; justify-content:center;
@@ -108,7 +105,6 @@ a:active, button:active{
 #boot-mark{
   width:min(95vw, 680px); height:auto; display:block;
 }
-body.no-boot #boot-overlay{ display:none; }
 @media (prefers-reduced-motion: reduce){
   #boot-overlay{ display:none; }
 }

@@ -1725,6 +1725,34 @@ body.search-open{ overflow:hidden; }
 
 .pack-preview-note{ text-align:center; font-size:12.5px; color:var(--text-secondary); }
 
+/* --------------------------- Pack demo tracks ------------------------------ */
+/* Same tile language as the sound picker above, stretched into longer
+   horizontal bars for full-length demo tracks instead of one-shot clips. */
+.pack-demo-tracks{ max-width:640px; margin:34px auto 0; }
+.pack-demo-label{
+  text-align:center; font-family:var(--mono); font-size:11px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary);
+  margin-bottom:14px;
+}
+.pack-demo-list{ display:flex; flex-direction:column; gap:10px; }
+
+.pack-demo-tile{
+  width:100%; height:auto; flex-direction:row; align-items:center; justify-content:flex-start;
+  gap:16px; padding:12px 20px; border-radius:14px;
+}
+.pack-demo-tile:hover{ transform:translateX(4px); border-color:var(--accent-dim); }
+.pack-demo-tile.is-active{
+  transform:translateX(4px); z-index:1;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 14px 26px -18px rgba(0,0,0,0.7), 0 0 30px -10px rgba(255,215,0,0.5);
+}
+.pack-demo-list.has-active .pack-demo-tile:not(.is-active){ opacity:0.45; }
+.pack-demo-tile .pack-sound-glow{ inset:-20%; }
+.pack-demo-tile .pack-sound-name{ font-size:12.5px; letter-spacing:1.2px; }
+
+@media (max-width:460px){
+  .pack-demo-tile{ padding:10px 16px; gap:12px; }
+}
+
 /* ------------------------------ Dev placeholder note ----------------------- */
 /* Marks copy/data that still needs the real pack info swapped in — not
    rendered in a way that looks broken, just visibly a stand-in. */

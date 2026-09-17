@@ -501,22 +501,23 @@
 
   /* -------------------------- Pack sound picker ----------------------------- */
   // Each tile carries its own preview clip in data-audio. One shared Audio
-  // instance is reused across tiles — selecting a tile stops whatever else
-  // is playing and starts its clip; the clip ending (or re-tapping the
+  // instance is reused across every picker group on the page (the per-sound
+  // tiles and the "made with" demo tracks) — selecting a tile stops whatever
+  // else is playing and starts its clip; the clip ending (or re-tapping the
   // active tile) resets the UI the same way a manual pause would.
-  const soundPicker = document.querySelector('.pack-sound-picker');
-  if (soundPicker) {
-    const tiles = soundPicker.querySelectorAll('.pack-sound-tile');
+  const soundPickers = document.querySelectorAll('.pack-sound-picker, .pack-demo-list');
+  if (soundPickers.length) {
+    const allTiles = document.querySelectorAll('.pack-sound-picker .pack-sound-tile, .pack-demo-list .pack-sound-tile');
     const player = new Audio();
 
     function deactivateAll() {
-      tiles.forEach((t) => t.classList.remove('is-active'));
-      soundPicker.classList.remove('has-active');
+      allTiles.forEach((t) => t.classList.remove('is-active'));
+      soundPickers.forEach((p) => p.classList.remove('has-active'));
     }
 
     player.addEventListener('ended', deactivateAll);
 
-    tiles.forEach((tile) => {
+    allTiles.forEach((tile) => {
       const src = tile.dataset.audio;
       tile.addEventListener('click', () => {
         const wasActive = tile.classList.contains('is-active');
@@ -529,7 +530,7 @@
           player.play().catch(() => {});
         }
         tile.classList.add('is-active');
-        soundPicker.classList.add('has-active');
+        tile.closest('.pack-sound-picker, .pack-demo-list').classList.add('has-active');
       });
     });
   }

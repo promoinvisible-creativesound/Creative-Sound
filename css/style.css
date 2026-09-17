@@ -1348,7 +1348,7 @@ body.search-open{ overflow:hidden; }
     height:calc(100vh - 64px - var(--announce-h));
     height:calc(100dvh - 64px - var(--announce-h));
     background:rgb(8,8,7); flex-direction:column; align-items:center;
-    justify-content:center; gap:32px; overflow-y:auto;
+    justify-content:flex-start; padding-top:56px; gap:28px; overflow-y:auto;
     transform:translateY(-8px); opacity:0; pointer-events:none;
     transition:opacity 0.3s var(--ease), transform 0.3s var(--ease);
   }
@@ -1357,7 +1357,7 @@ body.search-open{ overflow:hidden; }
   #nav-toggle{ display:flex; }
   .header-actions .btn-buy{ display:none; }
   .header-cart-icon{ display:flex; }
-  .header-inner{ padding:14px 16px; }
+  .header-inner{ padding:14px 16px; grid-template-columns:1fr auto; }
   /* Decluttered to a single obvious menu button in the top-right corner —
      search, support and account move into the open nav instead of sitting
      in a crowded row of five icons next to the hamburger. */
@@ -1370,6 +1370,28 @@ body.search-open{ overflow:hidden; }
   .footer-bottom{ flex-direction:column; align-items:flex-start; }
   .nav-new-badge{ font-size:11px; top:-14px; }
   .nav-dropdown-caret{ display:none; }
+}
+
+/* --------------------------- Phone density pass ---------------------------- */
+/* Phone screens are short on vertical room, so the generous desktop section
+   padding (160px, tightened to 110px at tablet widths) turns into a wall of
+   empty scroll between sections. Tighten spacing and a few oversized visuals
+   specifically for phones — desktop/tablet are untouched. */
+@media (max-width:700px){
+  .section{ padding:64px 20px; }
+  .section-tight{ padding:56px 20px; }
+  .section-head{ margin:0 auto 40px; }
+  .section h2{ font-size:clamp(24px, 7vw, 36px); margin-bottom:16px; }
+  .section-lede{ font-size:15.5px; }
+  .kicker{ font-size:11px; margin-bottom:14px; }
+  #hero.hero-home + #artists{ padding-top:32px; }
+  #hero.hero-home{ padding:calc(96px + var(--announce-h)) 20px 32px; }
+  .hero-sub{ margin-top:22px; font-size:16px; }
+  .hero-cta{ margin-top:28px; gap:12px; }
+  .hero-formats{ margin-top:36px; }
+  .feature{ padding:56px 20px; }
+  #site-footer{ padding:44px 20px 24px; }
+  .footer-inner{ gap:28px; padding-bottom:24px; }
 }
 
 /* =====================================================================

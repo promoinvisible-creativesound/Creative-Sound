@@ -96,7 +96,7 @@ a:active, button:active{
    hardcoded CSS animation length, so it always matches whatever clip is
    dropped in here. */
 #boot-overlay{
-  position:fixed; inset:0; z-index:9999; background:#030201;
+  position:fixed; inset:0; z-index:9999; background:#000;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; pointer-events:none;
   opacity:1; transition:opacity 0.5s ease-out;

@@ -173,7 +173,7 @@
   // video's src attaches lazily (just before it scrolls into view) so none
   // of the 8 clips downloads until it's actually about to be seen. Hovering
   // a card is what "plays" it visually (CSS scales it up over the rest);
-  // right-clicking the hovered card toggles its sound, muting every other
+  // tapping a card's speaker icon toggles its sound, muting every other
   // card first so only one is ever audible.
   const storyCards = document.querySelectorAll('.story-card');
   const loadStory = (card) => {
@@ -199,9 +199,10 @@
 
     storyCards.forEach((card) => {
       const video = card.querySelector('.story-video');
-      if (!video) return;
-      card.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
+      const soundBtn = card.querySelector('.story-sound');
+      if (!video || !soundBtn) return;
+      soundBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const turningOn = video.muted;
         storyCards.forEach((other) => {
           const otherVideo = other.querySelector('.story-video');

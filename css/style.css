@@ -89,40 +89,24 @@ a:active, button:active{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ---------- Boot overlay: logo-mark power-on, plays once per session ---- */
+/* ---------- Boot overlay: intro video, plays once per session ---- */
 /* A tiny inline script (right before this markup, in every page's <body>)
    sets body.no-boot on every page load after the first one in a browser
    session, so this only ever plays once per visit — not on every internal
-   link click. Total runtime 3.8s. Just the mark itself, no ring effects —
-   the 3D version (js/boot-3d.js) replaces it with the real payoff: the
-   logo's own pieces flying in and locking together. This 2D version is
-   the fallback for when WebGL/the CDN isn't available, so it keeps a
-   plain scale-in settle instead of a flat fade, before the whole thing
-   clears. */
+   link click. The overlay's own lifetime follows the video's real
+   duration (a second inline script listens for its "ended" event and
+   adds .boot-done, with a timeout fallback if the video never fires one)
+   instead of a hardcoded CSS animation length, so it always matches
+   whatever clip is dropped in here. */
 #boot-overlay{
   position:fixed; inset:0; z-index:9999; background:#030201;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; pointer-events:none;
-  animation: bootOverlayFade 3.8s ease-out forwards;
+  opacity:1; transition:opacity 0.5s ease-out;
 }
+#boot-overlay.boot-done{ opacity:0; }
 #boot-mark{
-  position:relative; z-index:1;
-  width:26vw; min-width:120px; max-width:220px; height:auto;
-  opacity:0; transform:scale(0.55) rotate(-6deg);
-  filter:drop-shadow(0 0 0 rgba(232,134,44,0));
-  animation: bootMarkIn 3.8s var(--ease) forwards;
-}
-@keyframes bootMarkIn{
-  0%{ opacity:0; transform:scale(0.55) rotate(-6deg); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
-  22%{ opacity:1; transform:scale(1.12) rotate(3deg); filter:drop-shadow(0 0 34px rgba(232,134,44,0.95)); }
-  38%{ transform:scale(0.95) rotate(-1.5deg); }
-  55%{ transform:scale(1.04) rotate(0.5deg); filter:drop-shadow(0 0 46px rgba(232,134,44,1)); }
-  72%{ opacity:1; transform:scale(1) rotate(0deg); }
-  90%{ opacity:1; transform:scale(1.06); filter:drop-shadow(0 0 16px rgba(232,134,44,0.5)); }
-  100%{ opacity:0; transform:scale(1.22); filter:drop-shadow(0 0 0 rgba(232,134,44,0)); }
-}
-@keyframes bootOverlayFade{
-  0%{opacity:1;} 82%{opacity:1;} 100%{opacity:0;}
+  width:min(80vw, 520px); height:auto; display:block;
 }
 body.no-boot #boot-overlay{ display:none; }
 @media (prefers-reduced-motion: reduce){

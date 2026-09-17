@@ -504,33 +504,84 @@
   // instance is reused across every picker group on the page (the per-sound
   // tiles and the "made with" demo tracks) — selecting a tile stops whatever
   // else is playing and starts its clip; the clip ending (or re-tapping the
-  // active tile) resets the UI the same way a manual pause would.
+  // active tile) resets the UI the same way a manual pause would. Demo tiles
+  // also carry a seek bar so a full-length track can be scrubbed to a point.
   const soundPickers = document.querySelectorAll('.pack-sound-picker, .pack-demo-list');
   if (soundPickers.length) {
     const allTiles = document.querySelectorAll('.pack-sound-picker .pack-sound-tile, .pack-demo-list .pack-sound-tile');
     const player = new Audio();
+    let currentSrc = null;
 
-    function deactivateAll() {
-      allTiles.forEach((t) => t.classList.remove('is-active'));
-      soundPickers.forEach((p) => p.classList.remove('has-active'));
+    function setActiveTile(tile) {
+      allTiles.forEach((t) => {
+        const isActive = t === tile;
+        t.classList.toggle('is-active', isActive);
+        if (!isActive) {
+          const fill = t.querySelector('.pack-demo-seek-fill');
+          if (fill) fill.style.width = '0%';
+        }
+      });
+      soundPickers.forEach((p) => p.classList.toggle('has-active', !!tile && p.contains(tile)));
     }
 
-    player.addEventListener('ended', deactivateAll);
+    function playTrack(tile, seekRatio) {
+      const src = tile.dataset.audio;
+      if (!src) return;
+      setActiveTile(tile);
+      const applySeek = () => {
+        if (seekRatio != null && player.duration) player.currentTime = seekRatio * player.duration;
+      };
+      if (currentSrc !== src) {
+        currentSrc = src;
+        player.src = src;
+        if (seekRatio != null) {
+          player.addEventListener('loadedmetadata', applySeek, { once: true });
+        } else {
+          player.currentTime = 0;
+        }
+      } else {
+        applySeek();
+      }
+      player.play().catch(() => {});
+    }
+
+    player.addEventListener('ended', () => setActiveTile(null));
+
+    player.addEventListener('timeupdate', () => {
+      const activeTile = document.querySelector('.pack-demo-tile.is-active');
+      if (!activeTile || !player.duration) return;
+      const fill = activeTile.querySelector('.pack-demo-seek-fill');
+      if (fill) fill.style.width = ((player.currentTime / player.duration) * 100) + '%';
+    });
 
     allTiles.forEach((tile) => {
-      const src = tile.dataset.audio;
-      tile.addEventListener('click', () => {
-        const wasActive = tile.classList.contains('is-active');
-        player.pause();
-        deactivateAll();
-        if (wasActive) return;
-        if (src) {
-          player.src = src;
-          player.currentTime = 0;
-          player.play().catch(() => {});
+      const trigger = tile.querySelector('.pack-demo-play') || tile;
+      trigger.addEventListener('click', () => {
+        if (tile.classList.contains('is-active')) {
+          player.pause();
+          setActiveTile(null);
+        } else {
+          playTrack(tile);
         }
-        tile.classList.add('is-active');
-        tile.closest('.pack-sound-picker, .pack-demo-list').classList.add('has-active');
+      });
+    });
+
+    document.querySelectorAll('.pack-demo-seek').forEach((seek) => {
+      const tile = seek.closest('.pack-demo-tile');
+
+      function ratioFromEvent(e) {
+        const rect = seek.getBoundingClientRect();
+        return Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      }
+
+      seek.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        seek.setPointerCapture(e.pointerId);
+        playTrack(tile, ratioFromEvent(e));
+      });
+      seek.addEventListener('pointermove', (e) => {
+        if (e.buttons !== 1 || !tile.classList.contains('is-active')) return;
+        if (player.duration) player.currentTime = ratioFromEvent(e) * player.duration;
       });
     });
   }

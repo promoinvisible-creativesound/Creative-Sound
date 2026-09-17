@@ -28,21 +28,6 @@
 <link rel="stylesheet" href="css/style.css?v=45">
 </head>
 <body>
-<div id="boot-overlay" aria-hidden="true">
-  <video id="boot-mark" src="assets/video/boot-animation.mp4" autoplay muted playsinline></video>
-</div>
-<script>
-  (function(){
-    var overlay = document.getElementById("boot-overlay");
-    var video = document.getElementById("boot-mark");
-    if (!overlay || !video) return;
-    function finish(){ overlay.classList.add("boot-done"); }
-    video.addEventListener("ended", finish);
-    video.addEventListener("error", finish);
-    setTimeout(finish, 6000);
-  })();
-</script>
-
 <div id="grain"></div>
 
 <a href="index.html" class="update-ticker" aria-label="Creative Dist 2.0 is out now">

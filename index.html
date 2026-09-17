@@ -39,6 +39,22 @@
     var video = document.getElementById("boot-mark");
     if (!overlay || !video) return;
     function finish(){ overlay.classList.add("boot-done"); }
+
+    // Skip the intro when arriving via a link clicked elsewhere on this
+    // site (e.g. the nav's "Creative Dist 2.0" item) — only a real reload
+    // of this page, or landing here fresh (typed URL, bookmark, external
+    // link, first visit), should replay it.
+    var navEntry = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    var isReload = navEntry ? navEntry.type === 'reload' : false;
+    var cameFromThisSite = false;
+    try { cameFromThisSite = document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
+
+    if (!isReload && cameFromThisSite) {
+      video.pause();
+      finish();
+      return;
+    }
+
     video.addEventListener("ended", finish);
     video.addEventListener("error", finish);
     setTimeout(finish, 6000);

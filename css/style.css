@@ -106,7 +106,7 @@ a:active, button:active{
 }
 #boot-overlay.boot-done{ opacity:0; }
 #boot-mark{
-  width:min(80vw, 520px); height:auto; display:block;
+  width:min(95vw, 680px); height:auto; display:block;
 }
 body.no-boot #boot-overlay{ display:none; }
 @media (prefers-reduced-motion: reduce){

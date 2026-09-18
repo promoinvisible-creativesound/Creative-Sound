@@ -1420,6 +1420,7 @@ body.search-open{ overflow:hidden; }
   position:relative; aspect-ratio:4/3; margin-bottom:22px; border-radius:10px;
   background:radial-gradient(circle at 50% 35%, rgba(232,134,44,0.1) 0%, transparent 60%), #020201;
   overflow:hidden; display:flex; align-items:center; justify-content:center;
+  padding:11%; box-sizing:border-box;
 }
 .pack-simple-art::after{
   content:''; position:absolute; inset:0; pointer-events:none; z-index:2;
@@ -1427,11 +1428,17 @@ body.search-open{ overflow:hidden; }
   transform:translateX(-130%); transition:transform 0.75s var(--ease);
 }
 .pack-simple-card:hover .pack-simple-art::after{ transform:translateX(130%); }
+/* width/height:100% + object-fit (rather than max-width/max-height alone
+   on an otherwise unsized img) is the sizing pattern that behaves
+   consistently across mobile browser engines/WebViews — the percentage-cap
+   version rendered the image full-bleed, uncropped, on some phones. The
+   78%-equivalent inset now comes from the container's own padding instead. */
 .pack-simple-art img{
-  max-width:78%; max-height:78%; object-fit:contain; display:block;
+  width:100%; height:100%; object-fit:contain; display:block;
   animation:packSimpleFloat 5s ease-in-out infinite;
 }
-.pack-simple-art-soon img{ filter:blur(9px) brightness(0.55) saturate(0.7); max-width:100%; max-height:100%; animation:none; }
+.pack-simple-art-soon{ padding:0; }
+.pack-simple-art-soon img{ filter:blur(9px) brightness(0.55) saturate(0.7); animation:none; }
 .pack-simple-art-soon .pack-tile-soon-tag{ position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; }
 @keyframes packSimpleFloat{
   0%,100%{ transform:translateY(0) rotate(0deg); }

@@ -2,7 +2,7 @@ const Stripe = require('stripe');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
-const { PACKS, downloadUrl, ensureTable, packIdForSession } = require('./_lib/packs');
+const { PACKS, downloadUrl, ensureTable, classifySession } = require('./_lib/packs');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -116,25 +116,22 @@ module.exports = async (req, res) => {
     if (email) {
       const normalizedEmail = email.trim().toLowerCase();
 
-      let packId = null;
+      // Decide what was bought. A license is only ever minted for Creative
+      // Dist: packs never get one, and a free checkout we can't identify
+      // doesn't fall through to one either.
+      let kind = { kind: 'unknown' };
+      let lookupFailed = false;
       try {
-        packId = await packIdForSession(stripe, session);
+        kind = await classifySession(stripe, session);
       } catch (err) {
-        if (session.amount_total > 0) {
-          // Packs are free. If Stripe's lookup fails for a paid checkout, keep
-          // the long-standing Creative Dist behavior instead of blocking a
-          // customer's license on a lookup problem (e.g. an API key that can't
-          // read payment links).
-          console.error('Payment link lookup failed for a paid checkout, treating it as Creative Dist:', err);
-        } else {
-          console.error('Could not tell which product this free checkout was for, asking Stripe to retry:', err);
-          res.status(500).json({ error: 'Temporary error, please retry.' });
-          return;
-        }
+        lookupFailed = true;
+        console.error('Payment link lookup failed:', err);
       }
-      if (packId) {
+
+      if (kind.kind === 'pack') {
+        console.log('checkout', session.id, 'pack', kind.packId);
         try {
-          await handlePackPurchase(session, normalizedEmail, packId);
+          await handlePackPurchase(session, normalizedEmail, kind.packId);
         } catch (err) {
           console.error('Failed to record pack purchase, asking Stripe to retry:', err);
           res.status(500).json({ error: 'Temporary error, please retry.' });
@@ -144,6 +141,29 @@ module.exports = async (req, res) => {
         return;
       }
 
+      if (kind.kind !== 'dist' && !(session.amount_total > 0)) {
+        if (lookupFailed) {
+          // Free checkout and Stripe couldn't tell us which product: retry later.
+          res.status(500).json({ error: 'Temporary error, please retry.' });
+          return;
+        }
+        console.error('Unrecognised free checkout, no email sent:', session.id, session.payment_link, session.client_reference_id);
+        try {
+          await resend.emails.send({
+            from: process.env.FROM_EMAIL,
+            to: 'hello@creativesound.io',
+            subject: 'Unrecognised free checkout',
+            html: `<p>A free checkout from ${normalizedEmail} did not match any known pack or product, so no email was sent to the buyer.</p><p>Stripe session: ${session.id}<br>Payment link: ${session.payment_link || 'none'}<br>client_reference_id: ${session.client_reference_id || 'none'}</p>`,
+          });
+        } catch (err) {
+          console.error('Failed to send the unrecognised-checkout alert:', err);
+        }
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      // Creative Dist (or a paid checkout we couldn't classify): license flow.
+      console.log('checkout', session.id, 'creative-dist license');
       let licenseKey;
       try {
         // Idempotent against Stripe webhook retries: reuse the license

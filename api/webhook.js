@@ -2,6 +2,7 @@ const Stripe = require('stripe');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
+const { PACKS, downloadUrl, ensureTable, packIdForSession } = require('./_lib/packs');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -41,6 +42,55 @@ function buildEmailHtml(licenseKey) {
   `;
 }
 
+// A pack checkout gets an email with that pack's download link and nothing
+// else: no license key and no Creative Dist installer. The purchase row is
+// what later unlocks the download in the buyer's account.
+function buildPackEmailHtml(packName, url) {
+  const siteUrl = process.env.SITE_URL || '';
+  const btn = `<a href="${url}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Download ${packName}</a>`;
+  return `
+    <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
+      <h1 style="color:#FFB347;font-size:22px;">Your ${packName} download</h1>
+      <p>Thanks for grabbing ${packName}. Here is your download:</p>
+      <p style="margin-top:24px;">${btn}</p>
+      <p style="margin-top:24px;">
+        You can also download it any time from your account: create one with this same email at
+        <a href="${siteUrl}/signup.html" style="color:#FFB347;">${siteUrl}/signup.html</a>
+        and open Your packs.
+      </p>
+      <p style="margin-top:32px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
+    </div>
+  `;
+}
+
+async function handlePackPurchase(session, email, packId) {
+  const pack = PACKS[packId];
+  const url = downloadUrl(packId);
+  if (!url) {
+    // Misconfigured deployment: fail so Stripe retries once the env var is set.
+    throw new Error(`No download URL configured for ${packId} (${pack.urlEnv}).`);
+  }
+  await ensureTable();
+  await sql`
+    INSERT INTO pack_purchases (email, pack_id, stripe_session_id, amount_total, currency)
+    VALUES (${email}, ${packId}, ${session.id}, ${session.amount_total || null}, ${session.currency || null})
+    ON CONFLICT (stripe_session_id) DO NOTHING
+  `;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
+      to: email,
+      subject: `Your ${pack.name} download`,
+      html: buildPackEmailHtml(pack.name, url),
+    });
+    if (error) console.error('Resend rejected the pack email:', error);
+  } catch (err) {
+    // The purchase is saved and the pack shows up in the account already.
+    console.error('Failed to send pack email:', err);
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).end();
@@ -65,6 +115,35 @@ module.exports = async (req, res) => {
 
     if (email) {
       const normalizedEmail = email.trim().toLowerCase();
+
+      let packId = null;
+      try {
+        packId = await packIdForSession(stripe, session);
+      } catch (err) {
+        if (session.amount_total > 0) {
+          // Packs are free. If Stripe's lookup fails for a paid checkout, keep
+          // the long-standing Creative Dist behavior instead of blocking a
+          // customer's license on a lookup problem (e.g. an API key that can't
+          // read payment links).
+          console.error('Payment link lookup failed for a paid checkout, treating it as Creative Dist:', err);
+        } else {
+          console.error('Could not tell which product this free checkout was for, asking Stripe to retry:', err);
+          res.status(500).json({ error: 'Temporary error, please retry.' });
+          return;
+        }
+      }
+      if (packId) {
+        try {
+          await handlePackPurchase(session, normalizedEmail, packId);
+        } catch (err) {
+          console.error('Failed to record pack purchase, asking Stripe to retry:', err);
+          res.status(500).json({ error: 'Temporary error, please retry.' });
+          return;
+        }
+        res.status(200).json({ received: true });
+        return;
+      }
+
       let licenseKey;
       try {
         // Idempotent against Stripe webhook retries: reuse the license

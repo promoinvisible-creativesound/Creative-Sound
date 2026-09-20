@@ -286,18 +286,45 @@
     `).join('');
   }
 
+  function renderPacks(data) {
+    const list = document.getElementById('profile-packs');
+    if (!list) return;
+    const packs = data.packs || [];
+    // One card per pack, however many times it was checked out.
+    const seen = new Set();
+    const unique = packs.filter((p) => (seen.has(p.pack_id) ? false : seen.add(p.pack_id)));
+    if (!unique.length) {
+      list.innerHTML = '<p class="profile-empty">No packs on this account yet — grab one from the <a href="packs.html">packs page</a>, using this same email.</p>';
+      return;
+    }
+    list.innerHTML = unique.map((p) => `
+      <div class="profile-license">
+        <div class="profile-pack-name">${escapeHtml(p.name)}</div>
+        <div class="profile-license-date">Added ${new Date(p.created_at).toLocaleDateString()}</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          ${p.download_url
+            ? `<a href="${escapeHtml(p.download_url)}" class="btn btn-primary">Download</a>`
+            : '<span class="profile-empty" style="padding:0;">The download is being set up. Contact support if it does not appear soon.</span>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
   function renderOrders(data) {
     const orders = document.getElementById('profile-orders');
     if (!orders) return;
-    if (!data.orders.length) {
+    const rows = data.orders.map((o) => ({ created_at: o.created_at, name: 'Creative Dist', amount: formatAmount(o.amount_total, o.currency) }))
+      .concat((data.packs || []).map((p) => ({ created_at: p.created_at, name: p.name, amount: p.amount_total ? formatAmount(p.amount_total, p.currency) : 'Free' })))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (!rows.length) {
       orders.innerHTML = '<p class="profile-empty">No orders yet.</p>';
       return;
     }
-    orders.innerHTML = data.orders.map((o) => `
+    orders.innerHTML = rows.map((o) => `
       <div class="order-row">
         <span class="order-row-date">${new Date(o.created_at).toLocaleDateString()}</span>
-        <span class="order-row-name">Creative Dist</span>
-        <span class="order-row-amount">${formatAmount(o.amount_total, o.currency)}</span>
+        <span class="order-row-name">${escapeHtml(o.name)}</span>
+        <span class="order-row-amount">${o.amount}</span>
       </div>
     `).join('');
   }
@@ -333,11 +360,14 @@
         }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        document.getElementById('hub-license-sub').textContent = data.licenses.length
-          ? `${data.licenses.length} license${data.licenses.length > 1 ? 's' : ''}`
-          : 'No license yet';
-        document.getElementById('hub-orders-sub').textContent = data.orders.length
-          ? `${data.orders.length} order${data.orders.length > 1 ? 's' : ''}`
+        const packCount = new Set((data.packs || []).map((p) => p.pack_id)).size;
+        const licenseParts = [];
+        if (data.licenses.length) licenseParts.push(`${data.licenses.length} license${data.licenses.length > 1 ? 's' : ''}`);
+        if (packCount) licenseParts.push(`${packCount} pack${packCount > 1 ? 's' : ''}`);
+        document.getElementById('hub-license-sub').textContent = licenseParts.length ? licenseParts.join(' · ') : 'No license yet';
+        const orderCount = data.orders.length + (data.packs || []).length;
+        document.getElementById('hub-orders-sub').textContent = orderCount
+          ? `${orderCount} order${orderCount > 1 ? 's' : ''}`
           : 'No orders yet';
       } catch (err) {
         // Cards still work as plain navigation even if the counts fail to load.
@@ -373,6 +403,7 @@
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
         document.getElementById('profile-email').textContent = data.email;
         renderLicenses(data);
+        renderPacks(data);
       } catch (err) {
         licenseRoot.innerHTML = `<p class="auth-error visible">${err.message}</p>`;
       }

@@ -1214,6 +1214,7 @@ body.search-open{ overflow:hidden; }
 }
 .profile-license-date{ font-size:11px; color:var(--text-muted); margin-top:8px; }
 .profile-empty{ color:var(--text-secondary); font-size:14px; padding:8px 0 20px; }
+.profile-pack-name{ font-family:var(--font-display); font-size:16px; letter-spacing:0.5px; color:var(--text); }
 .profile-logout{ margin-top:8px; }
 
 .order-row{

@@ -3,6 +3,7 @@ const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
 const { PACKS, downloadUrl, ensureTable, classifySession } = require('./_lib/packs');
+const { renderEmail, button, codeBlock, steps, paragraph, accountLine } = require('./_lib/emailTemplate');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -22,24 +23,27 @@ function readRawBody(req) {
 
 function buildEmailHtml(licenseKey) {
   const siteUrl = process.env.SITE_URL || '';
-  const btn = (href, label) => `<a href="${href}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;margin:0 8px 8px 0;">${label}</a>`;
-  const downloadBlock = btn(`${siteUrl}/assets/downloads/Creative-Dist-Mac.zip`, 'Download for macOS')
-    + btn(`${siteUrl}/assets/downloads/Creative-Dist-Windows.zip`, 'Download for Windows');
-
-  return `
-    <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
-      <h1 style="color:#FFB347;font-size:22px;">Thanks for grabbing Creative Dist</h1>
-      <p>Your license key:</p>
-      <p style="font-family:monospace;font-size:18px;letter-spacing:1px;background:#0d0d0c;border:1px solid rgba(255,255,255,0.18);padding:12px 16px;border-radius:8px;display:inline-block;">${licenseKey}</p>
-      <p style="margin-top:28px;">${downloadBlock}</p>
-      <p style="margin-top:24px;">
-        Create an account with this same email to find your license and download
-        link any time from your profile:
-        <a href="${process.env.SITE_URL || ''}/signup.html" style="color:#FFB347;">${process.env.SITE_URL || ''}/signup.html</a>
-      </p>
-      <p style="margin-top:32px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
-    </div>
-  `;
+  const content = [
+    paragraph('Thanks for grabbing Creative Dist 2.0. Your license key and the installers are below.'),
+    codeBlock('License key', licenseKey),
+    '<div style="margin-top:22px;">',
+    button(`${siteUrl}/assets/downloads/Creative-Dist-Mac.zip`, 'Download for macOS'),
+    button(`${siteUrl}/assets/downloads/Creative-Dist-Windows.zip`, 'Download for Windows'),
+    '</div>',
+    steps([
+      'Download the installer for your system and run it.',
+      'Open Creative Dist in your DAW. On first launch, paste your license key into the activation screen.',
+      'Keep this email. Your key and downloads also live in your account.',
+    ]),
+    accountLine(siteUrl),
+  ].join('');
+  return renderEmail({
+    siteUrl,
+    preheader: 'Your Creative Dist license key and downloads.',
+    kicker: 'Order confirmed',
+    title: 'Your license',
+    content,
+  });
 }
 
 // A pack checkout gets an email with that pack's download link and nothing
@@ -47,20 +51,26 @@ function buildEmailHtml(licenseKey) {
 // what later unlocks the download in the buyer's account.
 function buildPackEmailHtml(packName, url) {
   const siteUrl = process.env.SITE_URL || '';
-  const btn = `<a href="${url}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Download ${packName}</a>`;
-  return `
-    <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
-      <h1 style="color:#FFB347;font-size:22px;">Your ${packName} download</h1>
-      <p>Thanks for grabbing ${packName}. Here is your download:</p>
-      <p style="margin-top:24px;">${btn}</p>
-      <p style="margin-top:24px;">
-        You can also download it any time from your account: create one with this same email at
-        <a href="${siteUrl}/signup.html" style="color:#FFB347;">${siteUrl}/signup.html</a>
-        and open Your packs.
-      </p>
-      <p style="margin-top:32px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
-    </div>
-  `;
+  const content = [
+    paragraph(`Thanks for grabbing ${packName}. Your download is ready.`),
+    '<div style="margin-top:22px;">',
+    button(url, 'Download pack'),
+    '</div>',
+    steps([
+      'Download the zip file with the button above.',
+      'Unzip it and copy the preset folder into your Serum presets folder.',
+      'Restart Serum, open the preset browser and start with a fresh sound.',
+    ]),
+    paragraph('You can also download this pack any time from your account, under Your packs.'),
+    accountLine(siteUrl),
+  ].join('');
+  return renderEmail({
+    siteUrl,
+    preheader: `Your ${packName} download is ready.`,
+    kicker: 'Download ready',
+    title: packName,
+    content,
+  });
 }
 
 async function handlePackPurchase(session, email, packId) {

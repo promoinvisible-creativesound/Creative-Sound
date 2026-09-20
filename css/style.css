@@ -1785,6 +1785,34 @@ body.search-open{ overflow:hidden; }
   .pack-demo-tile{ padding:10px 16px; gap:12px; }
 }
 
+/* ----------------------- Blue pack theme (Vol. 2 only) --------------------- */
+/* Scoped to <main class="pack-theme-blue"> so it never touches the header,
+   footer or any other page: re-points the accent colors at the blue of the
+   pack's own artwork, plus the few hard-coded amber values (sound-tile glow,
+   blink, seek handle, hero glow) that don't go through the variables. */
+.pack-theme-blue{
+  --accent:#2f6df0; --accent-dim:rgba(47,109,240,0.45); --accent-glow:rgba(47,109,240,0.18);
+  --amber-bright:#5b9bff; --amber-dim:#2a5fd0; --amber-text:#7fb0ff;
+}
+.pack-theme-blue .pack-hero-art-portrait::before{
+  background:radial-gradient(ellipse farthest-side, rgba(47,109,240,0.46) 0%, rgba(47,109,240,0.14) 45%, transparent 72%);
+}
+.pack-theme-blue .pack-hero-art-portrait:hover img{ filter:drop-shadow(0 0 24px rgba(47,109,240,0.4)); }
+.pack-theme-blue .btn-primary{
+  background:linear-gradient(180deg, #3b7bff 0%, #1d4fc4 100%);
+  color:#fff; box-shadow:0 0 0 1px rgba(47,109,240,0.55);
+}
+.pack-theme-blue .pack-sound-icon{ border-color:rgba(127,176,255,0.5); }
+.pack-theme-blue .pack-sound-tile.is-active{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 24px 44px -18px rgba(0,0,0,0.75), 0 0 44px -8px rgba(47,109,240,0.6);
+}
+.pack-theme-blue .pack-sound-glow{ background:radial-gradient(circle, rgba(47,109,240,0.38) 0%, transparent 65%); }
+.pack-theme-blue .pack-sound-blink{ box-shadow:0 0 6px 1px rgba(91,155,255,0.9); }
+.pack-theme-blue .pack-demo-tile.is-active{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 14px 26px -18px rgba(0,0,0,0.7), 0 0 30px -10px rgba(47,109,240,0.55);
+}
+.pack-theme-blue .pack-demo-seek-fill::after{ box-shadow:0 0 6px rgba(91,155,255,0.7); }
+
 /* ------------------------------ Dev placeholder note ----------------------- */
 /* Marks copy/data that still needs the real pack info swapped in — not
    rendered in a way that looks broken, just visibly a stand-in. */

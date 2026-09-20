@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=4">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
-<link rel="stylesheet" href="css/style.css?v=45">
+<link rel="stylesheet" href="css/style.css?v=48">
 </head>
 <body>
 <div id="grain"></div>
@@ -127,7 +127,7 @@
         <span class="pack-hero-price-note">no payment needed</span>
       </div>
       <div class="pack-hero-cta reveal-up">
-        <a href="assets/downloads/Creative-Presets-Vol-2.zip" download class="btn btn-primary">Download Free</a>
+        <a href="https://buy.stripe.com/dRmaEP4X52SCcOcfX36EU03" class="btn btn-primary">Free Download</a>
         <a href="#previews" class="btn btn-ghost">Listen to the demo</a>
       </div>
     </div>
@@ -139,20 +139,32 @@
       <h2 class="reveal-up">Hear it before you download.</h2>
     </div>
 
-    <div class="pack-demo-tracks">
-      <div class="pack-demo-list">
-        <div class="pack-demo-tile pack-sound-tile reveal-up" data-track="demo-pack" data-audio="assets/audio/pack-creative-presets-2/demo-pack.mp3">
-          <button type="button" class="pack-demo-play" aria-label="Play the Creative Presets Vol. 2 demo pack">
-            <span class="pack-sound-glow" aria-hidden="true"></span>
-            <span class="pack-sound-blink" aria-hidden="true"></span>
-            <span class="pack-sound-icon">
-            <svg class="icon-play" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>
-            <svg class="icon-pause" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
-            </span>
-            <span class="pack-sound-name">Demo Pack</span>
-          </button>
-          <div class="pack-demo-seek" role="slider" aria-label="Seek the demo pack" tabindex="0"><div class="pack-demo-seek-fill"></div></div>
+    <div class="pack-screen reveal-up">
+      <div class="pack-screen-device">
+        <div class="pack-screen-lcd">
+          <div class="pack-screen-top">
+            <span>Creative Sound</span>
+            <span class="pack-screen-status"><span class="pack-screen-count">01/01</span><span class="pack-screen-led" aria-hidden="true"></span></span>
+          </div>
+          <div class="pack-screen-kind">Demo pack</div>
+          <div class="pack-screen-title" aria-live="polite">Demo Pack</div>
+          <canvas class="pack-screen-scope" aria-hidden="true"></canvas>
+          <div class="pack-screen-progress">
+            <span class="pack-screen-time">0:00</span>
+            <div class="pack-screen-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="pack-screen-bar-fill"></div></div>
+            <span class="pack-screen-dur">--:--</span>
+          </div>
         </div>
+        <div class="pack-screen-controls">
+          <button type="button" class="pack-screen-key pack-screen-key-step pack-screen-key-prev" aria-label="Previous"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2.5h2v11H3zM14 2.5v11L6 8z"/></svg></button>
+          <button type="button" class="pack-screen-key pack-screen-key-play" aria-label="Play"><svg class="icon-play" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg><svg class="icon-pause" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg></button>
+          <button type="button" class="pack-screen-key pack-screen-key-step pack-screen-key-next" aria-label="Next"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2 2.5v11L10 8z"/></svg></button>
+        </div>
+      </div>
+      <div class="pack-screen-list">
+      <div class="pack-screen-tracks">
+        <button type="button" class="pack-screen-track" data-audio="assets/audio/pack-creative-presets-2/demo-pack.mp3" data-title="Demo Pack" data-kind="Demo pack">Demo Pack</button>
+      </div>
       </div>
     </div>
   </section>
@@ -173,7 +185,8 @@
         <li>Instant download</li>
         <li>100% royalty-free</li>
       </ul>
-      <a href="assets/downloads/Creative-Presets-Vol-2.zip" download class="btn btn-primary btn-buy-large">Download Creative Presets Vol. 2</a>
+      <a href="https://buy.stripe.com/dRmaEP4X52SCcOcfX36EU03" class="btn btn-primary btn-buy-large">Free Download</a>
+      <span class="pricing-note pricing-note-small">Free checkout via Stripe · download link on the confirmation page</span>
     </div>
     <p style="text-align:center; margin-top:32px;">
       <a href="preset-packs.html" class="btn btn-ghost">← Back to preset packs</a>
@@ -232,7 +245,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/main.js?v=19"></script>
+<script src="js/main.js?v=21"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

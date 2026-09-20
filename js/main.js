@@ -500,90 +500,239 @@
     });
   }
 
-  /* -------------------------- Pack sound picker ----------------------------- */
-  // Each tile carries its own preview clip in data-audio. One shared Audio
-  // instance is reused across every picker group on the page (the per-sound
-  // tiles and the "made with" demo tracks) — selecting a tile stops whatever
-  // else is playing and starts its clip; the clip ending (or re-tapping the
-  // active tile) resets the UI the same way a manual pause would. Demo tiles
-  // also carry a seek bar so a full-length track can be scrubbed to a point.
-  const soundPickers = document.querySelectorAll('.pack-sound-picker, .pack-demo-list');
-  if (soundPickers.length) {
-    const allTiles = document.querySelectorAll('.pack-sound-picker .pack-sound-tile, .pack-demo-list .pack-sound-tile');
-    const player = new Audio();
-    let currentSrc = null;
+  /* --------------------------- Pack screen player ----------------------------- */
+  // Each .pack-screen is a small device: an LCD (title, live oscilloscope,
+  // seekable progress) plus prev/play/next keys, driven by a list of
+  // .pack-screen-track buttons that carry data-audio / data-title / data-kind.
+  // The scope is drawn from a Web Audio AnalyserNode on the same <audio>
+  // element that plays the sound; if the graph can't be built (old browser)
+  // it falls back to a synthetic waveform so the screen still feels alive.
+  const screenPlayers = [];
+  document.querySelectorAll('.pack-screen').forEach((root) => {
+    const tracks = Array.from(root.querySelectorAll('.pack-screen-track'));
+    if (!tracks.length) return;
 
-    function setActiveTile(tile) {
-      allTiles.forEach((t) => {
-        const isActive = t === tile;
-        t.classList.toggle('is-active', isActive);
-        if (!isActive) {
-          const fill = t.querySelector('.pack-demo-seek-fill');
-          if (fill) fill.style.width = '0%';
-        }
-      });
-      soundPickers.forEach((p) => p.classList.toggle('has-active', !!tile && p.contains(tile)));
+    const $ = (sel) => root.querySelector(sel);
+    const titleEl = $('.pack-screen-title');
+    const kindEl = $('.pack-screen-kind');
+    const countEl = $('.pack-screen-count');
+    const timeEl = $('.pack-screen-time');
+    const durEl = $('.pack-screen-dur');
+    const bar = $('.pack-screen-bar');
+    const fill = $('.pack-screen-bar-fill');
+    const canvas = $('.pack-screen-scope');
+    const playKey = $('.pack-screen-key-play');
+    const prevKey = $('.pack-screen-key-prev');
+    const nextKey = $('.pack-screen-key-next');
+    const g = canvas.getContext('2d');
+
+    const player = new Audio();
+    player.preload = 'none';
+    screenPlayers.push(player);
+    let idx = 0;
+    let loaded = -1;
+    let ctx = null;
+    let analyser = null;
+    let samples = null;
+    let synthetic = false;
+    let raf = 0;
+    let dpr = 1;
+
+    if (tracks.length === 1) root.classList.add('is-single');
+
+    function fmt(s) {
+      if (!isFinite(s) || s < 0) return '0:00';
+      const m = Math.floor(s / 60);
+      const r = Math.floor(s % 60);
+      return m + ':' + (r < 10 ? '0' : '') + r;
     }
 
-    function playTrack(tile, seekRatio) {
-      const src = tile.dataset.audio;
-      if (!src) return;
-      setActiveTile(tile);
-      const applySeek = () => {
-        if (seekRatio != null && player.duration) player.currentTime = seekRatio * player.duration;
-      };
-      if (currentSrc !== src) {
-        currentSrc = src;
-        player.src = src;
-        if (seekRatio != null) {
-          player.addEventListener('loadedmetadata', applySeek, { once: true });
-        } else {
-          player.currentTime = 0;
-        }
-      } else {
-        applySeek();
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    function show(i, animate) {
+      idx = i;
+      const t = tracks[i];
+      tracks.forEach((b, k) => b.classList.toggle('is-current', k === i));
+      titleEl.textContent = t.dataset.title || t.textContent.trim();
+      kindEl.textContent = t.dataset.kind || '';
+      if (countEl) countEl.textContent = pad(i + 1) + '/' + pad(tracks.length);
+      if (animate) {
+        titleEl.classList.remove('is-changing');
+        void titleEl.offsetWidth;
+        titleEl.classList.add('is-changing');
       }
+    }
+
+    function resetProgress() {
+      fill.style.width = '0%';
+      timeEl.textContent = '0:00';
+      durEl.textContent = '--:--';
+      root.classList.remove('has-track');
+      bar.setAttribute('aria-valuenow', '0');
+    }
+
+    function load(i) {
+      if (loaded === i) return;
+      loaded = i;
+      player.src = tracks[i].dataset.audio;
+      resetProgress();
+    }
+
+    function ensureGraph() {
+      if (analyser || synthetic) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC();
+        const src = ctx.createMediaElementSource(player);
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.6;
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        samples = new Uint8Array(analyser.fftSize);
+      } catch (e) {
+        synthetic = true;
+        analyser = null;
+      }
+    }
+
+    function play(i) {
+      if (i !== undefined) show(i, i !== idx);
+      load(idx);
+      ensureGraph();
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+      player.currentTime = player.currentTime || 0;
       player.play().catch(() => {});
     }
 
-    player.addEventListener('ended', () => setActiveTile(null));
+    function step(dir) {
+      const n = (idx + dir + tracks.length) % tracks.length;
+      const wasPlaying = !player.paused;
+      show(n, true);
+      load(n);
+      if (wasPlaying) play(); else resetProgress();
+    }
 
-    player.addEventListener('timeupdate', () => {
-      const activeTile = document.querySelector('.pack-demo-tile.is-active');
-      if (!activeTile || !player.duration) return;
-      const fill = activeTile.querySelector('.pack-demo-seek-fill');
-      if (fill) fill.style.width = ((player.currentTime / player.duration) * 100) + '%';
-    });
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      canvas.height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      drawFrame();
+    }
 
-    allTiles.forEach((tile) => {
-      const trigger = tile.querySelector('.pack-demo-play') || tile;
-      trigger.addEventListener('click', () => {
-        if (tile.classList.contains('is-active')) {
-          player.pause();
-          setActiveTile(null);
+    function drawFrame() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const color = getComputedStyle(canvas).color;
+      g.clearRect(0, 0, w, h);
+      const mid = h / 2;
+      const playing = !player.paused;
+      const pts = 140;
+      const t = performance.now() / 1000;
+
+      g.lineWidth = 2 * dpr;
+      g.lineJoin = 'round';
+      g.lineCap = 'round';
+      g.strokeStyle = color;
+      g.shadowColor = color;
+      g.shadowBlur = 12 * dpr;
+
+      if (playing && analyser) analyser.getByteTimeDomainData(samples);
+
+      g.beginPath();
+      for (let i = 0; i <= pts; i++) {
+        const x = (i / pts) * w;
+        let v = 0;
+        if (playing && analyser) {
+          const s = samples[Math.floor((i / pts) * (samples.length - 1))];
+          v = ((s - 128) / 128) * 1.7;
+        } else if (playing) {
+          const e = 0.45 + 0.35 * Math.sin(t * 3.1) * Math.sin(t * 1.3);
+          v = (Math.sin(i * 0.21 + t * 9) * 0.6 + Math.sin(i * 0.53 - t * 5) * 0.4) * e;
         } else {
-          playTrack(tile);
+          v = Math.sin(i * 0.12 + t * 1.2) * 0.025;
         }
-      });
-    });
-
-    document.querySelectorAll('.pack-demo-seek').forEach((seek) => {
-      const tile = seek.closest('.pack-demo-tile');
-
-      function ratioFromEvent(e) {
-        const rect = seek.getBoundingClientRect();
-        return Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        v = Math.max(-1, Math.min(1, v));
+        const y = mid + v * mid * 0.85;
+        if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
       }
+      g.stroke();
+    }
 
-      seek.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        seek.setPointerCapture(e.pointerId);
-        playTrack(tile, ratioFromEvent(e));
-      });
-      seek.addEventListener('pointermove', (e) => {
-        if (e.buttons !== 1 || !tile.classList.contains('is-active')) return;
-        if (player.duration) player.currentTime = ratioFromEvent(e) * player.duration;
+    function loop() {
+      drawFrame();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function start() {
+      if (!raf) raf = requestAnimationFrame(loop);
+    }
+
+    function stop() {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      drawFrame();
+    }
+
+    function setProgress(ratio) {
+      const r = Math.max(0, Math.min(1, ratio));
+      fill.style.width = (r * 100) + '%';
+      bar.setAttribute('aria-valuenow', String(Math.round(r * 100)));
+    }
+
+    player.addEventListener('play', () => { screenPlayers.forEach((p) => { if (p !== player) p.pause(); }); root.classList.add('is-playing', 'has-track'); playKey.setAttribute('aria-label', 'Pause'); start(); });
+    player.addEventListener('pause', () => { root.classList.remove('is-playing'); playKey.setAttribute('aria-label', 'Play'); stop(); });
+    player.addEventListener('loadedmetadata', () => { durEl.textContent = fmt(player.duration); });
+    player.addEventListener('timeupdate', () => {
+      timeEl.textContent = fmt(player.currentTime);
+      if (player.duration) setProgress(player.currentTime / player.duration);
+    });
+    player.addEventListener('ended', () => {
+      if (idx < tracks.length - 1) {
+        play(idx + 1);
+      } else {
+        player.currentTime = 0;
+        setProgress(0);
+        timeEl.textContent = '0:00';
+      }
+    });
+    player.addEventListener('error', () => { root.classList.remove('is-playing'); stop(); });
+
+    playKey.addEventListener('click', () => { if (player.paused) play(); else player.pause(); });
+    if (prevKey) prevKey.addEventListener('click', () => step(-1));
+    if (nextKey) nextKey.addEventListener('click', () => step(1));
+    tracks.forEach((b, i) => {
+      b.addEventListener('click', () => {
+        if (i === idx && !player.paused) { player.pause(); return; }
+        if (i === idx && loaded === i) { play(); return; }
+        show(i, true);
+        play();
       });
     });
-  }
+
+    function seekFromEvent(e) {
+      const rect = bar.getBoundingClientRect();
+      const r = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      if (loaded !== idx) { load(idx); }
+      if (player.duration) { player.currentTime = r * player.duration; setProgress(r); }
+      else {
+        player.addEventListener('loadedmetadata', () => { player.currentTime = r * player.duration; }, { once: true });
+        if (player.paused) play();
+      }
+    }
+    bar.addEventListener('pointerdown', (e) => {
+      bar.setPointerCapture(e.pointerId);
+      seekFromEvent(e);
+    });
+    bar.addEventListener('pointermove', (e) => { if (e.buttons === 1) seekFromEvent(e); });
+    bar.addEventListener('keydown', (e) => {
+      if (!player.duration) return;
+      if (e.key === 'ArrowRight') { player.currentTime = Math.min(player.duration, player.currentTime + 5); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { player.currentTime = Math.max(0, player.currentTime - 5); e.preventDefault(); }
+    });
+
+    show(0, false);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas); else window.addEventListener('resize', resize);
+    resize();
+  });
 })();

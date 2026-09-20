@@ -69,11 +69,15 @@
     navToggle.addEventListener('click', () => {
       const isOpen = siteNav.classList.toggle('open');
       navToggle.setAttribute('aria-expanded', String(isOpen));
+      document.body.classList.toggle('nav-open', isOpen);
+      if (lenis) { if (isOpen) lenis.stop(); else lenis.start(); }
     });
     siteNav.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
         siteNav.classList.remove('open');
         navToggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('nav-open');
+        if (lenis) lenis.start();
       });
     });
   }

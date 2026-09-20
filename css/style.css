@@ -1690,6 +1690,7 @@ body.search-open{ overflow:hidden; }
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted);
 }
+.pack-screen-count{ font-size:14px; font-weight:800; letter-spacing:1.5px; color:var(--amber-text); text-shadow:0 0 8px var(--accent-dim); }
 .pack-screen-status{ display:inline-flex; align-items:center; gap:10px; }
 .pack-screen-led{
   width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.14);
@@ -1703,10 +1704,13 @@ body.search-open{ overflow:hidden; }
 .pack-screen-kind{
   margin-top:12px; font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--amber-text); opacity:0.8;
 }
+/* Dot-matrix face (Doto) for everything the LCD "prints", so it reads as an
+   LED display rather than ordinary page text. */
+.pack-screen-title, .pack-screen-count, .pack-screen-time, .pack-screen-dur{ font-family:'Doto', var(--mono); }
 .pack-screen-title{
-  margin-top:4px; min-height:1.3em; font-family:var(--font-display); font-size:clamp(20px, 4.6vw, 27px); font-weight:700;
-  letter-spacing:2px; text-transform:uppercase; color:var(--amber-bright);
-  text-shadow:0 0 16px var(--accent), 0 0 3px var(--accent);
+  margin-top:2px; min-height:1.1em; font-size:clamp(30px, 7vw, 40px); font-weight:900; line-height:1.05;
+  letter-spacing:3px; text-transform:uppercase; color:var(--amber-bright);
+  text-shadow:0 0 14px var(--accent), 0 0 4px var(--accent);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .pack-screen-title.is-changing{ animation:packScreenFlicker 0.35s steps(2, end); }
@@ -1718,8 +1722,10 @@ body.search-open{ overflow:hidden; }
 }
 .pack-screen-progress{
   display:flex; align-items:center; gap:12px; margin-top:6px;
-  font-family:var(--mono); font-size:11px; letter-spacing:1px; color:var(--text-secondary); font-variant-numeric:tabular-nums;
+  font-size:14px; font-weight:800; letter-spacing:1.5px; color:var(--amber-text); font-variant-numeric:tabular-nums;
 }
+.pack-screen-time, .pack-screen-dur{ text-shadow:0 0 8px var(--accent-dim); }
+.pack-screen-dur{ opacity:0.65; }
 .pack-screen-bar{ position:relative; flex:1; height:16px; cursor:pointer; touch-action:none; outline:none; }
 .pack-screen-bar::before{
   content:''; position:absolute; left:0; right:0; top:50%; height:4px; margin-top:-2px; border-radius:2px;

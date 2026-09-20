@@ -1879,6 +1879,11 @@ body.search-open{ overflow:hidden; }
   color:#fff; box-shadow:0 0 0 1px rgba(47,109,240,0.55);
 }
 
+/* ---------------------- Orange pack theme (Vol. 1 only) -------------------- */
+/* The default highlight is a yellow-gold; the first pack's artwork is a
+   deeper orange, so its page pulls the bright/text accents toward it. */
+.pack-theme-orange{ --amber-bright:#ff8a2b; --amber-text:#ffa04d; --amber-dim:#c96f1f; }
+
 /* ------------------------------ Dev placeholder note ----------------------- */
 /* Marks copy/data that still needs the real pack info swapped in — not
    rendered in a way that looks broken, just visibly a stand-in. */

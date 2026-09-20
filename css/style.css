@@ -1591,12 +1591,8 @@ body.search-open{ overflow:hidden; }
   background:radial-gradient(ellipse farthest-side, var(--accent-glow) 0%, rgba(232,134,44,0.05) 45%, transparent 72%);
   animation:packHeroGlowPulse 5s ease-in-out infinite; pointer-events:none;
 }
-.pack-hero-art-portrait img{ animation:packHeroFloat 6s ease-in-out infinite; transition:filter 0.4s var(--ease); }
+.pack-hero-art-portrait img{ transition:filter 0.4s var(--ease); }
 .pack-hero-art-portrait:hover img{ filter:drop-shadow(0 0 24px rgba(232,134,44,0.35)); }
-@keyframes packHeroFloat{
-  0%,100%{ transform:translateY(0) rotate(0deg); }
-  50%{ transform:translateY(-12px) rotate(-0.7deg); }
-}
 @keyframes packHeroGlowPulse{
   0%,100%{ opacity:0.65; transform:translate(-50%,-50%) scale(1); }
   50%{ opacity:1; transform:translate(-50%,-50%) scale(1.05); }

@@ -634,8 +634,6 @@
       g.lineJoin = 'round';
       g.lineCap = 'round';
       g.strokeStyle = color;
-      g.shadowColor = color;
-      g.shadowBlur = 12 * dpr;
 
       if (playing && analyser) analyser.getByteTimeDomainData(samples);
 

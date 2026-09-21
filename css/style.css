@@ -1520,7 +1520,7 @@ body.search-open{ overflow:hidden; }
   position:absolute; z-index:3; right:3.4%; bottom:5%;
   padding:0.45em 0.8em; background:#050505; border:1px solid var(--border-strong);
   font-family:var(--font-display); font-weight:500; text-transform:uppercase; letter-spacing:0.5px;
-  font-size:clamp(12px, 4.4cqw, 21px); line-height:1.1; color:var(--text); white-space:nowrap;
+  font-size:clamp(10px, 3.3cqw, 16px); line-height:1.1; color:var(--text); white-space:nowrap;
   display:flex; align-items:center; gap:0.55em; padding-left:0.75em;
   clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }

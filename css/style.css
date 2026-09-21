@@ -1478,7 +1478,7 @@ body.search-open{ overflow:hidden; }
   content:''; position:absolute; inset:1px; background:#0d0d0c;
   clip-path:polygon(0 0, calc(100% - var(--cut) + 0.6px) 0, 100% calc(var(--cut) - 0.6px), 100% 100%, calc(var(--cut) - 0.6px) 100%, 0 calc(100% - var(--cut) + 0.6px));
 }
-.pack-hub-card:hover .pack-hub-frame{ background:var(--accent-dim); }
+.pack-hub-card:hover .pack-hub-frame{ background:var(--accent); }
 /* white corner tick, top-left */
 .pack-hub-card::before{
   content:''; position:absolute; top:-1px; left:-1px; width:20px; height:20px; z-index:4; pointer-events:none;

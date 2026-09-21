@@ -1513,19 +1513,72 @@ body.search-open{ overflow:hidden; }
   background-size:26px 26px; background-position:center top;
   -webkit-mask-image:linear-gradient(180deg, #000 0%, transparent 78%); mask-image:linear-gradient(180deg, #000 0%, transparent 78%);
 }
-.pack-hub-usb{
-  position:absolute; z-index:2; left:50%; top:50%; width:102%; height:auto; max-width:none;
+/* Hologram: the drives are re-tinted to amber and blended into the window
+   (their black plastic turns see-through), split into faint colour fringes,
+   crossed by scan lines and a travelling light band, and stand on a
+   projector pad that throws a soft cone of light. */
+.pack-hub-holo{
+  position:absolute; z-index:2; left:50%; top:50%; width:102%; aspect-ratio:1000 / 435;
   translate:-50% -50%;
-  filter:drop-shadow(0 18px 30px rgba(0,0,0,0.42)) drop-shadow(0 8px 34px rgba(232,134,44,0.22));
   animation:packHubFloat 5s ease-in-out infinite;
   transition:scale 0.5s var(--ease);
 }
-.pack-hub-card:hover .pack-hub-usb{ scale:1.035; }
-@keyframes packHubFloat{
-  0%,100%{ transform:translateY(0) rotate(0deg); }
-  50%{ transform:translateY(-6px) rotate(-0.5deg); }
+.pack-hub-card:hover .pack-hub-holo{ scale:1.035; }
+.pack-hub-usb{
+  position:absolute; inset:0; width:100%; height:100%; max-width:none; display:block;
+  mix-blend-mode:screen;
+  filter:
+    sepia(0.9) saturate(1.9) hue-rotate(-12deg) brightness(1.02) contrast(1.32)
+    drop-shadow(1.8px 0 0 rgba(90,225,255,0.55))
+    drop-shadow(-1.8px 0 0 rgba(255,70,30,0.5))
+    drop-shadow(0 0 12px rgba(255,170,70,0.4));
+  animation:packHubFlicker 7s steps(1, end) infinite;
 }
-@media (prefers-reduced-motion: reduce){ .pack-hub-usb, .pack-hub-badge::before{ animation:none; } }
+/* scan lines + a bright band sweeping down, both clipped to the drives' shape */
+.pack-hub-holo-scan{
+  position:absolute; inset:0; pointer-events:none;
+  -webkit-mask:url(../assets/img/preset-packs-usb.webp) center / 100% 100% no-repeat;
+  mask:url(../assets/img/preset-packs-usb.webp) center / 100% 100% no-repeat;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 43%, rgba(255,236,200,0.62) 50%, transparent 57%, transparent 100%) 0 0 / 100% 300% no-repeat,
+    repeating-linear-gradient(180deg, rgba(8,4,0,0.42) 0 1px, transparent 1px 4px);
+  animation:packHubSweep 4.2s linear infinite;
+}
+@keyframes packHubSweep{
+  0%{ background-position:0 120%, 0 0; }
+  100%{ background-position:0 -20%, 0 0; }
+}
+@keyframes packHubFlicker{
+  0%, 100%{ opacity:0.94; transform:none; }
+  91%{ opacity:0.72; transform:translateX(1.5px); }
+  92%{ opacity:0.96; transform:translateX(-1px); }
+  93%{ opacity:0.8; transform:none; }
+  94%{ opacity:0.94; }
+  97%{ opacity:0.86; }
+  98%{ opacity:0.94; }
+}
+@keyframes packHubFloat{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-7px); }
+}
+/* projector pad + light cone under the drives */
+.pack-hub-base{
+  position:absolute; z-index:1; left:50%; bottom:6%; width:66%; height:74%; transform:translateX(-50%);
+  pointer-events:none;
+}
+.pack-hub-base::before{
+  content:''; position:absolute; left:0; right:0; top:0; bottom:9px;
+  background:linear-gradient(0deg, rgba(255,175,80,0.62) 0%, rgba(232,134,44,0.24) 55%, transparent 100%);
+  clip-path:polygon(0 0, 100% 0, 76% 100%, 24% 100%);
+  -webkit-mask-image:linear-gradient(0deg, #000 0%, transparent 92%); mask-image:linear-gradient(0deg, #000 0%, transparent 92%);
+}
+.pack-hub-base::after{
+  content:''; position:absolute; left:12%; right:12%; bottom:0; height:17px; border-radius:50%;
+  border:1px solid rgba(255,206,140,0.95);
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,200,120,0.75) 0%, rgba(232,134,44,0.25) 60%, transparent 100%);
+  box-shadow:0 0 18px rgba(232,134,44,0.8), inset 0 0 12px rgba(255,170,70,0.6);
+}
+@media (prefers-reduced-motion: reduce){ .pack-hub-holo, .pack-hub-usb, .pack-hub-holo-scan, .pack-hub-badge::before{ animation:none; } }
 .pack-hub-badge{
   position:absolute; z-index:3; right:3.4%; bottom:5%;
   padding:0.45em 0.8em; background:#050505; border:1px solid var(--border-strong);
@@ -1610,9 +1663,9 @@ body.search-open{ overflow:hidden; }
 .pack-hub-cta svg{ width:1.05em; height:1.05em; flex-shrink:0; transition:transform 0.35s var(--ease); }
 .pack-hub-card:hover .pack-hub-cta{ background:var(--amber-text); }
 .pack-hub-card:hover .pack-hub-cta svg{ transform:translateX(7px); }
-@media (max-width:1100px){ .pack-hub-usb{ width:98%; } }
+@media (max-width:1100px){ .pack-hub-holo{ width:98%; } }
 @media (max-width:700px){
-  .pack-hub-usb{ width:98%; }
+  .pack-hub-holo{ width:98%; }
   .pack-hub-card{ --cut:18px; }
 }
 

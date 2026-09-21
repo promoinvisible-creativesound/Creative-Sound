@@ -1527,10 +1527,8 @@ body.search-open{ overflow:hidden; }
   filter:
     sepia(0.95) saturate(2.1) hue-rotate(-14deg) brightness(1.08) contrast(1.4)
     drop-shadow(2.6px 0 0 rgba(90,225,255,0.7))
-    drop-shadow(-2.6px 0 0 rgba(255,60,25,0.6))
-    drop-shadow(0 0 14px rgba(255,170,70,0.65))
-    drop-shadow(0 0 38px rgba(232,134,44,0.4));
-  animation:packHubFlicker 3.6s steps(1, end) infinite, packHubShimmer 2.2s ease-in-out infinite;
+    drop-shadow(-2.6px 0 0 rgba(255,60,25,0.6));
+  animation:packHubFlicker 3.6s steps(1, end) infinite;
 }
 /* cyan echo: a displaced, faint copy of the drives that drifts sideways */
 .pack-hub-holo::before{
@@ -1541,34 +1539,16 @@ body.search-open{ overflow:hidden; }
   filter:blur(0.6px);
   animation:packHubEcho 3s ease-in-out infinite;
 }
-/* scan lines + light bands sweeping down, all clipped to the drives' shape */
+/* scan lines, clipped to the drives' shape */
 .pack-hub-holo-scan{
   position:absolute; inset:0; pointer-events:none;
   -webkit-mask:url(../assets/img/preset-packs-usb.webp) center / 100% 100% no-repeat;
   mask:url(../assets/img/preset-packs-usb.webp) center / 100% 100% no-repeat;
-  background:
-    linear-gradient(180deg, transparent 0%, transparent 46%, rgba(255,246,222,0.85) 50%, transparent 54%, transparent 100%) 0 0 / 100% 500% no-repeat,
-    linear-gradient(180deg, transparent 0%, transparent 38%, rgba(255,214,150,0.55) 50%, transparent 62%, transparent 100%) 0 0 / 100% 300% no-repeat,
-    repeating-linear-gradient(180deg, rgba(8,4,0,0.6) 0 1px, transparent 1px 3px);
-  animation:packHubSweep 3.2s linear infinite;
-}
-@keyframes packHubSweep{
-  0%{ background-position:0 130%, 0 120%, 0 0; }
-  100%{ background-position:0 -30%, 0 -20%, 0 0; }
+  background:repeating-linear-gradient(180deg, rgba(8,4,0,0.6) 0 1px, transparent 1px 3px);
 }
 @keyframes packHubEcho{
   0%,100%{ transform:translateX(3px); opacity:0.55; }
   50%{ transform:translateX(7px); opacity:0.3; }
-}
-@keyframes packHubShimmer{
-  0%,100%{ filter:
-    sepia(0.95) saturate(2.1) hue-rotate(-14deg) brightness(1.08) contrast(1.4)
-    drop-shadow(2.6px 0 0 rgba(90,225,255,0.7)) drop-shadow(-2.6px 0 0 rgba(255,60,25,0.6))
-    drop-shadow(0 0 14px rgba(255,170,70,0.65)) drop-shadow(0 0 38px rgba(232,134,44,0.4)); }
-  50%{ filter:
-    sepia(0.95) saturate(2.3) hue-rotate(-18deg) brightness(1.22) contrast(1.4)
-    drop-shadow(3.4px 0 0 rgba(90,225,255,0.8)) drop-shadow(-3.4px 0 0 rgba(255,60,25,0.7))
-    drop-shadow(0 0 20px rgba(255,180,80,0.85)) drop-shadow(0 0 50px rgba(232,134,44,0.55)); }
 }
 @keyframes packHubFlicker{
   0%, 100%{ opacity:0.94; transform:none; }

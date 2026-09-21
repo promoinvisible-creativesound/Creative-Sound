@@ -1502,10 +1502,7 @@ body.search-open{ overflow:hidden; }
 .pack-hub-art{
   position:relative; z-index:1; aspect-ratio:2.1 / 1;
   border-bottom:1px solid var(--border-strong);
-  background:
-    linear-gradient(180deg, transparent 60%, #0d0d0c 100%),
-    radial-gradient(ellipse 62% 54% at 50% 68%, rgba(232,134,44,0.66) 0%, rgba(232,134,44,0.34) 38%, rgba(232,134,44,0.1) 66%, transparent 100%),
-    linear-gradient(180deg, #060605 0%, #0d0d0c 100%);
+  background:linear-gradient(180deg, #060605 0%, #0d0d0c 100%);
 }
 .pack-hub-art::before{
   content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
@@ -1560,23 +1557,6 @@ body.search-open{ overflow:hidden; }
 @keyframes packHubFloat{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-7px); }
-}
-/* projector pad + light cone under the drives */
-.pack-hub-base{
-  position:absolute; z-index:1; left:50%; bottom:6%; width:66%; height:74%; transform:translateX(-50%);
-  pointer-events:none;
-}
-.pack-hub-base::before{
-  content:''; position:absolute; left:0; right:0; top:0; bottom:9px;
-  background:linear-gradient(0deg, rgba(255,175,80,0.62) 0%, rgba(232,134,44,0.24) 55%, transparent 100%);
-  clip-path:polygon(0 0, 100% 0, 76% 100%, 24% 100%);
-  -webkit-mask-image:linear-gradient(0deg, #000 0%, transparent 92%); mask-image:linear-gradient(0deg, #000 0%, transparent 92%);
-}
-.pack-hub-base::after{
-  content:''; position:absolute; left:12%; right:12%; bottom:0; height:17px; border-radius:50%;
-  border:1px solid rgba(255,206,140,0.95);
-  background:radial-gradient(ellipse at 50% 50%, rgba(255,200,120,0.75) 0%, rgba(232,134,44,0.25) 60%, transparent 100%);
-  box-shadow:0 0 18px rgba(232,134,44,0.8), inset 0 0 12px rgba(255,170,70,0.6);
 }
 @media (prefers-reduced-motion: reduce){ .pack-hub-holo, .pack-hub-usb, .pack-hub-holo-scan, .pack-hub-badge::before{ animation:none; } }
 .pack-hub-badge{

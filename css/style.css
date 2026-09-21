@@ -335,9 +335,9 @@ body.search-open{ overflow:hidden; }
 
 /* -------------------------------- Layout -------------------------------- */
 .section{
-  max-width:var(--container); margin:0 auto; padding:160px 32px;
+  max-width:var(--container); margin:0 auto; padding:clamp(80px, 8.5vw, 128px) 32px;
 }
-.section-tight{ padding:100px 32px; }
+.section-tight{ padding:clamp(60px, 6.5vw, 88px) 32px; }
 /* Right under the compact homepage hero — no need for the usual top gap. */
 #plugins .section{ padding-top:20px; }
 /* Artists now follows the hero directly on the homepage — tighten the gap
@@ -345,7 +345,8 @@ body.search-open{ overflow:hidden; }
 #hero.hero-home + #artists{ padding-top:56px; }
 /* Sections without a side image (no .feature-visual) get their heading
    block centered on the page instead of hugging the left edge. */
-.section-head{ max-width:680px; margin:0 auto 64px; text-align:center; }
+.section-head{ max-width:860px; margin:0 auto clamp(28px, 3.2vw, 44px); text-align:center; }
+.section h2, .section-head h2{ text-wrap:balance; }
 /* Gradient-filled label flanked by thin HUD tick lines — same treatment
    as the hero's "SOUND" accent, used here as every section's small
    eyebrow instead of a status dot, so the whole site reads as one
@@ -375,7 +376,7 @@ body.search-open{ overflow:hidden; }
   .hud-title::before, .hud-title::after{ width:20px; }
 }
 .section h2{
-  font-size:clamp(28px, 4vw, 44px); line-height:1.2; margin-bottom:22px;
+  font-size:clamp(28px, 4vw, 44px); line-height:1.2; margin-bottom:16px;
 }
 .section-lede{
   font-size:17px; color:var(--text-secondary); font-weight:300; max-width:560px;
@@ -462,7 +463,7 @@ body.search-open{ overflow:hidden; }
 #hero.hero-launch .hero-title{ font-size:clamp(23px, 2.8vw, 45px); white-space:nowrap; align-items:flex-start; }
 #hero.hero-launch .hero-sub{ text-align:left; max-width:460px; margin:22px 0 0; text-wrap:balance; }
 #hero.hero-launch .hero-cta{ justify-content:flex-start; }
-.hero-launch-visual{ position:relative; display:flex; justify-content:center; align-items:center; }
+.hero-launch-visual{ position:relative; display:flex; justify-content:center; align-items:center; margin:-4% 0 -10%; }
 .hero-launch-visual::before{
   content:''; position:absolute; inset:-8%; z-index:0;
   background:radial-gradient(circle, rgba(232,134,44,0.4) 0%, rgba(232,134,44,0.14) 45%, transparent 72%);
@@ -470,6 +471,8 @@ body.search-open{ overflow:hidden; }
 }
 .hero-launch-visual img{
   position:relative; z-index:1; width:100%; max-width:1500px; height:auto;
+  max-width:min(1500px, calc((100vh - 150px) * 1.25));
+  max-width:min(1500px, calc((100svh - 150px) * 1.25));
   filter:drop-shadow(0 30px 70px rgba(0,0,0,0.65));
 }
 @media (max-width:900px){
@@ -497,8 +500,8 @@ body.search-open{ overflow:hidden; }
 
 /* -------------------------------- Feature rows --------------------------- */
 .feature{
-  max-width:var(--container); margin:0 auto; padding:110px 32px;
-  display:grid; grid-template-columns:80px 1fr 1fr; gap:40px; align-items:center;
+  max-width:var(--container); margin:0 auto; padding:clamp(52px, 5.6vw, 84px) 32px;
+  display:grid; grid-template-columns:80px 1fr 1fr; gap:clamp(24px, 2.8vw, 40px); align-items:center;
 }
 .feature-reverse .feature-visual{ order:1; }
 .feature-reverse .feature-text{ order:2; }
@@ -511,11 +514,11 @@ body.search-open{ overflow:hidden; }
   font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:1px;
   padding:3px 8px; border-radius:3px; text-transform:uppercase; margin-bottom:14px;
 }
-.feature-text h3{ font-size:clamp(20px, 2.3vw, 27px); margin-bottom:8px; }
+.feature-text h3{ font-size:clamp(20px, 2.3vw, 34px); margin-bottom:8px; }
 .feature-tagline{ color:var(--amber-text); font-size:12.5px; font-weight:400; margin-bottom:16px; font-style:italic; font-family:var(--font-sans); }
-.feature-text > p:not(.feature-tagline){ color:var(--text-secondary); font-size:13px; max-width:390px; margin-bottom:22px; }
+.feature-text > p:not(.feature-tagline){ color:var(--text-secondary); font-size:clamp(13px, 0.9vw, 17px); max-width:clamp(390px, 27vw, 560px); margin-bottom:22px; }
 .feature-specs li{
-  font-family:var(--mono); font-size:10.5px; color:var(--text-muted);
+  font-family:var(--mono); font-size:clamp(10.5px, 0.75vw, 14px); color:var(--text-muted);
   padding:7px 0; border-top:1px solid var(--border);
 }
 .feature-specs li:last-child{ border-bottom:1px solid var(--border); }
@@ -897,7 +900,7 @@ body.search-open{ overflow:hidden; }
    home page's main "buy" moment. */
 .pricing-with-visual{
   max-width:1300px; margin:0 auto; display:grid;
-  grid-template-columns:minmax(0, 0.85fr) minmax(0, 1.35fr); align-items:center; gap:48px;
+  grid-template-columns:minmax(0, 0.85fr) minmax(0, 1.35fr); align-items:center; gap:clamp(28px, 3.3vw, 48px);
 }
 .pricing-with-visual .pricing-card{ margin:0; }
 .pricing-visual img{
@@ -905,9 +908,11 @@ body.search-open{ overflow:hidden; }
   filter:drop-shadow(0 30px 60px rgba(0,0,0,0.6));
 }
 @media (max-width:900px){
-  .pricing-with-visual{ grid-template-columns:1fr; gap:32px; }
+  .pricing-with-visual{ grid-template-columns:minmax(0, 1fr); gap:32px; }
+  .pricing-with-visual .pricing-card{ margin:0 auto; }
 }
-.pricing-card{ max-width:480px; margin:0 auto; padding:44px; text-align:center; }
+.pricing-card{ max-width:480px; margin:0 auto; padding:clamp(22px, 6vw, 44px); text-align:center; }
+.pricing-with-visual > *{ min-width:0; }
 .pricing-top{ margin-bottom:32px; }
 .pricing-name{ display:block; font-family:var(--mono); letter-spacing:2px; font-size:13px; color:var(--text-muted); margin-bottom:14px; }
 .pricing-discount-badge{
@@ -1302,19 +1307,20 @@ body.search-open{ overflow:hidden; }
    in its inline style, so it just fills the single-column layout at 100%;
    changing these numbers never affects the mobile stack. */
 @media (min-width:901px){
-  #saturation .feature-visual img{ max-width:455px; }
-  #noise .feature-visual img{ max-width:440px; }
-  #bode .feature-visual img{ max-width:440px; }
-  #flux .feature-visual img{ max-width:440px; }
-  #eq .feature-visual img{ max-width:440px; }
-  #output .feature-visual img{ max-width:385px; }
+  #saturation .feature-visual img{ max-width:min(100%, clamp(340px, 31.6vw, 640px)); }
+  #noise .feature-visual img{ max-width:min(100%, clamp(330px, 30.6vw, 620px)); }
+  #bode .feature-visual img{ max-width:min(100%, clamp(330px, 30.6vw, 620px)); }
+  #flux .feature-visual img{ max-width:min(100%, clamp(330px, 30.6vw, 620px)); }
+  #eq .feature-visual img{ max-width:min(100%, clamp(330px, 30.6vw, 620px)); }
+  #output .feature-visual img{ max-width:min(100%, clamp(290px, 26.7vw, 540px)); }
 }
 @media (max-width:900px){
   .feature{ grid-template-columns:1fr; gap:24px; }
   .feature-index{ writing-mode:horizontal-tb; }
   /* Module screenshot always before the description on mobile, regardless
      of .feature-reverse (which only swaps the side-by-side order on desktop). */
-  .feature-visual{ order:0; }
+  .feature-visual{ order:0; text-align:center; }
+  .feature-visual img{ max-width:min(100%, 440px); margin-inline:auto; }
   .feature-text{ order:1; }
   .section{ padding:110px 24px; }
 }

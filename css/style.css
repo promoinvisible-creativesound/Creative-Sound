@@ -1370,6 +1370,12 @@ body.search-open{ overflow:hidden; }
   .header-utils{ gap:6px; }
   #header-search-btn, .header-utils a[aria-label="Support"], #header-account-link{ display:none; }
   .header-icon-btn{ width:30px; height:30px; }
+  .header-icon-btn.header-cart-icon{
+    width:auto; height:30px; padding:0 15px; border-radius:0;
+    border-color:var(--accent); color:var(--amber-text);
+    font-size:12px; font-weight:600; letter-spacing:0.5px;
+    clip-path:polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  }
   .header-icon-btn svg{ width:15px; height:15px; }
   .footer-inner{ grid-template-columns:1fr 1fr; }
   .footer-col-brand{ grid-column:1 / -1; }

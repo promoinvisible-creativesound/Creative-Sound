@@ -1501,6 +1501,7 @@ body.search-open{ overflow:hidden; }
 
 .pack-hub-art{
   position:relative; z-index:1; aspect-ratio:2.1 / 1;
+  border-bottom:1px solid var(--border-strong);
   background:
     linear-gradient(180deg, transparent 60%, #0d0d0c 100%),
     radial-gradient(ellipse 62% 54% at 50% 68%, rgba(232,134,44,0.66) 0%, rgba(232,134,44,0.34) 38%, rgba(232,134,44,0.1) 66%, transparent 100%),

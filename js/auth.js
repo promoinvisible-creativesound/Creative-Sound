@@ -271,7 +271,7 @@
     const list = document.getElementById('profile-licenses');
     if (!list) return;
     if (!data.licenses.length) {
-      list.innerHTML = '<p class="profile-empty">No Creative Dist license on this account yet — buy it from the <a href="index.html">product page</a>, using this same email.</p>';
+      list.innerHTML = '<p class="profile-empty">No CREATIVE DIST license on this account yet — buy it from the <a href="index.html">product page</a>, using this same email.</p>';
       return;
     }
     list.innerHTML = data.licenses.map((lic) => `
@@ -313,7 +313,7 @@
   function renderOrders(data) {
     const orders = document.getElementById('profile-orders');
     if (!orders) return;
-    const rows = data.orders.map((o) => ({ created_at: o.created_at, name: 'Creative Dist', amount: formatAmount(o.amount_total, o.currency) }))
+    const rows = data.orders.map((o) => ({ created_at: o.created_at, name: 'CREATIVE DIST', amount: formatAmount(o.amount_total, o.currency) }))
       .concat((data.packs || []).map((p) => ({ created_at: p.created_at, name: p.name, amount: p.amount_total ? formatAmount(p.amount_total, p.currency) : 'Free' })))
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     if (!rows.length) {

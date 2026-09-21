@@ -1448,8 +1448,13 @@ body.search-open{ overflow:hidden; }
    (preset-packs.html / sample-packs.html) — a plain link card each,
    no product-tile chrome since these aren't purchasable items. */
 .pack-category-grid{
+  position:relative; isolation:isolate;
   display:grid; grid-template-columns:1fr 1fr; gap:clamp(40px, 5vw, 64px);
   max-width:1000px; margin:0 auto;
+}
+.pack-category-grid::before{
+  content:''; position:absolute; inset:-14% 0; z-index:-1; pointer-events:none;
+  background:radial-gradient(ellipse farthest-side, rgba(232,134,44,0.11) 0%, rgba(232,134,44,0.04) 45%, transparent 72%);
 }
 @media (max-width:700px){ .pack-category-grid{ grid-template-columns:1fr; max-width:420px; gap:40px; } }
 /* Hub cards: a HUD-style frame with two chamfered corners, a big title bar,
@@ -1486,50 +1491,110 @@ body.search-open{ overflow:hidden; }
   font-family:var(--font-display); font-weight:500; text-transform:uppercase; text-align:center;
   font-size:clamp(22px, 3vw, 36px); font-size:clamp(22px, 8.4cqw, 40px);
   letter-spacing:1px; line-height:1.1; color:var(--accent);
+  background:
+    linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 62%, var(--amber-dim) 100%) text,
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent);
+  background-clip:text, border-box; -webkit-background-clip:text, border-box;
+  -webkit-text-fill-color:transparent;
+  text-shadow:none;
 }
 
 .pack-hub-art{
   position:relative; z-index:1; aspect-ratio:2.1 / 1;
-  background:linear-gradient(180deg, #060605 0%, #060605 32%, rgba(232,134,44,0.55) 78%, #e8862c 100%);
+  background:
+    linear-gradient(180deg, transparent 60%, #0d0d0c 100%),
+    radial-gradient(ellipse 62% 54% at 50% 68%, rgba(232,134,44,0.66) 0%, rgba(232,134,44,0.34) 38%, rgba(232,134,44,0.1) 66%, transparent 100%),
+    linear-gradient(180deg, #060605 0%, #0d0d0c 100%);
+}
+.pack-hub-art::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:26px 26px; background-position:center top;
+  -webkit-mask-image:linear-gradient(180deg, #000 0%, transparent 78%); mask-image:linear-gradient(180deg, #000 0%, transparent 78%);
 }
 .pack-hub-usb{
   position:absolute; z-index:2; left:50%; top:50%; width:114%; height:auto; max-width:none;
   translate:-50% -50%;
-  filter:drop-shadow(0 14px 22px rgba(0,0,0,0.55));
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,0.42)) drop-shadow(0 8px 34px rgba(232,134,44,0.22));
   animation:packHubFloat 5s ease-in-out infinite;
+  transition:scale 0.5s var(--ease);
 }
+.pack-hub-card:hover .pack-hub-usb{ scale:1.035; }
 @keyframes packHubFloat{
   0%,100%{ transform:translateY(0) rotate(0deg); }
   50%{ transform:translateY(-6px) rotate(-0.5deg); }
 }
-@media (prefers-reduced-motion: reduce){ .pack-hub-usb{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ .pack-hub-usb, .pack-hub-badge::before{ animation:none; } }
 .pack-hub-badge{
   position:absolute; z-index:3; right:3.4%; bottom:5%;
   padding:0.45em 0.8em; background:#050505; border:1px solid var(--border-strong);
   font-family:var(--font-display); font-weight:500; text-transform:uppercase; letter-spacing:0.5px;
   font-size:clamp(12px, 4.4cqw, 21px); line-height:1.1; color:var(--text); white-space:nowrap;
+  display:flex; align-items:center; gap:0.55em; padding-left:0.75em;
+  clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }
+.pack-hub-badge::before{
+  content:''; width:0.38em; height:0.38em; border-radius:50%; flex-shrink:0;
+  background:var(--led-green); box-shadow:0 0 8px var(--led-green);
+  animation:packHubLed 2.4s ease-in-out infinite;
+}
+@keyframes packHubLed{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
 .pack-hub-badge b{ color:var(--accent); font-weight:700; }
-/* "coming soon" variant: the blurred plugin shot stays inside the window */
-.pack-hub-art-soon{ overflow:hidden; background:#060605; }
-.pack-hub-soon-img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;
-  filter:blur(9px) brightness(0.5) saturate(0.7); transform:scale(1.08);
+/* "coming soon" variant: the window holds nothing but the label */
+.pack-hub-art-soon{
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg, #060605 0%, #0d0d0c 100%);
 }
-.pack-hub-art-soon .pack-tile-soon-tag{ position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; }
+.pack-hub-soon-label{
+  position:relative; z-index:1;
+  font-family:var(--font-display); font-weight:500; text-transform:uppercase;
+  font-size:clamp(14px, 5.2cqw, 24px); letter-spacing:0.28em; padding-left:0.28em;
+  color:var(--text-secondary);
+}
 
 .pack-hub-body{ position:relative; z-index:1; flex:1; padding:clamp(18px, 6cqw, 28px) clamp(18px, 5.6cqw, 28px) clamp(20px, 6cqw, 32px); }
-.pack-hub-sub{ margin:0 0 clamp(14px, 4.4cqw, 22px); color:var(--accent); font-weight:700; font-size:clamp(14px, 3.6cqw, 17px); }
+/* lead line: display face in the amber gradient, underlined by a short bright
+   segment that runs into a hairline */
+.pack-hub-sub{
+  margin:0 0 clamp(16px, 4.8cqw, 22px); padding-bottom:clamp(13px, 3.8cqw, 17px);
+  font-family:var(--font-display); font-weight:500; font-size:clamp(13px, 3.7cqw, 16px);
+  letter-spacing:0.06em; line-height:1.3;
+  background:
+    linear-gradient(90deg, var(--accent) 0 38px, var(--border) 38px 100%) bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 100%) text;
+  -webkit-background-clip:border-box, text; background-clip:border-box, text;
+  -webkit-text-fill-color:transparent;
+}
 .pack-hub-list{ margin:0; padding:0; list-style:none; }
 .pack-hub-list li{
-  position:relative; padding-left:24px; margin-bottom:clamp(12px, 4cqw, 20px);
-  font-size:clamp(13px, 3.1cqw, 15px); line-height:1.5; color:var(--text-secondary); font-weight:400;
+  position:relative; padding-left:22px; margin-bottom:clamp(12px, 3.8cqw, 18px);
+  font-size:clamp(13px, 3.2cqw, 14.5px); line-height:1.55; letter-spacing:0.01em;
+  color:#dad7cc; font-weight:400;
 }
 .pack-hub-list li:last-child{ margin-bottom:0; }
+/* small glowing diamond as the marker */
 .pack-hub-list li::before{
-  content:''; position:absolute; left:2px; top:0.5em; width:8px; height:8px; border-radius:2px; background:var(--accent);
+  content:''; position:absolute; left:3px; top:0.62em; width:6px; height:6px;
+  background:var(--accent); transform:rotate(45deg);
+  box-shadow:0 0 9px rgba(232,134,44,0.7);
 }
-.pack-hub-key{ color:var(--accent); }
+/* the "Contains" row: a small mono label over a row of chamfered chips */
+.pack-hub-list li.pack-hub-contains{ padding-left:0; }
+.pack-hub-list li.pack-hub-contains::before{ display:none; }
+.pack-hub-key{
+  display:block; margin-bottom:9px;
+  font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:0.22em; text-transform:uppercase;
+  color:var(--text-muted);
+}
+.pack-hub-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+.pack-hub-chips b{
+  padding:5px 10px; font-family:var(--mono); font-size:clamp(10.5px, 2.7cqw, 12px); font-weight:500;
+  letter-spacing:0.08em; text-transform:uppercase; line-height:1.2; color:var(--amber-text);
+  background:rgba(232,134,44,0.08); border:1px solid rgba(232,134,44,0.34);
+  clip-path:polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  transition:background 0.3s var(--ease), color 0.3s var(--ease);
+}
+.pack-hub-card:hover .pack-hub-chips b{ background:rgba(232,134,44,0.15); color:var(--amber-bright); }
 
 .pack-hub-cta{
   position:relative; z-index:1; display:flex; align-items:center; justify-content:flex-end; gap:10px;
@@ -1538,11 +1603,13 @@ body.search-open{ overflow:hidden; }
   font-family:var(--font-display); font-weight:500; text-transform:uppercase; letter-spacing:0.5px;
   font-size:clamp(14px, 4.6cqw, 21px); line-height:1.2;
   clip-path:polygon(0 0, 100% 0, 100% 100%, calc(var(--cut) - 0.6px) 100%, 0 calc(100% - var(--cut) + 0.6px));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.28);
   transition:background 0.3s var(--ease);
 }
 .pack-hub-cta svg{ width:1.05em; height:1.05em; flex-shrink:0; transition:transform 0.35s var(--ease); }
 .pack-hub-card:hover .pack-hub-cta{ background:var(--amber-text); }
 .pack-hub-card:hover .pack-hub-cta svg{ transform:translateX(7px); }
+@media (max-width:1100px){ .pack-hub-usb{ width:108%; } }
 @media (max-width:700px){
   .pack-hub-usb{ width:108%; }
   .pack-hub-card{ --cut:18px; }

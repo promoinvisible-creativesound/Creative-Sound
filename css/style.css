@@ -345,7 +345,7 @@ body.search-open{ overflow:hidden; }
 #hero.hero-home + #artists{ padding-top:56px; }
 /* Sections without a side image (no .feature-visual) get their heading
    block centered on the page instead of hugging the left edge. */
-.section-head{ max-width:860px; margin:0 auto clamp(28px, 3.2vw, 44px); text-align:center; }
+.section-head{ max-width:860px; margin:0 auto clamp(18px, 2.2vw, 30px); text-align:center; }
 .section h2, .section-head h2{ text-wrap:balance; }
 /* Gradient-filled label flanked by thin HUD tick lines — same treatment
    as the hero's "SOUND" accent, used here as every section's small
@@ -354,7 +354,7 @@ body.search-open{ overflow:hidden; }
 .kicker{
   position:relative; display:inline-flex; align-items:center; gap:14px;
   font-family:var(--mono); font-size:12px; letter-spacing:3px;
-  margin-bottom:18px;
+  margin-bottom:14px;
   background:linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 60%, var(--amber-dim) 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 14px var(--accent-glow));
@@ -376,7 +376,7 @@ body.search-open{ overflow:hidden; }
   .hud-title::before, .hud-title::after{ width:20px; }
 }
 .section h2{
-  font-size:clamp(28px, 4vw, 44px); line-height:1.2; margin-bottom:16px;
+  font-size:clamp(28px, 4vw, 44px); line-height:1.2; margin-bottom:12px;
 }
 .section-lede{
   font-size:17px; color:var(--text-secondary); font-weight:300; max-width:560px;
@@ -670,7 +670,7 @@ body.search-open{ overflow:hidden; }
    is "in view" at a time while the rest sit visible-but-still behind it;
    right-clicking the hovered card toggles its sound (muting every other
    card first, so only one is ever audible). */
-.stories-row{ overflow:hidden; padding:80px 4px 96px; -webkit-mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+.stories-row{ overflow:hidden; padding:56px 4px 80px; -webkit-mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
 .stories-track{
   display:flex; gap:18px; width:max-content;
   animation:storiesMarquee 60s linear infinite;
@@ -711,7 +711,7 @@ body.search-open{ overflow:hidden; }
   .stories-track{ animation:none; }
 }
 @media (max-width:700px){
-  .stories-row{ padding:48px 4px 60px; }
+  .stories-row{ padding:40px 4px 52px; }
   .story-card{ width:145px; }
   .story-card:hover{ transform:scale(1.25); }
 }
@@ -1337,7 +1337,7 @@ body.search-open{ overflow:hidden; }
   #output .feature-visual img{ max-width:min(100%, clamp(290px, 26.7vw, 540px)); }
 }
 @media (max-width:900px){
-  .feature{ grid-template-columns:1fr; gap:24px; }
+  .feature{ grid-template-columns:1fr; gap:18px; }
   .feature-index{ writing-mode:horizontal-tb; }
   /* Module screenshot always before the description on mobile, regardless
      of .feature-reverse (which only swaps the side-by-side order on desktop). */
@@ -1410,7 +1410,7 @@ body.search-open{ overflow:hidden; }
 @media (max-width:700px){
   .section{ padding:64px 20px; }
   .section-tight{ padding:56px 20px; }
-  .section-head{ margin:0 auto 40px; }
+  .section-head{ margin:0 auto 28px; }
   .section h2{ font-size:clamp(24px, 7vw, 36px); margin-bottom:16px; }
   .section-lede{ font-size:15.5px; }
   .kicker{ font-size:11px; margin-bottom:14px; }

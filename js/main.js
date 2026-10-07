@@ -488,13 +488,15 @@
   // backend involved. The trigger button lives in every page's header; the
   // overlay itself is built once here and shared.
   const SEARCH_INDEX = [
-    { name: 'CREATIVE DIST', desc: 'Modular distortion plugin — overview & pricing', url: 'index.html' },
-    { name: 'Saturation', desc: '14 distortion algorithms, one input', url: 'index.html#saturation' },
-    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'index.html#noise' },
-    { name: 'Bode Shifter', desc: 'Frequency shifting for otherworldly motion', url: 'index.html#bode' },
-    { name: 'EQ', desc: '5-band dual EQ', url: 'index.html#eq' },
-    { name: 'Output', desc: 'Final gain stage', url: 'index.html#output' },
-    { name: 'Pricing', desc: 'Buy CREATIVE DIST', url: 'index.html#pricing' },
+    { name: 'CREATIVE DIST 2.0', desc: 'Modular distortion plugin — overview & pricing', url: '/' },
+    { name: 'Saturation', desc: '18 saturation modes', url: '/#saturation' },
+    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: '/#noise' },
+    { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: '/#bode' },
+    { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: '/#flux' },
+    { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: '/#eq' },
+    { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: '/#output' },
+    { name: 'Pricing', desc: 'Buy CREATIVE DIST 2.0 or get the free demo', url: '/#pricing' },
+    { name: 'Sound Packs', desc: 'Free Serum preset packs', url: 'packs.html' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },
     { name: 'License & Download', desc: 'Your license key and download links', url: 'profile-license.html' },

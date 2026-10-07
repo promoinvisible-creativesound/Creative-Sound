@@ -271,7 +271,7 @@
     const list = document.getElementById('profile-licenses');
     if (!list) return;
     if (!data.licenses.length) {
-      list.innerHTML = '<p class="profile-empty">No CREATIVE DIST license on this account yet — buy it from the <a href="index.html">product page</a>, using this same email.</p>';
+      list.innerHTML = '<p class="profile-empty">No CREATIVE DIST license on this account yet — buy it from the <a href="/">product page</a>, using this same email.</p>';
       return;
     }
     list.innerHTML = data.licenses.map((lic) => `
@@ -582,7 +582,7 @@
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = 'index.html';
+      window.location.href = '/';
     });
   }
 

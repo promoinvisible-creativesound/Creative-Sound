@@ -2,7 +2,12 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.creativesound.io" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.creativesound.io"
+        }
+      ],
       "destination": "https://creativesound.io/:path*",
       "permanent": true
     },
@@ -10,6 +15,12 @@
       "source": "/creative-dist.html",
       "destination": "/",
       "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/notify",
+      "destination": "/api/tickets?action=notify"
     }
   ]
 }

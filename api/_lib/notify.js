@@ -2,8 +2,12 @@
 // packs on packs.html). Stores one row per email + topic and tells the
 // studio inbox about each new sign-up. Nothing is sent to the subscriber
 // now; the list is used once, when the topic launches.
+//
+// Lives in _lib (not its own function) because the Hobby plan caps a
+// deployment at 12 serverless functions: /api/notify is rewritten in
+// vercel.json to /api/tickets?action=notify, which hands off to this.
 const { Resend } = require('resend');
-const { sql } = require('./_lib/db');
+const { sql } = require('./db');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const TOPICS = { 'sample-packs': 'Sample packs' };
@@ -36,7 +40,7 @@ function escapeHtml(str) {
   }[c]));
 }
 
-module.exports = async (req, res) => {
+async function handleNotify(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -99,4 +103,6 @@ module.exports = async (req, res) => {
   }
 
   res.status(200).json({ ok: true });
-};
+}
+
+module.exports = { handleNotify };

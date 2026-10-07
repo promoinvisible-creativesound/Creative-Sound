@@ -1,6 +1,7 @@
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { getSession } = require('./_lib/auth');
+const { handleNotify } = require('./_lib/notify');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -11,6 +12,12 @@ function escapeHtml(str) {
 }
 
 module.exports = async (req, res) => {
+  // Public "notify me" sign-ups share this function (see _lib/notify.js).
+  if (req.query && req.query.action === 'notify') {
+    await handleNotify(req, res);
+    return;
+  }
+
   const session = getSession(req);
   if (!session) {
     res.status(401).json({ error: 'Not signed in.' });

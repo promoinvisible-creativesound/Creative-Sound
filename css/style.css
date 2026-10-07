@@ -2142,3 +2142,190 @@ body.search-open{ overflow:hidden; }
 .demo-download-fmt.is-swapping{ opacity:0; }
 .demo-download-link.is-started{ border-color:var(--accent); }
 .demo-download-link.is-started .demo-download-fmt{ color:var(--amber-text); }
+
+/* =============================== Packs page ===============================
+   Two pack cards with a playable cover: pointer tilt + amber glare on
+   desktop, a live audio-reactive bar meter while the demo plays (js/packs.js).
+   Covers come in with a soft focus pull the first time they scroll in. */
+.pk-hero{ padding-bottom:28px; }
+.pk-title{ font-family:var(--font-display); font-size:clamp(30px, 5vw, 48px); margin-bottom:0; line-height:1.12; }
+.pk-title-accent{
+  background:linear-gradient(180deg, var(--amber-bright) 0%, var(--accent) 60%, var(--amber-dim) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.pk-lede{ margin:20px auto 0; max-width:560px; }
+
+.pk-section{ padding-top:24px; }
+.pk-grid{
+  display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:clamp(20px, 3vw, 40px);
+  max-width:1040px; margin:0 auto;
+}
+
+.pk-card{
+  --rx:0deg; --ry:0deg; --gx:50%; --gy:30%;
+  transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry));
+  will-change:transform;
+  display:grid; grid-template-columns:minmax(0, 0.9fr) minmax(0, 1fr); gap:0;
+  background:var(--panel); border:1px solid var(--border-strong); border-radius:14px;
+  overflow:hidden; box-shadow:0 40px 80px -40px rgba(0,0,0,0.85);
+  transition:border-color 0.3s var(--ease), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pk-card:hover{ border-color:rgba(var(--fx), 0.45); }
+.pk-card.is-tilting{ transition:border-color 0.3s var(--ease), transform 0.12s linear; }
+
+/* The card tilts (js/packs.js writes --rx/--ry in degrees and --gx/--gy,
+   the glare position in %, from the pointer); the cover inherits the vars. */
+.pk-cover{ position:relative; aspect-ratio:3/4; background:#020201; overflow:hidden; }
+.pk-cover img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  transition:transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), filter 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pk-card:hover .pk-cover img{ transform:scale(1.04); }
+.pk-glare{
+  position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:radial-gradient(circle 70px at var(--gx) var(--gy), rgba(var(--fx-soft), 0.45) 0%, rgba(var(--fx), 0.16) 40%, transparent 100%);
+  opacity:0; transition:opacity 0.4s var(--ease);
+}
+.pk-card.is-tilting .pk-glare, .pk-cover.is-playing .pk-glare{ opacity:1; }
+
+/* Focus pull on first appearance (class added by js/packs.js) */
+.pk-cover.pk-pre img{ filter:blur(10px) brightness(0.6); transform:scale(1.08); }
+.pk-cover.pk-pre .pk-play{ opacity:0; transform:scale(0.9); }
+
+.pk-tag{
+  position:absolute; top:12px; left:12px; z-index:2;
+  font-family:var(--font-display); font-size:13px; font-weight:800; letter-spacing:0.5px;
+  color:#0a0a09; background:var(--accent); padding:5px 10px;
+}
+
+/* Play button: centred, glassy, amber ring; becomes pause while playing */
+.pk-play{
+  position:absolute; left:50%; top:50%; z-index:3; width:64px; height:64px; margin:-32px 0 0 -32px;
+  display:flex; align-items:center; justify-content:center; padding:0;
+  border-radius:50%; border:1px solid rgba(var(--fx-hi), 0.55); color:rgb(var(--fx-hi));
+  background:rgba(8,8,7,0.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  transition:transform 0.16s ease-out, opacity 0.5s var(--ease) 0.25s, background 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.pk-play svg{ width:24px; height:24px; }
+.pk-play .pk-icon-pause{ display:none; }
+.pk-play:hover{ background:rgba(var(--fx), 0.22); border-color:rgb(var(--fx-hi)); }
+.pk-play:active{ transform:scale(0.94); }
+.pk-cover.is-playing .pk-play{ background:rgba(var(--fx), 0.92); color:#0a0a09; border-color:rgb(var(--fx-hi)); }
+.pk-cover.is-playing .pk-icon-play{ display:none; }
+.pk-cover.is-playing .pk-icon-pause{ display:block; }
+/* Soft ring that breathes only while audio plays */
+.pk-play::after{
+  content:''; position:absolute; inset:-6px; border-radius:50%;
+  border:1px solid rgba(var(--fx-hi), 0.5); opacity:0; transform:scale(0.9);
+}
+.pk-cover.is-playing .pk-play::after{ animation:pkRing 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+@keyframes pkRing{ 0%{ opacity:0.7; transform:scale(0.9); } 100%{ opacity:0; transform:scale(1.35); } }
+
+/* Live visualizer (canvas drawn by js/packs.js): spectrum silhouette with
+   glow, oscilloscope line, falling peak caps and embers on bass hits. The
+   dark fade under it keeps it readable on any cover. */
+.pk-viz{
+  position:absolute; left:0; right:0; bottom:0; z-index:2; width:100%; height:46%;
+  pointer-events:none; opacity:0; transition:opacity 0.5s var(--ease);
+}
+.pk-cover::before{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:55%; z-index:1; pointer-events:none;
+  background:linear-gradient(to top, rgba(8,8,7,0.9), rgba(8,8,7,0.35) 55%, transparent);
+  opacity:0; transition:opacity 0.5s var(--ease);
+}
+.pk-cover.is-playing .pk-viz, .pk-cover.is-fading .pk-viz,
+.pk-cover.is-playing::before, .pk-cover.is-fading::before{ opacity:1; }
+/* Warm bloom from below that breathes with the kick (--pulse 0..1) */
+.pk-pulse{
+  --pulse:0;
+  position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen;
+  background:radial-gradient(120% 70% at 50% 110%, rgba(var(--fx), 0.55), rgba(var(--fx), 0.12) 45%, transparent 70%);
+  opacity:calc(var(--pulse) * 0.9);
+}
+.pk-cover.is-playing img{ transform:scale(calc(1.02 + var(--kick, 0) * 0.018)); transition:transform 0.08s linear, filter 0.9s cubic-bezier(0.23, 1, 0.32, 1); }
+
+.pk-body{ display:flex; flex-direction:column; padding:24px 24px 22px; min-width:0; }
+.pk-meta{ font-family:var(--mono); font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--amber-dim); }
+.pk-name{ font-family:var(--font-display); font-size:clamp(18px, 1.7vw, 22px); line-height:1.2; margin:8px 0 10px; }
+.pk-name a{ color:var(--text); transition:color 0.25s var(--ease); }
+.pk-name a:hover{ color:var(--amber-text); }
+.pk-desc{ font-size:13.5px; line-height:1.55; color:var(--text-secondary); }
+.pk-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:16px 0 0; }
+.pk-chips li{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:0.5px; color:var(--text-secondary);
+  border:1px solid var(--border-strong); border-radius:20px; padding:4px 10px;
+}
+.pk-actions{ display:flex; align-items:center; flex-wrap:wrap; gap:16px; margin-top:auto; padding-top:22px; }
+.pk-more{
+  display:inline-flex; align-items:center; gap:8px; padding:10px 0;
+  font-family:var(--mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--amber-text);
+}
+.pk-more svg{ width:14px; height:14px; transition:transform 0.3s var(--ease); }
+.pk-more:hover svg{ transform:translateX(5px); }
+
+.pk-soon{
+  max-width:1040px; margin:28px auto 0; display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:14px 18px; border:1px dashed var(--border-strong); border-radius:10px;
+  font-size:13.5px; color:var(--text-secondary); text-align:center;
+}
+.pk-soon-led{ width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+
+.pk-cross-inner{
+  max-width:1040px; margin:0 auto; display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+  align-items:center; gap:clamp(24px, 4vw, 56px);
+  padding:clamp(24px, 4vw, 44px); border:1px solid var(--border); border-radius:16px;
+  background:radial-gradient(120% 140% at 100% 50%, rgba(232,134,44,0.10), transparent 60%), var(--bg-alt);
+}
+.pk-cross-text h2{ font-size:clamp(20px, 2.2vw, 28px); line-height:1.2; }
+.pk-cross-text p{ margin-top:12px; color:var(--text-secondary); font-size:14.5px; max-width:420px; }
+.pk-cross-shot{ width:100%; height:auto; filter:drop-shadow(0 24px 50px rgba(0,0,0,0.6)); }
+
+@media (max-width:1000px){
+  .pk-grid{ grid-template-columns:minmax(0, 1fr); max-width:620px; }
+}
+@media (max-width:560px){
+  .pk-card{ grid-template-columns:minmax(0, 1fr); }
+  .pk-cover{ aspect-ratio:4/4.4; }
+  .pk-body{ padding:20px 18px 18px; }
+  .pk-cross-inner{ grid-template-columns:minmax(0, 1fr); }
+  .pk-cross-shot{ order:-1; }
+  .pk-soon{ text-align:left; justify-content:flex-start; }
+}
+@media (prefers-reduced-motion: reduce){
+  .pk-card, .pk-cover img{ transition:none; transform:none; }
+  .pk-cover.is-playing .pk-play::after{ animation:none; }
+}
+.pk-card-wrap{ display:flex; min-width:0; }
+.pk-card-wrap > .pk-card{ flex:1; min-width:0; }
+/* Two cards side by side: cover on top, text below. One card per row
+   (tablet): cover left, text right. Phone: stacked again. */
+.pk-card{ grid-template-columns:minmax(0, 1fr); }
+.pk-card .pk-cover{ aspect-ratio:1/1; }
+.pk-card .pk-cover img{ object-position:center 35%; }
+.pk-card .pk-name{ font-size:clamp(19px, 1.8vw, 23px); margin:8px 0 10px; }
+@media (min-width:561px) and (max-width:1000px){
+  .pk-card{ grid-template-columns:minmax(0, 0.85fr) minmax(0, 1fr); }
+  .pk-card .pk-cover{ aspect-ratio:auto; min-height:100%; }
+}
+/* gui-flux.png carries a lot of transparent margin: pull it in so the band
+   isn't twice as tall as its text. */
+.pk-cross-shot{ margin:-12% 0 -14%; }
+@media (max-width:560px){ .pk-cross-shot{ margin:-10% 0 -12%; } }
+
+/* Whole card opens the pack page: the title link stretches over the card,
+   while Play, Free download and All previews sit above it. */
+.pk-card{ position:relative; cursor:pointer; }
+.pk-name a::after{ content:''; position:absolute; inset:0; z-index:1; }
+.pk-play{ z-index:4; }
+.pk-actions{ position:relative; z-index:2; }
+.pk-card:focus-within{ border-color:rgba(var(--fx), 0.45); }
+.pk-name a:focus-visible{ outline:none; }
+.pk-name a:focus-visible::after{ outline:2px solid var(--accent); outline-offset:-2px; border-radius:14px; }
+
+/* Per-pack effect colour (RGB triplets): visualizer, glare, bloom and the
+   play button follow the cover. Amber by default; data-tint="blue" matches
+   the Vol. 2 cover. Brand elements (Free tag, download buttons) stay amber. */
+.pk-card{ --fx:232,134,44; --fx-hi:255,215,0; --fx-soft:255,228,170; }
+.pk-card[data-tint="blue"]{ --fx:58,128,240; --fx-hi:120,190,255; --fx-soft:200,228,255; }
+.pk-card[data-tint="blue"] .pk-play{ color:rgb(var(--fx-soft)); }

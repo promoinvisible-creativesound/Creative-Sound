@@ -2389,3 +2389,8 @@ body.search-open{ overflow:hidden; }
 .pk-art-plane.is-tilting{ transition:transform 0.12s linear; }
 .pk-art-plane .pk-glare{ -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; }
 .pk-art-plane.is-tilting .pk-glare{ opacity:1; }
+
+/* Draft placeholders in legal pages: must all be filled before publishing */
+.prose mark.todo{ background:rgba(255,215,0,0.18); color:var(--amber-bright); padding:1px 4px; border-radius:3px; font-weight:500; }
+.prose em{ color:var(--text-muted); font-style:italic; }
+.prose code{ font-family:var(--mono); font-size:13px; color:var(--amber-text); }

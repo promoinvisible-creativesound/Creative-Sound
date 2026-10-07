@@ -2018,3 +2018,127 @@ body.search-open{ overflow:hidden; }
   letter-spacing:0.5px; color:var(--led-green); background:rgba(57,255,20,0.08);
   border:1px dashed rgba(57,255,20,0.4); padding:2px 8px; border-radius:4px;
 }
+
+/* ======================= Live review fixes (Impeccable) ======================
+   Readability floor, mobile touch targets and the pieces added with the
+   hero subhead, pricing card and closing CTA. Kept together at the end so
+   they win over the earlier rules without touching them. */
+
+/* Hero: one line of positioning + formats under the wordmark */
+#hero.hero-launch .hero-sub{ font-size:clamp(14px, 1.05vw, 17px); color:var(--text-secondary); }
+#hero.hero-launch .hero-cta{ margin-top:28px; }
+.hero-launch-formats{ margin-top:18px; font-size:12px; letter-spacing:1.5px; }
+@media (max-width:900px){ .hero-launch-formats{ text-align:center; } }
+
+/* Feature sections: say which modules are the reorderable slots */
+.feature-role{
+  display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  font-family:var(--mono); font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--amber-dim);
+}
+.feature-role .feature-new-tag{ margin-bottom:0; }
+.feature-new-tag{ font-size:11px; }
+.feature-specs li{ font-size:clamp(12px, 0.8vw, 14px); }
+.feature-tagline{ font-size:13.5px; }
+
+/* Pricing card */
+.plan-option-discount{ font-size:11px; }
+.plan-compat-badge{ font-size:11.5px; }
+.pricing-features-check li.feature-limit{ color:var(--text-secondary); }
+.pricing-features-check li.feature-limit::before{ content:'·'; color:var(--accent); font-weight:700; width:10px; text-align:center; }
+.demo-download-fmt{ font-size:12px; }
+.mac-warning-icon{ width:16px; height:16px; flex-shrink:0; margin-top:1px; color:var(--amber-text); }
+.pricing-note-small{ font-size:12.5px; color:var(--text-secondary); }
+.pricing-note-small a{ color:var(--amber-text); text-decoration:underline; text-underline-offset:2px; }
+.pricing-card[data-plan="demo"] .pricing-note-checkout{ display:none; }
+
+/* Closing CTA after the Output section */
+.closing-cta{ text-align:center; }
+.closing-cta .section-lede{ max-width:560px; margin-left:auto; margin-right:auto; }
+.closing-cta .hero-cta{ margin-top:28px; }
+
+/* Footer readability */
+.footer-brand-sub, .footer-col-title{ font-size:12px; }
+.footer-copy, .footer-email{ font-size:12.5px; }
+
+/* Mobile: every tap target at least 44px, without changing what it looks like */
+@media (max-width:900px){
+  #nav-toggle{ width:44px; height:44px; margin-right:-6px; }
+  .header-icon-btn.header-cart-icon{ height:40px; }
+  .story-sound{ width:40px; height:40px; }
+  .story-sound::after{ content:''; position:absolute; inset:-6px; }
+  .footer-col a{ padding:11px 0; }
+  .footer-col{ gap:2px; }
+  .footer-social{ gap:8px; }
+  .footer-col .footer-social-link{ width:44px; height:44px; padding:0; }
+  .pricing-note-small a{ display:inline-block; padding:12px 2px; margin:-12px 0; }
+  .footer-email{ display:inline-block; padding:12px 0; }
+  .mac-warning-note a{ display:inline-block; padding:12px 2px; margin:-12px 0; }
+}
+
+/* Pricing: below ~1100px the side-by-side layout squeezed the card to
+   ~280px of content (plan names and download buttons wrapping onto 3-4
+   lines), so the product shot moves under the card earlier. */
+@media (max-width:1100px){
+  .pricing-with-visual{ grid-template-columns:minmax(0, 1fr); gap:32px; }
+  .pricing-with-visual .pricing-card{ margin:0 auto; width:100%; }
+  .pricing-visual{ max-width:640px; margin:0 auto; }
+}
+.demo-download-left{ white-space:nowrap; }
+.demo-download-fmt{ white-space:nowrap; }
+.pack-hub-key{ font-size:11.5px; }
+
+/* ============================ Motion pass ============================
+   Plan swap tightened, signal-chain explainer, download confirmation. */
+
+/* Plan toggle: was 220ms out + 220ms in with an empty card in between */
+.plan-cta{ transition:opacity 0.15s var(--ease), transform 0.15s var(--ease); }
+.plan-cta.is-hiding{ transform:translateY(4px); }
+
+/* Signal chain explainer: fixed stages are dashed and muted, the four
+   slots are amber chips; js/main.js swaps two neighbouring chips. */
+.chain{
+  max-width:1100px; margin:8px auto 0; display:flex; align-items:center; justify-content:center;
+  gap:12px;
+}
+.chain-fixed{
+  flex-shrink:0; padding:14px 16px; border:1px dashed var(--border-strong); border-radius:8px;
+  font-family:var(--mono); font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text-muted);
+}
+.chain-arrow{ flex-shrink:0; width:18px; height:1px; background:var(--accent-dim); position:relative; }
+.chain-arrow::after{
+  content:''; position:absolute; right:-1px; top:-3px; width:7px; height:7px;
+  border-top:1px solid var(--accent-dim); border-right:1px solid var(--accent-dim); transform:rotate(45deg);
+}
+.chain-slots{
+  display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px;
+  padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--panel);
+  flex:1 1 auto; max-width:640px;
+}
+.chain-slot{ display:flex; flex-direction:column; gap:8px; align-items:stretch; text-align:center; }
+.chain-slot-n{ font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); }
+.chain-chip{
+  display:block; padding:14px 8px; border:1px solid var(--accent-dim); border-radius:8px;
+  background:rgba(232,134,44,0.06); color:var(--amber-text);
+  font-family:var(--font-display); font-size:12.5px; letter-spacing:0.5px; white-space:nowrap;
+  transition:border-color 0.3s var(--ease), background 0.3s var(--ease);
+  will-change:transform;
+}
+.chain-chip.is-moving{ border-color:var(--accent); background:rgba(232,134,44,0.14); }
+
+@media (max-width:760px){
+  .chain{ flex-direction:column; gap:10px; }
+  .chain-arrow{ width:1px; height:16px; }
+  .chain-arrow::after{ right:-3px; top:auto; bottom:-1px; transform:rotate(135deg); }
+  .chain-slots{ grid-template-columns:1fr; width:100%; max-width:320px; }
+  .chain-slot{ flex-direction:row; align-items:center; gap:12px; }
+  .chain-slot-n{ width:52px; flex-shrink:0; text-align:left; }
+  .chain-chip{ flex:1; }
+}
+
+/* Demo download: the format label briefly reads "Download started" */
+.demo-download-fmt{ transition:opacity 0.12s var(--ease); }
+.demo-download-fmt.is-swapping{ opacity:0; }
+.demo-download-link.is-started{ border-color:var(--accent); }
+.demo-download-link.is-started .demo-download-fmt{ color:var(--amber-text); }

@@ -148,10 +148,13 @@
       }));
     }
 
+    card.dataset.plan = (group.querySelector('.plan-option-selected') || options[0]).dataset.plan;
+
     options.forEach((opt) => {
       opt.addEventListener('click', () => {
         const plan = opt.dataset.plan;
         if (opt.classList.contains('plan-option-selected')) return;
+        card.dataset.plan = plan;
         options.forEach((o) => {
           o.classList.toggle('plan-option-selected', o === opt);
           o.querySelector('input').checked = (o === opt);
@@ -169,6 +172,97 @@
           });
         });
       });
+    });
+  });
+
+  // "Try the free demo" links (hero, closing CTA) jump to the pricing card
+  // with the Demo option already picked, so the download buttons are the
+  // first thing in view instead of the Buy button. Same for a #demo URL.
+  const selectPlan = (plan) => {
+    const opt = document.querySelector(`.plan-option[data-plan="${plan}"]`);
+    if (opt) opt.click();
+  };
+  document.querySelectorAll('[data-select-plan]').forEach((link) => {
+    link.addEventListener('click', () => selectPlan(link.dataset.selectPlan));
+  });
+  if (location.hash === '#demo') {
+    selectPlan('demo');
+    const pricing = document.getElementById('pricing');
+    if (pricing) pricing.scrollIntoView();
+  }
+
+  /* ------------------------------ Signal chain ------------------------------- */
+  // Explainer for "4 reorderable slots": every few seconds two neighbouring
+  // modules trade places. FLIP: move the chips in the DOM, then animate each
+  // from where it was to where it now is, so it works the same in the
+  // horizontal (desktop) and vertical (phone) layouts. Only runs while the
+  // diagram is on screen and the tab is visible; static with reduced motion.
+  const chainSlots = [...document.querySelectorAll('.chain-slot')];
+  if (chainSlots.length > 1 && !prefersReducedMotion && 'IntersectionObserver' in window) {
+    const SWAP_MS = 520;
+    const PAUSE_MS = 2200;
+    let visible = false;
+    let timer = null;
+    let busy = false;
+    let lastPair = -1;
+
+    const swap = () => {
+      timer = null;
+      if (!visible || document.hidden) return;
+      busy = true;
+      let i;
+      do { i = Math.floor(Math.random() * (chainSlots.length - 1)); } while (i === lastPair && chainSlots.length > 2);
+      lastPair = i;
+      const a = chainSlots[i].querySelector('.chain-chip');
+      const b = chainSlots[i + 1].querySelector('.chain-chip');
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      chainSlots[i].appendChild(b);
+      chainSlots[i + 1].appendChild(a);
+      const timing = { duration: SWAP_MS, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' };
+      [[a, ra], [b, rb]].forEach(([chip, from]) => {
+        const to = chip.getBoundingClientRect();
+        chip.classList.add('is-moving');
+        chip.animate(
+          [{ transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)` }, { transform: 'none' }],
+          timing
+        ).finished.then(() => chip.classList.remove('is-moving'), () => chip.classList.remove('is-moving'));
+      });
+      setTimeout(() => { busy = false; schedule(); }, SWAP_MS);
+    };
+    const schedule = () => {
+      if (timer || busy || !visible || document.hidden) return;
+      timer = setTimeout(swap, PAUSE_MS);
+    };
+    const stop = () => { clearTimeout(timer); timer = null; };
+
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) schedule(); else stop();
+    }, { threshold: 0.4 }).observe(document.querySelector('.chain'));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else schedule(); });
+  }
+
+  /* --------------------------- Demo download state --------------------------- */
+  // A 7–11 MB zip gives no sign of life on click, so the button's format
+  // label reads "Download started ✓" for a few seconds, then swaps back.
+  document.querySelectorAll('.demo-download-link').forEach((link) => {
+    const fmt = link.querySelector('.demo-download-fmt');
+    if (!fmt) return;
+    const original = fmt.textContent;
+    let resetTimer = null;
+    const setLabel = (text, started) => {
+      fmt.classList.add('is-swapping');
+      setTimeout(() => {
+        fmt.textContent = text;
+        link.classList.toggle('is-started', started);
+        fmt.classList.remove('is-swapping');
+      }, 120);
+    };
+    link.addEventListener('click', () => {
+      clearTimeout(resetTimer);
+      setLabel('Download started ✓', true);
+      resetTimer = setTimeout(() => setLabel(original, false), 3500);
     });
   });
 
@@ -232,40 +326,71 @@
 
     const groups = new Map();
     document.querySelectorAll('.reveal-up').forEach((el) => {
+      if (el.closest('#hero')) return; // the hero has its own entrance below
       const section = el.closest('section') || document.body;
       if (!groups.has(section)) groups.set(section, []);
       groups.get(section).push(el);
     });
 
-    groups.forEach((els) => {
-      gsap.set(els, { opacity: 0, y: 28 });
-      gsap.to(els, {
+    // Short and small on purpose: ~10 sections reveal on the way down, so a
+    // long rise turns into waiting. 0.6s / 16px reads as "arriving", not
+    // as a performance.
+    const sectionReveals = new Map();
+    groups.forEach((els, section) => {
+      gsap.set(els, { opacity: 0, y: 16 });
+      const tween = gsap.to(els, {
         opacity: 1,
         y: 0,
-        duration: 0.9,
+        duration: 0.6,
         ease: 'power3.out',
-        stagger: 0.08,
+        stagger: 0.06,
         scrollTrigger: {
           trigger: els[0].closest('section') || els[0],
-          start: 'top 78%',
+          start: 'top 82%',
           once: true,
         },
       });
+      sectionReveals.set(section, tween);
     });
 
-    // Hero always plays immediately on load, not on scroll — only on pages
-    // that actually have the full hero (product pages, not simple content pages).
+    // Landing on a section through a link ("Free demo" -> #pricing, a #demo
+    // URL, the nav) shows it at once instead of leaving it blank until the
+    // next scroll event wakes ScrollTrigger up.
+    const revealNow = (hash) => {
+      const target = hash && hash.length > 1 && document.getElementById(hash.slice(1));
+      const section = target && (target.closest('section') || target);
+      const tween = section && sectionReveals.get(section);
+      if (tween) tween.progress(1);
+    };
+    revealNow(location.hash === '#demo' ? '#pricing' : location.hash);
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href^="#"]');
+      if (link) revealNow(link.getAttribute('href'));
+    });
+
+    // Hero always plays on load, not on scroll — only on pages that actually
+    // have the full hero. On the home page it waits for the boot intro to
+    // clear (inline script in index.html fires "boot:done"), otherwise it
+    // would play underneath the overlay and nobody would ever see it.
     if (document.getElementById('hero')) {
       const heroEls = document.querySelectorAll('#hero .reveal-up');
-      gsap.set(heroEls, { opacity: 0, y: 28 });
-      gsap.to(heroEls, {
+      gsap.set(heroEls, { opacity: 0, y: 16 });
+      const heroIn = gsap.to(heroEls, {
         opacity: 1,
         y: 0,
-        duration: 1,
+        duration: 0.7,
         ease: 'power3.out',
-        stagger: 0.1,
-        delay: prefersReducedMotion ? 0 : 0.7,
+        stagger: 0.07,
+        paused: true,
       });
+      const bootOverlay = document.getElementById('boot-overlay');
+      if (!bootOverlay || prefersReducedMotion || window.__bootDone) {
+        heroIn.play();
+      } else {
+        // Starts while the overlay is still fading (0.5s), so the two overlap.
+        document.addEventListener('boot:done', () => gsap.delayedCall(0.15, () => heroIn.play()), { once: true });
+        setTimeout(() => { if (!heroIn.isActive() && heroIn.progress() === 0) heroIn.play(); }, 7000);
+      }
     }
 
     // Subtle parallax drift on the hero glow.
@@ -369,7 +494,7 @@
             <circle cx="11" cy="11" r="7"></circle>
             <path d="M21 21l-4.3-4.3"></path>
           </svg>
-          <input type="text" placeholder="Search plugins, support, pages…" autocomplete="off" spellcheck="false">
+          <input type="text" placeholder="Search plugins, support, pages…" aria-label="Search the site" autocomplete="off" spellcheck="false">
           <button type="button" class="site-search-close">ESC</button>
         </div>
         <div class="site-search-results"></div>

@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="QqAx02c_UBWDslTfuMNrB7Gb9RIdBO8NAnWG28mItqE" />
-<title>Creative Sound | Sound tools by Invisible</title>
-<meta name="description" content="Creative Sound builds creative audio plugins. Starting with Creative Dist 2.0, a modular distortion engine.">
+<title>Creative Dist 2.0 | Modular Distortion Plugin | Creative Sound</title>
+<meta name="description" content="Creative Dist 2.0: a modular distortion plugin with 4 reorderable slots (Saturation, Noise, Bode Shifter, Flux), a 5-band EQ and Auto Gain. VST3 / AU for macOS and Windows. Free demo.">
 <link rel="canonical" href="https://creativesound.io/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Creative Sound">
-<meta property="og:title" content="Creative Sound | Sound tools by Invisible">
-<meta property="og:description" content="Creative Sound builds creative audio plugins. Starting with Creative Dist 2.0, a modular distortion engine.">
+<meta property="og:title" content="Creative Dist 2.0 | Modular Distortion Plugin | Creative Sound">
+<meta property="og:description" content="Creative Dist 2.0: a modular distortion plugin with 4 reorderable slots (Saturation, Noise, Bode Shifter, Flux), a 5-band EQ and Auto Gain. VST3 / AU for macOS and Windows. Free demo.">
 <meta property="og:url" content="https://creativesound.io/">
 <meta property="og:image" content="https://creativesound.io/assets/img/gui-flux.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Creative Sound | Sound tools by Invisible">
-<meta name="twitter:description" content="Creative Sound builds creative audio plugins. Starting with Creative Dist 2.0, a modular distortion engine.">
+<meta name="twitter:title" content="Creative Dist 2.0 | Modular Distortion Plugin | Creative Sound">
+<meta name="twitter:description" content="Creative Dist 2.0: a modular distortion plugin with 4 reorderable slots (Saturation, Noise, Bode Shifter, Flux), a 5-band EQ and Auto Gain. VST3 / AU for macOS and Windows. Free demo.">
 <meta name="twitter:image" content="https://creativesound.io/assets/img/gui-flux.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=99">
+<link rel="stylesheet" href="css/style.css?v=101">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Creative Sound","url":"https://creativesound.io/","logo":"https://creativesound.io/assets/img/apple-touch-icon.png","description":"Creative Sound builds creative audio plugins. Starting with Creative Dist 2.0, a modular distortion engine.","sameAs":["https://www.instagram.com/creativesound.io/"]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Creative Sound","url":"https://creativesound.io/"}</script>
 </head>
@@ -38,7 +38,14 @@
     var overlay = document.getElementById("boot-overlay");
     var video = document.getElementById("boot-mark");
     if (!overlay || !video) return;
-    function finish(){ overlay.classList.add("boot-done"); }
+    // Tells js/main.js the intro is gone, so the hero's entrance plays in
+    // view instead of underneath the overlay.
+    function finish(){
+      if (window.__bootDone) return;
+      window.__bootDone = true;
+      overlay.classList.add("boot-done");
+      document.dispatchEvent(new Event("boot:done"));
+    }
 
     // Skip the intro when arriving via a link clicked elsewhere on this
     // site (e.g. the nav's "Creative Dist 2.0" item) — only a real reload
@@ -58,6 +65,11 @@
     video.addEventListener("ended", finish);
     video.addEventListener("error", finish);
     setTimeout(finish, 6000);
+
+    // Any tap, click or key skips the intro straight to the page.
+    ["pointerdown", "keydown"].forEach(function(type){
+      window.addEventListener(type, finish, { once: true });
+    });
   })();
 </script>
 
@@ -135,10 +147,12 @@
           <span class="hero-title-line">CREATIVE</span>
           <span class="hero-title-line"><span class="hero-title-accent">DIST</span><span class="hero-title-version">2.0</span></span>
         </h1>
+        <p class="hero-sub reveal-up">Four reorderable slots: Saturation, Noise, Bode Shifter and the new Flux. Reorder, reshape and break the signal on your own terms.</p>
         <div class="hero-cta reveal-up">
-          <a href="#saturation" class="btn btn-ghost">More Info</a>
-          <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="btn btn-primary">Buy Now</a>
+          <a href="#pricing" class="btn btn-ghost" data-select-plan="demo">Free demo</a>
+          <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="btn btn-primary">Buy Now €25</a>
         </div>
+        <p class="hero-formats hero-launch-formats reveal-up">VST3 · AU <span class="dot">·</span> macOS &amp; Windows 11+</p>
       </div>
       <div class="hero-launch-visual reveal-up">
         <img src="assets/img/gui-flux.png" alt="Creative Dist 2.0 plugin interface with the new Flux module" loading="eager">
@@ -371,7 +385,7 @@
           <span class="plan-option-radio" aria-hidden="true"></span>
           <span class="plan-option-body">
             <span class="plan-option-name">Demo</span>
-            <span class="plan-option-desc">Free trial of the full plugin</span>
+            <span class="plan-option-desc">Every module, 30-minute sessions</span>
           </span>
           <span class="plan-option-price plan-option-free">Free</span>
         </label>
@@ -379,20 +393,21 @@
 
       <div class="plan-cta-stack">
         <ul class="pricing-features pricing-features-check plan-cta" data-plan-cta="full">
-          <li>3 assignable slots: Saturation, Noise, Bode Shifter</li>
+          <li>4 reorderable slots: Saturation, Noise, Bode Shifter, Flux</li>
           <li>5-band EQ, switchable Pre/Post, with Linear Phase mode</li>
           <li>Auto Gain output stage</li>
           <li>Full preset management + randomization</li>
           <li>Free updates</li>
           <li>No session time limit</li>
+          <li>License for up to 3 devices</li>
         </ul>
         <ul class="pricing-features pricing-features-check plan-cta" data-plan-cta="demo" hidden>
-          <li>3 assignable slots: Saturation, Noise, Bode Shifter</li>
+          <li>4 reorderable slots: Saturation, Noise, Bode Shifter, Flux</li>
           <li>5-band EQ, switchable Pre/Post, with Linear Phase mode</li>
           <li>Auto Gain output stage</li>
           <li>Full preset management + randomization</li>
-          <li class="feature-no">Free updates</li>
-          <li class="feature-no">No session time limit <span class="feature-no-note">(30 min per session)</span></li>
+          <li class="feature-limit">30-minute sessions, reopen to keep going</li>
+          <li class="feature-limit">Same installer: enter a license key anytime to unlock, no reinstall</li>
         </ul>
       </div>
 
@@ -409,26 +424,26 @@
           <a href="assets/downloads/Creative-Dist-Demo-Mac.zip" download class="demo-download-link">
             <span class="demo-download-left">
               <svg class="demo-download-icon" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-              macOS
+              Download for macOS
             </span>
-            <span class="demo-download-fmt">VST3 · AU</span>
+            <span class="demo-download-fmt" aria-live="polite">VST3 · AU · 11 MB</span>
           </a>
           <a href="assets/downloads/Creative-Dist-Demo-Windows.zip" download class="demo-download-link">
             <span class="demo-download-left">
               <svg class="demo-download-icon" viewBox="0 0 448 512" aria-hidden="true"><path d="M0 93.7l183.6-25.3v177.4H0V93.7zm0 324.6l183.6 25.3V268.4H0v149.9zm203.8 28L448 480V268.4H203.8v177.9zm0-380.6v180.1H448V32L203.8 65.7z"/></svg>
-              Windows 11+
+              Download for Windows 11+
             </span>
-            <span class="demo-download-fmt">VST3</span>
+            <span class="demo-download-fmt" aria-live="polite">VST3 · 7 MB</span>
           </a>
         </div>
       </div>
 
       <div class="mac-warning-note">
-        <span aria-hidden="true">⚠️</span>
+        <svg class="mac-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6v.01"></path></svg>
         <span>Mac users: CREATIVE DIST isn't Apple-notarized, so Logic, Studio One or another DAW may not find it right after install. Quick one-command fix in our <a href="faq.html#mac-plugin-not-found">FAQ</a>.</span>
       </div>
 
-      <span class="pricing-note pricing-note-small">Secure checkout via Stripe · license delivered by email</span>
+      <span class="pricing-note pricing-note-small pricing-note-checkout">Secure checkout via Stripe · license delivered by email · <a href="refund.html">Refund policy</a></span>
     </div>
 
       <div class="pricing-visual reveal-up">
@@ -440,8 +455,8 @@
   <section id="stories" class="section section-tight">
     <div class="section-head">
       <p class="kicker reveal-up">COMMUNITY</p>
-      <h2 class="reveal-up">CREATIVE DIST 2.0</h2>
-      <p class="section-lede reveal-up">Used by artists worldwide, join them. Hover a video to watch it, tap the speaker icon for sound.</p>
+      <h2 class="reveal-up">Made with CREATIVE DIST 2.0.</h2>
+      <p class="section-lede reveal-up">Clips from producers using it in their own sessions. Tap the speaker icon on a clip to hear it.</p>
     </div>
 
     <div class="stories-row reveal-up">
@@ -552,10 +567,36 @@
     </div>
   </section>
 
+  <!-- ============ SIGNAL CHAIN ============ -->
+  <!-- js/main.js swaps two neighbouring modules every few seconds while this
+       is on screen, to show the slots are reorderable. Static with reduced
+       motion. -->
+  <section id="chain" class="section section-tight chain-section">
+    <div class="section-head">
+      <h2 class="reveal-up">Same modules, different order, different sound.</h2>
+      <p class="section-lede reveal-up">Put the four slots in any order: the signal runs through them one after another, so every order is its own distortion.</p>
+    </div>
+    <div class="chain reveal-up" role="img" aria-label="Signal chain: Input, then four reorderable slots (Saturation, Noise, Bode Shifter, Flux), then Equalizer and Output">
+      <div class="chain-fixed" aria-hidden="true">Input</div>
+      <span class="chain-arrow" aria-hidden="true"></span>
+      <div class="chain-slots" aria-hidden="true">
+        <div class="chain-slot"><span class="chain-slot-n">Slot 1</span><span class="chain-chip">Saturation</span></div>
+        <div class="chain-slot"><span class="chain-slot-n">Slot 2</span><span class="chain-chip">Noise</span></div>
+        <div class="chain-slot"><span class="chain-slot-n">Slot 3</span><span class="chain-chip">Bode Shifter</span></div>
+        <div class="chain-slot"><span class="chain-slot-n">Slot 4</span><span class="chain-chip">Flux</span></div>
+      </div>
+      <span class="chain-arrow" aria-hidden="true"></span>
+      <div class="chain-fixed" aria-hidden="true">EQ</div>
+      <span class="chain-arrow" aria-hidden="true"></span>
+      <div class="chain-fixed" aria-hidden="true">Output</div>
+    </div>
+  </section>
+
   <!-- ============ FEATURE 01 — SATURATION ============ -->
   <section class="feature" id="saturation">
     <div class="feature-index reveal-up">01</div>
     <div class="feature-text">
+      <p class="feature-role reveal-up">Reorderable slot</p>
       <h3 class="reveal-up">Saturation</h3>
       <p class="feature-tagline reveal-up">18 saturation modes.</p>
       <p class="reveal-up">
@@ -583,6 +624,7 @@
   <section class="feature feature-reverse" id="noise">
     <div class="feature-index reveal-up">02</div>
     <div class="feature-text">
+      <p class="feature-role reveal-up">Reorderable slot</p>
       <h3 class="reveal-up">Noise</h3>
       <p class="feature-tagline reveal-up">Procedural noise texture.</p>
       <p class="reveal-up">
@@ -608,6 +650,7 @@
   <section class="feature" id="bode">
     <div class="feature-index reveal-up">03</div>
     <div class="feature-text">
+      <p class="feature-role reveal-up">Reorderable slot</p>
       <h3 class="reveal-up">Bode Shifter</h3>
       <p class="feature-tagline reveal-up">Spectral frequency shifting.</p>
       <p class="reveal-up">
@@ -636,7 +679,7 @@
   <section class="feature feature-reverse" id="flux">
     <div class="feature-index reveal-up">04</div>
     <div class="feature-text">
-      <span class="feature-new-tag reveal-up">New module</span>
+      <p class="feature-role reveal-up">Reorderable slot <span class="feature-new-tag">New module</span></p>
       <h3 class="reveal-up">Flux</h3>
       <p class="feature-tagline reveal-up">Two algorithms, one continuous morph.</p>
       <p class="reveal-up">
@@ -666,6 +709,7 @@
   <section class="feature" id="eq">
     <div class="feature-index reveal-up">05</div>
     <div class="feature-text">
+      <p class="feature-role reveal-up">Always on</p>
       <h3 class="reveal-up">Equalizer</h3>
       <p class="feature-tagline reveal-up">Shapes the chaos, doesn't just clean it up.</p>
       <p class="reveal-up">
@@ -696,6 +740,7 @@
   <section class="feature feature-reverse" id="output">
     <div class="feature-index reveal-up">06</div>
     <div class="feature-text">
+      <p class="feature-role reveal-up">Always on</p>
       <h3 class="reveal-up">Output</h3>
       <p class="feature-tagline reveal-up">Automatic gain compensation.</p>
       <p class="reveal-up">
@@ -712,8 +757,20 @@
       </ul>
     </div>
     <div class="feature-visual reveal-up">
-      <img src="assets/img/module-output.png?v=2" alt="Output section in Creative Dist 2.0 with Input, Output and L/R meter" loading="lazy"
+      <img src="assets/img/module-output.png?v=2" alt="Output section in Creative Dist 2.0 with Input Gain, Level and L/R meters" loading="lazy"
            style="display:block;width:100%;height:auto;margin:0 auto;">
+    </div>
+  </section>
+
+  <!-- ============ CLOSING CTA ============ -->
+  <section id="get-it" class="section section-tight closing-cta">
+    <div class="section-head">
+      <h2 class="reveal-up">Four slots. Your order.</h2>
+      <p class="section-lede reveal-up">Saturation, Noise, Bode Shifter and Flux in any order, plus the Equalizer and Auto Gain. One-time payment, license for up to 3 devices.</p>
+    </div>
+    <div class="hero-cta reveal-up">
+      <a href="#pricing" class="btn btn-ghost" data-select-plan="demo">Free demo</a>
+      <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="btn btn-primary">Buy Now €25</a>
     </div>
   </section>
 
@@ -771,7 +828,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/plexus.js?v=1"></script>
-<script src="js/main.js?v=33"></script>
+<script src="js/main.js?v=35"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

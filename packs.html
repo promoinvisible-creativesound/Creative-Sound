@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=4">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
-<link rel="stylesheet" href="css/style.css?v=108">
+<link rel="stylesheet" href="css/style.css?v=112">
 </head>
 <body>
 <div id="grain"></div>
@@ -97,7 +97,7 @@
     <h1 class="reveal-up pk-title">
       Free Serum presets, <span class="hero-title-accent pk-title-accent">ready to drop in.</span>
     </h1>
-    <p class="section-lede reveal-up pk-lede">Two packs, 302 presets, made by Creative Sound and guest sound designers. Press play on a cover to hear them, download in one click. 100% royalty-free.</p>
+    <p class="section-lede reveal-up pk-lede">Two packs, 302 presets, made by Creative Sound and guest sound designers. Press play on a cover to hear them, then grab them for free. 100% royalty-free.</p>
   </div>
 
   <section class="section section-tight pk-section" aria-label="Preset packs">
@@ -114,6 +114,8 @@
           </button>
           <span class="pk-pulse" aria-hidden="true"></span>
           <canvas class="pk-viz" aria-hidden="true"></canvas>
+          <div class="pk-progress" aria-hidden="true"><span class="pk-progress-fill"></span></div>
+          <span class="pk-time" aria-hidden="true">0:00</span>
         </div>
         <div class="pk-body">
           <p class="pk-meta">Serum &amp; Serum 2 · 220 presets</p>
@@ -138,6 +140,8 @@
           </button>
           <span class="pk-pulse" aria-hidden="true"></span>
           <canvas class="pk-viz" aria-hidden="true"></canvas>
+          <div class="pk-progress" aria-hidden="true"><span class="pk-progress-fill"></span></div>
+          <span class="pk-time" aria-hidden="true">0:00</span>
         </div>
         <div class="pk-body">
           <p class="pk-meta">Serum · 82 presets</p>
@@ -153,7 +157,16 @@
 
     </div>
 
-    <p class="pk-soon reveal-up"><span class="pk-soon-led" aria-hidden="true"></span>Sample packs: one-shots, loops and drum hits are in development.</p>
+    <form class="pk-soon reveal-up" id="notify-form" novalidate>
+      <p class="pk-soon-text"><span class="pk-soon-led" aria-hidden="true"></span>Sample packs: one-shots, loops and drum hits are in development.</p>
+      <div class="pk-soon-field">
+        <label for="notify-email" class="sr-only">Email address</label>
+        <input id="notify-email" name="email" type="email" autocomplete="email" placeholder="Your email" required>
+        <input type="text" name="website" class="pk-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button type="submit" class="btn btn-ghost">Notify me</button>
+      </div>
+      <p class="pk-soon-note" id="notify-status" role="status" aria-live="polite">One email when the first sample pack is out. Nothing else.</p>
+    </form>
   </section>
 
   <section class="section section-tight pk-cross" aria-label="Creative Dist 2.0">
@@ -166,7 +179,7 @@
           <a href="https://buy.stripe.com/00w6oz89h8cW6pO6mt6EU01" class="btn btn-primary">Buy Now €25</a>
         </div>
       </div>
-      <img class="pk-cross-shot" src="assets/img/gui-flux.png" alt="Creative Dist 2.0 plugin interface" loading="lazy">
+      <img class="pk-cross-shot" src="assets/img/gui-flux.webp" alt="Creative Dist 2.0 plugin interface" loading="lazy">
     </div>
   </section>
 </main>
@@ -222,8 +235,8 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/main.js?v=35"></script>
-<script src="js/packs.js?v=8"></script>
+<script src="js/main.js?v=38"></script>
+<script src="js/packs.js?v=11"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

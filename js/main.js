@@ -426,6 +426,32 @@
       .catch(() => {});
   }
 
+  /* ------------------------------ Click tracking ----------------------------- */
+  // Vercel Web Analytics custom events for the clicks that matter: Buy, free
+  // demo, demo download, pack download and pack preview. window.va queues
+  // calls until /_vercel/insights/script.js has loaded. Custom events only
+  // show up on a Vercel plan that includes them; otherwise they're dropped.
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  const track = (name, data) => { try { window.va('event', { name, data }); } catch (e) {} };
+  const pageName = location.pathname.replace(/^\/|\.html$/g, '') || 'home';
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('a, button');
+    if (!el) return;
+    const href = el.getAttribute('href') || '';
+    const where = (el.closest('section[id]') && el.closest('section[id]').id) || (el.closest('header') ? 'header' : el.closest('footer') ? 'footer' : 'page');
+    if (href.includes('client_reference_id=creative-presets')) {
+      track('Pack download', { pack: href.includes('vol-2') ? 'Creative Presets Vol. 2' : 'Creative Presets', page: pageName });
+    } else if (href.includes('buy.stripe.com')) {
+      track('Buy click', { page: pageName, where });
+    } else if (el.classList.contains('demo-download-link')) {
+      track('Demo download', { os: href.includes('Windows') ? 'Windows' : 'macOS', page: pageName });
+    } else if (el.dataset.selectPlan === 'demo' || href.endsWith('#demo')) {
+      track('Free demo click', { page: pageName, where });
+    } else if (el.classList.contains('pk-play') && el.getAttribute('aria-pressed') !== 'true') {
+      track('Pack preview play', { pack: (el.getAttribute('aria-label') || '').replace(/^Play the | demo$/g, '') });
+    }
+  }, true);
+
   /* ------------------------- Require an account before buying ---------------- */
   // Guest checkout would leave a purchase with no site account attached, so
   // every Buy/Cart link is gated on being signed in first — that's the only
@@ -663,6 +689,9 @@
     let ctx = null;
     let analyser = null;
     let samples = null;
+    let freqs = null;
+    const SCREEN_BANDS = 40;
+    const bands = new Array(SCREEN_BANDS).fill(0);
     let synthetic = false;
     let raf = 0;
     let dpr = 1;
@@ -719,6 +748,7 @@
         src.connect(analyser);
         analyser.connect(ctx.destination);
         samples = new Uint8Array(analyser.fftSize);
+        freqs = new Uint8Array(analyser.frequencyBinCount);
       } catch (e) {
         synthetic = true;
         analyser = null;
@@ -759,10 +789,60 @@
       const pts = 140;
       const t = performance.now() / 1000;
 
+      // Same look as the packs page visualizer: a glowing spectrum silhouette
+      // rising from the bottom of the LCD, in the screen's own colour, with
+      // the waveform drawn over it.
+      const rgb = (color.match(/\d+(\.\d+)?/g) || [255, 179, 71]).slice(0, 3).join(', ');
+      if (playing && analyser) {
+        analyser.getByteFrequencyData(freqs);
+        const usable = freqs.length * 0.7;
+        for (let i = 0; i < SCREEN_BANDS; i++) {
+          const a = Math.floor(Math.pow(i / SCREEN_BANDS, 1.7) * usable);
+          const b = Math.max(a + 1, Math.floor(Math.pow((i + 1) / SCREEN_BANDS, 1.7) * usable));
+          let sum = 0;
+          for (let j = a; j < b; j++) sum += freqs[j];
+          const target = Math.min(1, Math.pow(sum / (b - a) / 255, 1.7) * (0.9 + (i / SCREEN_BANDS) * 0.7));
+          bands[i] += (target - bands[i]) * (target > bands[i] ? 0.55 : 0.12);
+        }
+      } else {
+        for (let i = 0; i < SCREEN_BANDS; i++) bands[i] = 0;
+      }
+      if (bands.some((v) => v > 0.002)) {
+        const base = h;
+        const maxH = h * 0.92;
+        const stepX = w / (SCREEN_BANDS - 1);
+        const fillG = g.createLinearGradient(0, base - maxH, 0, base);
+        fillG.addColorStop(0, `rgba(${rgb}, 0.7)`);
+        fillG.addColorStop(1, `rgba(${rgb}, 0.06)`);
+        g.save();
+        g.beginPath();
+        g.moveTo(0, base);
+        for (let i = 0; i < SCREEN_BANDS; i++) {
+          const x = i * stepX;
+          const y = base - bands[i] * maxH;
+          if (i === 0) g.lineTo(x, y);
+          else {
+            const px = (i - 1) * stepX;
+            const py = base - bands[i - 1] * maxH;
+            g.quadraticCurveTo(px, py, (px + x) / 2, (py + y) / 2);
+          }
+        }
+        g.lineTo(w, base - bands[SCREEN_BANDS - 1] * maxH);
+        g.lineTo(w, base);
+        g.closePath();
+        g.shadowColor = `rgba(${rgb}, 0.8)`;
+        g.shadowBlur = 16 * dpr;
+        g.fillStyle = fillG;
+        g.fill();
+        g.restore();
+      }
+
       g.lineWidth = 2 * dpr;
       g.lineJoin = 'round';
       g.lineCap = 'round';
       g.strokeStyle = color;
+      g.shadowColor = `rgba(${rgb}, 0.9)`;
+      g.shadowBlur = playing ? 8 * dpr : 0;
 
       if (playing && analyser) analyser.getByteTimeDomainData(samples);
 

@@ -10,7 +10,6 @@
    stretched title link (CSS only). */
 (function () {
   const cards = document.querySelectorAll('.pk-card');
-  if (!cards.length) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -35,53 +34,79 @@
   }
 
   /* --------------------------------- Tilt --------------------------------- */
+  // ref:   an element that never tilts and whose box is the plane's untilted
+  //        layout box (plus `inset` px of border on the top/left)
+  // plane: the element that tilts; --rx/--ry/--gx/--gy are written on it and
+  //        its glare child reads --gx/--gy (pixels, in the plane's own space)
+  const attachTilt = (ref, plane, inset, hoverTarget) => {
+    let frame = 0;
+    let last = null;
+    const apply = () => {
+      frame = 0;
+      if (!last) return;
+      const r = ref.getBoundingClientRect();
+      const x = (last.clientX - r.left) / r.width;  // 0..1
+      const y = (last.clientY - r.top) / r.height;  // 0..1
+      plane.style.setProperty('--ry', `${((x - 0.5) * 2 * MAX_TILT).toFixed(2)}deg`);
+      plane.style.setProperty('--rx', `${((0.5 - y) * 2 * MAX_TILT * 0.7).toFixed(2)}deg`);
+      // Undo the plane's current perspective + rotation (a plane homography)
+      // so the glare dot lands exactly under the pointer, corners included.
+      const ox = r.width / 2;
+      const oy = r.height / 2;
+      const t = getComputedStyle(plane).transform;
+      const m = t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix();
+      const X = last.clientX - r.left - ox;
+      const Y = last.clientY - r.top - oy;
+      const A = m.m11 - m.m14 * X, B = m.m21 - m.m24 * X, E = m.m44 * X - m.m41;
+      const C = m.m12 - m.m14 * Y, D = m.m22 - m.m24 * Y, F = m.m44 * Y - m.m42;
+      const det = A * D - B * C || 1;
+      plane.style.setProperty('--gx', `${((E * D - B * F) / det + ox - inset).toFixed(1)}px`);
+      plane.style.setProperty('--gy', `${((A * F - E * C) / det + oy - inset).toFixed(1)}px`);
+    };
+    // The tilt eases in over 0.12s; re-place the dot once it settles.
+    plane.addEventListener('transitionend', (e) => {
+      if (e.target === plane && e.propertyName === 'transform' && last && !frame) frame = requestAnimationFrame(apply);
+    });
+    hoverTarget.addEventListener('pointerenter', () => plane.classList.add('is-tilting'));
+    hoverTarget.addEventListener('pointermove', (e) => {
+      last = e;
+      if (!frame) frame = requestAnimationFrame(apply);
+    });
+    hoverTarget.addEventListener('pointerleave', () => {
+      last = null;
+      plane.classList.remove('is-tilting'); // longer settle transition takes over
+      plane.style.setProperty('--rx', '0deg');
+      plane.style.setProperty('--ry', '0deg');
+    });
+  };
+
   if (finePointer && !reduceMotion) {
-    cards.forEach((card) => {
-      // The wrapper never tilts, so its box is the card's untilted layout box.
-      const wrap = card.parentElement;
-      let frame = 0;
-      let last = null;
-      const apply = () => {
-        frame = 0;
-        if (!last) return;
-        const r = wrap.getBoundingClientRect();
-        const x = (last.clientX - r.left) / r.width;  // 0..1
-        const y = (last.clientY - r.top) / r.height;  // 0..1
-        card.style.setProperty('--ry', `${((x - 0.5) * 2 * MAX_TILT).toFixed(2)}deg`);
-        card.style.setProperty('--rx', `${((0.5 - y) * 2 * MAX_TILT * 0.7).toFixed(2)}deg`);
-        // The glare is drawn on the cover (first item, at the card's top-left
-        // inside the 1px border), in the card's own tilted plane. Undo the
-        // card's current perspective + rotation (a plane homography) so the
-        // dot lands exactly under the pointer, corners included.
-        const ox = r.width / 2;
-        const oy = r.height / 2;
-        const t = getComputedStyle(card).transform;
-        const m = t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix();
-        const X = last.clientX - r.left - ox;
-        const Y = last.clientY - r.top - oy;
-        const A = m.m11 - m.m14 * X, B = m.m21 - m.m24 * X, E = m.m44 * X - m.m41;
-        const C = m.m12 - m.m14 * Y, D = m.m22 - m.m24 * Y, F = m.m44 * Y - m.m42;
-        const det = A * D - B * C || 1;
-        const lx = (E * D - B * F) / det + ox - 1;
-        const ly = (A * F - E * C) / det + oy - 1;
-        card.style.setProperty('--gx', `${lx.toFixed(1)}px`);
-        card.style.setProperty('--gy', `${ly.toFixed(1)}px`);
+    // Pack cards: the wrapper never tilts; the cover sits at the card's
+    // top-left inside its 1px border.
+    cards.forEach((card) => attachTilt(card.parentElement, card, 1, card));
+
+    // Pack page hero art: wrap the cover so it can tilt with a glare that is
+    // masked to the artwork itself (the PNG/WebP has a transparent surround).
+    document.querySelectorAll('.pack-hero-art').forEach((art) => {
+      const img = art.querySelector('img');
+      if (!img) return;
+      const ref = document.createElement('span');
+      ref.className = 'pk-art-ref';
+      const plane = document.createElement('span');
+      plane.className = 'pk-art-plane';
+      const glare = document.createElement('span');
+      glare.className = 'pk-glare';
+      glare.setAttribute('aria-hidden', 'true');
+      img.replaceWith(ref);
+      ref.appendChild(plane);
+      plane.append(img, glare);
+      const setMask = () => {
+        const url = `url("${img.currentSrc || img.src}")`;
+        glare.style.webkitMaskImage = url;
+        glare.style.maskImage = url;
       };
-      // The tilt eases in over 0.12s; re-place the dot once it settles.
-      card.addEventListener('transitionend', (e) => {
-        if (e.target === card && e.propertyName === 'transform' && last && !frame) frame = requestAnimationFrame(apply);
-      });
-      card.addEventListener('pointerenter', () => card.classList.add('is-tilting'));
-      card.addEventListener('pointermove', (e) => {
-        last = e;
-        if (!frame) frame = requestAnimationFrame(apply);
-      });
-      card.addEventListener('pointerleave', () => {
-        last = null;
-        card.classList.remove('is-tilting'); // longer settle transition takes over
-        card.style.setProperty('--rx', '0deg');
-        card.style.setProperty('--ry', '0deg');
-      });
+      if (img.complete) setMask(); else img.addEventListener('load', setMask, { once: true });
+      attachTilt(ref, plane, 0, ref);
     });
   }
 
@@ -138,6 +163,7 @@
     if (live) {
       analyser.getByteFrequencyData(freq);
       analyser.getByteTimeDomainData(wave);
+      showProgress(state);
     }
 
     // Bands: log-spaced over the useful part of the spectrum.
@@ -289,6 +315,18 @@
     state.raf = requestAnimationFrame((t) => frame(state, t));
   };
 
+  // Progress line + elapsed time along the bottom of the cover; a click on
+  // the line seeks. Updated every frame while drawing, and on timeupdate as
+  // a fallback (reduced motion, or no Web Audio).
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const showProgress = (state) => {
+    const { audio } = state;
+    const p = audio.duration ? audio.currentTime / audio.duration : 0;
+    state.fill.style.transform = `scaleX(${p.toFixed(4)})`;
+    const label = audio.duration ? `${fmt(audio.currentTime)} / ${fmt(audio.duration)}` : fmt(audio.currentTime);
+    if (state.time.textContent !== label) state.time.textContent = label;
+  };
+
   const stop = (state) => {
     state.audio.pause();
     state.playing = false;
@@ -312,7 +350,9 @@
       hi: css.getPropertyValue('--fx-hi').trim() || '255,215,0',
       soft: css.getPropertyValue('--fx-soft').trim() || '255,228,170',
     };
+    const progress = card.querySelector('.pk-progress');
     const state = {
+      fill: card.querySelector('.pk-progress-fill'), time: card.querySelector('.pk-time'),
       col, cover, button, audio, canvas, g: canvas ? canvas.getContext('2d') : null,
       analyser: null, freq: null, wave: null, raf: 0, playing: false, t: 0,
       bands: new Array(BANDS).fill(0),
@@ -320,6 +360,16 @@
     };
 
     audio.addEventListener('ended', () => { stop(state); if (current === state) current = null; });
+    audio.addEventListener('timeupdate', () => { if (!state.raf) showProgress(state); });
+    audio.addEventListener('loadedmetadata', () => showProgress(state));
+    progress.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!audio.duration) return;
+      const r = progress.getBoundingClientRect();
+      audio.currentTime = Math.min(audio.duration - 0.05, Math.max(0, ((e.clientX - r.left) / r.width) * audio.duration));
+      showProgress(state);
+    });
 
     button.addEventListener('click', async () => {
       if (current === state && !audio.paused) { stop(state); current = null; return; }
@@ -353,7 +403,7 @@
       }
       state.playing = true;
       cover.classList.remove('is-fading');
-      cover.classList.add('is-playing');
+      cover.classList.add('is-playing', 'has-played');
       button.setAttribute('aria-pressed', 'true');
       if (state.analyser && !state.raf) state.raf = requestAnimationFrame((t) => frame(state, t));
     });
@@ -362,5 +412,47 @@
   // Leaving the tab pauses the demo instead of playing to nobody.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && current) { stop(current); current = null; }
+  });
+})();
+
+/* "Notify me" for sample packs: posts to /api/notify, keeps the visitor on
+   the page and reports the result in the status line under the field. */
+(function () {
+  const form = document.getElementById('notify-form');
+  if (!form) return;
+  const input = form.querySelector('input[type="email"]');
+  const button = form.querySelector('button[type="submit"]');
+  const status = document.getElementById('notify-status');
+  const say = (text, kind) => {
+    status.textContent = text;
+    status.classList.toggle('is-ok', kind === 'ok');
+    status.classList.toggle('is-error', kind === 'error');
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      say('Please enter a valid email address.', 'error');
+      input.focus();
+      return;
+    }
+    button.disabled = true;
+    say('Saving…');
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, topic: 'sample-packs', website: form.website.value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Something went wrong, please try again.');
+      say("You're on the list. We'll email you when the first sample pack is out.", 'ok');
+      form.reset();
+      try { window.va && window.va('event', { name: 'Notify signup', data: { topic: 'sample-packs' } }); } catch (err) {}
+    } catch (err) {
+      say(err.message || 'Something went wrong, please try again.', 'error');
+    } finally {
+      button.disabled = false;
+    }
   });
 })();

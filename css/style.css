@@ -2329,3 +2329,63 @@ body.search-open{ overflow:hidden; }
 .pk-card{ --fx:232,134,44; --fx-hi:255,215,0; --fx-soft:255,228,170; }
 .pk-card[data-tint="blue"]{ --fx:58,128,240; --fx-hi:120,190,255; --fx-soft:200,228,255; }
 .pk-card[data-tint="blue"] .pk-play{ color:rgb(var(--fx-soft)); }
+
+/* Demo progress: hidden until a demo has started, then a thin line in the
+   pack colour with a taller invisible hit area for seeking. */
+.pk-progress{
+  position:absolute; left:0; right:0; bottom:0; z-index:4; height:14px; cursor:pointer;
+  opacity:0; pointer-events:none; transition:opacity 0.4s var(--ease);
+}
+.pk-progress::before{ content:''; position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,0.10); }
+.pk-progress-fill{
+  position:absolute; left:0; right:0; bottom:0; height:3px; transform-origin:left; transform:scaleX(0);
+  background:linear-gradient(90deg, rgb(var(--fx)), rgb(var(--fx-hi)));
+  box-shadow:0 0 10px rgba(var(--fx), 0.8);
+}
+.pk-progress:hover::before, .pk-progress:hover .pk-progress-fill{ height:5px; }
+.pk-time{
+  position:absolute; right:12px; bottom:12px; z-index:3; pointer-events:none;
+  font-family:var(--mono); font-size:11.5px; letter-spacing:0.5px; color:rgba(var(--fx-soft), 0.9);
+  text-shadow:0 1px 6px rgba(0,0,0,0.8); opacity:0; transition:opacity 0.4s var(--ease);
+}
+.pk-cover.is-playing .pk-progress, .pk-cover.has-played .pk-progress{ opacity:1; pointer-events:auto; }
+.pk-cover.is-playing .pk-time, .pk-cover.has-played .pk-time{ opacity:1; }
+
+/* Sample packs "notify me" strip */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.pk-soon{ flex-wrap:wrap; justify-content:space-between; text-align:left; gap:14px 20px; padding:18px 20px; }
+.pk-soon-text{ display:flex; align-items:center; gap:10px; flex:1 1 300px; }
+.pk-soon-field{ display:flex; gap:10px; flex:1 1 340px; max-width:440px; }
+.pk-soon-field input[type="email"]{
+  flex:1; min-width:0; height:44px; padding:0 14px; border-radius:8px;
+  background:var(--bg); border:1px solid var(--border-strong); color:var(--text);
+  font-family:var(--font-sans); font-size:14px;
+  transition:border-color 0.2s var(--ease);
+}
+.pk-soon-field input[type="email"]:focus{ border-color:var(--accent); outline:none; }
+.pk-soon-field .btn{ height:44px; flex-shrink:0; }
+.pk-soon-note{ flex-basis:100%; font-size:12.5px; color:var(--text-muted); }
+.pk-soon-note.is-ok{ color:var(--amber-text); }
+.pk-soon-note.is-error{ color:#ff7a6b; }
+.pk-hp{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
+@media (max-width:560px){ .pk-soon-field{ max-width:none; } }
+
+/* Pack page hero art: same tilt + masked glare as the packs page cards
+   (js/packs.js wraps the <img> in .pk-art-ref > .pk-art-plane). The glow and
+   hover shadow follow the pack colour. */
+.pack-hero-art{ --fx:232,134,44; --fx-hi:255,215,0; --fx-soft:255,228,170; }
+.pack-hero-art[data-tint="blue"]{ --fx:58,128,240; --fx-hi:120,190,255; --fx-soft:200,228,255; }
+.pack-hero-art-portrait::before{
+  background:radial-gradient(ellipse farthest-side, rgba(var(--fx), 0.16) 0%, rgba(var(--fx), 0.05) 45%, transparent 72%);
+}
+.pack-hero-art-portrait:hover img{ filter:drop-shadow(0 0 24px rgba(var(--fx), 0.35)); }
+.pk-art-ref, .pk-art-plane{ display:block; position:relative; width:100%; height:100%; }
+.pk-art-plane{
+  --rx:0deg; --ry:0deg; --gx:50%; --gy:30%;
+  transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition:transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change:transform;
+}
+.pk-art-plane.is-tilting{ transition:transform 0.12s linear; }
+.pk-art-plane .pk-glare{ -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; }
+.pk-art-plane.is-tilting .pk-glare{ opacity:1; }

@@ -664,7 +664,19 @@
     const f = BEATS.filter((b) => b.featured);
     return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 4);
   };
-  const spotHtml = (b) => `
+  // "Oct 12 – 18" (or "Sep 29 – Oct 5"): Monday to Sunday of this week.
+  const weekLabel = () => {
+    const now = new Date();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const m = (d) => d.toLocaleDateString('en-GB', { month: 'short' });
+    return mon.getMonth() === sun.getMonth()
+      ? `${m(mon)} ${mon.getDate()} – ${sun.getDate()}`
+      : `${m(mon)} ${mon.getDate()} – ${m(sun)} ${sun.getDate()}`;
+  };
+  const spotHtml = (b, rank) => `
     <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}">
       <div class="bt-feat-cover">
         ${art(b)}
@@ -674,8 +686,8 @@
         </button>
       </div>
       <div class="bt-feat-info">
-        <p class="bt-feat-kicker"><span class="bt-feat-dot" aria-hidden="true"></span>Featured beat</p>
-        <h2 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h2>
+        <p class="bt-feat-kicker"><span class="bt-feat-rank-big">#${rank}</span>this week</p>
+        <h3 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h3>
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>
         ${b.about ? `<p class="bt-feat-about">${esc(b.about)}</p>` : ''}
@@ -694,11 +706,34 @@
     const b = list[featIndex % list.length];
     const others = list.map((x, i) => `
       <button type="button" class="bt-feat-pick${i === featIndex ? ' is-active' : ''} ${tintClass(x)}" data-feat-index="${i}" aria-pressed="${i === featIndex}" aria-label="Show ${esc(x.title)}">
+        <span class="bt-feat-rank">${i + 1}</span>
         <span class="bt-feat-thumb">${art(x)}</span>
         <span class="bt-feat-pick-text"><b>${esc(x.title)}</b><small>${esc(x.producer)} · ${x.bpm} BPM</small></span>
       </button>`).join('');
+    // The frame (header with this week's dates, light running round the
+    // border, HUD corners) is built once; only the body swaps.
+    if (!$('.bt-top-body', box)) {
+      box.innerHTML = `
+        <div class="bt-top-frame">
+          <span class="bt-top-beam" aria-hidden="true"></span>
+          <span class="bt-top-corner tl" aria-hidden="true"></span><span class="bt-top-corner tr" aria-hidden="true"></span>
+          <span class="bt-top-corner bl" aria-hidden="true"></span><span class="bt-top-corner br" aria-hidden="true"></span>
+          <header class="bt-top-head">
+            <div class="bt-top-titles">
+              <span class="bt-top-live"><span class="bt-feat-dot" aria-hidden="true"></span>This week</span>
+              <h2 class="bt-top-title">Top tracks</h2>
+            </div>
+            <div class="bt-top-meta">
+              <span class="bt-top-dates">${weekLabel()}</span>
+              <span class="bt-top-pill">${list.length} picks</span>
+            </div>
+          </header>
+          <div class="bt-top-body"></div>
+        </div>`;
+    }
+    const body = $('.bt-top-body', box);
     const swap = () => {
-      box.innerHTML = `${spotHtml(b)}<div class="bt-feat-list" role="group" aria-label="Featured beats">${others}</div>`;
+      body.innerHTML = `${spotHtml(b, featIndex + 1)}<div class="bt-feat-list" role="group" aria-label="Top tracks this week">${others}</div>`;
       syncCards();
       if (animate && !reduceMotion) {
         $('.bt-feat-spot', box).animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE_OUT });

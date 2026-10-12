@@ -1104,3 +1104,70 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-grid[data-view="list"] .bt-card{ transform:none; }
 .bt-grid[data-view="list"] .bt-glare{ display:none; }
 @media (prefers-reduced-motion: reduce){ .bt-card{ transform:none !important; } }
+
+/* ============================ Top tracks this week ==========================
+   Framed news-style block: header with this week's dates, ranked picks, a
+   light that runs slowly round the border and HUD corners. */
+@property --bt-angle{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+
+.bt-featured{ display:block; max-width:1180px; margin:0 auto 44px; }
+.bt-top-frame{
+  position:relative; padding:clamp(16px, 2.2vw, 24px); border-radius:26px; isolation:isolate;
+  border:1px solid rgba(232,134,44,0.26);
+  background:
+    radial-gradient(70% 90% at 0% 0%, rgba(232,134,44,0.10), transparent 60%),
+    linear-gradient(180deg, #0f0e0c, #090908);
+  box-shadow:0 40px 100px -50px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.6);
+}
+/* Light running round the border (1px ring cut out with a mask) */
+.bt-top-beam{
+  position:absolute; inset:-1px; z-index:-1; border-radius:inherit; padding:1px; pointer-events:none;
+  background:conic-gradient(from var(--bt-angle), transparent 0deg, transparent 290deg, rgba(232,134,44,0.25) 320deg, rgba(255,214,140,0.95) 350deg, transparent 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation:btBeam 9s linear infinite;
+  z-index:1;
+}
+@keyframes btBeam{ to{ --bt-angle:360deg; } }
+.bt-top-corner{ position:absolute; z-index:2; width:22px; height:22px; border-color:var(--accent); border-style:solid; border-width:0; pointer-events:none; }
+.bt-top-corner.tl{ top:10px; left:10px; border-top-width:2px; border-left-width:2px; border-top-left-radius:8px; }
+.bt-top-corner.tr{ top:10px; right:10px; border-top-width:2px; border-right-width:2px; border-top-right-radius:8px; }
+.bt-top-corner.bl{ bottom:10px; left:10px; border-bottom-width:2px; border-left-width:2px; border-bottom-left-radius:8px; }
+.bt-top-corner.br{ bottom:10px; right:10px; border-bottom-width:2px; border-right-width:2px; border-bottom-right-radius:8px; }
+
+.bt-top-head{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  padding:6px 12px 16px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.bt-top-titles{ display:flex; flex-direction:column; gap:6px; }
+.bt-top-live{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font-sans); font-size:13px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--amber-text); }
+.bt-top-title{ font-family:var(--font-display); font-size:clamp(26px, 3vw, 38px); line-height:1; margin:0; color:#fff; }
+.bt-top-meta{ display:flex; align-items:center; gap:10px; }
+.bt-top-dates{ font-family:var(--font-sans); font-size:14.5px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
+.bt-top-pill{ height:30px; display:inline-flex; align-items:center; padding:0 12px; border-radius:15px; border:1px solid rgba(232,134,44,0.45); background:rgba(232,134,44,0.10); color:var(--amber-text); font-size:13px; font-weight:600; }
+
+.bt-top-body{ display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:16px; align-items:stretch; }
+.bt-top-body .bt-feat-spot{ border-color:rgba(var(--fx), 0.28); }
+
+/* Rank: big number in the spotlight kicker, numbered picks */
+.bt-feat-kicker{ font-size:14px; gap:10px; }
+.bt-feat-rank-big{ font-family:var(--font-display); font-size:22px; font-weight:800; color:rgb(var(--fx)); text-shadow:0 0 18px rgba(var(--fx), 0.6); }
+.bt-feat-title{ margin:0; }
+.bt-feat-pick{ padding:10px 12px 10px 10px; }
+.bt-feat-rank{ width:26px; flex-shrink:0; text-align:center; font-family:var(--font-display); font-size:22px; font-weight:800; color:rgba(255,255,255,0.28); font-variant-numeric:tabular-nums; transition:color 200ms ease; }
+.bt-feat-pick.is-active .bt-feat-rank{ color:rgb(var(--fx)); text-shadow:0 0 14px rgba(var(--fx), 0.55); }
+@media (hover:hover) and (pointer:fine){ .bt-feat-pick:not(.is-active):hover .bt-feat-rank{ color:rgba(255,255,255,0.5); } }
+
+@media (max-width:1000px){
+  .bt-top-body{ grid-template-columns:1fr; }
+  .bt-feat-list{ flex-direction:row; overflow-x:auto; }
+}
+@media (max-width:560px){
+  .bt-top-head{ padding:4px 6px 12px; }
+  .bt-top-corner{ width:16px; height:16px; }
+  .bt-top-meta{ width:100%; justify-content:space-between; }
+}
+@media (prefers-reduced-motion: reduce){
+  .bt-top-beam{ animation:none; --bt-angle:200deg; }
+}
+@media (max-width:640px){ .bt-top-body .bt-feat-spot{ grid-template-columns:120px 1fr; gap:14px; align-items:start; } .bt-top-body .bt-feat-cover{ max-width:none; } .bt-feat-play{ width:48px; height:48px; margin:-24px 0 0 -24px; } .bt-feat-play svg{ width:20px; height:20px; } .bt-feat-title{ font-size:24px; } .bt-feat-about{ display:none; } .bt-feat-actions{ grid-column:1 / -1; } .bt-feat-specs .bt-spec:last-child{ display:none; } }

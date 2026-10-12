@@ -1269,3 +1269,9 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-top-live, .bt-top-pill{ gap:14px; }
 .bt-top-live::before, .bt-top-pill::before{ margin-right:0; }
 .bt-top-live .bt-feat-dot{ display:none; }
+
+/* Narrow screens: single column again (the slim pass above set two) */
+@media (max-width:1000px){ .bt-top-body{ grid-template-columns:1fr; } }
+@media (max-width:640px){ .bt-feat-nav{ bottom:auto; } .bt-feat-nav.prev{ left:6px; right:auto; } .bt-feat-nav.next{ right:6px; left:auto; } }
+@media (max-width:1000px){ .bt-feat-slot, .bt-feat-slot .bt-feat-spot{ height:auto; } }
+@media (max-width:640px){ .bt-feat-dots{ margin:14px 0 4px; } }

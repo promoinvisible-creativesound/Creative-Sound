@@ -1,0 +1,217 @@
+/* ================================== Home ===================================
+   News banner, the two-world hero (plugins | tracks, the hovered side
+   widens), new tracks, plugins & sounds, and the producer pitch.
+   Motion: transform/opacity (plus flex-grow on the hero panels, two
+   elements), strong ease-out, hover gated to fine pointers, calmer under
+   reduced motion. */
+.ho-page{
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --line: rgba(255,255,255,0.09);
+  max-width:1240px; margin:0 auto; padding:104px 20px 40px;
+}
+.t-amber{ --fx:232,134,44;  --fx-hi:255,200,90; }
+.t-blue{  --fx:58,128,240;  --fx-hi:120,190,255; }
+.t-red{   --fx:228,72,58;   --fx-hi:255,140,110; }
+.t-violet{--fx:150,100,255; --fx-hi:200,160,255; }
+.t-green{ --fx:46,190,120;  --fx-hi:120,235,170; }
+
+.ho-kicker{ display:inline-block; font-family:var(--font-sans); font-size:12.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--amber-text); }
+.ho-title{ margin:6px 0 0; font-family:var(--font-display); font-size:clamp(24px, 3vw, 34px); line-height:1.1; color:#fff; }
+
+/* ---------------------------------- News ---------------------------------- */
+.ho-news-wrap{ margin-bottom:18px; }
+.ho-news{
+  position:relative; display:grid; grid-template-columns:200px minmax(0, 1fr); align-items:center; gap:22px;
+  padding:12px 22px 12px 12px; border-radius:18px; text-decoration:none; overflow:hidden; isolation:isolate;
+  border:1px solid rgba(232,134,44,0.3);
+  background:radial-gradient(60% 140% at 0% 50%, rgba(232,134,44,0.14), transparent 70%), linear-gradient(180deg, #100f0d, #0a0a09);
+  animation:hoIn 600ms var(--ease-out) both;
+  transition:border-color 200ms ease;
+}
+.ho-news[hidden]{ display:none; }
+/* Light sweep across the banner on hover */
+.ho-news::after{ content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.06) 50%, transparent 65%); transform:translateX(-100%); transition:transform 900ms var(--ease-out); }
+.ho-news-media{ position:relative; aspect-ratio:16/9; border-radius:11px; overflow:hidden; background:#090908; }
+.ho-news-media img{ width:100%; height:100%; object-fit:cover; transition:transform 600ms var(--ease-out); }
+.ho-news-body{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.ho-news-kicker{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--amber-text); }
+.ho-news-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:hoPulse 2s ease-in-out infinite; }
+.ho-news-date{ font-weight:600; letter-spacing:0.2px; text-transform:none; color:var(--text-muted); }
+.ho-news-date::before{ content:'·'; margin-right:8px; }
+.ho-news-title{ font-family:var(--font-display); font-size:clamp(18px, 2vw, 24px); line-height:1.15; color:#fff; }
+.ho-news-text{ font-size:14.5px; line-height:1.55; color:var(--text-secondary); max-width:680px; }
+.ho-news-cta{ display:inline-flex; align-items:center; gap:6px; margin-top:2px; font-size:14px; font-weight:700; color:var(--amber-text); }
+.ho-news-cta svg, .ho-more svg, .ho-tool-cta svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform 200ms var(--ease-out); }
+@keyframes hoPulse{ 50%{ opacity:0.4; } }
+@keyframes hoIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+@media (hover:hover) and (pointer:fine){
+  .ho-news:hover{ border-color:rgba(232,134,44,0.6); }
+  .ho-news:hover::after{ transform:translateX(100%); }
+  .ho-news:hover .ho-news-media img{ transform:scale(1.04); }
+  .ho-news:hover .ho-news-cta svg{ transform:translateX(3px); }
+}
+
+/* ------------------------------- Two worlds -------------------------------- */
+.ho-split{ display:flex; gap:14px; height:clamp(520px, 72vh, 680px); }
+.ho-panel{
+  --fx:232,134,44;
+  position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:flex-end;
+  padding:clamp(22px, 3vw, 36px); border-radius:24px; overflow:hidden; isolation:isolate;
+  border:1px solid var(--line); background:linear-gradient(180deg, #0f0e0c, #080807);
+  transition:flex-grow 650ms var(--ease-in-out), border-color 250ms ease;
+  animation:hoIn 700ms var(--ease-out) both;
+}
+.ho-panel-tracks{ --fx:150,100,255; animation-delay:90ms; }
+.ho-panel-visual{ position:absolute; inset:0; z-index:-1; }
+.ho-glow{ position:absolute; left:50%; top:34%; width:70%; aspect-ratio:1; border-radius:50%; transform:translate(-50%, -50%); background:radial-gradient(circle, rgba(var(--fx), 0.4), transparent 65%); filter:blur(10px); transition:opacity 400ms ease, transform 650ms var(--ease-out); }
+/* Fade the visual into the text area */
+.ho-panel-visual::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 30%, rgba(8,8,7,0.85) 62%, #080807 85%); }
+.ho-gui{ position:absolute; left:50%; top:32%; width:min(86%, 560px); transform:translate(-50%, -50%) rotate(-4deg); border-radius:12px; box-shadow:0 40px 90px -30px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06); transition:transform 650ms var(--ease-out); }
+
+/* Stack of track covers that fan out on hover */
+.ho-stack{ position:absolute; left:50%; top:32%; width:min(44%, 260px); aspect-ratio:1; transform:translate(-50%, -50%); }
+.ho-cover{
+  position:absolute; inset:0; border-radius:16px; overflow:hidden;
+  background:radial-gradient(120% 90% at 18% 12%, rgba(var(--fx), 0.9), rgba(var(--fx), 0.25) 42%, transparent 68%), radial-gradient(90% 80% at 92% 96%, rgba(var(--fx-hi), 0.45), transparent 55%), linear-gradient(160deg, #141210, #050504);
+  box-shadow:0 30px 70px -26px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06);
+  transition:transform 650ms var(--ease-out);
+}
+.ho-cover::after{ content:''; position:absolute; inset:14% -20% auto auto; width:70%; aspect-ratio:1; border-radius:50%; border:1px solid rgba(255,255,255,0.14); box-shadow:0 0 0 18px rgba(var(--fx), 0.06), 0 0 0 40px rgba(var(--fx), 0.03); }
+.ho-cover:nth-child(1){ transform:translate(-26%, 6%) rotate(-10deg) scale(0.9); }
+.ho-cover:nth-child(2){ transform:translate(26%, 6%) rotate(10deg) scale(0.9); }
+.ho-cover:nth-child(3){ transform:none; z-index:1; animation:hoFloat 6s ease-in-out infinite; }
+@keyframes hoFloat{ 50%{ transform:translateY(-8px); } }
+
+.ho-panel-body{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:10px; max-width:500px; }
+.ho-panel-title{ margin:0; font-family:var(--font-display); font-size:clamp(28px, 3.4vw, 44px); line-height:1.05; color:#fff; }
+.ho-panel-text{ margin:0; font-size:15.5px; line-height:1.6; color:var(--text-secondary); }
+.ho-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+
+@media (hover:hover) and (pointer:fine){
+  .ho-split:hover .ho-panel{ flex-grow:0.82; }
+  .ho-split .ho-panel:hover{ flex-grow:1.25; border-color:rgba(var(--fx), 0.45); }
+  .ho-panel:hover .ho-glow{ transform:translate(-50%, -50%) scale(1.12); }
+  .ho-panel-plugins:hover .ho-gui{ transform:translate(-50%, -52%) rotate(-2deg) scale(1.03); }
+  .ho-panel-tracks:hover .ho-cover:nth-child(1){ transform:translate(-52%, 4%) rotate(-16deg) scale(0.9); }
+  .ho-panel-tracks:hover .ho-cover:nth-child(2){ transform:translate(52%, 4%) rotate(16deg) scale(0.9); }
+}
+
+/* --------------------------------- Sections -------------------------------- */
+.ho-section{ margin-top:clamp(56px, 8vw, 96px); }
+.ho-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; }
+.ho-more{ display:inline-flex; align-items:center; gap:6px; font-size:14.5px; font-weight:700; color:var(--amber-text); text-decoration:none; white-space:nowrap; }
+@media (hover:hover) and (pointer:fine){ .ho-more:hover svg{ transform:translateX(3px); } }
+
+/* New tracks */
+.ho-tracks{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:16px; }
+.ho-skel{ aspect-ratio:3/4; border-radius:14px; background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.07), rgba(255,255,255,0.03)); background-size:200% 100%; animation:hoSkel 1.4s ease-in-out infinite; }
+@keyframes hoSkel{ to{ background-position:-200% 0; } }
+.ho-track{ position:relative; display:flex; flex-direction:column; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:var(--panel); text-decoration:none; transition:border-color 200ms ease, transform 250ms var(--ease-out); animation:hoIn 500ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 60ms); }
+.ho-track-art{ position:relative; aspect-ratio:1; }
+.ho-track-art .ho-cover{ position:absolute; inset:0; border-radius:0; box-shadow:none; transform:none; animation:none; }
+.ho-play{
+  position:absolute; left:50%; top:50%; width:52px; height:52px; margin:-26px 0 0 -26px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); padding:0;
+  display:flex; align-items:center; justify-content:center; background:rgba(10,10,9,0.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); color:#fff; cursor:pointer;
+  transition:transform 160ms var(--ease-out), background-color 200ms ease, border-color 200ms ease;
+}
+.ho-play svg{ width:20px; height:20px; fill:currentColor; }
+.ho-play .ho-ic-pause{ display:none; }
+.ho-track.is-playing .ho-play{ background:rgb(var(--fx)); border-color:rgb(var(--fx)); color:#0a0a09; }
+.ho-track.is-playing .ho-ic-play{ display:none; }
+.ho-track.is-playing .ho-ic-pause{ display:block; }
+.ho-play:active{ transform:scale(0.92); }
+.ho-track-body{ display:flex; flex-direction:column; gap:3px; padding:12px 14px 14px; }
+.ho-track-title{ font-family:var(--font-display); font-size:15px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ho-track-meta{ font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ho-track-price{ margin-top:6px; font-size:13px; color:var(--text-secondary); }
+.ho-track-price b{ color:#fff; font-size:14.5px; }
+@media (hover:hover) and (pointer:fine){
+  .ho-track:hover{ border-color:rgba(var(--fx), 0.5); transform:translateY(-3px); }
+  .ho-play:hover{ transform:scale(1.06); border-color:#fff; }
+}
+
+/* Plugins & sounds */
+.ho-tools{ display:grid; grid-template-columns:1.5fr 1fr; gap:16px; }
+.ho-tool{ display:flex; flex-direction:column; border-radius:20px; overflow:hidden; border:1px solid var(--line); background:linear-gradient(180deg, #0f0e0c, #090908); text-decoration:none; transition:border-color 200ms ease, transform 250ms var(--ease-out); }
+.ho-tool-media{ position:relative; aspect-ratio:16/8; overflow:hidden; background:radial-gradient(70% 90% at 50% 40%, rgba(232,134,44,0.25), transparent 70%), #090908; }
+.ho-tool-media img{ position:absolute; left:50%; top:52%; width:86%; transform:translate(-50%, -50%); border-radius:10px; box-shadow:0 30px 60px -24px rgba(0,0,0,0.9); transition:transform 600ms var(--ease-out); }
+.ho-tool-media-packs img{ width:44%; border-radius:12px; }
+.ho-tool-media-packs img:first-child{ transform:translate(-92%, -50%) rotate(-6deg); }
+.ho-tool-media-packs img:last-child{ transform:translate(-8%, -50%) rotate(6deg); }
+.ho-tool-body{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:18px 20px 20px; }
+.ho-tool-tag{ font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
+.ho-tool-name{ font-family:var(--font-display); font-size:22px; color:#fff; }
+.ho-tool-text{ font-size:14.5px; line-height:1.55; color:var(--text-secondary); }
+.ho-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.ho-chips span{ height:26px; display:inline-flex; align-items:center; padding:0 10px; border-radius:13px; border:1px solid rgba(232,134,44,0.35); font-size:12.5px; font-weight:600; color:var(--amber-text); }
+.ho-tool-cta{ display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:14px; font-weight:700; color:var(--amber-text); }
+@media (hover:hover) and (pointer:fine){
+  .ho-tool:hover{ border-color:rgba(232,134,44,0.5); transform:translateY(-3px); }
+  .ho-tool:hover .ho-tool-cta svg{ transform:translateX(3px); }
+  .ho-tool-main:hover .ho-tool-media img{ transform:translate(-50%, -52%) scale(1.03); }
+  .ho-tool-media-packs img{ transition:transform 600ms var(--ease-out); }
+  .ho-tool:hover .ho-tool-media-packs img:first-child{ transform:translate(-100%, -52%) rotate(-10deg); }
+  .ho-tool:hover .ho-tool-media-packs img:last-child{ transform:translate(0%, -52%) rotate(10deg); }
+}
+
+/* Sell your tracks */
+.ho-sell{ margin-bottom:40px; }
+.ho-sell-card{
+  display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr); gap:clamp(24px, 4vw, 56px); align-items:center;
+  padding:clamp(24px, 4vw, 44px); border-radius:24px; border:1px solid rgba(150,100,255,0.3);
+  background:radial-gradient(80% 120% at 0% 0%, rgba(150,100,255,0.16), transparent 60%), radial-gradient(60% 100% at 100% 100%, rgba(232,134,44,0.1), transparent 60%), #0b0a0c;
+}
+.ho-sell-intro{ display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.ho-sell-intro .ho-kicker{ color:#c7b3ff; }
+.ho-sell-intro p{ margin:0; font-size:15.5px; line-height:1.6; color:var(--text-secondary); }
+.ho-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; counter-reset:step; }
+.ho-steps li{ position:relative; display:flex; flex-direction:column; gap:3px; padding:16px 18px 16px 62px; border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,0.02); counter-increment:step; }
+.ho-steps li::before{ content:counter(step); position:absolute; left:16px; top:50%; width:32px; height:32px; margin-top:-16px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(150,100,255,0.16); color:#c7b3ff; font-family:var(--font-display); font-size:14px; font-weight:700; }
+.ho-steps b{ font-size:15px; color:#fff; }
+.ho-steps span{ font-size:13.5px; line-height:1.5; color:var(--text-muted); }
+
+/* --------------------------------- Phones ---------------------------------- */
+@media (max-width:900px){
+  .ho-page{ padding-top:96px; }
+  .ho-news{ grid-template-columns:1fr; gap:14px; padding:10px 10px 18px; }
+  .ho-news-body{ padding:0 8px; }
+  .ho-split{ flex-direction:column; height:auto; }
+  .ho-panel{ min-height:480px; }
+  .ho-tracks{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+  .ho-tools, .ho-sell-card{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){
+  .ho-panel{ min-height:440px; padding:20px; }
+  .ho-gui{ width:92%; top:30%; }
+  .ho-stack{ width:52%; top:30%; }
+  .ho-panel-text{ font-size:14.5px; }
+  .ho-actions .btn{ flex:1; justify-content:center; text-align:center; }
+  .ho-head{ align-items:flex-start; flex-direction:column; gap:8px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .ho-news, .ho-panel, .ho-track{ animation:none; }
+  .ho-cover:nth-child(3), .ho-news-dot{ animation:none; }
+  .ho-panel{ transition:border-color 250ms ease; }
+  .ho-skel{ animation:none; }
+}
+
+/* Phones: compact news row (thumbnail + title + link) */
+@media (max-width:560px){
+  .ho-news{ grid-template-columns:92px minmax(0, 1fr); gap:12px; padding:10px 14px 10px 10px; align-items:center; }
+  .ho-news-media{ aspect-ratio:1; }
+  .ho-news-body{ padding:0; gap:4px; }
+  .ho-news-kicker{ font-size:11px; }
+  .ho-news-title{ font-size:16px; }
+  .ho-news-text{ display:none; }
+  .ho-news-cta{ font-size:13px; }
+}
+@media (max-width:560px){
+  .ho-actions{ flex-direction:column; align-items:stretch; width:100%; }
+  .ho-actions .btn{ width:100%; }
+  .ho-panel{ min-height:520px; }
+  .ho-gui{ top:24%; width:94%; }
+  .ho-stack{ top:24%; width:50%; }
+  .ho-panel-visual::after{ background:linear-gradient(180deg, transparent 22%, rgba(8,8,7,0.9) 48%, #080807 62%); }
+}
+@media (max-width:900px){ .ho-page{ padding-top:112px; } }

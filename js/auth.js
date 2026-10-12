@@ -721,8 +721,11 @@
         return res.ok ? res.json() : null;
       })
       .then((data) => {
-        if (!data || !data.role) return;
-        const input = roleForm.querySelector(`.role-input[value="${data.role}"]`);
+        // A saved choice wins; otherwise ?role= (e.g. from "Start selling")
+        // preselects a card.
+        const wanted = (data && data.role) || new URLSearchParams(location.search).get('role');
+        if (!wanted) return;
+        const input = roleForm.querySelector(`.role-input[value="${CSS.escape(wanted)}"]`);
         if (input) { input.checked = true; submit.disabled = false; }
       })
       .catch(() => {});

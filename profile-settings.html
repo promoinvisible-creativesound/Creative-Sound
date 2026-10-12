@@ -27,6 +27,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=116">
+<link rel="stylesheet" href="css/welcome.css?v=3">
 </head>
 <body>
 <div id="grain"></div>
@@ -118,6 +119,17 @@
     </section>
 
     <section class="account-section glass-panel reveal-up">
+      <h2 class="account-section-title">Account type</h2>
+      <p class="role-seg-lede">Producers can upload beats for review. You can switch any time.</p>
+      <form id="role-settings" class="role-seg" novalidate>
+        <label class="role-seg-opt"><input type="radio" name="role" value="producer"><span>Producer</span></label>
+        <label class="role-seg-opt"><input type="radio" name="role" value="artist"><span>Artist</span></label>
+        <label class="role-seg-opt"><input type="radio" name="role" value="listener"><span>Just exploring</span></label>
+      </form>
+      <p id="role-settings-status" class="role-seg-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="account-section glass-panel reveal-up">
       <h2 class="account-section-title">Change password</h2>
       <form id="password-form" novalidate>
         <p id="password-error" class="auth-error" role="alert"></p>
@@ -193,7 +205,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=40"></script>
-<script src="js/auth.js?v=36"></script>
+<script src="js/auth.js?v=37"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

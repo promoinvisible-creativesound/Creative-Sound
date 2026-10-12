@@ -663,6 +663,43 @@
     });
   }
 
+  /* ------------------------- Account type in Settings ----------------------- */
+  // Saves as soon as another option is picked; goes back on failure.
+  const roleSettings = document.getElementById('role-settings');
+  if (roleSettings) {
+    const status = document.getElementById('role-settings-status');
+    const LABELS = { producer: 'Producer', artist: 'Artist', listener: 'Just exploring' };
+    let saved = null;
+    const select = (role) => {
+      const input = roleSettings.querySelector(`input[value="${role}"]`);
+      if (input) input.checked = true;
+    };
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data && data.role) { saved = data.role; select(saved); } })
+      .catch(() => {});
+    roleSettings.addEventListener('change', async (e) => {
+      const role = e.target.value;
+      status.textContent = 'Saving…';
+      try {
+        const res = await fetch('/api/account/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save, please try again.');
+        saved = role;
+        status.innerHTML = role === 'producer'
+          ? 'Saved. You can now <a href="upload-beat.html">upload beats</a>.'
+          : `Saved: ${LABELS[role]}.`;
+      } catch (err) {
+        status.textContent = err.message;
+        if (saved) select(saved); else e.target.checked = false;
+      }
+    });
+  }
+
   /* ------------------------------ Account type ------------------------------ */
   // welcome.html: producer / artist / listener. Signed-out visitors go to
   // sign in; an existing choice is preselected so this page also works for

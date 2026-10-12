@@ -944,3 +944,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-col.is-active .bt-col-disc{ background:radial-gradient(circle at 50% 35%, rgba(232,134,44,0.18) 0%, #070706 72%); }
 .bt-col.is-active .bt-col-icon{ color:var(--amber-bright); }
 @media (max-width:560px){ .bt-col-icon svg{ width:24px; height:24px; } }
+
+/* Ring centred on the disc exactly (the old inset + width combo drifted 2px left) */
+.bt-col-ring{ inset:auto; left:50%; top:50%; width:calc(100% + 4px); height:calc(100% + 4px); transform:translate(-50%, -50%) rotate(-90deg); transform-origin:50% 50%; }

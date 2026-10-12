@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="css/style.css?v=118">
 <link rel="stylesheet" href="css/header-menu.css?v=5">
-<link rel="stylesheet" href="css/home.css?v=4">
+<link rel="stylesheet" href="css/home.css?v=8">
 </head>
 <body>
 <div id="grain"></div>
@@ -58,6 +58,7 @@
     </a>
 
     <nav id="site-nav" aria-label="Primary">
+      <a href="home.html">Home</a>
       <a href="/">Creative Dist 2.0</a>
       <a href="packs.html">Packs</a>
       <a href="beats.html">Tracks<span class="nav-new-badge">NEW</span></a>
@@ -95,120 +96,63 @@
 <main class="ho-page">
   <h1 class="sr-only">Creative Sound: plugins, sound packs and tracks</h1>
 
-  <!-- 1. News (data/news.json) -->
-  <section class="ho-news-wrap" aria-label="Latest news">
-    <a class="ho-news" id="ho-news" href="/" hidden>
-      <span class="ho-news-media"><img alt="" loading="eager"></span>
-      <span class="ho-news-body">
-        <span class="ho-news-kicker"><span class="ho-news-dot" aria-hidden="true"></span><span data-news="kicker"></span><span class="ho-news-date" data-news="date"></span></span>
-        <b class="ho-news-title" data-news="title"></b>
-        <span class="ho-news-text" data-news="text"></span>
-        <span class="ho-news-cta"><span data-news="cta"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </span>
-    </a>
+  <!-- Creative Dist 2.0 -->
+  <section class="ho-tile ho-tile-plugin" aria-labelledby="ho-plugin-title">
+    <div class="ho-tile-text">
+      <h2 id="ho-plugin-title" class="ho-name">Creative Dist 2.0</h2>
+      <p class="ho-line">Reorder, reshape and break the signal.</p>
+      <div class="ho-links">
+        <a href="/" class="ho-link ho-link-fill">Learn more</a>
+        <a href="/#pricing" class="ho-link">Buy <span aria-hidden="true">›</span></a>
+      </div>
+    </div>
+    <div class="ho-tile-media">
+      <img src="assets/img/gui-flux.webp" alt="Creative Dist 2.0 plugin interface" class="ho-plugin-img" loading="eager">
+    </div>
   </section>
 
-  <!-- 2. Two worlds: plugins and tracks -->
-  <section class="ho-split" aria-label="Plugins and tracks">
-    <article class="ho-panel ho-panel-plugins">
-      <div class="ho-panel-visual" aria-hidden="true">
-        <span class="ho-glow"></span>
-        <img src="assets/img/gui-full-v2.webp" alt="" class="ho-gui" loading="eager">
+  <!-- Tracks -->
+  <section class="ho-tile ho-tile-tracks" aria-labelledby="ho-tracks-title">
+    <div class="ho-tile-text">
+      <h2 id="ho-tracks-title" class="ho-name">Tracks</h2>
+      <p class="ho-line">Your next track is already here.</p>
+      <div class="ho-links">
+        <a href="beats.html" class="ho-link ho-link-fill">Browse tracks</a>
+        <a href="#ho-sell" class="ho-link">Sell yours <span aria-hidden="true">›</span></a>
       </div>
-      <div class="ho-panel-body">
-        <span class="ho-kicker">Plugins &amp; sounds</span>
-        <h2 class="ho-panel-title">Sound tools that bite.</h2>
-        <p class="ho-panel-text">Creative Dist 2.0: five modules of saturation, noise, frequency shifting and morphing in one distortion plugin. Plus free Serum preset packs.</p>
-        <div class="ho-actions">
-          <a href="/" class="btn btn-primary">Discover Creative Dist 2.0</a>
-          <a href="packs.html" class="btn btn-ghost">Free packs</a>
-        </div>
-      </div>
-    </article>
-
-    <article class="ho-panel ho-panel-tracks">
-      <div class="ho-panel-visual" aria-hidden="true">
-        <span class="ho-glow"></span>
-        <div class="ho-stack" id="ho-stack">
-          <span class="ho-cover t-amber"></span><span class="ho-cover t-blue"></span><span class="ho-cover t-red"></span>
-        </div>
-      </div>
-      <div class="ho-panel-body">
-        <span class="ho-kicker">Tracks</span>
-        <h2 class="ho-panel-title">Your next track is here.</h2>
-        <p class="ho-panel-text">Trap, drill, R&amp;B and more from verified producers. Preview everything, then license it as MP3, WAV, stems or the full project.</p>
-        <div class="ho-actions">
-          <a href="beats.html" class="btn btn-primary">Browse tracks</a>
-          <a href="#ho-sell" class="btn btn-ghost">Sell your tracks</a>
-        </div>
-      </div>
-    </article>
-  </section>
-
-  <!-- 3. Tracks -->
-  <section class="ho-section" aria-labelledby="ho-tracks-title">
-    <div class="ho-head">
-      <div>
-        <span class="ho-kicker">Tracks</span>
-        <h2 id="ho-tracks-title" class="ho-title">Latest tracks</h2>
-      </div>
-      <a href="beats.html" class="ho-more">See all tracks <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
     <div class="ho-tracks" id="ho-tracks" aria-busy="true">
-      <div class="ho-skel"></div><div class="ho-skel"></div><div class="ho-skel"></div><div class="ho-skel"></div>
+      <span class="ho-skel"></span><span class="ho-skel"></span><span class="ho-skel"></span><span class="ho-skel"></span>
     </div>
   </section>
 
-  <!-- 4. Plugins & sounds -->
-  <section class="ho-section" aria-labelledby="ho-tools-title">
-    <div class="ho-head">
-      <div>
-        <span class="ho-kicker">Plugins &amp; sounds</span>
-        <h2 id="ho-tools-title" class="ho-title">Made for producers</h2>
+  <!-- Two smaller tiles -->
+  <div class="ho-pair">
+    <section class="ho-tile ho-tile-half" aria-labelledby="ho-packs-title">
+      <div class="ho-tile-text">
+        <h2 id="ho-packs-title" class="ho-name ho-name-s">Free Serum packs</h2>
+        <p class="ho-line ho-line-s">302 presets. Free with an account.</p>
+        <div class="ho-links"><a href="packs.html" class="ho-link">Get them <span aria-hidden="true">›</span></a></div>
       </div>
-    </div>
-    <div class="ho-tools">
-      <a href="/" class="ho-tool ho-tool-main">
-        <span class="ho-tool-media"><img src="assets/img/gui-full-v2.webp" alt="Creative Dist 2.0 plugin interface" loading="lazy"></span>
-        <span class="ho-tool-body">
-          <span class="ho-tool-tag">Plugin · VST3 / AU</span>
-          <b class="ho-tool-name">Creative Dist 2.0</b>
-          <span class="ho-tool-text">Modular distortion with Saturation, Noise, Bode Shifter, Flux and a 5-band EQ.</span>
-          <span class="ho-chips"><span>Saturation</span><span>Noise</span><span>Bode Shifter</span><span>Flux</span><span>EQ</span></span>
-          <span class="ho-tool-cta">Discover <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </span>
-      </a>
-      <a href="packs.html" class="ho-tool">
-        <span class="ho-tool-media ho-tool-media-packs">
-          <img src="assets/img/creative-presets-tile.webp" alt="Creative Presets pack" loading="lazy">
-          <img src="assets/img/creative-presets-2-tile.webp" alt="Creative Presets Vol. 2 pack" loading="lazy">
-        </span>
-        <span class="ho-tool-body">
-          <span class="ho-tool-tag">Free · Serum presets</span>
-          <b class="ho-tool-name">Free preset packs</b>
-          <span class="ho-tool-text">302 Serum presets across two packs, free with an account.</span>
-          <span class="ho-tool-cta">Get them free <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </span>
-      </a>
-    </div>
-  </section>
+      <div class="ho-packs-media" aria-hidden="true">
+        <img src="assets/img/creative-presets-tile.webp" alt="" loading="lazy">
+        <img src="assets/img/creative-presets-2-tile.webp" alt="" loading="lazy">
+      </div>
+    </section>
 
-  <!-- 5. Sell your tracks -->
-  <section class="ho-section ho-sell" id="ho-sell" aria-labelledby="ho-sell-title">
-    <div class="ho-sell-card">
-      <div class="ho-sell-intro">
-        <span class="ho-kicker">For producers</span>
-        <h2 id="ho-sell-title" class="ho-title">Sell your tracks on Creative Sound</h2>
-        <p>Upload your tracks, we review every one, and they go on sale under your name with four license types.</p>
-        <a href="signup.html?role=producer" class="btn btn-primary">Start selling</a>
+    <section class="ho-tile ho-tile-half ho-tile-sell" id="ho-sell" aria-labelledby="ho-sell-title">
+      <div class="ho-tile-text">
+        <h2 id="ho-sell-title" class="ho-name ho-name-s">Sell your tracks</h2>
+        <p class="ho-line ho-line-s">Upload. We review. It goes on sale under your name.</p>
+        <div class="ho-links"><a href="signup.html?role=producer" class="ho-link">Start selling <span aria-hidden="true">›</span></a></div>
       </div>
-      <ol class="ho-steps">
-        <li><b>Upload</b><span>Cover, preview and the files for each license, straight from your account.</span></li>
-        <li><b>Review</b><span>Our team checks files, rights and details, and emails you the result.</span></li>
-        <li><b>Sell</b><span>Approved tracks go live in the store with your producer name.</span></li>
+      <ol class="ho-steps" aria-label="How it works">
+        <li><span>1</span>Upload</li>
+        <li><span>2</span>Review</li>
+        <li><span>3</span>On sale</li>
       </ol>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
 <footer id="site-footer">
@@ -263,9 +207,9 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/main.js?v=42"></script>
+<script src="js/main.js?v=43"></script>
 <script src="js/header-menu.js?v=4"></script>
-<script src="js/home.js?v=1"></script>
+<script src="js/home.js?v=2"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

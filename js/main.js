@@ -500,6 +500,7 @@
     { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: '/#output' },
     { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: '/#pricing' },
     { name: 'Sound Packs', desc: 'Free Serum preset packs', url: 'packs.html' },
+    { name: 'Home', desc: 'Creative Sound: plugins, sound packs and tracks', url: 'home.html' },
     { name: 'Tracks', desc: 'Buy tracks: MP3, WAV, stems, FLP licenses', url: 'beats.html' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },

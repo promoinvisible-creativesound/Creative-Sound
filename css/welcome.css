@@ -80,3 +80,50 @@
   @keyframes roleFade{ from{ opacity:0; } to{ opacity:1; } }
   .role-check, .role-card, .role-icon{ transform:none !important; }
 }
+
+/* ============================ Refined cards v2 ============================
+   Slimmer, quieter cards: sans titles, a small icon tile, a radio ring that
+   fills when chosen, and a light sweep + border glow on hover. */
+.role-card{ padding:20px 20px 18px; gap:8px; border-radius:16px; background:linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)) , var(--panel); border-color:rgba(255,255,255,0.12); }
+.role-card::before{ background:radial-gradient(80% 120% at 0% 0%, rgba(232,134,44,0.16), transparent 65%); }
+/* Light sweep across the card on hover */
+.role-card::after{
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.06) 50%, transparent 65%);
+  transform:translateX(-100%); transition:transform 700ms var(--ease-out);
+}
+.role-icon{ width:44px; height:44px; border-radius:12px; }
+.role-icon svg{ width:22px; height:22px; stroke-width:1.6; }
+.role-name{ margin-top:6px; font-family:var(--font-sans); font-size:17px; font-weight:700; letter-spacing:0.1px; }
+.role-desc{ font-size:14px; }
+.role-perks{ gap:6px; margin-top:6px; padding-top:12px; }
+.role-perks span{ font-size:13.5px; }
+
+/* Radio ring (always visible), fills with a tick when chosen */
+.role-check{ top:18px; right:18px; width:20px; height:20px; opacity:1; transform:none; background:transparent; border:1.5px solid rgba(255,255,255,0.25); transition:border-color 150ms ease, background-color 150ms ease; }
+.role-check svg{ width:11px; height:11px; opacity:0; transform:scale(0.5); transition:opacity 150ms ease, transform 250ms var(--ease-out); }
+.role-card:has(.role-input:checked) .role-check{ background:var(--accent); border-color:var(--accent); }
+.role-card:has(.role-input:checked) .role-check svg{ opacity:1; transform:none; }
+.role-card:has(.role-input:checked){ box-shadow:0 0 0 1px rgba(232,134,44,0.35), 0 24px 60px -34px rgba(232,134,44,0.6); }
+
+@media (hover:hover) and (pointer:fine){
+  .role-card:hover{ transform:translateY(-2px); border-color:rgba(232,134,44,0.45); box-shadow:0 18px 40px -28px rgba(0,0,0,0.9); }
+  .role-card:hover::after{ transform:translateX(100%); }
+  .role-card:hover .role-icon{ color:var(--amber-text); border-color:rgba(232,134,44,0.4); background:rgba(232,134,44,0.08); }
+  .role-card:hover .role-check{ border-color:rgba(232,134,44,0.6); }
+  .role-card:has(.role-input:checked):hover .role-icon{ color:#0a0a09; background:var(--accent); }
+}
+
+@media (max-width:860px){
+  .role-card{ padding:14px 16px; column-gap:14px; row-gap:2px; border-radius:14px; }
+  .role-icon{ width:42px; height:42px; border-radius:11px; }
+  .role-icon svg{ width:21px; height:21px; }
+  .role-name{ font-size:16px; padding-right:28px; }
+  .role-desc{ font-size:13.5px; line-height:1.45; padding-right:28px; }
+  .role-check{ top:50%; margin-top:-10px; right:16px; }
+}
+/* Touch: the sweep plays once when a card is tapped/chosen */
+@media (hover:none){
+  .role-card:has(.role-input:checked)::after{ transform:translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce){ .role-card::after{ display:none; } }

@@ -1242,3 +1242,14 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-feat-nav.prev{ right:66px; }
 .bt-feat-thumb{ width:50px; }
 @media (max-width:640px){ .bt-top-body .bt-feat-spot{ grid-template-columns:1fr; padding:16px 14px 18px; gap:14px; } .bt-top-body .bt-feat-cover{ width:min(190px, 52vw); } .bt-feat-title{ font-size:26px; } .bt-feat-nav{ top:calc(16px + min(95px, 26vw) - 20px); } .bt-feat-nav.prev{ left:6px; right:auto; } .bt-feat-nav.next{ right:6px; } }
+
+/* Top tracks header: one slim line. Title in small display type with a
+   soft gradient, "This week" as a pill beside it. */
+.bt-top-head{ align-items:center; padding:0 8px 12px; }
+.bt-top-titles{ flex-direction:row; align-items:center; gap:12px; }
+.bt-featured .bt-top-title{ margin:0; line-height:1.1;  order:1; font-size:clamp(18px, 1.7vw, 22px); font-weight:700; letter-spacing:0.6px; background:linear-gradient(90deg, #fff 30%, #f2b56b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.bt-top-live{ order:2; height:26px; padding:0 10px; gap:7px; border-radius:13px; font-size:11px; letter-spacing:1.4px; border:1px solid rgba(232,134,44,0.35); background:rgba(232,134,44,0.08); }
+.bt-top-live .bt-feat-dot{ width:6px; height:6px; }
+.bt-top-dates{ font-size:13.5px; color:var(--text-secondary); }
+.bt-top-pill{ height:26px; font-size:12px; padding:0 10px; }
+@media (max-width:560px){ .bt-top-titles{ gap:10px; } }

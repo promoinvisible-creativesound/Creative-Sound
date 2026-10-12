@@ -217,6 +217,36 @@
     return m;
   }
 
+  /* ------------------------------- Signed out ------------------------------- */
+  I.headset = '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="14" width="5" height="7" rx="2"/><rect x="16.5" y="14" width="5" height="7" rx="2"/>';
+  I.user = '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.2a7.5 7.5 0 0 1 15 0"/>';
+  I.play = '<circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/>';
+  I.mail = '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/>';
+  I.login = '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H4"/>';
+  I.plus = '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.2a7.5 7.5 0 0 1 11-6.6M18 15v6M15 18h6"/>';
+
+  function guestSupportMenu() {
+    const m = makeMenu({ id: 'support', label: 'Help', cls: 'hm-support', buttonHtml: icon('headset', 'hm-btn-ic') });
+    m.panel.innerHTML = `
+      <div class="hm-head"><b>Help</b></div>
+      <div class="hm-group hm-group-first">
+        ${item('faq.html', 'help', 'FAQ')}
+        ${item('tutorial-creative-dist.html', 'play', 'Creative Dist tutorial')}
+        ${item('contact.html', 'mail', 'Contact us')}
+      </div>`;
+    return m;
+  }
+  function guestAccountMenu() {
+    const m = makeMenu({ id: 'guest', label: 'Account', cls: 'hm-guest', buttonHtml: icon('user', 'hm-btn-ic') });
+    m.panel.innerHTML = `
+      <div class="hm-guest-intro"><b>Your Creative Sound account</b><span>Licenses, downloads, saved tracks and orders in one place.</span></div>
+      <div class="hm-group">
+        ${item('login.html', 'login', 'Sign in')}
+        ${item('signup.html', 'plus', 'Create account')}
+      </div>`;
+    return m;
+  }
+
   /* ---------------------------------- Boot ---------------------------------- */
   const me = window.csMe || fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).catch(() => null);
   Promise.resolve(me).then((data) => {
@@ -235,9 +265,13 @@
       }
       cluster.append(savedMenu(data).wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
     } else {
+      // Signed out: support and account menus in the same style, the cart
+      // only when it has something in it.
+      document.documentElement.classList.add('is-signed-out');
       const cart = cartMenu();
-      if (!cart.paintCount()) return; // signed out with an empty cart: nothing to add
-      cluster.append(cart.wrap);
+      cluster.append(guestSupportMenu().wrap);
+      if (cart.paintCount()) cluster.append(cart.wrap);
+      cluster.append(guestAccountMenu().wrap);
     }
     utils.appendChild(cluster);
   });

@@ -34,13 +34,37 @@
   // "Sign in" / "Create one" doesn't drop them back into guest checkout.
   const rawNext = new URLSearchParams(location.search).get('next');
   if (rawNext) {
-    const switchLink = document.querySelector('.auth-switch a');
+    const switchLink = document.querySelector('.auth-alt-btn, .auth-switch a');
     if (switchLink) {
       const url = new URL(switchLink.href, location.href);
       url.searchParams.set('next', rawNext);
       switchLink.href = url.toString();
     }
   }
+
+  /* --------------------------- Show / hide password -------------------------- */
+  // Every password field in an account form gets an eye button.
+  document.querySelectorAll('.auth-field input[type="password"]').forEach((input) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'auth-pass';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'auth-eye';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label', 'Show password');
+    btn.innerHTML = '<svg class="eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+      + '<svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6a9.7 9.7 0 0 1 1.4-.1c6 0 9.5 6.1 9.5 6.1a17 17 0 0 1-3 3.7M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1.1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+    btn.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(show));
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      input.focus({ preventScroll: true });
+    });
+    wrap.appendChild(btn);
+  });
 
   /* --------------------------------- Signup form --------------------------- */
   const signupForm = document.getElementById('signup-form');

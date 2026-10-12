@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=119">
+<link rel="stylesheet" href="css/style.css?v=120">
 <link rel="stylesheet" href="css/header-menu.css?v=5">
 </head>
 <body>
@@ -94,27 +94,31 @@
   </div>
 </header>
 
-<main>
-  <div class="page-hero" style="padding-bottom:0;">
-    <p class="kicker reveal-up">ACCOUNT</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Sign in</h1>
-  </div>
-
-  <div class="glass-panel auth-card reveal-up">
+<main class="auth-page">
+  <div class="auth-card auth-card-v2">
+    <header class="auth-head">
+      <h1 class="auth-title">Sign in</h1>
+      <p class="auth-sub">Welcome back. Your licenses, downloads and saved tracks are waiting.</p>
+    </header>
     <p id="auth-error" class="auth-error" role="alert"></p>
     <form id="login-form" novalidate>
       <div class="auth-field">
         <label for="login-email">Email</label>
-        <input type="email" id="login-email" name="email" autocomplete="email" required>
+        <input type="email" id="login-email" name="email" autocomplete="email" placeholder="you@example.com" required>
       </div>
       <div class="auth-field">
-        <label for="login-password">Password</label>
+        <div class="auth-label-row">
+          <label for="login-password">Password</label>
+          <a href="forgot-password.html" class="auth-inline-link">Forgot password?</a>
+        </div>
         <input type="password" id="login-password" name="password" autocomplete="current-password" required>
       </div>
       <button type="submit" class="btn btn-primary auth-submit">Sign in</button>
     </form>
-    <p class="auth-switch">No account yet? <a href="signup.html">Create one</a></p>
-    <p class="auth-switch"><a href="forgot-password.html">Forgot your password?</a></p>
+    <div class="auth-alt">
+      <span>New to Creative Sound?</span>
+      <a href="signup.html" class="auth-alt-btn">Create an account</a>
+    </div>
   </div>
 </main>
 
@@ -172,7 +176,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=43"></script>
 <script src="js/header-menu.js?v=4"></script>
-<script src="js/auth.js?v=40"></script>
+<script src="js/auth.js?v=41"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

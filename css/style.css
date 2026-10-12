@@ -2428,3 +2428,80 @@ body.search-open{ overflow:hidden; }
    light sweep across the cover), same as the track cards. */
 .pk-glare{ display:none; }
 .pack-tile-shot::after{ display:none; }
+
+/* ================================ Auth v2 =================================
+   Sign in / create account (and the other account forms through
+   .auth-field): title inside the card, readable labels, taller inputs,
+   show/hide password, clear switch link. */
+.auth-page{ padding:clamp(110px, 14vh, 150px) 16px 120px; }
+.auth-card-v2{
+  max-width:440px; margin:0 auto; padding:clamp(28px, 4vw, 40px);
+  border-radius:24px; border:1px solid rgba(255,255,255,0.08);
+  background:radial-gradient(90% 60% at 50% 0%, rgba(232,134,44,0.08), transparent 70%), #0d0d0c;
+  box-shadow:0 40px 100px -50px rgba(0,0,0,0.9);
+  animation:authIn 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes authIn{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+.auth-head{ text-align:center; margin-bottom:28px; }
+.auth-title{ margin:0; font-family:var(--font-sans); font-size:clamp(26px, 4vw, 32px); font-weight:700; letter-spacing:-0.02em; color:#f5f5f7; }
+.auth-sub{ margin:10px auto 0; max-width:340px; font-size:15px; line-height:1.55; color:#a1a1a6; }
+.auth-sub strong{ color:#f5f5f7; }
+
+/* Fields (all account forms) */
+.auth-field{ gap:8px; margin-bottom:18px; }
+.auth-field label{ font-family:var(--font-sans); font-size:14px; font-weight:600; letter-spacing:0; color:#d2d2d7; }
+.auth-field input, .auth-field select, .auth-field textarea{
+  min-height:50px; padding:12px 16px; border-radius:12px; font-size:16px;
+  background:#0a0a09; border:1px solid rgba(255,255,255,0.14); color:#f5f5f7;
+  transition:border-color 150ms ease, box-shadow 150ms ease;
+}
+.auth-field textarea{ min-height:0; }
+.auth-field input::placeholder, .auth-field textarea::placeholder{ color:#6e6e73; }
+.auth-field input:focus, .auth-field select:focus, .auth-field textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(232,134,44,0.16); }
+.auth-label-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.auth-inline-link{ font-size:13.5px; font-weight:600; color:var(--amber-text); text-decoration:none; }
+.auth-inline-link:hover{ text-decoration:underline; text-underline-offset:3px; }
+.auth-hint{ font-size:13px; line-height:1.45; color:#86868b; }
+.auth-code{ font-family:var(--mono) !important; font-size:24px !important; letter-spacing:10px; text-align:center; }
+
+/* Show / hide password (button added by js/auth.js) */
+.auth-pass{ position:relative; display:flex; }
+.auth-pass input{ flex:1; padding-right:52px; }
+.auth-eye{
+  position:absolute; right:6px; top:50%; width:40px; height:40px; margin-top:-20px; border-radius:10px; border:0; padding:0;
+  display:flex; align-items:center; justify-content:center; background:none; color:#86868b; cursor:pointer;
+  transition:color 150ms ease, background-color 150ms ease;
+}
+.auth-eye svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.auth-eye .eye-off{ display:none; }
+.auth-eye[aria-pressed="true"] .eye-on{ display:none; }
+.auth-eye[aria-pressed="true"] .eye-off{ display:block; }
+.auth-eye:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+@media (hover:hover) and (pointer:fine){ .auth-eye:hover{ color:#f5f5f7; background:rgba(255,255,255,0.06); } }
+
+/* Messages */
+.auth-error{ border-radius:12px; padding:12px 14px; font-size:14px; line-height:1.45; }
+.auth-ok{ background:rgba(232,134,44,0.12) !important; border-color:rgba(232,134,44,0.45) !important; color:var(--amber-text) !important; }
+
+/* Main button */
+.auth-card-v2 .auth-submit{
+  height:52px; margin-top:8px; border-radius:12px; clip-path:none;
+  font-family:var(--font-sans); font-size:16px; font-weight:700; letter-spacing:0; text-transform:none;
+}
+.auth-card-v2 .auth-submit:active{ transform:scale(0.985); }
+
+/* Switch between sign in and create account */
+.auth-alt{ display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:26px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.08); }
+.auth-alt span{ font-size:14.5px; color:#a1a1a6; }
+.auth-alt-btn{
+  width:100%; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px;
+  border:1px solid rgba(255,255,255,0.16); color:#f5f5f7; font-size:15px; font-weight:600; text-decoration:none;
+  transition:border-color 150ms ease, background-color 150ms ease;
+}
+@media (hover:hover) and (pointer:fine){ .auth-alt-btn:hover{ border-color:rgba(232,134,44,0.55); background:rgba(232,134,44,0.06); } }
+.auth-switch{ font-size:14.5px; color:#a1a1a6; }
+.auth-switch-link{ font-size:14.5px; font-weight:600; }
+@media (max-width:480px){
+  .auth-card-v2{ padding:24px 20px; border-radius:20px; }
+}
+@media (prefers-reduced-motion: reduce){ .auth-card-v2{ animation:none; } }

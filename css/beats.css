@@ -1432,3 +1432,11 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-col-disc{ width:84px; height:58px; border-radius:15px; }
 }
 @media (prefers-reduced-motion: reduce){ .bt-col.is-active .bt-col-ring rect{ animation:none; stroke-dashoffset:0; } }
+
+/* No light effects on card hover: no border light, no pointer glare, no
+   coloured glow. Hover keeps the quiet border tint and cover drift. */
+.bt-card::before{ display:none; }
+.bt-glare{ display:none; }
+@media (hover:hover) and (pointer:fine){
+  .bt-card:hover{ box-shadow:none; }
+}

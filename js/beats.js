@@ -46,7 +46,7 @@
         ? `<img src="${esc(b.cover)}" alt="" loading="lazy">`
         : `<div class="bt-art-gen" aria-hidden="true"></div><span class="bt-art-word" aria-hidden="true">${esc(b.title)}</span>`}
     </div>`;
-  const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><path d="M12 1.8l2.5 1.9 3.1-.2.9 3 2.6 1.7-.9 3 .9 3-2.6 1.7-.9 3-3.1-.2L12 22.2l-2.5-1.9-3.1.2-.9-3-2.6-1.7.9-3-.9-3 2.6-1.7.9-3 3.1.2z" fill="currentColor"/><path d="M8.2 12.3l2.5 2.5 5.1-5.3" fill="none" stroke="#0a0a09" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><title>Verified producer</title><path class="bt-verified-seal" d="M12.0 1.0L12.9 1.4L13.7 2.3L14.4 2.9L15.4 2.8L16.5 2.4L17.5 2.5L18.1 3.3L18.3 4.5L18.6 5.4L19.5 5.7L20.7 5.9L21.5 6.5L21.6 7.5L21.2 8.6L21.1 9.6L21.7 10.3L22.6 11.1L23.0 12.0L22.6 12.9L21.7 13.7L21.1 14.4L21.2 15.4L21.6 16.5L21.5 17.5L20.7 18.1L19.5 18.3L18.6 18.6L18.3 19.5L18.1 20.7L17.5 21.5L16.5 21.6L15.4 21.2L14.4 21.1L13.7 21.7L12.9 22.6L12.0 23.0L11.1 22.6L10.3 21.7L9.6 21.1L8.6 21.2L7.5 21.6L6.5 21.5L5.9 20.7L5.7 19.5L5.4 18.6L4.5 18.3L3.3 18.1L2.5 17.5L2.4 16.5L2.8 15.4L2.9 14.4L2.3 13.7L1.4 12.9L1.0 12.0L1.4 11.1L2.3 10.3L2.9 9.6L2.8 8.6L2.4 7.5L2.5 6.5L3.3 5.9L4.5 5.7L5.4 5.4L5.7 4.5L5.9 3.3L6.5 2.5L7.5 2.4L8.6 2.8L9.6 2.9L10.3 2.3L11.1 1.4Z"/><path class="bt-verified-tick" d="M7.6 12.4l3 3 5.8-6.2"/></svg>';
   const isVerified = (name) => !!(PRODUCERS[name] && PRODUCERS[name].verified);
   const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${isVerified(b.producer) ? VERIFIED : ''}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
@@ -102,7 +102,7 @@
           ${producerLine(b)}
         </div>
         <div class="bt-specs" aria-label="Details">
-          <span><b>${b.bpm}</b> BPM</span><i aria-hidden="true"></i><span>${esc(b.key)}</span><i aria-hidden="true"></i><span>${esc(b.genre)}</span>
+          <span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span>
         </div>
         <button type="button" class="bt-buy" data-buy aria-label="Choose a license for ${esc(b.title)}, from ${euro(minPrice(b))}">
           <span class="bt-buy-text"><span class="bt-buy-label">Licenses from</span><span class="bt-buy-price">${euro(minPrice(b))}</span></span>
@@ -178,7 +178,7 @@
         <span class="bt-dd-glide" aria-hidden="true"></span>
         ${options.map((o, i) => `
           <div class="bt-dd-opt" role="option" id="${id}-${i}" data-value="${esc(o.value)}" aria-selected="false" style="--k:${i}">
-            <span class="bt-dd-check" aria-hidden="true"></span>
+            <svg class="bt-dd-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.4l3 3 6.6-7"/></svg>
             <span class="bt-dd-text">${esc(o.label)}</span>
             ${o.count != null ? `<span class="bt-dd-count">${o.count}</span>` : ''}
           </div>`).join('')}
@@ -213,6 +213,10 @@
     };
     const open = () => {
       openDropdowns.forEach((close) => close(true));
+      // Open towards the left when the panel would run off the right edge.
+      wrap.classList.remove('align-right');
+      const btnRect = btn.getBoundingClientRect();
+      if (btnRect.left + Math.max(panel.offsetWidth, 220) > window.innerWidth - 12) wrap.classList.add('align-right');
       wrap.classList.add('is-open');
       btn.setAttribute('aria-expanded', 'true');
       const sel = Math.max(0, opts.findIndex((el) => el.dataset.value === current));

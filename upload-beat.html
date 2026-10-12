@@ -28,7 +28,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=118">
 <link rel="stylesheet" href="css/header-menu.css?v=4">
-<link rel="stylesheet" href="css/upload.css?v=4">
+<link rel="stylesheet" href="css/upload.css?v=5">
 </head>
 <body>
 <div id="grain"></div>
@@ -131,18 +131,18 @@
       <section class="up-card" aria-labelledby="up-s1">
         <div class="up-card-head">
           <span class="up-step">1</span>
-          <div><h2 id="up-s1">Files</h2><p>Drop files on a row or click Upload. Up to 150 MB each.</p></div>
+          <div><h2 id="up-s1">Files</h2><p>Drop files on a row or click Upload. Same file rules as BeatStars.</p></div>
         </div>
 
         <div class="up-files">
           <div class="up-file up-file-art" data-kind="artwork">
             <div class="up-art-thumb" aria-hidden="true"><img alt="" hidden><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5l-5-5-9 9"/></svg></div>
-            <div class="up-file-text"><b>Cover art <em>Required</em></b><small>Square JPG, PNG or WebP, at least 1000 × 1000. Max 10 MB.</small></div>
+            <div class="up-file-text"><b>Cover art <em>Required</em></b><small>Square JPG or PNG, at least 1000 × 1000. Max 10 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
           <div class="up-file" data-kind="preview">
             <span class="up-file-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg></span>
-            <div class="up-file-text"><b>Preview MP3 <em>Required</em></b><small>Tagged version people hear in the store. Max 30 MB.</small></div>
+            <div class="up-file-text"><b>Preview MP3 <em>Required</em></b><small>Tagged version people hear in the store. MP3, 320 kbps, stereo. Max 150 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
         </div>
@@ -151,22 +151,22 @@
         <div class="up-files">
           <div class="up-file" data-kind="mp3">
             <span class="up-file-icon" aria-hidden="true">MP3</span>
-            <div class="up-file-text"><b>Untagged MP3</b><small>No voice tags. Max 50 MB.</small></div>
+            <div class="up-file-text"><b>Untagged MP3</b><small>No voice tags. MP3, 320 kbps, stereo. Max 150 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
           <div class="up-file" data-kind="wav">
             <span class="up-file-icon" aria-hidden="true">WAV</span>
-            <div class="up-file-text"><b>Untagged WAV</b><small>24-bit preferred. Max 150 MB.</small></div>
+            <div class="up-file-text"><b>Untagged WAV</b><small>No voice tags. 16 to 32-bit, 44.1 or 48 kHz, stereo. Max 300 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
           <div class="up-file" data-kind="stems">
             <span class="up-file-icon" aria-hidden="true">ZIP</span>
-            <div class="up-file-text"><b>Track stems</b><small>One ZIP or RAR with every track. Max 150 MB.</small></div>
+            <div class="up-file-text"><b>Track stems</b><small>One ZIP with every track, WAV 24-bit or higher. Max 300 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
           <div class="up-file" data-kind="project">
             <span class="up-file-icon" aria-hidden="true">FLP</span>
-            <div class="up-file-text"><b>Project file</b><small>FL Studio project as FLP or ZIP with samples. Max 150 MB.</small></div>
+            <div class="up-file-text"><b>Project file</b><small>One ZIP with the FL Studio project and its samples. Max 300 MB.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
         </div>
@@ -293,7 +293,7 @@
 <script src="js/main.js?v=42"></script>
 <script src="js/header-menu.js?v=3"></script>
 <script src="js/auth.js?v=39"></script>
-<script src="js/upload.js?v=2"></script>
+<script src="js/upload.js?v=3"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

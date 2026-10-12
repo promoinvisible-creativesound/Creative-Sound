@@ -16,13 +16,16 @@
   const MB = 1024 * 1024;
 
   // Mirrors api/_lib/producer.js (the server re-checks everything).
+  // Same rules as BeatStars: WAV up to 300 MB, MP3 up to 150 MB, stems as
+  // a ZIP; audio 1 s to 10 min, 44.1 or 48 kHz, stereo, WAV 16-32 bit,
+  // MP3 at least 320 kbps.
   const KINDS = {
-    artwork: { exts: ['jpg', 'jpeg', 'png', 'webp'], max: 10 * MB },
-    preview: { exts: ['mp3'], max: 30 * MB },
-    mp3: { exts: ['mp3'], max: 50 * MB },
-    wav: { exts: ['wav'], max: 150 * MB },
-    stems: { exts: ['zip', 'rar', '7z'], max: 150 * MB },
-    project: { exts: ['zip', 'rar', '7z', 'flp'], max: 150 * MB },
+    artwork: { exts: ['jpg', 'jpeg', 'png'], max: 10 * MB },
+    preview: { exts: ['mp3'], max: 150 * MB, audio: 'mp3' },
+    mp3: { exts: ['mp3'], max: 150 * MB, audio: 'mp3' },
+    wav: { exts: ['wav'], max: 300 * MB, audio: 'wav' },
+    stems: { exts: ['zip'], max: 300 * MB },
+    project: { exts: ['zip'], max: 300 * MB },
   };
   const TIER_NEEDS = { mp3: ['mp3'], wav: ['mp3', 'wav'], trackout: ['mp3', 'wav', 'stems'], project: ['mp3', 'wav', 'stems', 'project'] };
   const FILE_NAMES = { mp3: 'untagged MP3', wav: 'WAV', stems: 'stems', project: 'project file' };
@@ -122,7 +125,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not start the upload.');
       submissionId = data.submissionId;
-      return data.uploadUrl;
+      return data;
     };
     const p = linkQueue.then(run);
     linkQueue = p.catch(() => {});
@@ -139,6 +142,92 @@
     xhr.send(file);
   });
 
+  /* ----------------------------- Audio checks ----------------------------- */
+  // Read the file's own header before uploading, so a wrong export is
+  // caught in a second instead of after a long upload.
+  const BR_V1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
+  const BR_V2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+  const SRS = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+  const bytesOf = async (file, n) => new Uint8Array(await file.slice(0, Math.min(file.size, n)).arrayBuffer());
+  const str = (b, i, n) => String.fromCharCode(...b.subarray(i, i + n));
+  const u32 = (b, i) => (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0;
+  const u16 = (b, i) => b[i] | (b[i + 1] << 8);
+  const u32be = (b, i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
+
+  async function wavInfo(file) {
+    const b = await bytesOf(file, 65536);
+    if (str(b, 0, 4) !== 'RIFF' || str(b, 8, 4) !== 'WAVE') return { ok: false, error: "This isn't a valid WAV file." };
+    let off = 12; let fmt = null; let data = null;
+    while (off + 8 <= b.length) {
+      const id = str(b, off, 4); const len = u32(b, off + 4);
+      if (id === 'fmt ') fmt = { format: u16(b, off + 8), channels: u16(b, off + 10), sampleRate: u32(b, off + 12), byteRate: u32(b, off + 16), bits: u16(b, off + 22) };
+      if (id === 'data') { data = len; break; }
+      off += 8 + len + (len % 2);
+    }
+    if (!fmt) return { ok: false, error: "This WAV has no format header." };
+    const bytes = data && data !== 0xffffffff ? data : file.size - off - 8;
+    return { ok: true, ...fmt, duration: fmt.byteRate ? Math.round(bytes / fmt.byteRate) : null };
+  }
+  async function mp3Info(file) {
+    const b = await bytesOf(file, 262144);
+    let p = str(b, 0, 3) === 'ID3' ? 10 + (((b[6] & 0x7f) << 21) | ((b[7] & 0x7f) << 14) | ((b[8] & 0x7f) << 7) | (b[9] & 0x7f)) : 0;
+    const start = p;
+    for (; p + 4 <= b.length; p++) {
+      if (b[p] !== 0xff || (b[p + 1] & 0xe0) !== 0xe0) continue;
+      const ver = (b[p + 1] >> 3) & 3; const layer = (b[p + 1] >> 1) & 3; const bri = b[p + 2] >> 4; const sri = (b[p + 2] >> 2) & 3;
+      if (ver === 1 || layer !== 1 || bri === 0 || bri === 15 || sri === 3) continue;
+      const mono = (b[p + 3] >> 6) === 3; const sampleRate = SRS[ver][sri]; const frameKbps = (ver === 3 ? BR_V1 : BR_V2)[bri];
+      const xo = p + 4 + (ver === 3 ? (mono ? 17 : 32) : (mono ? 9 : 17));
+      const tag = str(b, xo, 4);
+      let duration = null; let kbps = frameKbps;
+      if ((tag === 'Xing' || tag === 'Info') && xo + 12 <= b.length && (u32be(b, xo + 4) & 1)) {
+        duration = (u32be(b, xo + 8) * (ver === 3 ? 1152 : 576)) / sampleRate;
+        if (tag === 'Xing' && duration) kbps = Math.round(((file.size - start) * 8) / duration / 1000);
+      }
+      if (duration == null) duration = ((file.size - start) * 8) / (frameKbps * 1000);
+      return { ok: true, kbps, sampleRate, channels: mono ? 1 : 2, duration: Math.round(duration) };
+    }
+    return { ok: false, error: "This isn't a valid MP3 file." };
+  }
+  async function audioProblem(kind, file) {
+    const type = KINDS[kind].audio;
+    if (!type) return null;
+    const i = type === 'wav' ? await wavInfo(file) : await mp3Info(file);
+    if (!i.ok) return i.error;
+    const len = i.duration != null ? `${Math.floor(i.duration / 60)}:${String(i.duration % 60).padStart(2, '0')}` : '';
+    if (i.duration != null && (i.duration < 1 || i.duration > 600)) return `Must be 1 second to 10 minutes long (this is ${len}).`;
+    if (i.sampleRate < 44100 || i.sampleRate > 48000) return `Export at 44.1 or 48 kHz (this is ${(i.sampleRate / 1000).toFixed(1)} kHz).`;
+    if (i.channels < 2) return 'Export in stereo (this file is mono).';
+    if (type === 'wav' && (i.bits < 16 || i.bits > 32)) return `Export at 16 to 32-bit (this is ${i.bits}-bit).`;
+    if (type === 'mp3' && i.kbps < 320) return `Export at 320 kbps (this is ${i.kbps} kbps).`;
+    return null;
+  }
+
+  // Files over 150 MB go up in 4 MB pieces through our server.
+  async function sendChunks(kind, file, chunkSize, onProgress) {
+    let session = '';
+    for (let off = 0; off < file.size; off += chunkSize) {
+      const piece = file.slice(off, Math.min(file.size, off + chunkSize));
+      let tries = 0;
+      for (;;) {
+        try {
+          const res = await fetch(`/api/producer/chunk?submissionId=${submissionId}&kind=${kind}&offset=${off}&session=${encodeURIComponent(session)}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: piece,
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'Part of the upload failed.');
+          session = data.session;
+          break;
+        } catch (err) {
+          tries += 1;
+          if (tries >= 3) throw err;
+          await new Promise((r) => setTimeout(r, 1000 * tries));
+        }
+      }
+      onProgress(Math.min(1, (off + piece.size) / file.size));
+    }
+  }
+
   async function upload(row, file) {
     const kind = row.dataset.kind;
     const spec = KINDS[kind];
@@ -146,14 +235,18 @@
     if (!spec.exts.includes(extOf(file.name))) { paintIdle(row, `Use ${spec.exts.map((e) => `.${e}`).join(' / ')}`); return; }
     if (file.size > spec.max) { paintIdle(row, `Max ${Math.round(spec.max / MB)} MB`); return; }
 
+    const problem = await audioProblem(kind, file).catch(() => null);
+    if (problem) { paintIdle(row, problem); return; }
+
     busy.add(kind);
     delete done[kind];
     paintBusy(row, file.name);
     if (kind === 'artwork') showArt(file);
     refresh();
     try {
-      const url = await requestLink(kind, file);
-      await sendFile(url, file, (p) => setProgress(row, p));
+      const link = await requestLink(kind, file);
+      if (link.chunked) await sendChunks(kind, file, link.chunkSize, (p) => setProgress(row, p));
+      else await sendFile(link.uploadUrl, file, (p) => setProgress(row, p));
       done[kind] = { name: file.name, size: file.size };
       paintDone(row, file);
     } catch (err) {

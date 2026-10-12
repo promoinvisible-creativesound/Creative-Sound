@@ -16,14 +16,57 @@
   const list = $('#rv-list');
   let status = 'pending';
 
+  const ORDER = ['artwork', 'preview', 'mp3', 'wav', 'stems', 'project'];
+  const HINTS = {
+    preview: 'Should have the voice tag.',
+    mp3: 'Must be untagged.',
+    wav: 'Must be untagged. 24-bit preferred.',
+    stems: 'Every track of the beat, labelled.',
+    project: 'Project file plus the samples it uses.',
+  };
+  const ICON_DL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>';
+  const playerHtml = (src, label) => `
+    <div class="rv-player" data-src="${esc(src)}">
+      <button type="button" class="rv-play" aria-label="Play ${esc(label)}">
+        <svg class="rv-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+        <svg class="rv-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+      </button>
+      <span class="rv-time" data-cur>0:00</span>
+      <div class="rv-bar" role="slider" tabindex="0" aria-label="Seek ${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="rv-bar-fill"></span><span class="rv-bar-knob"></span>
+      </div>
+      <span class="rv-time" data-dur>–:––</span>
+    </div>`;
+
+  // One row per uploaded file: what it is, a way to check it right here
+  // (player, image size, WAV format, ZIP contents) and a download link.
+  function fileRow(s, kind) {
+    const f = (s.files || {})[kind];
+    const link = s.links && s.links[kind];
+    const label = FILE_LABELS[kind];
+    if (!f) return `<div class="rv-frow is-missing"><div class="rv-fhead"><b>${label}</b><span class="rv-fmeta">Not uploaded</span></div></div>`;
+    const dl = link ? `<a href="${esc(link)}" class="rv-dl" target="_blank" rel="noopener" download>${ICON_DL}Download</a>` : '';
+    let check = '';
+    if (!link) check = '<p class="rv-fnote is-bad">Link unavailable. Check Dropbox.</p>';
+    else if (kind === 'artwork') check = `<div class="rv-art"><a href="${esc(link)}" target="_blank" rel="noopener"><img src="${esc(link)}" alt="Cover art" data-art-check></a><span class="rv-fnote" data-art-info>Checking size…</span></div>`;
+    else if (['preview', 'mp3', 'wav'].includes(kind)) check = `${playerHtml(link, label)}<p class="rv-fnote" data-inspect="${kind}">Reading format…</p>`;
+    else check = `<button type="button" class="rv-peek" data-peek="${kind}">Show what's inside</button><div class="rv-zip" hidden></div>`;
+    return `
+      <div class="rv-frow" data-kind="${kind}">
+        <div class="rv-fhead">
+          <b>${label}</b>
+          <span class="rv-fmeta">${esc(f.name)} · ${size(f.size || 0)}</span>
+          ${dl}
+        </div>
+        ${HINTS[kind] ? `<p class="rv-fhint">${HINTS[kind]}</p>` : ''}
+        ${check}
+      </div>`;
+  }
+
   function card(s) {
-    const files = Object.entries(s.files || {}).map(([k, f]) => {
-      const link = s.links && s.links[k];
-      const label = `${FILE_LABELS[k] || k} <small>${esc(f.name)} · ${size(f.size || 0)}</small>`;
-      return link ? `<a href="${esc(link)}" target="_blank" rel="noopener" class="rv-file">${label}</a>` : `<span class="rv-file is-off">${label}</span>`;
-    }).join('');
     const prices = Object.entries(s.prices || {}).map(([t, c]) => `<span>${TIER_LABELS[t] || t}<b>€${(c / 100).toFixed(2)}</b></span>`).join('');
     const tags = [...(s.tags || []).map((t) => `#${t}`), ...(s.typeBeat || []).map((t) => `${t} type beat`)];
+    const kinds = ORDER.filter((k) => (s.files || {})[k] || ['artwork', 'preview'].includes(k));
     return `
       <article class="up-card rv-card" data-id="${s.id}">
         <div class="rv-top">
@@ -34,24 +77,13 @@
             <p class="rv-by">${esc(s.producerName)} · <a href="mailto:${esc(s.email)}">${esc(s.email)}</a></p>
             <div class="up-preview-chips rv-chips">${[`${s.bpm} BPM`, s.key, s.genre, s.mood].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('')}</div>
             ${tags.length ? `<p class="rv-tags">${tags.map(esc).join(' · ')}</p>` : ''}
-            ${s.links && s.links.preview ? `
-            <div class="rv-player" data-src="${esc(s.links.preview)}">
-              <button type="button" class="rv-play" aria-label="Play preview of ${esc(s.title)}">
-                <svg class="rv-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
-                <svg class="rv-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
-              </button>
-              <span class="rv-time" data-cur>0:00</span>
-              <div class="rv-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                <span class="rv-bar-fill"></span><span class="rv-bar-knob"></span>
-              </div>
-              <span class="rv-time" data-dur>–:––</span>
-            </div>` : ''}
+            <div class="rv-prices">${prices}</div>
           </div>
         </div>
         ${s.about ? `<p class="rv-about">${esc(s.about)}</p>` : ''}
-        <div class="rv-grid">
-          <div><h3>Licenses</h3><div class="rv-prices">${prices}</div></div>
-          <div><h3>Files</h3><div class="rv-files">${files}</div></div>
+        <div class="rv-files-wrap">
+          <h3>Files <span>${Object.keys(s.files || {}).length} uploaded</span></h3>
+          <div class="rv-files">${kinds.map((k) => fileRow(s, k)).join('')}</div>
         </div>
         ${s.status === 'pending' ? `
           <div class="rv-decide">
@@ -83,6 +115,7 @@
       $('#rv-n').textContent = data.pendingCount ? String(data.pendingCount) : '';
       list.innerHTML = data.submissions.length ? data.submissions.map(card).join('')
         : `<p class="pa-none">${status === 'pending' ? 'Nothing to review. All caught up.' : 'Nothing here yet.'}</p>`;
+      runChecks();
     } catch (err) {
       list.innerHTML = '';
       $('#rv-error').textContent = err.message;
@@ -131,6 +164,61 @@
       err.hidden = false;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
     }
+  });
+
+  /* ------------------------------- File checks ------------------------------ */
+  const fmtDur = (t) => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}`;
+  const note = (el, text, bad) => { el.textContent = text; el.classList.toggle('is-bad', !!bad); el.classList.toggle('is-ok', !bad); };
+  const inspect = (id, kind) => fetch(`/api/review/inspect?id=${id}&kind=${kind}`).then(async (r) => {
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'Could not read the file.');
+    return data;
+  });
+
+  function runChecks() {
+    // Cover: real pixel size, square and at least 1000 px.
+    list.querySelectorAll('img[data-art-check]').forEach((img) => {
+      const info = img.closest('.rv-art').querySelector('[data-art-info]');
+      const check = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const issues = [w !== h ? 'not square' : '', Math.min(w, h) < 1000 ? 'smaller than 1000 px' : ''].filter(Boolean);
+        note(info, `${w} × ${h} px${issues.length ? `: ${issues.join(', ')}` : ', looks good'}`, issues.length > 0);
+      };
+      if (img.complete && img.naturalWidth) check(); else img.addEventListener('load', check, { once: true });
+      img.addEventListener('error', () => note(info, 'Could not open the image.', true), { once: true });
+    });
+    // WAV: bit depth, sample rate, channels, length.
+    // Audio: format against BeatStars' rules (problems come from the server).
+    list.querySelectorAll('[data-inspect]').forEach((el) => {
+      const id = el.closest('.rv-card').dataset.id;
+      inspect(id, el.dataset.inspect).then((d) => {
+        if (!d.ok) { note(el, d.error, true); return; }
+        const quality = d.kind === 'wav' ? (d.float ? '32-bit float' : `${d.bits}-bit`) : `${d.kbps} kbps${d.vbr ? ' VBR' : ''}`;
+        const issues = d.problems || [];
+        note(el, `${quality} · ${(d.sampleRate / 1000).toFixed(1)} kHz · ${d.channels === 1 ? 'mono' : d.channels === 2 ? 'stereo' : `${d.channels} channels`}${d.duration ? ` · ${fmtDur(d.duration)}` : ''}${issues.length ? ` · ${issues.join(', ')}` : ' · OK for BeatStars rules'}`, issues.length > 0);
+      }).catch((err) => note(el, err.message, true));
+    });
+  }
+
+  // ZIP / RAR: list what's inside on demand.
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-peek]');
+    if (!btn) return;
+    const box = btn.nextElementSibling;
+    if (!box.hidden) { box.hidden = true; btn.textContent = "Show what's inside"; return; }
+    box.hidden = false;
+    btn.textContent = 'Hide contents';
+    if (box.dataset.loaded) return;
+    box.innerHTML = '<p class="rv-fnote">Reading the archive…</p>';
+    inspect(btn.closest('.rv-card').dataset.id, btn.dataset.peek).then((d) => {
+      box.dataset.loaded = '1';
+      if (d.kind === 'other') { box.innerHTML = `<p class="rv-fnote">${esc(d.note || 'This file type can only be checked after downloading.')}</p>`; return; }
+      if (!d.ok) { box.innerHTML = `<p class="rv-fnote is-bad">${esc(d.error)}</p>`; return; }
+      box.innerHTML = `
+        <p class="rv-fnote ${d.audio ? 'is-ok' : 'is-bad'}">${d.files} file${d.files === 1 ? '' : 's'}, ${d.audio} audio${d.audio ? '' : ': no audio files found'}${d.truncated ? ' (showing the first ones)' : ''}</p>
+        <ul class="rv-zip-list">${d.entries.map((x) => `<li><span>${esc(x.name.replace(/\\/g, '/'))}</span><small>${size(x.size)}</small></li>`).join('')}</ul>`;
+    }).catch((err) => { box.innerHTML = `<p class="rv-fnote is-bad">${esc(err.message)}</p>`; });
   });
 
   /* ------------------------------ Preview player ---------------------------- */

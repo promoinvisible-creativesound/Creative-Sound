@@ -58,6 +58,14 @@
     {
       "source": "/api/review/decide",
       "destination": "/api/tickets?action=review-decide"
+    },
+    {
+      "source": "/api/review/inspect",
+      "destination": "/api/tickets?action=review-inspect"
+    },
+    {
+      "source": "/api/producer/chunk",
+      "destination": "/api/tickets?action=producer-chunk"
     }
   ]
 }

@@ -14,18 +14,25 @@ const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { roleFor } = require('./account');
 const dropbox = require('./dropbox');
+const inspect = require('./inspect');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MB = 1024 * 1024;
-// What a producer can upload, and the license tier each file unlocks.
+// What a producer can upload, matching BeatStars' upload rules: WAV up to
+// 300 MB, MP3 (tagged or untagged) up to 150 MB, stems as a ZIP. The
+// project file (not a BeatStars slot) is a ZIP too. Audio is also checked
+// for length, sample rate, channels, bit depth / bitrate (see inspect.js).
 const FILE_KINDS = {
-  artwork: { exts: ['jpg', 'jpeg', 'png', 'webp'], max: 10 * MB, required: true },
-  preview: { exts: ['mp3'], max: 30 * MB, required: true },
-  mp3: { exts: ['mp3'], max: 50 * MB },
-  wav: { exts: ['wav'], max: dropbox.MAX_UPLOAD_BYTES },
-  stems: { exts: ['zip', 'rar', '7z'], max: dropbox.MAX_UPLOAD_BYTES },
-  project: { exts: ['zip', 'rar', '7z', 'flp'], max: dropbox.MAX_UPLOAD_BYTES },
+  artwork: { exts: ['jpg', 'jpeg', 'png'], max: 10 * MB, required: true },
+  preview: { exts: ['mp3'], max: 150 * MB, required: true, audio: 'mp3' },
+  mp3: { exts: ['mp3'], max: 150 * MB, audio: 'mp3' },
+  wav: { exts: ['wav'], max: 300 * MB, audio: 'wav' },
+  stems: { exts: ['zip'], max: 300 * MB },
+  project: { exts: ['zip'], max: 300 * MB },
 };
+// Bigger than a direct upload link allows: sent in pieces through us.
+const CHUNK = 4 * 1024 * 1024;
+const needsChunks = (size) => size > dropbox.MAX_UPLOAD_BYTES;
 // A tier can only be priced if the files it delivers are there.
 const TIER_NEEDS = { mp3: ['mp3'], wav: ['mp3', 'wav'], trackout: ['mp3', 'wav', 'stems'], project: ['mp3', 'wav', 'stems', 'project'] };
 const MIN_PRICE = 500; // cents
@@ -124,14 +131,70 @@ async function handleFile(req, res) {
 
     // /submissions/<id>/<kind>.<ext>: one file per kind, replaced on re-upload.
     const path = `/submissions/${sub.id}/${kind}.${ext(name)}`;
-    const uploadUrl = await dropbox.uploadLink(path);
     const files = { ...(sub.files || {}), [kind]: { path, name, size } };
     await sql`UPDATE beat_submissions SET files = ${JSON.stringify(files)}::jsonb, updated_at = now() WHERE id = ${sub.id}`;
-    res.status(200).json({ submissionId: sub.id, uploadUrl });
+    if (needsChunks(size)) {
+      res.status(200).json({ submissionId: sub.id, chunked: true, chunkSize: CHUNK });
+      return;
+    }
+    res.status(200).json({ submissionId: sub.id, uploadUrl: await dropbox.uploadLink(path) });
   } catch (err) {
     console.error('producer file error:', err);
     res.status(500).json({ error: 'Could not start the upload, please try again.' });
   }
+}
+
+// POST raw bytes ?submissionId=&kind=&offset=&session= -> one 4 MB piece of
+// a file over 150 MB (registered first through handleFile). The first
+// piece opens a Dropbox upload session, the last one commits the file.
+async function handleChunk(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  try {
+    const session = await producerSession(req, res);
+    if (!session) return;
+    const q = req.query || {};
+    const sub = await ownDraft(session, Number(q.submissionId));
+    const kind = String(q.kind || '');
+    const f = sub && sub.files && sub.files[kind];
+    if (!f || !needsChunks(f.size)) { res.status(404).json({ error: 'This upload has expired. Please upload the file again.' }); return; }
+    const chunk = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || []);
+    const offset = Number(q.offset);
+    if (!Number.isInteger(offset) || offset < 0 || offset + chunk.length > f.size || !chunk.length || chunk.length > CHUNK) {
+      res.status(400).json({ error: 'Upload went out of sync. Please upload the file again.' });
+      return;
+    }
+    const last = offset + chunk.length === f.size;
+    let id = String(q.session || '');
+    if (offset === 0) {
+      id = await dropbox.sessionStart(last ? Buffer.alloc(0) : chunk);
+      if (last) await dropbox.sessionFinish(id, 0, chunk, f.path);
+    } else if (!id) {
+      res.status(400).json({ error: 'Upload went out of sync. Please upload the file again.' });
+      return;
+    } else if (last) {
+      await dropbox.sessionFinish(id, offset, chunk, f.path);
+    } else {
+      await dropbox.sessionAppend(id, offset, chunk);
+    }
+    res.status(200).json({ session: id, received: offset + chunk.length, done: last });
+  } catch (err) {
+    console.error('producer chunk error:', err);
+    res.status(500).json({ error: 'Part of the upload failed. Please try again.' });
+  }
+}
+
+// Checks uploaded audio against BeatStars' rules; returns an error or null.
+async function audioError(files) {
+  const NAMES = { preview: 'preview MP3', mp3: 'untagged MP3', wav: 'WAV' };
+  for (const [kind, spec] of Object.entries(FILE_KINDS)) {
+    const f = files[kind];
+    if (!spec.audio || !f) continue;
+    const read = (start, end) => dropbox.readRange(f.path, start, end);
+    const info = spec.audio === 'wav' ? await inspect.wavInfo(read, f.size) : await inspect.mp3Info(read, f.size);
+    const problems = inspect.audioProblems(spec.audio, info);
+    if (problems.length) return `The ${NAMES[kind]} ${problems.join(', ')}.`;
+  }
+  return null;
 }
 
 // Validates the details form; returns { data } or { error }.
@@ -195,6 +258,8 @@ async function handleSubmit(req, res) {
       if (size == null) { res.status(400).json({ error: `The ${kind} file didn't finish uploading. Please upload it again.` }); return; }
       files[kind] = { ...f, size };
     }
+    const badAudio = await audioError(files);
+    if (badAudio) { res.status(400).json({ error: badAudio }); return; }
 
     await sql`UPDATE users SET producer_name = ${data.producerName} WHERE id = ${session.uid}`;
     await sql`
@@ -359,7 +424,39 @@ async function handleAdminReview(req, res) {
   }
 }
 
+// GET ?id=&kind= -> what's inside one uploaded file: a WAV's format, or
+// the list of files in a ZIP. Reads only the bytes it needs.
+async function handleAdminInspect(req, res) {
+  if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const [sub] = await sql`SELECT files FROM beat_submissions WHERE id = ${Number(req.query.id)}`;
+    const f = sub && sub.files && sub.files[String(req.query.kind || '')];
+    if (!f) { res.status(404).json({ error: 'File not found.' }); return; }
+    const size = await dropbox.fileSize(f.path);
+    if (size == null) { res.status(404).json({ error: 'The file is no longer in Dropbox.' }); return; }
+    const read = (start, end) => dropbox.readRange(f.path, start, end);
+    const type = ext(f.name);
+    let info;
+    if (type === 'wav' || type === 'mp3') {
+      const data = type === 'wav' ? await inspect.wavInfo(read, size) : await inspect.mp3Info(read, size);
+      info = { kind: type, ...data, problems: inspect.audioProblems(type, data) };
+    } else if (type === 'zip') {
+      info = { kind: 'zip', ...(await inspect.zipInfo(read, size)) };
+    } else {
+      info = { kind: 'other', ok: true, note: 'This file type can only be checked after downloading.' };
+    }
+    res.status(200).json({ size, ...info });
+  } catch (err) {
+    console.error('admin inspect error:', err);
+    res.status(500).json({ error: 'Could not read the file.' });
+  }
+}
+
 module.exports = {
   FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
-  handleFile, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview,
+  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect,
 };

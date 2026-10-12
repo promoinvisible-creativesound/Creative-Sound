@@ -76,4 +76,49 @@ async function readLink(path) {
   return data.link;
 }
 
-module.exports = { MAX_UPLOAD_BYTES, configured, uploadLink, fileSize, readLink };
+// Bytes [start, end] (inclusive) of a file, for reading headers and the
+// ZIP directory without downloading whole uploads.
+async function readRange(path, start, end) {
+  const res = await fetch('https://content.dropboxapi.com/2/files/download', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${await accessToken()}`,
+      'Dropbox-API-Arg': JSON.stringify({ path }),
+      Range: `bytes=${start}-${end}`,
+    },
+  });
+  if (!res.ok && res.status !== 206) throw new Error(`Dropbox download ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+// Upload sessions for files over the 150 MB link limit: the browser sends
+// 4 MB pieces to our function, which forwards them here.
+async function content(endpoint, arg, body) {
+  const res = await fetch(`https://content.dropboxapi.com/2/${endpoint}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${await accessToken()}`,
+      'Dropbox-API-Arg': JSON.stringify(arg),
+      'Content-Type': 'application/octet-stream',
+    },
+    body,
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    const err = new Error(`Dropbox ${endpoint} ${res.status}: ${text.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
+  }
+  try { return JSON.parse(text); } catch (e) { return {}; }
+}
+const sessionStart = async (chunk) => (await content('files/upload_session/start', { close: false }, chunk)).session_id;
+const sessionAppend = (id, offset, chunk) => content('files/upload_session/append_v2', { cursor: { session_id: id, offset }, close: false }, chunk);
+const sessionFinish = (id, offset, chunk, path) => content('files/upload_session/finish', {
+  cursor: { session_id: id, offset },
+  commit: { path, mode: 'overwrite', autorename: false, mute: true },
+}, chunk);
+
+module.exports = {
+  MAX_UPLOAD_BYTES, configured, uploadLink, fileSize, readLink, readRange,
+  sessionStart, sessionAppend, sessionFinish,
+};

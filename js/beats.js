@@ -224,7 +224,7 @@
   // highlight that glides between options, options settle in with a short
   // stagger. Keyboard: arrows, Home/End, Enter/Space, Escape, Tab.
   const openDropdowns = new Set();
-  const makeDropdown = ({ key, label, options, value, onChange, alwaysSet }) => {
+  const makeDropdown = ({ key, label, options, value, onChange, alwaysSet, custom }) => {
     const wrap = document.createElement('div');
     wrap.className = 'bt-dd';
     wrap.dataset.key = key;
@@ -243,6 +243,17 @@
             <span class="bt-dd-text">${esc(o.label)}</span>
             ${o.count != null ? `<span class="bt-dd-count">${o.count}</span>` : ''}
           </div>`).join('')}
+        ${custom ? `
+        <form class="bt-dd-custom" role="group" aria-label="${esc(custom.title)}" novalidate>
+          <span class="bt-dd-custom-title">${esc(custom.title)}</span>
+          <div class="bt-dd-custom-row">
+            <input type="number" inputmode="numeric" name="lo" min="${custom.min}" max="${custom.max}" placeholder="Min" aria-label="Minimum ${esc(label)}">
+            <span class="bt-dd-custom-sep" aria-hidden="true">–</span>
+            <input type="number" inputmode="numeric" name="hi" min="${custom.min}" max="${custom.max}" placeholder="Max" aria-label="Maximum ${esc(label)}">
+            <button type="submit" class="bt-dd-custom-go">Apply</button>
+          </div>
+          <span class="bt-dd-custom-hint">Same number twice for an exact ${esc(label)}</span>
+        </form>` : ''}
       </div>`;
     const btn = $('.bt-dd-btn', wrap);
     const panel = $('.bt-dd-panel', wrap);
@@ -252,8 +263,8 @@
     let active = -1;
 
     const paintValue = () => {
-      const o = options.find((x) => x.value === current) || options[0];
-      $('.bt-dd-value', wrap).textContent = o.short || o.label;
+      const o = options.find((x) => x.value === current);
+      $('.bt-dd-value', wrap).textContent = o ? (o.short || o.label) : custom.format(current);
       wrap.classList.toggle('is-set', !alwaysSet && current !== options[0].value);
       opts.forEach((el) => el.setAttribute('aria-selected', String(el.dataset.value === current)));
     };
@@ -282,6 +293,12 @@
       btn.setAttribute('aria-expanded', 'true');
       const sel = Math.max(0, opts.findIndex((el) => el.dataset.value === current));
       setActive(sel, true);
+      if (form) {
+        const isCustom = !options.some((x) => x.value === current);
+        const [lo, hi] = isCustom ? current.split('-') : ['', ''];
+        form.lo.value = lo && lo !== String(custom.min) ? lo : '';
+        form.hi.value = hi && hi !== String(custom.max) ? hi : '';
+      }
       panel.focus({ preventScroll: true });
       openDropdowns.add(close);
     };
@@ -298,6 +315,23 @@
       close();
     };
 
+    // Typed range: either end may be left empty; numbers are clamped and
+    // swapped if given the wrong way round.
+    const form = $('.bt-dd-custom', wrap);
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const num = (v) => (v.trim() === '' ? null : Math.round(Math.min(custom.max, Math.max(custom.min, Number(v)))));
+        let lo = num(form.lo.value);
+        let hi = num(form.hi.value);
+        if (lo == null && hi == null) { form.lo.focus(); return; }
+        if (lo != null && hi != null && lo > hi) [lo, hi] = [hi, lo];
+        const v = `${lo ?? custom.min}-${hi ?? custom.max}`;
+        if (v !== current) { current = v; paintValue(); onChange(v); }
+        close();
+      });
+    }
+
     btn.addEventListener('click', () => (wrap.classList.contains('is-open') ? close() : open()));
     btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } });
     panel.addEventListener('pointermove', (e) => {
@@ -306,6 +340,7 @@
     });
     panel.addEventListener('click', (e) => { const el = e.target.closest('.bt-dd-opt'); if (el) choose(opts.indexOf(el)); });
     panel.addEventListener('keydown', (e) => {
+      if (form && form.contains(e.target)) { if (e.key === 'Escape') { e.preventDefault(); close(); } return; }
       if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
       else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
@@ -496,7 +531,18 @@
     };
     add('genre', 'Genre', [{ value: '', label: 'Any genre', short: 'Any' }, ...countOptions('genre', uniq('genre'))]);
     add('mood', 'Mood', [{ value: '', label: 'Any mood', short: 'Any' }, ...countOptions('mood', uniq('mood'))]);
-    add('bpm', 'BPM', BPM_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => inBpm(b, r.value)).length } : r)));
+    add('bpm', 'BPM', BPM_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => inBpm(b, r.value)).length } : r)), {
+      custom: {
+        title: 'Type a range', min: 40, max: 250,
+        format: (v) => {
+          const [lo, hi] = v.split('-').map(Number);
+          if (lo === hi) return String(lo);
+          if (lo <= 40) return `≤ ${hi}`;
+          if (hi >= 250) return `${lo}+`;
+          return `${lo}–${hi}`;
+        },
+      },
+    });
     add('key', 'Key', [{ value: '', label: 'Any key', short: 'Any' }, ...countOptions('key', uniq('key'))]);
     add('added', 'Added', ADDED_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => addedWithin(b, r.value)).length } : r)));
     add('sort', 'Sort', [

@@ -224,6 +224,15 @@
     cluster.className = 'hm-cluster';
     if (data && data.email) {
       document.documentElement.classList.add('is-signed-in');
+      // Producers get a one-click Upload button ahead of the icons.
+      if (data.role === 'producer' && !location.pathname.endsWith('/upload-beat.html')) {
+        const up = document.createElement('a');
+        up.href = 'upload-beat.html';
+        up.className = 'hm-upload';
+        up.setAttribute('aria-label', 'Upload a track');
+        up.innerHTML = `${icon('upload', 'hm-upload-ic')}<span>Upload</span>`;
+        cluster.append(up);
+      }
       cluster.append(savedMenu(data).wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
     } else {
       const cart = cartMenu();

@@ -1283,3 +1283,40 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-top-head{ justify-content:center; padding:2px 0 14px; }
   .bt-top-titles{ justify-content:center; }
 }
+
+/* ============================ Cards: motion v2 ============================
+   No horizon line on generated covers. Entrance: the card rises while its
+   cover wipes up from the bottom and settles from a light zoom. Hover (fine
+   pointers): light runs round the border in the beat's colour, the cover
+   drifts in and the ring slides, with a coloured glow under the card. */
+.bt-art-gen::before{ display:none; }
+
+@keyframes btCardIn{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:none; } }
+@keyframes btArtIn{ from{ clip-path:inset(100% 0 0 0); transform:scale(1.18); } to{ clip-path:inset(0); transform:none; } }
+.bt-card.bt-in{ animation:btCardIn 420ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 55ms); }
+.bt-card.bt-in .bt-art{ animation:btArtIn 700ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 55ms + 60ms); }
+
+.bt-art-gen{ transition:transform 700ms var(--ease-out); }
+.bt-art-gen::after{ transition:transform 900ms var(--ease-out); }
+
+.bt-card::before{
+  content:''; position:absolute; inset:0; z-index:3; border-radius:inherit; padding:1px; pointer-events:none;
+  background:conic-gradient(from var(--bt-angle), transparent 0deg, transparent 250deg, rgba(var(--fx), 0.5) 310deg, rgba(var(--fx-soft), 1) 350deg, transparent 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity:0; transition:opacity 250ms ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .bt-card:hover::before{ opacity:1; animation:btBeam 2.4s linear infinite; }
+  .bt-card:hover{ box-shadow:0 26px 60px -28px rgba(var(--fx), 0.65); }
+  .bt-card:hover .bt-art-gen{ transform:scale(1.07); }
+  .bt-card:hover .bt-art-gen::after{ transform:translate(-8%, 6%) scale(1.08); }
+}
+.bt-grid[data-view="list"] .bt-card::before{ display:none; }
+
+@media (prefers-reduced-motion: reduce){
+  .bt-card.bt-in{ animation:btFade 200ms ease both; animation-delay:0ms; }
+  .bt-card.bt-in .bt-art{ animation:none; }
+  .bt-card:hover::before{ animation:none; }
+  .bt-card:hover .bt-art-gen, .bt-card:hover .bt-art-gen::after{ transform:none; }
+}

@@ -1,0 +1,82 @@
+/* =============================== Welcome / role ============================
+   Picked once after sign-up: producer, artist or just exploring. Three
+   radio cards; the chosen one lights up and its tick pops in. */
+.welcome-page{
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  max-width:1060px; margin:0 auto; padding:0 20px 90px;
+}
+.welcome-hero{ padding-bottom:10px; text-align:center; }
+.welcome-title{ font-family:var(--font-display); font-size:clamp(28px, 4.4vw, 42px); margin:0; }
+.welcome-lede{ margin:12px auto 0; max-width:520px; }
+
+.role-form{ margin-top:34px; }
+.role-grid{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:18px; margin:0; padding:0; border:0; }
+
+.role-card{
+  position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  padding:26px 22px 24px; border-radius:20px; cursor:pointer; isolation:isolate; overflow:hidden;
+  border:1px solid var(--border-strong);
+  background:radial-gradient(120% 90% at 0% 0%, rgba(232,134,44,0.06), transparent 60%), var(--panel);
+  transition:border-color 200ms ease, transform 200ms var(--ease-out), box-shadow 200ms ease;
+  animation:roleIn 520ms var(--ease-out) both; animation-delay:calc(var(--k, 0) * 70ms + 80ms);
+}
+@keyframes roleIn{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:none; } }
+/* Glow that fades in behind the chosen card */
+.role-card::before{
+  content:''; position:absolute; inset:0; z-index:-1; opacity:0;
+  background:radial-gradient(90% 70% at 50% 0%, rgba(232,134,44,0.22), transparent 70%);
+  transition:opacity 250ms ease;
+}
+.role-input{ position:absolute; opacity:0; pointer-events:none; }
+
+.role-icon{
+  width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); color:var(--text-secondary);
+  transition:color 200ms ease, border-color 200ms ease, background-color 200ms ease, transform 300ms var(--ease-out);
+}
+.role-icon svg{ width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.role-name{ margin-top:8px; font-family:var(--font-display); font-size:21px; font-weight:700; color:#fff; }
+.role-desc{ font-size:15px; line-height:1.5; color:var(--text-secondary); }
+.role-perks{ display:flex; flex-direction:column; gap:8px; margin-top:8px; padding-top:14px; width:100%; border-top:1px solid rgba(255,255,255,0.07); }
+.role-perks span{ position:relative; padding-left:16px; font-size:14px; line-height:1.45; color:var(--text-secondary); }
+.role-perks span::before{ content:''; position:absolute; left:2px; top:0.6em; width:5px; height:5px; border-radius:50%; background:var(--accent); }
+
+.role-check{
+  position:absolute; top:16px; right:16px; width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; background:var(--accent);
+  opacity:0; transform:scale(0.6); transition:opacity 150ms ease, transform 250ms var(--ease-out);
+}
+.role-check svg{ width:14px; height:14px; fill:none; stroke:#0a0a09; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+
+/* Chosen */
+.role-card:has(.role-input:checked){ border-color:var(--accent); box-shadow:0 30px 70px -36px rgba(232,134,44,0.7); }
+.role-card:has(.role-input:checked)::before{ opacity:1; }
+.role-card:has(.role-input:checked) .role-check{ opacity:1; transform:none; }
+.role-card:has(.role-input:checked) .role-icon{ color:#0a0a09; background:var(--accent); border-color:var(--accent); }
+.role-card:has(.role-input:focus-visible){ outline:2px solid var(--accent); outline-offset:3px; }
+.role-card:active{ transform:scale(0.985); }
+@media (hover:hover) and (pointer:fine){
+  .role-card:hover{ border-color:rgba(232,134,44,0.5); transform:translateY(-3px); }
+  .role-card:hover .role-icon{ transform:translateY(-2px); }
+}
+
+.role-form .auth-error{ max-width:520px; margin:22px auto 0; }
+.role-actions{ display:flex; justify-content:center; margin-top:28px; }
+.role-submit{ min-width:220px; height:52px; }
+.role-submit:disabled{ opacity:0.45; cursor:not-allowed; }
+
+@media (max-width:860px){
+  .role-grid{ grid-template-columns:1fr; gap:12px; max-width:520px; margin:0 auto; }
+  .role-card{ display:grid; grid-template-columns:auto 1fr; column-gap:16px; row-gap:4px; padding:18px 18px; align-items:center; }
+  .role-icon{ grid-row:1 / span 2; width:52px; height:52px; }
+  .role-name{ margin:0; font-size:18px; padding-right:30px; }
+  .role-desc{ grid-column:2; font-size:14px; }
+  .role-perks{ display:none; }
+  .role-check{ top:50%; margin-top:-13px; }
+  .role-submit{ width:100%; max-width:520px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .role-card{ animation:roleFade 200ms ease both; animation-delay:0ms; }
+  @keyframes roleFade{ from{ opacity:0; } to{ opacity:1; } }
+  .role-check, .role-card, .role-icon{ transform:none !important; }
+}

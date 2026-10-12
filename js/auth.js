@@ -23,6 +23,11 @@
     if (next && /^https:\/\/buy\.stripe\.com\//.test(next)) return next;
     return 'profile.html';
   }
+  // New accounts pick producer / artist / listener first; any pending
+  // checkout (?next=) rides along and is honoured once they've chosen.
+  function welcomeUrl() {
+    return `welcome.html${location.search}`;
+  }
 
   // Carry a pending checkout across to the other form if someone lands on
   // signup but already has an account (or vice versa), so switching between
@@ -76,7 +81,7 @@
           verifyStep.style.display = 'block';
           document.getElementById('verify-code').focus();
         } else {
-          window.location.href = getNextUrl();
+          window.location.href = welcomeUrl();
         }
       } catch (err) {
         showError(errorEl, err.message);
@@ -112,7 +117,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = getNextUrl();
+        window.location.href = welcomeUrl();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -172,7 +177,8 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = getNextUrl();
+        // Accounts from before account types existed choose one first.
+        window.location.href = data.role ? getNextUrl() : welcomeUrl();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -653,6 +659,58 @@
       } finally {
         btn.textContent = originalLabel;
         btn.disabled = false;
+      }
+    });
+  }
+
+  /* ------------------------------ Account type ------------------------------ */
+  // welcome.html: producer / artist / listener. Signed-out visitors go to
+  // sign in; an existing choice is preselected so this page also works for
+  // changing it.
+  const roleForm = document.getElementById('role-form');
+  if (roleForm) {
+    const errorEl = document.getElementById('role-error');
+    const submit = roleForm.querySelector('.role-submit');
+    const chosen = () => roleForm.querySelector('.role-input:checked');
+
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then((res) => {
+        if (res.status === 401) { window.location.href = `login.html${location.search}`; return null; }
+        return res.ok ? res.json() : null;
+      })
+      .then((data) => {
+        if (!data || !data.role) return;
+        const input = roleForm.querySelector(`.role-input[value="${data.role}"]`);
+        if (input) { input.checked = true; submit.disabled = false; }
+      })
+      .catch(() => {});
+
+    roleForm.addEventListener('change', () => { submit.disabled = !chosen(); hideError(errorEl); });
+
+    roleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = chosen();
+      if (!input) return;
+      hideError(errorEl);
+      const originalLabel = submit.textContent;
+      submit.textContent = 'Saving…';
+      submit.disabled = true;
+      try {
+        const res = await fetch('/api/account/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: input.value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        // A pending checkout wins; otherwise the account page, which opens
+        // on the producer area for producers.
+        const next = getNextUrl();
+        window.location.href = next !== 'profile.html' ? next : (data.role === 'producer' ? 'profile.html#producer' : 'profile.html');
+      } catch (err) {
+        showError(errorEl, err.message);
+        submit.textContent = originalLabel;
+        submit.disabled = false;
       }
     });
   }

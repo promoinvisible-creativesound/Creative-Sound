@@ -3,6 +3,7 @@ const { sql } = require('./_lib/db');
 const { getSession } = require('./_lib/auth');
 const { handleNotify } = require('./_lib/notify');
 const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = require('./_lib/beats');
+const { handleRole } = require('./_lib/account');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -25,6 +26,11 @@ module.exports = async (req, res) => {
   }
   if (req.query && req.query.action === 'beats-saved') {
     await handleBeatsSaved(req, res);
+    return;
+  }
+  // Account type (producer / artist / listener), see _lib/account.js.
+  if (req.query && req.query.action === 'account-role') {
+    await handleRole(req, res);
     return;
   }
 

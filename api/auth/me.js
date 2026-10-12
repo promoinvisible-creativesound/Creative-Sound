@@ -2,6 +2,7 @@ const { sql } = require('../_lib/db');
 const { getSession } = require('../_lib/auth');
 const { PACKS, downloadUrl, ensureTable } = require('../_lib/packs');
 const { beatsForAccount, savedForAccount } = require('../_lib/beats');
+const { roleFor } = require('../_lib/account');
 
 module.exports = async (req, res) => {
   const session = getSession(req);
@@ -52,8 +53,12 @@ module.exports = async (req, res) => {
       console.error('me beats error:', err);
     }
 
+    let role = null;
+    try { role = await roleFor(session.uid); } catch (err) { console.error('me role error:', err); }
+
     res.status(200).json({
       email: session.email,
+      role,
       beats,
       savedBeats,
       firstName: (user && user.first_name) || '',

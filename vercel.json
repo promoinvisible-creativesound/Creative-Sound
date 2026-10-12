@@ -34,6 +34,10 @@
     {
       "source": "/api/beats/saved",
       "destination": "/api/tickets?action=beats-saved"
+    },
+    {
+      "source": "/api/account/role",
+      "destination": "/api/tickets?action=account-role"
     }
   ]
 }

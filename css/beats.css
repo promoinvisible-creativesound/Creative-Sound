@@ -1417,3 +1417,18 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-dd-custom-go{ height:30px; padding:0 10px; font-size:12.5px; }
 }
 @media (max-width:560px){ .bt-dd-custom-row{ justify-content:center; } .bt-dd-custom-title{ text-align:center; } }
+
+/* ===================== Explore tiles: rounded rectangles ===================
+   Discs become 100 x 70 rounded rectangles; the selection line is drawn
+   round the rectangle (pathLength 100, same draw-in animation). */
+.bt-col-disc{ width:100px; height:70px; border-radius:18px; }
+.bt-col-ring{ inset:0; left:0; top:0; width:100%; height:100%; transform:none; overflow:visible; }
+.bt-col-ring circle{ display:none; }
+.bt-col-ring rect{ fill:none; stroke:rgba(255,255,255,0.14); stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.bt-col.is-active .bt-col-ring rect{ stroke:var(--accent); stroke-width:2.5; stroke-dasharray:100; stroke-dashoffset:100; animation:btRing 450ms var(--ease-out) forwards; filter:drop-shadow(0 0 6px rgba(232,134,44,0.7)); }
+.bt-col{ width:132px; }
+@media (max-width:560px){
+  .bt-col{ width:112px; }
+  .bt-col-disc{ width:84px; height:58px; border-radius:15px; }
+}
+@media (prefers-reduced-motion: reduce){ .bt-col.is-active .bt-col-ring rect{ animation:none; stroke-dashoffset:0; } }

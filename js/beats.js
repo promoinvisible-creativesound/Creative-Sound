@@ -454,7 +454,7 @@
       <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${empty ? 'disabled' : ''}>
         <span class="bt-col-disc">
           <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[c.icon]}</svg></span>
-          <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
+          <svg class="bt-col-ring" viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="98" height="68" rx="18" ry="18" pathLength="100"/></svg>
         </span>
         <span class="bt-col-label">${esc(c.label)}</span>
         <span class="bt-col-count">${items.length} track${items.length === 1 ? '' : 's'}</span>

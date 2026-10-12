@@ -1320,3 +1320,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-card:hover::before{ animation:none; }
   .bt-card:hover .bt-art-gen, .bt-card:hover .bt-art-gen::after{ transform:none; }
 }
+
+/* "This week" reads as a quiet subtitle to the title, not a badge */
+.bt-top-live{ font-size:15px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--text-secondary); }

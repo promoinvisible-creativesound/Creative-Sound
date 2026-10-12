@@ -133,3 +133,9 @@
 .hm-upload:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 @media (hover:hover) and (pointer:fine){ .hm-upload:hover{ background:rgba(232,134,44,0.22); border-color:var(--accent); } }
 @media (max-width:900px){ .hm-upload{ width:34px; padding:0; justify-content:center; margin-right:2px; } .hm-upload span{ display:none; } }
+
+/* Full name on up to two lines next to the role badge */
+.hm-who{ align-items:flex-start; }
+.hm-who-text b{ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3; }
+.hm-role{ margin-top:2px; }
+@media (max-width:900px){ .hm-panel{ top:98px; max-height:calc(100dvh - 110px); } }

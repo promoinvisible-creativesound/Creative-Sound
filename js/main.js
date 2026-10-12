@@ -416,12 +416,12 @@
   window.csMe = fetch('/api/auth/me')
     .then((res) => (res.ok ? res.json() : null))
     .catch(() => null);
-  // Private preview: new features show only to allowed accounts (and on a
-  // local preview). css/style.css hides their links until this class is set.
-  window.csPreview = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)
-    ? Promise.resolve(true)
-    : window.csMe.then((me) => !!(me && me.preview));
-  window.csPreview.then((on) => { if (on) document.documentElement.classList.add('is-preview'); });
+  // New features are open to everyone. If the server is put back in private
+  // preview (PREVIEW_LOCK=1) it answers preview:false for other accounts and
+  // css/style.css hides their links again.
+  document.documentElement.classList.add('is-preview');
+  window.csPreview = window.csMe.then((me) => !(me && me.preview === false));
+  window.csPreview.then((on) => { if (!on) document.documentElement.classList.remove('is-preview'); });
   const headerAccountLink = document.getElementById('header-account-link');
   if (headerAccountLink) {
     window.csMe

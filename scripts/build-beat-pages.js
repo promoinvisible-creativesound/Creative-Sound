@@ -13,7 +13,7 @@
 // Private preview: the store is only visible to the accounts in
 // ADMIN_EMAILS (see js/preview-gate.js). Pages stay noindex and out of the
 // sitemap until this is set to false for the public launch.
-const PREVIEW = true;
+const PREVIEW = false;
 const fs = require('fs');
 const path = require('path');
 

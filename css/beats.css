@@ -1223,3 +1223,22 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-feat-dots{ display:flex; }
   .bt-top-body .bt-feat-list{ display:none; }
 }
+
+/* Top tracks: slimmer block (top 3, no description) */
+.bt-top-frame{ padding:clamp(14px, 1.8vw, 20px); }
+.bt-top-head{ padding:2px 10px 12px; margin-bottom:14px; }
+.bt-top-title{ font-size:clamp(24px, 2.4vw, 30px); }
+.bt-top-live{ font-size:12px; }
+.bt-top-body{ grid-template-columns:minmax(0, 1fr) 280px; gap:14px; }
+.bt-top-body .bt-feat-spot{ grid-template-columns:200px 1fr; gap:24px; padding:16px; }
+.bt-feat-title{ font-size:clamp(26px, 2.8vw, 36px); }
+.bt-feat-producer{ margin-top:6px; }
+.bt-feat-specs{ margin-top:12px; }
+.bt-feat-open{ margin-top:14px; }
+.bt-feat-play{ width:60px; height:60px; margin:-30px 0 0 -30px; }
+.bt-feat-play svg{ width:24px; height:24px; }
+.bt-feat-nav{ bottom:16px; width:40px; height:40px; }
+.bt-feat-nav.next{ right:16px; }
+.bt-feat-nav.prev{ right:66px; }
+.bt-feat-thumb{ width:50px; }
+@media (max-width:640px){ .bt-top-body .bt-feat-spot{ grid-template-columns:1fr; padding:16px 14px 18px; gap:14px; } .bt-top-body .bt-feat-cover{ width:min(190px, 52vw); } .bt-feat-title{ font-size:26px; } .bt-feat-nav{ top:calc(16px + min(95px, 26vw) - 20px); } .bt-feat-nav.prev{ left:6px; right:auto; } .bt-feat-nav.next{ right:6px; } }

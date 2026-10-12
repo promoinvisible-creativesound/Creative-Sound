@@ -675,7 +675,7 @@
   let featIndex = 0;
   const featuredList = () => {
     const f = BEATS.filter((b) => b.featured);
-    return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 4);
+    return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 3);
   };
   // "Oct 12 – 18" (or "Sep 29 – Oct 5"): Monday to Sunday of this week.
   const weekLabel = () => {
@@ -703,7 +703,6 @@
         <h3 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h3>
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>
-        ${b.about ? `<p class="bt-feat-about">${esc(b.about)}</p>` : ''}
         <span class="bt-feat-open">Open beat <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
     </div>`;

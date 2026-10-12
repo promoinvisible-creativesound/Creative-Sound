@@ -1339,3 +1339,5 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (hover:hover) and (pointer:fine){ .bt-reset:hover{ border-color:var(--accent); background:rgba(232,134,44,0.14); } }
 .bt-reset:active{ transform:scale(0.97); }
 .bt-view-btn{ height:40px; }
+@media (max-width:760px){ .bt-meta{ width:100%; justify-content:center; margin-left:0; } }
+@media (max-width:560px){ .bt-buy span.bt-buy-price{ display:block; } .bt-buy span.bt-buy-icon{ display:flex; } }

@@ -2412,3 +2412,8 @@ body.search-open{ overflow:hidden; }
 .account-card-desc{ font-size:13.5px; color:var(--text-secondary); }
 @media (min-width:861px){ .account-links-row{ grid-template-columns:repeat(5, minmax(0, 1fr)); } }
 @media (max-width:560px){ .account-links-row{ grid-template-columns:1fr 1fr; } }
+
+/* Sentence case: product name and footer as written (no forced capitals) */
+.update-ticker-item{ text-transform:none; letter-spacing:0.6px; }
+.footer-col-title{ text-transform:none; font-family:var(--font-sans); font-size:13px; font-weight:600; letter-spacing:0.2px; color:var(--text-secondary); }
+.footer-brand-name{ letter-spacing:0.6px; color:var(--text); }

@@ -491,14 +491,14 @@
   // backend involved. The trigger button lives in every page's header; the
   // overlay itself is built once here and shared.
   const SEARCH_INDEX = [
-    { name: 'CREATIVE DIST 2.0', desc: 'Modular distortion plugin — overview & pricing', url: '/' },
+    { name: 'Creative Dist 2.0', desc: 'Modular distortion plugin — overview & pricing', url: '/' },
     { name: 'Saturation', desc: '18 saturation modes', url: '/#saturation' },
     { name: 'Noise', desc: 'Procedural noise layered under your signal', url: '/#noise' },
     { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: '/#bode' },
     { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: '/#flux' },
     { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: '/#eq' },
     { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: '/#output' },
-    { name: 'Pricing', desc: 'Buy CREATIVE DIST 2.0 or get the free demo', url: '/#pricing' },
+    { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: '/#pricing' },
     { name: 'Sound Packs', desc: 'Free Serum preset packs', url: 'packs.html' },
     { name: 'Beats', desc: 'Buy beats: MP3, WAV, stems, FLP licenses', url: 'beats.html' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
@@ -544,7 +544,7 @@
       currentResults = items;
       activeIndex = items.length ? 0 : -1;
       if (!items.length) {
-        resultsEl.innerHTML = '<p class="site-search-empty">No matches — try CREATIVE DIST, support or pricing.</p>';
+        resultsEl.innerHTML = '<p class="site-search-empty">No matches — try Creative Dist, support or pricing.</p>';
         return;
       }
       resultsEl.innerHTML = items.map((item, i) => `

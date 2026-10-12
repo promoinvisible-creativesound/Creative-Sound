@@ -12,17 +12,31 @@
       "permanent": true
     },
     {
-      "source": "/creative-dist.html",
+      "source": "/index.html",
       "destination": "/",
       "permanent": true
     },
     {
-      "source": "/index.html",
+      "source": "/creative-dist.html",
+      "destination": "/creative-dist-2",
+      "permanent": true
+    },
+    {
+      "source": "/creative-dist-2.html",
+      "destination": "/creative-dist-2",
+      "permanent": true
+    },
+    {
+      "source": "/home.html",
       "destination": "/",
       "permanent": true
     }
   ],
   "rewrites": [
+    {
+      "source": "/creative-dist-2",
+      "destination": "/creative-dist-2.html"
+    },
     {
       "source": "/api/notify",
       "destination": "/api/tickets?action=notify"

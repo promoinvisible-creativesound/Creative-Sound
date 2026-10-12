@@ -1,7 +1,15 @@
-// Home page (home.html): the latest tracks from data/beats.json, each with
-// a play button so a preview starts without leaving the page.
+// Home page (index.html, served on "/"): the latest tracks from
+// data/beats.json, each with a play button so a preview starts without
+// leaving the page.
 (() => {
   'use strict';
+  // "/" used to be the Creative Dist page: old links like /#pricing (emails,
+  // Stripe, bookmarks) go on to that section of /creative-dist-2.
+  const CD_SECTIONS = ['hero', 'artists', 'pricing', 'demo', 'stories', 'chain', 'saturation', 'noise', 'bode', 'flux', 'eq', 'output', 'get-it'];
+  if (CD_SECTIONS.includes(location.hash.slice(1))) {
+    location.replace(`creative-dist-2${location.hash}`);
+    return;
+  }
   const grid = document.getElementById('ho-tracks');
   if (!grid) return;
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -168,3 +168,37 @@
 .ho-track .ho-cover{ animation:none; }
 .ho-track .ho-track-art{ animation:hoFocus 900ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 110ms + 200ms); }
 @media (prefers-reduced-motion: reduce){ .ho-track .ho-track-art{ animation:none; } }
+
+/* Full-screen tiles: edge to edge with a small gutter; the first tile fills
+   the screen under the header. */
+.ho-page{ max-width:none; padding:92px 12px 12px; gap:12px; }
+.ho-tile{ border-radius:24px; }
+.ho-tile-plugin{ min-height:calc(100svh - 104px); justify-content:center; }
+.ho-tile-plugin .ho-plugin-img{ width:min(100%, 1180px); }
+.ho-tile-tracks{ min-height:calc(100svh - 104px); justify-content:center; }
+.ho-tracks{ max-width:1320px; }
+.ho-pair{ gap:12px; }
+.ho-tile-half{ min-height:min(80svh, 720px); }
+@media (max-width:900px){
+  .ho-page{ padding:104px 8px 8px; gap:8px; }
+  .ho-tile-plugin, .ho-tile-tracks{ min-height:0; }
+  .ho-tile-half{ min-height:0; }
+  .ho-pair{ gap:8px; }
+}
+/* Keep the first tile within one screen: the 3D render scales with height too */
+.ho-tile-plugin .ho-plugin-img{ width:min(100%, 1180px, calc(100svh - 300px)); }
+@media (max-width:900px){ .ho-tile-plugin .ho-plugin-img{ width:min(100%, 640px); } }
+
+/* The animated plexus background (js/plexus.js) runs behind the whole
+   page, as on the old home; tiles are see-through so it shows behind them. */
+.ho-page{ position:relative; }
+.ho-page > .plexus-bg-page{ position:absolute; inset:0; z-index:0; opacity:0.7; }
+.ho-page > *:not(.plexus-bg-page){ position:relative; z-index:1; }
+.ho-tile{ background-color:rgba(14,13,12,0.62); border:1px solid rgba(255,255,255,0.05); }
+.ho-tile-plugin{ background:radial-gradient(60% 50% at 50% 78%, rgba(232,134,44,0.16), transparent 70%), rgba(14,13,12,0.62); }
+.ho-tile-sell{ background:radial-gradient(70% 60% at 50% 100%, rgba(150,100,255,0.16), transparent 70%), rgba(14,13,12,0.62); }
+.ho-track{ background:rgba(20,19,17,0.7); }
+.ho-page > .plexus-bg-page{ opacity:1; }
+.ho-tile{ background-color:rgba(14,13,12,0.42); }
+.ho-tile-plugin{ background:radial-gradient(60% 50% at 50% 78%, rgba(232,134,44,0.14), transparent 70%), rgba(14,13,12,0.42); }
+.ho-tile-sell{ background:radial-gradient(70% 60% at 50% 100%, rgba(150,100,255,0.14), transparent 70%), rgba(14,13,12,0.42); }

@@ -497,16 +497,16 @@
   // backend involved. The trigger button lives in every page's header; the
   // overlay itself is built once here and shared.
   const SEARCH_INDEX = [
-    { name: 'Creative Dist 2.0', desc: 'Modular distortion plugin — overview & pricing', url: '/' },
-    { name: 'Saturation', desc: '18 saturation modes', url: '/#saturation' },
-    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: '/#noise' },
-    { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: '/#bode' },
-    { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: '/#flux' },
-    { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: '/#eq' },
-    { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: '/#output' },
-    { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: '/#pricing' },
+    { name: 'Creative Dist 2.0', desc: 'Modular distortion plugin — overview & pricing', url: 'creative-dist-2' },
+    { name: 'Saturation', desc: '18 saturation modes', url: 'creative-dist-2#saturation' },
+    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'creative-dist-2#noise' },
+    { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: 'creative-dist-2#bode' },
+    { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: 'creative-dist-2#flux' },
+    { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: 'creative-dist-2#eq' },
+    { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: 'creative-dist-2#output' },
+    { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: 'creative-dist-2#pricing' },
     { name: 'Sound Packs', desc: 'Free Serum preset packs', url: 'packs.html' },
-    { name: 'Home', desc: 'Creative Sound: plugins, sound packs and tracks', url: 'home.html' },
+    { name: 'Home', desc: 'Creative Sound: plugins, sound packs and tracks', url: '/' },
     { name: 'Tracks', desc: 'Buy tracks: MP3, WAV, stems, FLP licenses', url: 'beats.html' },
     { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
     { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },
@@ -565,7 +565,7 @@
     function runSearch(query) {
       const q = query.trim().toLowerCase();
       // Private preview: Home and Tracks only for allowed accounts.
-      const PREVIEW_URLS = ['home.html', 'beats.html'];
+      const PREVIEW_URLS = ['/', 'beats.html'];
       const index = document.documentElement.classList.contains('is-preview')
         ? SEARCH_INDEX
         : SEARCH_INDEX.filter((item) => !PREVIEW_URLS.includes(item.url));

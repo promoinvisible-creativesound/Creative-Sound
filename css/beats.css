@@ -800,3 +800,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-specs{ font-size:12px; }
   .bt-col-count{ font-size:12px; }
 }
+
+/* License cards: round dot instead of the dash, with room before the text */
+.bt-tier-card li{ padding-left:18px; }
+.bt-tier-card li::before{ content:""; top:0.62em; left:2px; width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px rgba(232,134,44,0.5); }
+.bt-tier-card:not(.is-unlimited) li::before{ background:var(--text-secondary); box-shadow:none; }

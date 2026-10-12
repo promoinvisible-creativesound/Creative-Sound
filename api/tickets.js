@@ -4,6 +4,11 @@ const { getSession } = require('./_lib/auth');
 const { handleNotify } = require('./_lib/notify');
 const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = require('./_lib/beats');
 const { handleRole } = require('./_lib/account');
+const {
+  handleFile: handleProducerFile,
+  handleSubmit: handleProducerSubmit,
+  handleSubmissions: handleProducerSubmissions,
+} = require('./_lib/producer');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -31,6 +36,12 @@ module.exports = async (req, res) => {
   // Account type (producer / artist / listener), see _lib/account.js.
   if (req.query && req.query.action === 'account-role') {
     await handleRole(req, res);
+    return;
+  }
+  // Producer uploads and review queue, see _lib/producer.js.
+  const producerRoutes = { 'producer-file': handleProducerFile, 'producer-submit': handleProducerSubmit, 'producer-submissions': handleProducerSubmissions };
+  if (req.query && producerRoutes[req.query.action]) {
+    await producerRoutes[req.query.action](req, res);
     return;
   }
 

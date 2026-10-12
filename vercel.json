@@ -38,6 +38,18 @@
     {
       "source": "/api/account/role",
       "destination": "/api/tickets?action=account-role"
+    },
+    {
+      "source": "/api/producer/file",
+      "destination": "/api/tickets?action=producer-file"
+    },
+    {
+      "source": "/api/producer/submit",
+      "destination": "/api/tickets?action=producer-submit"
+    },
+    {
+      "source": "/api/producer/submissions",
+      "destination": "/api/tickets?action=producer-submissions"
     }
   ]
 }

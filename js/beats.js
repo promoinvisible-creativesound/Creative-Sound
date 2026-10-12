@@ -45,7 +45,7 @@
     <div class="bt-art">
       ${b.cover
         ? `<img src="${esc(b.cover)}" alt="" loading="lazy">`
-        : `<div class="bt-art-gen" aria-hidden="true"></div><span class="bt-art-word" aria-hidden="true">${esc(b.title)}</span>`}
+        : '<div class="bt-art-gen" aria-hidden="true"></div>'}
     </div>`;
   const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><title>Verified producer</title><path class="bt-verified-seal" d="M12.0 1.0L12.9 1.4L13.7 2.3L14.4 2.9L15.4 2.8L16.5 2.4L17.5 2.5L18.1 3.3L18.3 4.5L18.6 5.4L19.5 5.7L20.7 5.9L21.5 6.5L21.6 7.5L21.2 8.6L21.1 9.6L21.7 10.3L22.6 11.1L23.0 12.0L22.6 12.9L21.7 13.7L21.1 14.4L21.2 15.4L21.6 16.5L21.5 17.5L20.7 18.1L19.5 18.3L18.6 18.6L18.3 19.5L18.1 20.7L17.5 21.5L16.5 21.6L15.4 21.2L14.4 21.1L13.7 21.7L12.9 22.6L12.0 23.0L11.1 22.6L10.3 21.7L9.6 21.1L8.6 21.2L7.5 21.6L6.5 21.5L5.9 20.7L5.7 19.5L5.4 18.6L4.5 18.3L3.3 18.1L2.5 17.5L2.4 16.5L2.8 15.4L2.9 14.4L2.3 13.7L1.4 12.9L1.0 12.0L1.4 11.1L2.3 10.3L2.9 9.6L2.8 8.6L2.4 7.5L2.5 6.5L3.3 5.9L4.5 5.7L5.4 5.4L5.7 4.5L5.9 3.3L6.5 2.5L7.5 2.4L8.6 2.8L9.6 2.9L10.3 2.3L11.1 1.4Z"/><path class="bt-verified-tick" d="M7.6 12.4l3 3 5.8-6.2"/></svg>';
   const isVerified = (name) => !!(PRODUCERS[name] && PRODUCERS[name].verified);
@@ -133,7 +133,7 @@
     $('#bt-saved-empty').hidden = list.length > 0;
     $('#bt-saved-count').textContent = list.length ? `${list.length} saved beat${list.length === 1 ? '' : 's'}` : '';
     grid.innerHTML = list.map(cardHtml).join('');
-    if (!grid.dataset.bound) { bindCardClicks(grid); grid.dataset.bound = '1'; }
+    if (!grid.dataset.bound) { bindCardClicks(grid); bindTilt(grid); grid.dataset.bound = '1'; }
     syncCards();
     renderCart();
   }
@@ -151,6 +151,7 @@
           <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
           <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
         </button>
+        <span class="bt-glare" aria-hidden="true"></span>
         <span class="bt-eq" aria-hidden="true"><i></i><i></i><i></i></span>
         ${saveButton(b)}
       </div>
@@ -163,7 +164,7 @@
           <span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span>
         </div>
         <button type="button" class="bt-buy" data-buy aria-label="Choose a license for ${esc(b.title)}, from ${euro(minPrice(b))}">
-          <span class="bt-buy-text"><span class="bt-buy-label">Licenses from</span><span class="bt-buy-price">${euro(minPrice(b))}</span></span>
+          <span class="bt-buy-text"><span class="bt-buy-label">From</span><span class="bt-buy-price">${euro(minPrice(b))}</span></span>
           <span class="bt-buy-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1.4 10.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7V5.8a3 3 0 0 1 6 0V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
         </button>
       </div>
@@ -200,7 +201,7 @@
     saved: '<path d="M12 18.7s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 6.8a3.9 3.9 0 0 1 7 2.5c0 5.1-7 9.4-7 9.4z"/>',
     new: '<path d="M12 3.8l2.1 6.1 6.1 2.1-6.1 2.1L12 20.2l-2.1-6.1L3.8 12l6.1-2.1z"/>',
     under30: '<path d="M4 12.2V5.5A1.5 1.5 0 0 1 5.5 4h6.7l7.4 7.4a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8.5" cy="8.5" r="1.4"/>',
-    stems: '<path d="M5.5 15.5v-7M9.8 19V5M14.2 16.5v-9M18.5 14v-4"/>',
+    stems: '<path d="M5.5 15.5v-7"/><path d="M9.8 19V5"/><path d="M14.2 16.5v-9"/><path d="M18.5 14v-4"/>',
     project: '<path d="M3.8 7.1A1.8 1.8 0 0 1 5.6 5.3h3.9l2 2h6.9a1.8 1.8 0 0 1 1.8 1.8v7.8a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z"/><path d="M8.5 13.1h7"/>',
     genre: '<path d="M9.8 17.2V6.4l9-2v10.6"/><circle cx="7.5" cy="17.2" r="2.3"/><circle cx="16.5" cy="15" r="2.3"/>',
   };
@@ -376,12 +377,28 @@
     syncCards();
     renderCart();
   };
+  // Filters and sorting: cards that stay glide to their new slot (FLIP),
+  // new ones fade in from 96%, so the change is easy to follow.
   const render = () => {
     visible = BEATS.filter((b) => matches(b)).sort(sorters[state.sort]);
+    grid.removeAttribute('aria-busy');
     if (firstRender) { firstRender = false; paint(); enter(grid); return; }
     if (reduceMotion) { paint(); return; }
-    grid.classList.add('is-swapping');
-    setTimeout(() => { paint(); grid.classList.remove('is-swapping'); }, 150);
+    const before = new Map($$('.bt-card', grid).map((c) => [c.dataset.id, c.getBoundingClientRect()]));
+    paint();
+    $$('.bt-card', grid).forEach((c, i) => {
+      const from = before.get(c.dataset.id);
+      if (from) {
+        const to = c.getBoundingClientRect();
+        const dx = from.left - to.left;
+        const dy = from.top - to.top;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 380, easing: EASE_IN_OUT });
+        }
+      } else {
+        c.animate([{ opacity: 0, transform: 'scale(0.96)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: Math.min(i, 8) * 30, easing: EASE_OUT, fill: 'backwards' });
+      }
+    });
   };
 
   const tileHtml = (c) => {
@@ -525,6 +542,8 @@
     $$('.bt-view-btn').forEach((b) => { b.classList.toggle('is-active', b.dataset.view === state.view); b.setAttribute('aria-pressed', String(b.dataset.view === state.view)); });
 
     bindCardClicks(grid);
+    bindTilt(grid);
+    setupFeatured();
     renderTierGrid();
     render();
   };
@@ -631,9 +650,115 @@
       if (!list.length) { section.hidden = true; return; }
       box.innerHTML = list.map(cardHtml).join('');
       bindCardClicks(box);
+      bindTilt(box);
       enter(box);
     });
     syncCards();
+  };
+
+  /* -------------------------------- Featured ------------------------------- */
+  // Spotlight on one beat with the other featured beats beside it to swap
+  // in. Beats flagged "featured" in data/beats.json; newest beats otherwise.
+  let featIndex = 0;
+  const featuredList = () => {
+    const f = BEATS.filter((b) => b.featured);
+    return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 4);
+  };
+  const spotHtml = (b) => `
+    <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}">
+      <div class="bt-feat-cover">
+        ${art(b)}
+        <button type="button" class="bt-feat-play" data-feat-play aria-label="Play ${esc(b.title)}">
+          <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+          <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+        </button>
+      </div>
+      <div class="bt-feat-info">
+        <p class="bt-feat-kicker"><span class="bt-feat-dot" aria-hidden="true"></span>Featured beat</p>
+        <h2 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h2>
+        <p class="bt-feat-producer">${producerLine(b)}</p>
+        <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>
+        ${b.about ? `<p class="bt-feat-about">${esc(b.about)}</p>` : ''}
+        <div class="bt-feat-actions">
+          <button type="button" class="btn btn-primary bt-feat-buy" data-feat-buy>License from ${euro(minPrice(b))}</button>
+          <a href="${beatUrl(b)}" class="btn btn-ghost">View beat</a>
+          ${saveButton(b).replace('class="bt-save', 'class="bt-save bt-feat-save')}
+        </div>
+      </div>
+    </div>`;
+  const renderFeatured = (animate) => {
+    const box = $('#bt-featured');
+    if (!box) return;
+    const list = featuredList();
+    if (!list.length) { box.hidden = true; return; }
+    const b = list[featIndex % list.length];
+    const others = list.map((x, i) => `
+      <button type="button" class="bt-feat-pick${i === featIndex ? ' is-active' : ''} ${tintClass(x)}" data-feat-index="${i}" aria-pressed="${i === featIndex}" aria-label="Show ${esc(x.title)}">
+        <span class="bt-feat-thumb">${art(x)}</span>
+        <span class="bt-feat-pick-text"><b>${esc(x.title)}</b><small>${esc(x.producer)} · ${x.bpm} BPM</small></span>
+      </button>`).join('');
+    const swap = () => {
+      box.innerHTML = `${spotHtml(b)}<div class="bt-feat-list" role="group" aria-label="Featured beats">${others}</div>`;
+      syncCards();
+      if (animate && !reduceMotion) {
+        $('.bt-feat-spot', box).animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE_OUT });
+      }
+    };
+    const spot = $('.bt-feat-spot', box);
+    if (animate && spot && !reduceMotion) {
+      spot.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: EASE_OUT }).finished.then(swap, swap);
+    } else swap();
+  };
+  const setupFeatured = () => {
+    const box = $('#bt-featured');
+    if (!box) return;
+    box.addEventListener('click', (e) => {
+      const pick = e.target.closest('[data-feat-index]');
+      if (pick) {
+        const i = Number(pick.dataset.featIndex);
+        if (i !== featIndex) { featIndex = i; renderFeatured(true); }
+        return;
+      }
+      const spot = e.target.closest('.bt-feat-spot');
+      if (!spot) return;
+      const beat = byId.get(spot.dataset.id);
+      if (e.target.closest('[data-feat-play]')) togglePlay(beat.id);
+      else if (e.target.closest('[data-feat-buy]')) openLicense(beat, e.target.closest('[data-feat-buy]'));
+    });
+    renderFeatured(false);
+  };
+
+  /* ---------------------------------- Tilt --------------------------------- */
+  // Small pointer tilt (max 4deg) and a glare dot on card covers. Fine
+  // pointers only; one delegated listener per container.
+  const bindTilt = (container) => {
+    if (reduceMotion || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    let current = null;
+    let frame = 0;
+    let last = null;
+    const reset = (card) => { if (!card) return; card.classList.remove('is-tilting'); card.style.removeProperty('--rx'); card.style.removeProperty('--ry'); };
+    const apply = () => {
+      frame = 0;
+      if (!current || !last) return;
+      const r = current.getBoundingClientRect();
+      const x = (last.clientX - r.left) / r.width;
+      const y = (last.clientY - r.top) / r.height;
+      current.style.setProperty('--ry', `${((x - 0.5) * 8).toFixed(2)}deg`);
+      current.style.setProperty('--rx', `${((0.5 - y) * 6).toFixed(2)}deg`);
+      const cover = $('.bt-cover-wrap', current);
+      if (cover) {
+        const c = cover.getBoundingClientRect();
+        cover.style.setProperty('--gx', `${(last.clientX - c.left).toFixed(0)}px`);
+        cover.style.setProperty('--gy', `${(last.clientY - c.top).toFixed(0)}px`);
+      }
+    };
+    container.addEventListener('pointermove', (e) => {
+      const card = e.target.closest('.bt-card:not(.bt-card-skel)');
+      if (card !== current) { reset(current); current = card; if (card) card.classList.add('is-tilting'); }
+      last = e;
+      if (current && !frame) frame = requestAnimationFrame(apply);
+    });
+    container.addEventListener('pointerleave', () => { reset(current); current = null; });
   };
 
   /* --------------------------------- Player -------------------------------- */
@@ -647,19 +772,25 @@
   let wave = null;
   let raf = 0;
   const bands = new Array(44).fill(0);
+  const kick = { v: 0, prev: 0, avg: 0, last: 0 };
   const vizCanvas = $('#bt-player-viz');
   const vg = vizCanvas.getContext('2d');
 
   const queue = () => (catalogueRoot ? (visible.length ? visible : BEATS) : savedRoot ? savedList() : BEATS);
 
+  let shownId = null;
   const showPlayer = (beat) => {
-    player.className = `bt-player ${tintClass(beat)}${audio.paused ? '' : ' is-playing'}${player.classList.contains('is-visible') ? ' is-visible' : ''}`;
-    $('#bt-player-cover').innerHTML = art(beat);
-    $('#bt-player-title').textContent = beat.title;
-    $('#bt-player-title').href = beatUrl(beat);
-    $('#bt-player-producer').innerHTML = producerLine(beat);
-    $('#bt-player-buy').innerHTML = `<span>Buy</span><strong>${euro(minPrice(beat))}</strong>`;
-    $('#bt-player-buy').setAttribute('aria-label', `Buy ${beat.title}, from ${euro(minPrice(beat))}`);
+    const changing = shownId && shownId !== beat.id && player.classList.contains('is-visible') && !reduceMotion;
+    shownId = beat.id;
+    if (changing) {
+      // Old track slides up and out, new one rises in.
+      const left = $('.bt-player-left', player);
+      left.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 130, easing: EASE_OUT })
+        .finished.then(() => {
+          fillPlayer(beat);
+          left.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: EASE_OUT });
+        }, () => fillPlayer(beat));
+    } else fillPlayer(beat);
     if (player.hidden) {
       player.hidden = false;
       document.body.classList.add('bt-has-player');
@@ -668,6 +799,15 @@
         requestAnimationFrame(() => player.classList.add('is-visible'));
       });
     }
+  };
+  const fillPlayer = (beat) => {
+    player.className = `bt-player ${tintClass(beat)}${audio.paused ? '' : ' is-playing'}${player.classList.contains('is-visible') ? ' is-visible' : ''}`;
+    $('#bt-player-cover').innerHTML = art(beat);
+    $('#bt-player-title').textContent = beat.title;
+    $('#bt-player-title').href = beatUrl(beat);
+    $('#bt-player-producer').innerHTML = producerLine(beat);
+    $('#bt-player-buy').innerHTML = `<span>Buy</span><strong>${euro(minPrice(beat))}</strong>`;
+    $('#bt-player-buy').setAttribute('aria-label', `Buy ${beat.title}, from ${euro(minPrice(beat))}`);
   };
 
   const syncCards = () => {
@@ -680,6 +820,12 @@
       if (!btn) return;
       btn.setAttribute('aria-pressed', String(playing));
       btn.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${byId.get(c.dataset.id).title}`);
+    });
+    $$('.bt-feat-spot').forEach((spot) => {
+      const playing = spot.dataset.id === currentId && !audio.paused;
+      spot.classList.toggle('is-playing', playing);
+      const btn = $('[data-feat-play]', spot);
+      if (btn) btn.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${byId.get(spot.dataset.id).title}`);
     });
     if (beatRoot) {
       const playing = beatRoot.dataset.beatId === currentId && !audio.paused;
@@ -760,6 +906,22 @@
         bands[i] += (target - bands[i]) * (target > bands[i] ? 0.5 : 0.12);
         energy += bands[i];
       }
+      let low = 0;
+      if (live) {
+        const binHz = actx.sampleRate / (freq.length * 2);
+        const a = Math.max(1, Math.floor(40 / binHz));
+        const b2 = Math.max(a + 1, Math.ceil(160 / binHz));
+        for (let j = a; j < b2; j++) low += freq[j];
+        low /= (b2 - a) * 255;
+      }
+      const now = performance.now();
+      const rise = low - kick.prev;
+      kick.prev = low;
+      kick.avg += (low - kick.avg) * 0.08;
+      if (live && low > 0.35 && rise > 0.035 && low > kick.avg * 1.06 && now - kick.last > 160) { kick.last = now; kick.v = 1; }
+      else kick.v *= 0.92; // ~140ms half-life: visible, still tight to the beat
+      const kickVal = kick.v.toFixed(3);
+      $$('.bt-card.is-playing .bt-cover-wrap, .bt-feat-spot.is-playing .bt-feat-cover, .beat-page.is-playing .bp-cover').forEach((el) => el.style.setProperty('--kick', kickVal));
       const rgb = rgbOf(player);
       if (energy > 0.01) {
         const base = h * 0.5;

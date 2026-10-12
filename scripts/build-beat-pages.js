@@ -31,7 +31,7 @@ const fmtDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { 
 function art(b) {
   return b.cover
     ? `<div class="bt-art"><img src="${esc(b.cover)}" alt="${esc(b.title)} cover art"></div>`
-    : `<div class="bt-art"><div class="bt-art-gen" aria-hidden="true"></div><span class="bt-art-word" aria-hidden="true">${esc(b.title)}</span><span class="bt-art-bpm" aria-hidden="true">${b.bpm} BPM</span></div>`;
+    : '<div class="bt-art"><div class="bt-art-gen" aria-hidden="true"></div></div>';
 }
 
 function mainFor(b) {

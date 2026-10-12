@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="css/style.css?v=116">
-<link rel="stylesheet" href="css/beats.css?v=17">
+<link rel="stylesheet" href="css/beats.css?v=18">
 </head>
 <body>
 <div id="grain"></div>
@@ -95,6 +95,9 @@
   <h1 class="sr-only">Beats for sale</h1>
 
   <section class="section section-tight bt-section" aria-label="Beat catalogue">
+    <section class="bt-featured" id="bt-featured" aria-label="Featured beats">
+      <div class="bt-feat-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w55"></span></span></div>
+    </section>
     <div class="bt-explore reveal-up">
       <div class="bt-explore-head">
         <h2 class="bt-explore-title">Explore</h2>
@@ -138,7 +141,16 @@
       </div>
     </div>
 
-    <div class="bt-grid" id="bt-grid" data-view="grid"></div>
+    <div class="bt-grid" id="bt-grid" data-view="grid" aria-busy="true">
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+      <div class="bt-card bt-card-skel" aria-hidden="true"><span class="bt-skel bt-skel-cover"></span><span class="bt-skel-lines"><span class="bt-skel bt-skel-line w70"></span><span class="bt-skel bt-skel-line w40"></span><span class="bt-skel bt-skel-line w55"></span><span class="bt-skel bt-skel-btn"></span></span></div>
+    </div>
     <div class="bt-empty" id="bt-empty" hidden>
       <p>No beats match these filters.</p>
       <button type="button" class="btn btn-ghost" data-reset>Clear filters</button>
@@ -296,7 +308,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=40"></script>
-<script src="js/beats.js?v=10"></script>
+<script src="js/beats.js?v=13"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -947,3 +947,160 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 
 /* Ring centred on the disc exactly (the old inset + width combo drifted 2px left) */
 .bt-col-ring{ inset:auto; left:50%; top:50%; width:calc(100% + 4px); height:calc(100% + 4px); transform:translate(-50%, -50%) rotate(-90deg); transform-origin:50% 50%; }
+
+/* ================================ v4 pass =================================
+   Featured spotlight, skeletons, kick pulse, icon hover motion, card tilt,
+   "From" price label, cleaner generated covers. */
+
+/* ---------------------------- Generated covers ----------------------------- */
+/* No title on the art any more: a second ring and a soft horizon line keep
+   it from looking empty. */
+.bt-art-gen::before{
+  content:''; position:absolute; left:-30%; right:-30%; bottom:22%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(var(--fx-soft), 0.35), transparent);
+  box-shadow:0 0 18px rgba(var(--fx), 0.6);
+}
+.bt-art-gen::after{ box-shadow:0 0 0 18px rgba(var(--fx), 0.05), 0 0 0 40px rgba(var(--fx), 0.03), 0 0 0 70px rgba(var(--fx), 0.02); }
+
+/* ---------------------------------- Price ---------------------------------- */
+.bt-buy-label{ font-family:var(--font-sans); font-size:12px; font-weight:600; letter-spacing:0.2px; text-transform:none; opacity:0.75; }
+
+/* -------------------------------- Skeletons -------------------------------- */
+.bt-skel{
+  display:block; border-radius:8px;
+  background:linear-gradient(100deg, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 70%);
+  background-size:300% 100%; animation:btShimmer 1.4s linear infinite;
+}
+@keyframes btShimmer{ from{ background-position:100% 0; } to{ background-position:0 0; } }
+.bt-card-skel{ pointer-events:none; }
+.bt-card-skel .bt-skel-cover{ aspect-ratio:1/1; border-radius:0; }
+.bt-skel-lines{ display:flex; flex-direction:column; gap:10px; padding:14px; }
+.bt-skel-line{ height:12px; }
+.bt-skel-line.w40{ width:40%; } .bt-skel-line.w55{ width:55%; } .bt-skel-line.w70{ width:70%; }
+.bt-skel-btn{ height:52px; border-radius:12px; margin-top:6px; }
+.bt-feat-skel{ display:grid; grid-template-columns:minmax(220px, 360px) 1fr; gap:28px; padding:22px; border:1px solid var(--border); border-radius:22px; }
+.bt-feat-skel .bt-skel-cover{ aspect-ratio:1/1; border-radius:16px; }
+.bt-feat-skel .bt-skel-lines{ padding:20px 0; gap:16px; }
+.bt-feat-skel .bt-skel-line{ height:18px; }
+@media (max-width:760px){ .bt-feat-skel{ grid-template-columns:1fr; } }
+@media (prefers-reduced-motion: reduce){ .bt-skel{ animation:none; } }
+
+/* -------------------------------- Featured -------------------------------- */
+.bt-featured{ max-width:1180px; margin:0 auto 34px; display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:16px; align-items:stretch; }
+.bt-featured:has(.bt-feat-skel){ display:block; }
+.bt-feat-spot{
+  position:relative; display:grid; grid-template-columns:minmax(200px, 330px) 1fr; gap:clamp(20px, 3vw, 34px); align-items:center;
+  padding:clamp(16px, 2.4vw, 24px); border-radius:22px; border:1px solid rgba(var(--fx), 0.35); overflow:hidden; isolation:isolate;
+  background:radial-gradient(120% 140% at 0% 0%, rgba(var(--fx), 0.22), transparent 55%), radial-gradient(80% 120% at 100% 100%, rgba(var(--fx), 0.10), transparent 60%), var(--panel);
+}
+.bt-feat-spot::after{ content:''; position:absolute; inset:0; z-index:-1; background:repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 4px); pointer-events:none; }
+.bt-feat-cover{ position:relative; border-radius:16px; overflow:hidden; box-shadow:0 30px 70px -24px rgba(0,0,0,0.85), 0 0 60px -18px rgba(var(--fx), 0.7); transform:scale(calc(1 + var(--kick, 0) * 0.025)); transition:transform 90ms linear; }
+.bt-feat-play{
+  position:absolute; left:50%; top:50%; width:72px; height:72px; margin:-36px 0 0 -36px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:#0a0a09; background:rgb(var(--fx)); border:0;
+  box-shadow:0 0 0 8px rgba(var(--fx), 0.18), 0 14px 40px rgba(var(--fx), 0.45); transition:transform 160ms var(--ease-out), box-shadow 300ms ease;
+}
+.bt-feat-play svg{ width:28px; height:28px; }
+.bt-feat-play .bt-ic-pause{ display:none; }
+.bt-feat-spot.is-playing .bt-feat-play .bt-ic-play{ display:none; }
+.bt-feat-spot.is-playing .bt-feat-play .bt-ic-pause{ display:block; }
+.bt-feat-spot.is-playing .bt-feat-play{ box-shadow:0 0 0 calc(8px + var(--kick, 0) * 10px) rgba(var(--fx), 0.16), 0 14px 40px rgba(var(--fx), 0.5); }
+.bt-feat-play:active{ transform:scale(0.94); }
+@media (hover:hover) and (pointer:fine){ .bt-feat-play:hover{ transform:scale(1.05); } }
+.bt-feat-info{ min-width:0; }
+.bt-feat-kicker{ display:flex; align-items:center; gap:8px; margin:0 0 10px; font-family:var(--font-sans); font-size:13px; font-weight:600; letter-spacing:0.4px; color:rgb(var(--fx-soft)); }
+.bt-feat-dot{ width:8px; height:8px; border-radius:50%; background:rgb(var(--fx)); box-shadow:0 0 10px rgb(var(--fx)); animation:btDot 2s ease-in-out infinite; }
+@keyframes btDot{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+.bt-feat-title{ font-family:var(--font-display); font-size:clamp(28px, 3.6vw, 48px); line-height:1.05; margin:0; }
+.bt-feat-title a{ color:#fff; }
+@media (hover:hover) and (pointer:fine){ .bt-feat-title a:hover{ color:rgb(var(--fx-soft)); } }
+.bt-feat-producer{ margin:10px 0 0; }
+.bt-feat-producer .bt-producer{ font-size:16px; color:var(--text); }
+.bt-feat-specs{ margin:16px 0 0; flex-wrap:wrap; }
+.bt-feat-specs .bt-spec-genre{ display:inline-flex !important; }
+.bt-feat-about{ margin:14px 0 0; max-width:520px; font-size:15px; line-height:1.6; color:var(--text-secondary); }
+.bt-feat-actions{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.bt-feat-actions .btn{ height:48px; display:inline-flex; align-items:center; padding:0 22px; }
+.bt-feat-buy{ background:rgb(var(--fx)) !important; border-color:rgb(var(--fx)) !important; color:#0a0a09 !important; }
+.bt-feat-save{ position:static; width:48px; height:48px; border-radius:12px; background:transparent; }
+
+.bt-feat-list{ display:flex; flex-direction:column; gap:8px; }
+.bt-feat-pick{
+  position:relative; flex:1; display:flex; align-items:center; gap:12px; padding:10px; text-align:left;
+  border-radius:14px; border:1px solid var(--border); background:var(--panel); color:var(--text);
+  transition:border-color 200ms ease, background-color 200ms ease, transform 160ms var(--ease-out);
+}
+.bt-feat-pick:active{ transform:scale(0.98); }
+.bt-feat-pick.is-active{ border-color:rgba(var(--fx), 0.7); background:linear-gradient(90deg, rgba(var(--fx), 0.14), transparent 80%), var(--panel); }
+.bt-feat-pick.is-active::before{ content:''; position:absolute; left:-1px; top:14px; bottom:14px; width:3px; border-radius:2px; background:rgb(var(--fx)); }
+@media (hover:hover) and (pointer:fine){ .bt-feat-pick:not(.is-active):hover{ border-color:var(--border-strong); } }
+.bt-feat-thumb{ width:58px; flex-shrink:0; border-radius:10px; overflow:hidden; }
+.bt-feat-pick-text{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.bt-feat-pick-text b{ font-size:14.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bt-feat-pick-text small{ font-size:12.5px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+@media (max-width:1000px){
+  .bt-featured{ grid-template-columns:1fr; }
+  .bt-feat-list{ flex-direction:row; overflow-x:auto; scrollbar-width:none; }
+  .bt-feat-list::-webkit-scrollbar{ display:none; }
+  .bt-feat-pick{ flex:0 0 220px; }
+}
+@media (max-width:640px){
+  .bt-feat-spot{ grid-template-columns:1fr; }
+  .bt-feat-cover{ max-width:320px; }
+  .bt-feat-actions .btn{ flex:1; justify-content:center; padding:0 14px; }
+}
+@media (prefers-reduced-motion: reduce){ .bt-feat-dot{ animation:none; } .bt-feat-cover{ transform:none; } }
+
+/* ------------------------------- Kick pulse ------------------------------- */
+/* --kick (0..1) is set by js/beats.js on the playing beat's elements only. */
+.bt-card.is-playing .bt-cover-wrap .bt-art{ transform:scale(calc(1.02 + var(--kick, 0) * 0.035)); transition:transform 90ms linear; }
+.bt-card.is-playing .bt-cover-wrap::after{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(90% 60% at 50% 100%, rgba(var(--fx), calc(0.15 + var(--kick, 0) * 0.35)), transparent 70%);
+  mix-blend-mode:screen;
+}
+.bt-cover-wrap{ overflow:hidden; }
+.beat-page.is-playing .bp-cover{ transform:scale(calc(1 + var(--kick, 0) * 0.02)); transition:transform 90ms linear; box-shadow:0 30px 70px -20px rgba(0,0,0,0.8), 0 0 calc(60px + var(--kick, 0) * 40px) -20px rgba(var(--fx), 0.9); }
+@media (prefers-reduced-motion: reduce){
+  .bt-card.is-playing .bt-cover-wrap .bt-art, .beat-page.is-playing .bp-cover{ transform:none; }
+}
+
+/* ---------------------------- Icon hover motion ---------------------------- */
+/* One short move per icon, only on a fine pointer hover (tens/day: keep it
+   subtle and under 600ms). */
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion: no-preference){
+  .bt-col-icon svg{ transform-origin:50% 50%; }
+  .bt-col:not(:disabled):hover[data-col="saved"] .bt-col-icon svg{ animation:btBeat 600ms var(--ease-out); }
+  .bt-col:not(:disabled):hover[data-col="new"] .bt-col-icon svg{ animation:btSpark 520ms var(--ease-out); }
+  .bt-col:not(:disabled):hover[data-col="all"] .bt-col-icon svg{ animation:btTurn 480ms var(--ease-in-out); }
+  .bt-col:not(:disabled):hover[data-col="under30"] .bt-col-icon svg{ animation:btWiggle 500ms var(--ease-out); }
+  .bt-col:not(:disabled):hover[data-col="project"] .bt-col-icon svg{ animation:btLift 420ms var(--ease-out); }
+  .bt-col:not(:disabled):hover[data-col^="genre"] .bt-col-icon svg{ animation:btBounce 520ms var(--ease-out); }
+  .bt-col[data-col="stems"] .bt-col-icon svg path{ transform-box:fill-box; transform-origin:50% 50%; }
+  .bt-col:not(:disabled):hover[data-col="stems"] .bt-col-icon svg path{ animation:btBars 560ms var(--ease-out); }
+  .bt-col:not(:disabled):hover[data-col="stems"] .bt-col-icon svg path:nth-child(2){ animation-delay:60ms; }
+  .bt-col:not(:disabled):hover[data-col="stems"] .bt-col-icon svg path:nth-child(3){ animation-delay:120ms; }
+  .bt-col:not(:disabled):hover[data-col="stems"] .bt-col-icon svg path:nth-child(4){ animation-delay:180ms; }
+}
+@keyframes btBeat{ 0%{ transform:scale(1); } 25%{ transform:scale(1.22); } 45%{ transform:scale(0.96); } 65%{ transform:scale(1.12); } 100%{ transform:scale(1); } }
+@keyframes btSpark{ 0%{ transform:rotate(0) scale(1); } 50%{ transform:rotate(45deg) scale(1.18); } 100%{ transform:rotate(90deg) scale(1); } }
+@keyframes btTurn{ 0%{ transform:rotate(0); } 100%{ transform:rotate(90deg); } }
+@keyframes btWiggle{ 0%,100%{ transform:rotate(0); } 25%{ transform:rotate(-12deg); } 60%{ transform:rotate(8deg); } }
+@keyframes btLift{ 0%,100%{ transform:translateY(0); } 45%{ transform:translateY(-3px); } }
+@keyframes btBounce{ 0%,100%{ transform:translateY(0); } 35%{ transform:translateY(-4px); } 65%{ transform:translateY(1px); } }
+@keyframes btBars{ 0%,100%{ transform:scaleY(1); } 40%{ transform:scaleY(0.45); } 70%{ transform:scaleY(1.15); } }
+
+/* ---------------------------------- Tilt ---------------------------------- */
+.bt-card{ --rx:0deg; --ry:0deg; transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition:border-color 200ms ease, transform 500ms var(--ease-out), box-shadow 200ms ease; }
+.bt-card.is-tilting{ transition:border-color 200ms ease, transform 100ms linear, box-shadow 200ms ease; }
+@media (hover:hover) and (pointer:fine){ .bt-card:hover{ transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-3px); } }
+.bt-glare{
+  position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen; opacity:0;
+  background:radial-gradient(circle 80px at var(--gx, 50%) var(--gy, 30%), rgba(var(--fx-soft), 0.35), rgba(var(--fx), 0.12) 40%, transparent 100%);
+  transition:opacity 250ms ease;
+}
+.bt-card.is-tilting .bt-glare{ opacity:1; }
+.bt-grid[data-view="list"] .bt-card{ transform:none; }
+.bt-grid[data-view="list"] .bt-glare{ display:none; }
+@media (prefers-reduced-motion: reduce){ .bt-card{ transform:none !important; } }

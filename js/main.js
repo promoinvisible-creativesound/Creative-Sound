@@ -412,10 +412,13 @@
   /* --------------------------- Header account status ------------------------ */
   // Points the fixed account icon at the profile page (and labels it with
   // the visitor's name) once we know they already have a session.
+  // The same request is shared with js/header-menu.js through window.csMe.
+  window.csMe = fetch('/api/auth/me')
+    .then((res) => (res.ok ? res.json() : null))
+    .catch(() => null);
   const headerAccountLink = document.getElementById('header-account-link');
   if (headerAccountLink) {
-    fetch('/api/auth/me')
-      .then((res) => (res.ok ? res.json() : null))
+    window.csMe
       .then((data) => {
         if (data) {
           headerAccountLink.href = 'profile.html';

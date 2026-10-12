@@ -1323,3 +1323,19 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 
 /* "This week" reads as a quiet subtitle to the title, not a badge */
 .bt-top-live{ font-size:15px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--text-secondary); }
+
+/* Results bar: count, clear and layout toggle as three blocks of the same
+   height, border and radius, evenly spaced. */
+.bt-meta{ gap:10px; }
+.bt-count, .bt-reset{
+  height:42px; display:inline-flex; align-items:center; gap:8px; padding:0 14px; border-radius:10px;
+  font-family:var(--font-sans); font-size:13.5px; font-weight:600; line-height:1; white-space:nowrap;
+  border:1px solid var(--border-strong); background:none;
+}
+.bt-count{ color:var(--text); font-variant-numeric:tabular-nums; }
+.bt-reset{ color:var(--amber-text); text-decoration:none; border-color:rgba(232,134,44,0.4); background:rgba(232,134,44,0.06); transition:border-color 150ms ease, background-color 150ms ease; }
+.bt-reset[hidden]{ display:none; }
+.bt-reset::before{ content:'×'; font-size:17px; font-weight:500; line-height:1; margin-top:-2px; }
+@media (hover:hover) and (pointer:fine){ .bt-reset:hover{ border-color:var(--accent); background:rgba(232,134,44,0.14); } }
+.bt-reset:active{ transform:scale(0.97); }
+.bt-view-btn{ height:40px; }

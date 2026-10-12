@@ -15,7 +15,8 @@
 (function () {
   const catalogueRoot = document.querySelector('.beats-page');
   const beatRoot = document.querySelector('[data-beat-id]');
-  if (!catalogueRoot && !beatRoot) return;
+  const savedRoot = document.querySelector('[data-saved-page]');
+  if (!catalogueRoot && !beatRoot && !savedRoot) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
@@ -64,6 +65,9 @@
     const on = !saved.has(id);
     if (on) saved.add(id); else saved.delete(id);
     store.set('bt-saved', [...saved]);
+    if (accountSaves) {
+      fetch('/api/beats/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ beatId: id, saved: on }) }).catch(() => {});
+    }
     track(on ? 'Beat save' : 'Beat unsave', { beat: id });
     $$(`[data-save="${CSS.escape(id)}"]`).forEach((btn) => {
       btn.classList.toggle('is-saved', on);
@@ -79,7 +83,61 @@
       }
     });
     if (catalogueRoot) onSavedChange();
+    if (savedRoot) renderSavedPage();
   };
+  // Signed in: saves live on the account. Browser-only saves made before
+  // signing in are merged in once, then the account list wins.
+  let accountSaves = false;
+  const paintHearts = () => {
+    $$('[data-save]').forEach((btn) => {
+      const id = btn.dataset.save;
+      const b = byId.get(id);
+      const on = saved.has(id);
+      btn.classList.toggle('is-saved', on);
+      btn.setAttribute('aria-pressed', String(on));
+      if (b) btn.setAttribute('aria-label', `${on ? 'Remove' : 'Save'} ${b.title}${on ? ' from saved' : ''}`);
+      const label = btn.querySelector('.bt-save-text');
+      if (label) label.textContent = on ? 'Saved' : 'Save';
+    });
+  };
+  async function syncSaved() {
+    try {
+      const res = await fetch('/api/beats/saved');
+      if (res.status === 401) {
+        if (savedRoot) location.href = '/login.html';
+        return;
+      }
+      if (!res.ok) return;
+      let { ids } = await res.json();
+      const localOnly = [...saved].filter((id) => !ids.includes(id) && byId.has(id));
+      if (localOnly.length) {
+        const merged = await fetch('/api/beats/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ merge: localOnly }) });
+        if (merged.ok) ({ ids } = await merged.json());
+      }
+      accountSaves = true;
+      saved.clear();
+      ids.forEach((id) => saved.add(id));
+      store.set('bt-saved', ids);
+      paintHearts();
+      if (catalogueRoot) onSavedChange();
+      if (savedRoot) renderSavedPage();
+    } catch (e) { /* offline or no API locally: browser saves keep working */ }
+  }
+  const savedList = () => [...saved].map((id) => byId.get(id)).filter(Boolean);
+
+  // profile-saved.html: the wishlist inside the account.
+  function renderSavedPage() {
+    const grid = $('#bt-saved-grid');
+    if (!grid) return;
+    const list = savedList();
+    $('#bt-saved-empty').hidden = list.length > 0;
+    $('#bt-saved-count').textContent = list.length ? `${list.length} saved beat${list.length === 1 ? '' : 's'}` : '';
+    grid.innerHTML = list.map(cardHtml).join('');
+    if (!grid.dataset.bound) { bindCardClicks(grid); grid.dataset.bound = '1'; }
+    syncCards();
+    renderCart();
+  }
+
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-save]');
     if (btn) { e.preventDefault(); e.stopPropagation(); toggleSave(btn.dataset.save); }
@@ -135,14 +193,16 @@
 
   /* --------------------------- Collections (tiles) -------------------------- */
   const NEW_DAYS = 30;
+  // One line weight (1.8) and round joins for every collection icon, drawn
+  // on the 24px grid so they stay crisp at 26px over the cover collage.
   const ICONS = {
-    all: '<path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-    new: '<path d="M12 3l2.3 5.4 5.7.5-4.3 3.8 1.3 5.6L12 15.4 7 18.3l1.3-5.6L4 8.9l5.7-.5z" fill="currentColor"/>',
-    under30: '<path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.6" fill="currentColor"/>',
-    stems: '<path d="M5 18V9M10 18V5M15 18v-7M20 18V8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
-    project: '<path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
-    genre: '<path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/>',
-    saved: '<path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z" fill="currentColor"/>',
+    all: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+    saved: '<path d="M12 19.5s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.5c0 5.1-7 9.4-7 9.4z"/>',
+    new: '<path d="M12 3.5l1.9 5.2 5.2 1.9-5.2 1.9L12 17.7l-1.9-5.2-5.2-1.9 5.2-1.9z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+    under30: '<path d="M4 12.2V5.5A1.5 1.5 0 0 1 5.5 4h6.7l7.4 7.4a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8.5" cy="8.5" r="1.4"/>',
+    stems: '<path d="M5 17.5v-5M9.7 17.5V6.5M14.3 17.5v-8M19 17.5v-3"/><path d="M3.5 20.5h17"/>',
+    project: '<path d="M3.8 7.5A1.8 1.8 0 0 1 5.6 5.7h3.9l2 2h6.9a1.8 1.8 0 0 1 1.8 1.8v7.8a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z"/><path d="M8.5 13.5h7"/>',
+    genre: '<path d="M9.5 17V6.2l9-2v10.6"/><circle cx="7.2" cy="17" r="2.3"/><circle cx="16.2" cy="14.8" r="2.3"/>',
   };
   const collections = () => {
     const base = [
@@ -333,7 +393,7 @@
       <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${empty ? 'disabled' : ''}>
         <span class="bt-col-disc">
           <span class="bt-col-mosaic n${Math.min(items.length, 4)}" aria-hidden="true">${mosaic}</span>
-          <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[c.icon]}</svg></span>
+          <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[c.icon]}</svg></span>
           <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
         </span>
         <span class="bt-col-label">${esc(c.label)}</span>
@@ -593,7 +653,7 @@
   const vizCanvas = $('#bt-player-viz');
   const vg = vizCanvas.getContext('2d');
 
-  const queue = () => (catalogueRoot ? (visible.length ? visible : BEATS) : BEATS);
+  const queue = () => (catalogueRoot ? (visible.length ? visible : BEATS) : savedRoot ? savedList() : BEATS);
 
   const showPlayer = (beat) => {
     player.className = `bt-player ${tintClass(beat)}${audio.paused ? '' : ' is-playing'}${player.classList.contains('is-visible') ? ' is-visible' : ''}`;
@@ -980,6 +1040,8 @@
     setupCart();
     if (catalogueRoot) setupCatalogue();
     if (beatRoot) setupBeatPage();
+    if (savedRoot) renderSavedPage();
+    syncSaved();
   }).catch((err) => {
     console.error('beats: catalogue failed to load', err);
     const empty = $('#bt-empty');

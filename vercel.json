@@ -30,6 +30,10 @@
     {
       "source": "/api/beats/checkout",
       "destination": "/api/tickets?action=beats-checkout"
+    },
+    {
+      "source": "/api/beats/saved",
+      "destination": "/api/tickets?action=beats-saved"
     }
   ]
 }

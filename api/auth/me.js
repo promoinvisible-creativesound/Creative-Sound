@@ -1,7 +1,7 @@
 const { sql } = require('../_lib/db');
 const { getSession } = require('../_lib/auth');
 const { PACKS, downloadUrl, ensureTable } = require('../_lib/packs');
-const { beatsForAccount } = require('../_lib/beats');
+const { beatsForAccount, savedForAccount } = require('../_lib/beats');
 
 module.exports = async (req, res) => {
   const session = getSession(req);
@@ -44,8 +44,10 @@ module.exports = async (req, res) => {
 
     // Beat purchases, same rule: never break the account pages.
     let beats = [];
+    let savedBeats = [];
     try {
       beats = await beatsForAccount(session.email);
+      savedBeats = await savedForAccount(session.email);
     } catch (err) {
       console.error('me beats error:', err);
     }
@@ -53,6 +55,7 @@ module.exports = async (req, res) => {
     res.status(200).json({
       email: session.email,
       beats,
+      savedBeats,
       firstName: (user && user.first_name) || '',
       lastName: (user && user.last_name) || '',
       licenses,

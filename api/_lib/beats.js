@@ -118,6 +118,14 @@ function ensureTables() {
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_beat_purchases_session_beat ON beat_purchases (stripe_session_id, beat_id)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_beat_purchases_email ON beat_purchases (email)`;
       await sql`
+        CREATE TABLE IF NOT EXISTS beat_saves (
+          email TEXT NOT NULL,
+          beat_id TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          PRIMARY KEY (email, beat_id)
+        )
+      `;
+      await sql`
         CREATE TABLE IF NOT EXISTS beat_files (
           beat_id TEXT NOT NULL,
           file_type TEXT NOT NULL,
@@ -348,7 +356,58 @@ async function beatsForAccount(email) {
   return out;
 }
 
-module.exports = { handleCheckout, handleBeatPurchase, beatsForAccount, validateItems, licensePdf, ensureTables };
+/* ------------------------------- Saved beats ------------------------------- */
+// The heart on beat cards. Signed-in visitors keep their saves on the
+// account (any device); the browser keeps a copy for signed-out visitors.
+// Reached through /api/beats/saved -> /api/tickets?action=beats-saved.
+//   GET                          -> { ids: [...] } newest first
+//   POST { beatId, saved }       -> save / unsave one beat
+//   POST { merge: [ids] }        -> add browser saves after signing in
+async function savedForAccount(email) {
+  await ensureTables();
+  const rows = await sql`SELECT beat_id FROM beat_saves WHERE email = ${email} ORDER BY created_at DESC`;
+  return rows.map((r) => r.beat_id).filter((id) => beatsById.has(id));
+}
+
+async function handleSaved(req, res) {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: 'Not signed in.' });
+    return;
+  }
+  try {
+    if (req.method === 'GET') {
+      res.status(200).json({ ids: await savedForAccount(session.email) });
+      return;
+    }
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+    await ensureTables();
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    if (Array.isArray(body.merge)) {
+      const ids = [...new Set(body.merge.map(String))].filter((id) => beatsById.has(id)).slice(0, 200);
+      for (const id of ids) {
+        await sql`INSERT INTO beat_saves (email, beat_id) VALUES (${session.email}, ${id}) ON CONFLICT DO NOTHING`;
+      }
+    } else {
+      const id = String(body.beatId || '');
+      if (!beatsById.has(id)) {
+        res.status(400).json({ error: 'Unknown beat.' });
+        return;
+      }
+      if (body.saved) await sql`INSERT INTO beat_saves (email, beat_id) VALUES (${session.email}, ${id}) ON CONFLICT DO NOTHING`;
+      else await sql`DELETE FROM beat_saves WHERE email = ${session.email} AND beat_id = ${id}`;
+    }
+    res.status(200).json({ ids: await savedForAccount(session.email) });
+  } catch (err) {
+    console.error('beats saved error:', err);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
+module.exports = { handleCheckout, handleBeatPurchase, beatsForAccount, savedForAccount, handleSaved, validateItems, licensePdf, ensureTables };
 
 /* README — making a beat buyable
    1. Add it to data/beats.json (id, title, producer, bpm, key, genre, mood,

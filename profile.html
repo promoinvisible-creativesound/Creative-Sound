@@ -26,7 +26,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=114">
+<link rel="stylesheet" href="css/style.css?v=116">
 </head>
 <body>
 <div id="grain"></div>
@@ -108,9 +108,26 @@
         </svg>
       </div>
       <div class="account-card-body">
-        <h2 class="account-card-title">License &amp; Download</h2>
+        <h2 class="account-card-title">Licenses &amp; Downloads</h2>
         <p class="account-card-sub" id="hub-license-sub">Loading…</p>
-        <p class="account-card-desc">View your license key and download CREATIVE DIST 2.0.</p>
+        <p class="account-card-desc">Your CREATIVE DIST 2.0 key and installers, plus the packs and beats you own, with their files.</p>
+      </div>
+      <span class="account-card-cta">
+        View
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+
+    <a href="profile-saved.html" class="account-card reveal-up">
+      <div class="account-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"></path>
+        </svg>
+      </div>
+      <div class="account-card-body">
+        <h2 class="account-card-title">Saved beats</h2>
+        <p class="account-card-sub" id="hub-saved-sub">Loading…</p>
+        <p class="account-card-desc">Your wishlist: the beats you saved with the heart, on every device.</p>
       </div>
       <span class="account-card-cta">
         View
@@ -172,6 +189,32 @@
     </a>
   </div>
 
+  <nav class="account-links reveal-up" aria-label="Quick links">
+    <h2 class="account-links-title">Quick links</h2>
+    <div class="account-links-row">
+      <a href="beats.html" class="account-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="16.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+        <span><b>Beat store</b><small>Preview and license beats</small></span>
+      </a>
+      <a href="packs.html" class="account-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 15V9l4 3 4-3v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span><b>Free Serum packs</b><small>302 presets, free</small></span>
+      </a>
+      <a href="tutorial-creative-dist.html" class="account-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 8.5v7l6-3.5z" fill="currentColor"/></svg>
+        <span><b>Creative Dist tutorial</b><small>Get the most out of it</small></span>
+      </a>
+      <a href="faq.html" class="account-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.8v.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span><b>FAQ</b><small>Install, Mac fix, licenses</small></span>
+      </a>
+      <a href="profile-tickets.html" class="account-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span><b>Contact support</b><small>We reply by email</small></span>
+      </a>
+    </div>
+  </nav>
+
   <div class="account-hub-footer reveal-up">
     <button id="logout-btn" class="btn btn-ghost">Sign out</button>
   </div>
@@ -230,7 +273,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=40"></script>
-<script src="js/auth.js?v=34"></script>
+<script src="js/auth.js?v=35"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

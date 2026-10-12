@@ -677,18 +677,6 @@
     const f = BEATS.filter((b) => b.featured);
     return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 3);
   };
-  // "Oct 12 – 18" (or "Sep 29 – Oct 5"): Monday to Sunday of this week.
-  const weekLabel = () => {
-    const now = new Date();
-    const mon = new Date(now);
-    mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
-    const m = (d) => d.toLocaleDateString('en-GB', { month: 'short' });
-    return mon.getMonth() === sun.getMonth()
-      ? `${m(mon)} ${mon.getDate()} – ${sun.getDate()}`
-      : `${m(mon)} ${mon.getDate()} – ${m(sun)} ${sun.getDate()}`;
-  };
   const spotHtml = (b, rank) => `
     <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}">
       <div class="bt-feat-cover">
@@ -726,10 +714,6 @@
             <div class="bt-top-titles">
               <span class="bt-top-live"><span class="bt-feat-dot" aria-hidden="true"></span>This week</span>
               <h2 class="bt-top-title">Top tracks</h2>
-            </div>
-            <div class="bt-top-meta">
-              <span class="bt-top-dates">${weekLabel()}</span>
-              <span class="bt-top-pill">${list.length} picks</span>
             </div>
           </header>
           <div class="bt-top-body">

@@ -34,7 +34,18 @@
             <p class="rv-by">${esc(s.producerName)} · <a href="mailto:${esc(s.email)}">${esc(s.email)}</a></p>
             <div class="up-preview-chips rv-chips">${[`${s.bpm} BPM`, s.key, s.genre, s.mood].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('')}</div>
             ${tags.length ? `<p class="rv-tags">${tags.map(esc).join(' · ')}</p>` : ''}
-            ${s.links && s.links.preview ? `<audio class="rv-audio" controls preload="none" src="${esc(s.links.preview)}"></audio>` : ''}
+            ${s.links && s.links.preview ? `
+            <div class="rv-player" data-src="${esc(s.links.preview)}">
+              <button type="button" class="rv-play" aria-label="Play preview of ${esc(s.title)}">
+                <svg class="rv-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+                <svg class="rv-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+              </button>
+              <span class="rv-time" data-cur>0:00</span>
+              <div class="rv-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="rv-bar-fill"></span><span class="rv-bar-knob"></span>
+              </div>
+              <span class="rv-time" data-dur>–:––</span>
+            </div>` : ''}
           </div>
         </div>
         ${s.about ? `<p class="rv-about">${esc(s.about)}</p>` : ''}
@@ -58,6 +69,9 @@
   }
 
   async function load() {
+    // The list is rebuilt, so stop whatever preview was playing.
+    audio.pause();
+    current = null;
     list.setAttribute('aria-busy', 'true');
     $('#rv-error').hidden = true;
     try {
@@ -117,6 +131,71 @@
       err.hidden = false;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
     }
+  });
+
+  /* ------------------------------ Preview player ---------------------------- */
+  // One shared <audio>; each card's player drives it. Starting one stops
+  // the other. The bar seeks on click/drag and with the arrow keys.
+  const audio = new Audio();
+  audio.preload = 'none';
+  let current = null;
+  const fmt = (t) => (Number.isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : '–:––');
+  const paint = () => {
+    if (!current) return;
+    const p = audio.duration ? audio.currentTime / audio.duration : 0;
+    current.style.setProperty('--p', p);
+    current.querySelector('[data-cur]').textContent = fmt(audio.currentTime);
+    current.querySelector('[data-dur]').textContent = fmt(audio.duration);
+    current.querySelector('.rv-bar').setAttribute('aria-valuenow', String(Math.round(p * 100)));
+  };
+  const setPlaying = (on) => { if (current) current.classList.toggle('is-playing', on); };
+  audio.addEventListener('timeupdate', paint);
+  audio.addEventListener('loadedmetadata', paint);
+  audio.addEventListener('play', () => setPlaying(true));
+  audio.addEventListener('pause', () => setPlaying(false));
+  audio.addEventListener('ended', () => { setPlaying(false); audio.currentTime = 0; paint(); });
+
+  const select = (player) => {
+    if (current === player) return;
+    if (current) { current.classList.remove('is-playing'); current.style.setProperty('--p', 0); current.querySelector('[data-cur]').textContent = '0:00'; }
+    current = player;
+    audio.src = player.dataset.src;
+  };
+  const seekTo = (player, clientX) => {
+    select(player);
+    const r = player.querySelector('.rv-bar').getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+    const go = () => { audio.currentTime = p * audio.duration; paint(); };
+    if (audio.duration) { go(); return; }
+    audio.addEventListener('loadedmetadata', go, { once: true });
+    audio.load();
+  };
+
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('.rv-play');
+    if (!btn) return;
+    const player = btn.closest('.rv-player');
+    select(player);
+    if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+  });
+  list.addEventListener('pointerdown', (e) => {
+    const bar = e.target.closest('.rv-bar');
+    if (!bar) return;
+    const player = bar.closest('.rv-player');
+    bar.setPointerCapture(e.pointerId);
+    player.classList.add('is-seeking');
+    seekTo(player, e.clientX);
+    const move = (ev) => seekTo(player, ev.clientX);
+    const up = () => { player.classList.remove('is-seeking'); bar.removeEventListener('pointermove', move); };
+    bar.addEventListener('pointermove', move);
+    bar.addEventListener('pointerup', up, { once: true });
+  });
+  list.addEventListener('keydown', (e) => {
+    const bar = e.target.closest('.rv-bar');
+    if (!bar || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    e.preventDefault();
+    select(bar.closest('.rv-player'));
+    if (audio.duration) { audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + (e.key === 'ArrowRight' ? 5 : -5))); paint(); }
   });
 
   load();

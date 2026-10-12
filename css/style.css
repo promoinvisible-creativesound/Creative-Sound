@@ -2423,3 +2423,8 @@ body.search-open{ overflow:hidden; }
 .account-card[hidden]{ display:none; }
 .account-card-accent{ border-color:rgba(232,134,44,0.45); background:radial-gradient(90% 120% at 0% 0%, rgba(232,134,44,0.12), transparent 60%), var(--panel); }
 .account-card-accent .account-card-icon{ color:var(--amber-text); }
+
+/* Pack cards: no light effects on hover either (no pointer glare, no
+   light sweep across the cover), same as the track cards. */
+.pk-glare{ display:none; }
+.pack-tile-shot::after{ display:none; }

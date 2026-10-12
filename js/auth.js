@@ -691,7 +691,7 @@
         if (!res.ok) throw new Error(data.error || 'Could not save, please try again.');
         saved = role;
         status.innerHTML = role === 'producer'
-          ? 'Saved. You can now <a href="upload-beat.html">upload beats</a>.'
+          ? 'Saved. You can now <a href="upload-beat.html">upload tracks</a>.'
           : `Saved: ${LABELS[role]}.`;
       } catch (err) {
         status.textContent = err.message;

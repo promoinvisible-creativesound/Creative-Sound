@@ -131,7 +131,7 @@
     if (!grid) return;
     const list = savedList();
     $('#bt-saved-empty').hidden = list.length > 0;
-    $('#bt-saved-count').textContent = list.length ? `${list.length} saved beat${list.length === 1 ? '' : 's'}` : '';
+    $('#bt-saved-count').textContent = list.length ? `${list.length} saved track${list.length === 1 ? '' : 's'}` : '';
     grid.innerHTML = list.map(cardHtml).join('');
     if (!grid.dataset.bound) { bindCardClicks(grid); bindTilt(grid); grid.dataset.bound = '1'; }
     syncCards();
@@ -207,7 +207,7 @@
   };
   const collections = () => {
     const base = [
-      { id: 'all', label: 'All beats', icon: 'all', test: () => true },
+      { id: 'all', label: 'All tracks', icon: 'all', test: () => true },
       { id: 'saved', label: 'Saved', icon: 'saved', test: (b) => saved.has(b.id) },
       { id: 'new', label: 'New', icon: 'new', test: (b) => (Date.now() - new Date(b.released).getTime()) / 864e5 <= NEW_DAYS },
       { id: 'under30', label: 'Under €30', icon: 'under30', test: (b) => minPrice(b) < 3000 },
@@ -416,9 +416,9 @@
     grid.dataset.view = state.view;
     $('#bt-empty').hidden = visible.length > 0;
     $('#bt-empty p').textContent = state.col === 'saved' && !saved.size
-      ? 'No saved beats yet. Tap the heart on any beat to keep it here.'
-      : 'No beats match these filters.';
-    $('#bt-count').textContent = `${visible.length} beat${visible.length === 1 ? '' : 's'}`;
+      ? 'No saved tracks yet. Tap the heart on any track to keep it here.'
+      : 'No tracks match these filters.';
+    $('#bt-count').textContent = `${visible.length} track${visible.length === 1 ? '' : 's'}`;
     $('#bt-reset').hidden = !isFiltered();
     syncCards();
     renderCart();
@@ -457,7 +457,7 @@
           <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
         </span>
         <span class="bt-col-label">${esc(c.label)}</span>
-        <span class="bt-col-count">${items.length} beat${items.length === 1 ? '' : 's'}</span>
+        <span class="bt-col-count">${items.length} track${items.length === 1 ? '' : 's'}</span>
       </button>`;
   };
   // Saving/unsaving refreshes the Saved tile in place, and the grid when
@@ -736,7 +736,7 @@
         <h3 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h3>
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>
-        <span class="bt-feat-open">Open beat <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="bt-feat-open">Open track <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
     </div>`;
   const ARROW = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;

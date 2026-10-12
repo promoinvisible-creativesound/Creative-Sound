@@ -245,7 +245,7 @@
     };
     $$('#up-checklist li').forEach((li) => li.classList.toggle('is-ok', !!checks[li.dataset.check]));
 
-    $('#up-pv-title').textContent = val('title') || 'Untitled beat';
+    $('#up-pv-title').textContent = val('title') || 'Untitled track';
     $('#up-pv-producer').textContent = val('producerName') || 'Your producer name';
     $('#up-pv-chips').innerHTML = [bpm ? `${bpm} BPM` : '', val('key'), val('genre')].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('');
     $('#up-pv-price').textContent = valid.length ? `€${Math.min(...valid).toFixed(2)}` : '—';

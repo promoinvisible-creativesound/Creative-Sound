@@ -94,10 +94,10 @@
       </div>
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
-        ${item('upload-beat.html', 'upload', 'Upload a beat', '<span class="hm-new">New</span>')}
+        ${item('upload-beat.html', 'upload', 'Upload a track', '<span class="hm-new">New</span>')}
       </div>` : ''}
       <div class="hm-group">
-        ${item('profile-saved.html', 'heart', 'Saved beats')}
+        ${item('profile-saved.html', 'heart', 'Saved tracks')}
         ${item('profile-license.html', 'key', 'Licenses &amp; downloads')}
         ${item('profile-orders.html', 'receipt', 'Orders')}
       </div>
@@ -119,19 +119,19 @@
   function savedMenu(me) {
     const ids = () => [...new Set([...(me.savedBeats || []), ...store.get('bt-saved', [])])];
     return makeMenu({
-      id: 'saved', label: 'Saved beats', cls: 'hm-saved', buttonHtml: icon('heart', 'hm-btn-ic'),
+      id: 'saved', label: 'Saved tracks', cls: 'hm-saved', buttonHtml: icon('heart', 'hm-btn-ic'),
       onOpen: async (panel) => {
         const { byId } = await loadCatalogue();
         const list = ids().map((id) => byId.get(id)).filter(Boolean);
         panel.innerHTML = `
-          <div class="hm-head"><b>Saved beats</b>${list.length ? `<span>${list.length}</span>` : ''}</div>
+          <div class="hm-head"><b>Saved tracks</b>${list.length ? `<span>${list.length}</span>` : ''}</div>
           ${list.length ? `<div class="hm-beats">${list.slice(0, 4).map((b) => `
             <a href="beats/${encodeURIComponent(b.id)}.html" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
               <span class="hm-beat-art" aria-hidden="true"></span>
               <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc(b.producer)} · ${b.bpm} BPM</small></span>
             </a>`).join('')}</div>
             <a href="profile-saved.html" class="hm-foot" role="menuitem">View all saved</a>`
-          : empty('heart', 'Nothing saved yet', 'Tap the heart on any beat to keep it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse beats</a>')}`;
+          : empty('heart', 'Nothing saved yet', 'Tap the heart on any track to keep it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse tracks</a>')}`;
       },
     });
   }
@@ -157,7 +157,7 @@
               ${s.reviewNote ? `<small>${esc(s.reviewNote)}</small>` : ''}
             </a>`).join('')}</div>
             <a href="profile-producer.html" class="hm-foot" role="menuitem">Open producer area</a>`
-          : empty('bell', "You're all caught up", me.role === 'producer' ? 'Review results for your beats will show up here.' : 'News about your orders and the site will show up here.')}`;
+          : empty('bell', "You're all caught up", me.role === 'producer' ? 'Review results for your tracks will show up here.' : 'News about your orders and the site will show up here.')}`;
       },
     });
     if (me.role === 'producer') {
@@ -197,7 +197,7 @@
           }).join('')}</div>
             <div class="hm-total"><span>Total</span><b>${euro(total)}</b></div>
             <a href="beats.html?cart=1" class="hm-checkout" role="menuitem">Go to checkout</a>`
-          : empty('bag', 'Your cart is empty', 'Pick a license on any beat to add it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse beats</a>')}`;
+          : empty('bag', 'Your cart is empty', 'Pick a license on any track to add it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse tracks</a>')}`;
       },
     });
     const paintCount = () => {

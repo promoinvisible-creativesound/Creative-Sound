@@ -41,7 +41,7 @@ function mainFor(b) {
   const facts = [['BPM', b.bpm], ['Key', b.key], ['Genre', b.genre], ['Mood', b.mood], ['Released', fmtDate(b.released)]];
   return `<main class="beat-page bt-tint-${tint}" data-beat-id="${esc(b.id)}">
   <div class="bp-wrap">
-    <nav class="bp-crumbs" aria-label="Breadcrumb"><a href="beats.html">Beats</a><span aria-hidden="true">/</span><span>${esc(b.title)}</span></nav>
+    <nav class="bp-crumbs" aria-label="Breadcrumb"><a href="beats.html">Tracks</a><span aria-hidden="true">/</span><span>${esc(b.title)}</span></nav>
 
     <section class="bp-hero" aria-label="${esc(b.title)}">
       <div class="bp-cover">
@@ -102,12 +102,12 @@ function mainFor(b) {
     </section>
 
     ${b.about ? `<section class="bp-section" aria-labelledby="bp-about-title">
-      <div class="bp-section-head"><h2 id="bp-about-title">About this beat</h2></div>
+      <div class="bp-section-head"><h2 id="bp-about-title">About this track</h2></div>
       <div class="bp-about"><p>${esc(b.about)}</p></div>
     </section>` : ''}
 
     <section class="bp-section" aria-labelledby="bp-more-title">
-      <div class="bp-section-head"><h2 id="bp-more-title">More from ${esc(b.producer)}</h2><a href="beats.html">See all beats</a></div>
+      <div class="bp-section-head"><h2 id="bp-more-title">More from ${esc(b.producer)}</h2><a href="beats.html">See all tracks</a></div>
       <div class="bp-row" id="bp-more"></div>
     </section>
   </div>
@@ -118,8 +118,8 @@ function pageFor(b) {
   const url = `${SITE}/beats/${b.id}.html`;
   const tiers = tiersOf(b);
   const prices = tiers.map((t) => b.prices[t]);
-  const title = `${b.title} (prod. ${b.producer}) | ${b.genre} beat | Creative Sound`;
-  const desc = `${b.title}: ${b.genre.toLowerCase()} beat by ${b.producer}, ${b.bpm} BPM in ${b.key}. Preview it and license it from ${euro(Math.min(...prices))}: MP3, WAV, stems or FL Studio project.`;
+  const title = `${b.title} (prod. ${b.producer}) | ${b.genre} track | Creative Sound`;
+  const desc = `${b.title}: ${b.genre.toLowerCase()} track by ${b.producer}, ${b.bpm} BPM in ${b.key}. Preview it and license it from ${euro(Math.min(...prices))}: MP3, WAV, stems or FL Studio project.`;
   const image = b.cover ? `${SITE}/${b.cover}` : `${SITE}/assets/img/gui-full.png`;
   const ld = {
     '@context': 'https://schema.org',

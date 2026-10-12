@@ -1264,3 +1264,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-top-live::before{ order:-1; }
 .bt-top-pill{ display:inline-flex; align-items:center; gap:8px; }
 .bt-top-dates{ order:-1; line-height:1; font-size:13.5px; font-weight:600; color:var(--text); }
+
+/* Equal spacing either side of the dividers (14px) */
+.bt-top-live, .bt-top-pill{ gap:14px; }
+.bt-top-live::before, .bt-top-pill::before{ margin-right:0; }
+.bt-top-live .bt-feat-dot{ display:none; }

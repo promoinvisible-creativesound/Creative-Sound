@@ -1408,3 +1408,11 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (max-width:560px){ .bt-dd-custom input{ height:38px; font-size:16px; } .bt-dd-custom-go{ height:38px; } }
 .bt-dd-custom-go{ flex:0 0 auto; height:30px; padding:0 10px; font-size:12.5px; border-radius:7px; }
 @media (max-width:560px){ .bt-dd-custom-go{ height:32px; } }
+/* Phone: compact Min – Max + Apply row instead of full width */
+@media (max-width:560px){
+  .bt-dd-custom{ padding:8px 6px 2px; gap:6px; }
+  .bt-dd-custom-title{ font-size:11.5px; }
+  .bt-dd-custom-row{ gap:6px; }
+  .bt-dd-custom input{ flex:0 0 72px; width:72px; height:32px; padding:0 6px; border-radius:7px; font-size:16px; }
+  .bt-dd-custom-go{ height:30px; padding:0 10px; font-size:12.5px; }
+}

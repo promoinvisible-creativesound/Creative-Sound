@@ -1440,3 +1440,24 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (hover:hover) and (pointer:fine){
   .bt-card:hover{ box-shadow:none; }
 }
+
+/* ============== Track cards: same motion as the pack cards ================
+   Pointer tilt up to 6deg (perspective 1100px, 0.6s settle), the cover
+   leans in 4% on hover, and covers come in with a focus pull (blurred and
+   dim to sharp), one after the other, the first time the grid scrolls in. */
+.bt-card{ transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)); transition:border-color 300ms ease, transform 600ms var(--ease-out); }
+.bt-card.is-tilting{ transition:border-color 300ms ease, transform 120ms linear; }
+@media (hover:hover) and (pointer:fine){
+  .bt-card:hover{ transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)); }
+  .bt-card:hover .bt-art-gen, .bt-card:hover .bt-art img{ transform:scale(1.04); }
+  .bt-card:hover .bt-art-gen::after{ transform:none; }
+}
+.bt-art-gen, .bt-art img{ transition:transform 600ms var(--ease-out), filter 900ms var(--ease-out); }
+
+@keyframes btFocus{ from{ filter:blur(10px) brightness(0.6); transform:scale(1.08); } to{ filter:none; transform:none; } }
+.bt-card.bt-in{ animation:btFade 400ms ease both; animation-delay:calc(var(--i, 0) * 60ms); }
+.bt-card.bt-in .bt-art{ animation:btFocus 900ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 110ms + 120ms); }
+@keyframes btFade{ from{ opacity:0; } to{ opacity:1; } }
+@media (prefers-reduced-motion: reduce){
+  .bt-card.bt-in .bt-art{ animation:none; }
+}

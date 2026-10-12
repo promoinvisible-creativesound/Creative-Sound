@@ -59,6 +59,28 @@
     }
     audio.play().catch(() => {});
   });
+  // Pointer tilt like the pack cards (max 6deg), fine pointers only.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let current = null;
+    let last = null;
+    let frame = 0;
+    const reset = (c) => { if (!c) return; c.classList.remove('is-tilting'); c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); };
+    const apply = () => {
+      frame = 0;
+      if (!current || !last) return;
+      const r = current.getBoundingClientRect();
+      current.style.setProperty('--ry', `${(((last.clientX - r.left) / r.width - 0.5) * 12).toFixed(2)}deg`);
+      current.style.setProperty('--rx', `${((0.5 - (last.clientY - r.top) / r.height) * 8.4).toFixed(2)}deg`);
+    };
+    grid.addEventListener('pointermove', (e) => {
+      const c = e.target.closest('.ho-track');
+      if (c !== current) { reset(current); current = c; if (c) c.classList.add('is-tilting'); }
+      last = e;
+      if (current && !frame) frame = requestAnimationFrame(apply);
+    });
+    grid.addEventListener('pointerleave', () => { reset(current); current = null; });
+  }
+
   const sync = () => { if (playing) playing.classList.toggle('is-playing', !audio.paused); };
   audio.addEventListener('play', sync);
   audio.addEventListener('pause', sync);

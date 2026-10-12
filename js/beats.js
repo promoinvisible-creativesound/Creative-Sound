@@ -852,8 +852,8 @@
       const r = current.getBoundingClientRect();
       const x = (last.clientX - r.left) / r.width;
       const y = (last.clientY - r.top) / r.height;
-      current.style.setProperty('--ry', `${((x - 0.5) * 8).toFixed(2)}deg`);
-      current.style.setProperty('--rx', `${((0.5 - y) * 6).toFixed(2)}deg`);
+      current.style.setProperty('--ry', `${((x - 0.5) * 12).toFixed(2)}deg`);
+      current.style.setProperty('--rx', `${((0.5 - y) * 8.4).toFixed(2)}deg`);
       const cover = $('.bt-cover-wrap', current);
       if (cover) {
         const c = cover.getBoundingClientRect();

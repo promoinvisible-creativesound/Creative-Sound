@@ -2394,3 +2394,6 @@ body.search-open{ overflow:hidden; }
 .prose mark.todo{ background:rgba(255,215,0,0.18); color:var(--amber-bright); padding:1px 4px; border-radius:3px; font-weight:500; }
 .prose em{ color:var(--text-muted); font-style:italic; }
 .prose code{ font-family:var(--mono); font-size:13px; color:var(--amber-text); }
+
+/* Main nav in sentence case: a touch larger and heavier to stay legible */
+#site-nav a{ font-size:14.5px; font-weight:500; letter-spacing:0.2px; }

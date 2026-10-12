@@ -64,6 +64,7 @@ function mainFor(b) {
             Preview
           </button>
           <a href="#licensing" class="btn btn-ghost" onclick="document.getElementById('licensing').scrollIntoView({behavior:'smooth'});return false;">Licenses from ${euro(Math.min(...tiers.map((t) => b.prices[t])))}</a>
+          <button type="button" class="btn btn-ghost bp-save" data-save="${esc(b.id)}" aria-pressed="false" aria-label="Save ${esc(b.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"/></svg><span class="bt-save-text">Save</span></button>
           <button type="button" class="btn btn-ghost" id="bp-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Share</span></button>
         </div>
       </div>

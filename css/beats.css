@@ -695,3 +695,108 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-row{ scrollbar-color:rgba(255,255,255,0.14) transparent; }
 .bp-row::-webkit-scrollbar{ height:6px; }
 .bp-row::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.14); border-radius:3px; }
+
+/* ================================ v3 pass =================================
+   Saved beats, no scrollbar in dropdowns, compact related rows, bigger
+   small text. */
+
+/* Page now starts with Explore (no hero): clear the fixed header */
+.beats-page .bt-section{ padding-top:calc(118px + var(--announce-h, 0px)); }
+@media (max-width:560px){ .beats-page .bt-section{ padding-top:calc(92px + var(--announce-h, 0px)); } }
+
+/* --------------------------------- Save ---------------------------------- */
+.bt-save{
+  position:absolute; top:10px; right:10px; z-index:3; width:40px; height:40px; padding:0;
+  display:flex; align-items:center; justify-content:center; border-radius:50%;
+  background:rgba(8,8,7,0.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.18); color:#fff;
+  transition:background-color 200ms ease, border-color 200ms ease, color 200ms ease, transform 160ms var(--ease-out);
+}
+.bt-save svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; transition:fill 200ms ease; }
+.bt-save:active{ transform:scale(0.92); }
+.bt-save.is-saved{ color:#ff4d6d; border-color:rgba(255,77,109,0.55); background:rgba(255,77,109,0.14); }
+.bt-save.is-saved svg{ fill:currentColor; }
+@media (hover:hover) and (pointer:fine){ .bt-save:not(.is-saved):hover{ border-color:rgba(255,255,255,0.4); } }
+/* Burst ring when a beat gets saved */
+.bt-save::after{ content:''; position:absolute; inset:-1px; border-radius:inherit; border:2px solid #ff4d6d; opacity:0; transform:scale(0.8); pointer-events:none; }
+.bt-save.is-burst::after{ animation:btBurst 450ms var(--ease-out); }
+@keyframes btBurst{ 0%{ opacity:0.8; transform:scale(0.8); } 100%{ opacity:0; transform:scale(1.6); } }
+/* the playing equalizer moves to the top-left so the heart keeps its corner */
+.bt-eq{ left:12px; right:auto; }
+.bt-grid[data-view="list"] .bt-save{ position:static; flex-shrink:0; margin-left:4px; order:5; width:40px; height:40px; background:transparent; }
+.bt-grid[data-view="list"] .bt-cover-wrap{ position:relative; }
+.bt-grid[data-view="list"] .bt-cover-wrap .bt-save{ display:none; }
+
+/* Beat page save button */
+.bp-save svg{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
+.bp-save.is-saved{ color:#ff4d6d; border-color:rgba(255,77,109,0.6); }
+.bp-save.is-saved svg{ fill:currentColor; }
+.bp-save{ position:relative; }
+.bp-save::after{ content:''; position:absolute; inset:-1px; border:2px solid #ff4d6d; opacity:0; pointer-events:none; }
+.bp-save.is-burst::after{ animation:btBurst 450ms var(--ease-out); }
+
+/* ------------------------- Dropdowns without scrollbar --------------------- */
+.bt-dd-panel{ max-height:none; overflow:visible; scrollbar-width:none; }
+.bt-dd-panel::-webkit-scrollbar{ display:none; }
+@media (max-width:560px){ .bt-dd-panel{ max-height:70dvh; overflow-y:auto; } }
+
+/* ---------------------------- Compact related rows ------------------------- */
+.bp-row{ grid-auto-columns:minmax(168px, 190px); gap:14px; }
+.bp-row .bt-body{ padding:10px 10px 10px; }
+.bp-row .bt-name{ font-size:14px; }
+.bp-row .bt-producer{ font-size:12.5px; }
+.bp-row .bt-specs{ font-size:12px; margin:8px 0 10px; gap:6px; }
+.bp-row .bt-specs span:nth-of-type(3), .bp-row .bt-specs i:nth-of-type(2){ display:none; }
+.bp-row .bt-buy{ min-height:46px; padding:6px 6px 6px 10px; }
+.bp-row .bt-buy-label{ font-size:10.5px; }
+.bp-row .bt-buy-price{ font-size:15px; }
+.bp-row .bt-buy-icon{ width:32px; height:32px; }
+.bp-row .bt-art-word{ font-size:15px; left:10px; bottom:9px; }
+.bp-row .bt-play{ width:44px; height:44px; margin:-22px 0 0 -22px; }
+.bp-row .bt-save{ width:34px; height:34px; top:8px; right:8px; }
+.bp-row .bt-save svg{ width:16px; height:16px; }
+@media (max-width:560px){ .bp-row{ grid-auto-columns:minmax(150px, 44%); } }
+
+/* ------------------------------ Readable small text ------------------------ */
+.bt-col-count{ font-size:12.5px; color:var(--text-secondary); }
+.bt-col-label{ font-size:14.5px; }
+.bt-dd-label{ color:var(--text-secondary); }
+.bt-dd-count{ font-size:12.5px; color:var(--text-secondary); }
+.bt-dd-opt{ font-size:14.5px; color:var(--text); }
+.bt-search input{ font-size:15px; }
+.bt-search input::placeholder{ color:var(--text-secondary); opacity:0.8; }
+.bt-tag{ font-size:13px; color:var(--text); border-color:var(--border-strong); }
+.bt-count{ font-size:13.5px; color:var(--text); }
+.bt-reset{ font-size:13px; }
+.bt-producer{ color:var(--text); opacity:0.86; }
+.bt-specs{ font-size:13px; color:var(--text); }
+.bt-specs span{ opacity:0.85; }
+.bt-buy-label{ font-size:11.5px; color:var(--text); opacity:0.8; letter-spacing:1.2px; }
+.bt-tier-files, .bp-tier-files{ font-size:13.5px; color:var(--text-secondary); }
+.bt-tier-pill{ font-size:11.5px; }
+.bt-modal-kicker{ font-size:12.5px; }
+.bt-modal-sub{ font-size:14px; color:var(--text-secondary); }
+.bt-terms summary{ font-size:14px; }
+.bt-terms-body{ font-size:13.5px; }
+.bt-terms-body th{ font-size:12px; color:var(--text-secondary); }
+.bt-cart-tier{ font-size:13.5px; color:var(--text-secondary); }
+.bt-cart-remove{ font-size:13px; color:var(--text-secondary); }
+.bt-cart-note{ font-size:13.5px; color:var(--text-secondary); }
+.bt-cart-total span{ font-size:12.5px; color:var(--text-secondary); }
+.bt-player-producer, .bt-player-producer .bt-producer{ font-size:13.5px; }
+.bt-player-time{ font-size:13px; color:var(--text-secondary); }
+.bt-tier-badge{ font-size:12px; }
+.bt-tier-card li{ font-size:14.5px; }
+.bp-crumbs{ font-size:13.5px; }
+.bp-kicker{ font-size:13px; }
+.bp-facts span{ font-size:12px; color:var(--text-secondary); }
+.bp-facts b{ font-size:17px; }
+.bp-tags a{ font-size:13.5px; color:var(--text); }
+.bp-total span{ font-size:12.5px; color:var(--text-secondary); }
+.bp-usage-box > p{ font-size:14px; color:var(--text-secondary); }
+.bp-usage li{ font-size:15px; color:var(--text); }
+.bp-section-head a{ font-size:14px; }
+@media (max-width:560px){
+  .bt-specs{ font-size:12px; }
+  .bt-col-count{ font-size:12px; }
+}

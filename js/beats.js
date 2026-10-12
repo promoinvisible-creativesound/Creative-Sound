@@ -45,13 +45,45 @@
       ${b.cover
         ? `<img src="${esc(b.cover)}" alt="" loading="lazy">`
         : `<div class="bt-art-gen" aria-hidden="true"></div><span class="bt-art-word" aria-hidden="true">${esc(b.title)}</span>`}
-      <span class="bt-art-bpm" aria-hidden="true">${b.bpm} BPM</span>
     </div>`;
   const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><path d="M12 1.8l2.5 1.9 3.1-.2.9 3 2.6 1.7-.9 3 .9 3-2.6 1.7-.9 3-3.1-.2L12 22.2l-2.5-1.9-3.1.2-.9-3-2.6-1.7.9-3-.9-3 2.6-1.7.9-3 3.1.2z" fill="currentColor"/><path d="M8.2 12.3l2.5 2.5 5.1-5.3" fill="none" stroke="#0a0a09" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const isVerified = (name) => !!(PRODUCERS[name] && PRODUCERS[name].verified);
   const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${isVerified(b.producer) ? VERIFIED : ''}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
+
+  /* ---------------------------------- Saved -------------------------------- */
+  // An artist can save beats to come back to (kept in this browser). Saved
+  // beats get their own "Saved" collection tile.
+  const saved = new Set(store.get('bt-saved', []));
+  const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"/></svg>';
+  const saveButton = (b) => `<button type="button" class="bt-save${saved.has(b.id) ? ' is-saved' : ''}" data-save="${esc(b.id)}" aria-pressed="${saved.has(b.id)}" aria-label="${saved.has(b.id) ? 'Remove' : 'Save'} ${esc(b.title)}${saved.has(b.id) ? ' from saved' : ''}">${HEART}</button>`;
+  const toggleSave = (id) => {
+    const b = byId.get(id);
+    if (!b) return;
+    const on = !saved.has(id);
+    if (on) saved.add(id); else saved.delete(id);
+    store.set('bt-saved', [...saved]);
+    track(on ? 'Beat save' : 'Beat unsave', { beat: id });
+    $$(`[data-save="${CSS.escape(id)}"]`).forEach((btn) => {
+      btn.classList.toggle('is-saved', on);
+      btn.setAttribute('aria-pressed', String(on));
+      btn.setAttribute('aria-label', `${on ? 'Remove' : 'Save'} ${b.title}${on ? ' from saved' : ''}`);
+      const label = btn.querySelector('.bt-save-text');
+      if (label) label.textContent = on ? 'Saved' : 'Save';
+      if (on && !reduceMotion) {
+        btn.querySelector('svg').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        btn.classList.remove('is-burst');
+        void btn.offsetWidth;
+        btn.classList.add('is-burst');
+      }
+    });
+    if (catalogueRoot) onSavedChange();
+  };
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-save]');
+    if (btn) { e.preventDefault(); e.stopPropagation(); toggleSave(btn.dataset.save); }
+  }, true);
 
   const cardHtml = (b, i) => `
     <article class="bt-card ${tintClass(b)}" data-id="${esc(b.id)}" style="--i:${Math.min(i, 12)}">
@@ -62,6 +94,7 @@
           <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
         </button>
         <span class="bt-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+        ${saveButton(b)}
       </div>
       <div class="bt-body">
         <div class="bt-titles">
@@ -109,10 +142,12 @@
     stems: '<path d="M5 18V9M10 18V5M15 18v-7M20 18V8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
     project: '<path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     genre: '<path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/>',
+    saved: '<path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z" fill="currentColor"/>',
   };
   const collections = () => {
     const base = [
       { id: 'all', label: 'All beats', icon: 'all', test: () => true },
+      { id: 'saved', label: 'Saved', icon: 'saved', test: (b) => saved.has(b.id) },
       { id: 'new', label: 'New', icon: 'new', test: (b) => (Date.now() - new Date(b.released).getTime()) / 864e5 <= NEW_DAYS },
       { id: 'under30', label: 'Under €30', icon: 'under30', test: (b) => minPrice(b) < 3000 },
       { id: 'stems', label: 'With stems', icon: 'stems', test: (b) => b.prices.trackout > 0 },
@@ -269,6 +304,9 @@
     grid.innerHTML = visible.map(cardHtml).join('');
     grid.dataset.view = state.view;
     $('#bt-empty').hidden = visible.length > 0;
+    $('#bt-empty p').textContent = state.col === 'saved' && !saved.size
+      ? 'No saved beats yet. Tap the heart on any beat to keep it here.'
+      : 'No beats match these filters.';
     $('#bt-count').textContent = `${visible.length} beat${visible.length === 1 ? '' : 's'}`;
     $('#bt-reset').hidden = !isFiltered();
     syncCards();
@@ -282,24 +320,41 @@
     setTimeout(() => { paint(); grid.classList.remove('is-swapping'); }, 150);
   };
 
+  const tileHtml = (c) => {
+    const items = BEATS.filter(c.test);
+    // Up to four covers of the collection make the tile's collage.
+    const mosaic = items.slice(0, 4).map((b) => `<span class="bt-col-tile ${tintClass(b)}">${art(b)}</span>`).join('');
+    const empty = !items.length && c.id !== 'saved';
+    return `
+      <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${empty ? 'disabled' : ''}>
+        <span class="bt-col-disc">
+          <span class="bt-col-mosaic n${Math.min(items.length, 4)}" aria-hidden="true">${mosaic}</span>
+          <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[c.icon]}</svg></span>
+          <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
+        </span>
+        <span class="bt-col-label">${esc(c.label)}</span>
+        <span class="bt-col-count">${items.length} beat${items.length === 1 ? '' : 's'}</span>
+      </button>`;
+  };
+  // Saving/unsaving refreshes the Saved tile in place, and the grid when
+  // the Saved collection is the one being shown.
+  function onSavedChange() {
+    const tile = $('.bt-col[data-col="saved"]');
+    const c = COLLECTIONS.find((x) => x.id === 'saved');
+    if (tile && c) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = tileHtml(c).trim();
+      const fresh = tmp.firstElementChild;
+      tile.replaceWith(fresh);
+      if (!reduceMotion) fresh.querySelector('.bt-col-disc').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 300, easing: EASE_OUT });
+    }
+    if (state.col === 'saved') render();
+  }
+
   const renderCollections = () => {
     COLLECTIONS = collections();
     const row = $('#bt-cats');
-    row.innerHTML = COLLECTIONS.map((c) => {
-      const items = BEATS.filter(c.test);
-      // Up to four covers of the collection make the tile's collage.
-      const mosaic = items.slice(0, 4).map((b) => `<span class="bt-col-tile ${tintClass(b)}">${art(b)}</span>`).join('');
-      return `
-        <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${items.length ? '' : 'disabled'}>
-          <span class="bt-col-disc">
-            <span class="bt-col-mosaic n${Math.min(items.length, 4)}" aria-hidden="true">${mosaic}</span>
-            <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[c.icon]}</svg></span>
-            <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
-          </span>
-          <span class="bt-col-label">${esc(c.label)}</span>
-          <span class="bt-col-count">${items.length} beat${items.length === 1 ? '' : 's'}</span>
-        </button>`;
-    }).join('');
+    row.innerHTML = COLLECTIONS.map(tileHtml).join('');
     row.addEventListener('click', (e) => {
       const tile = e.target.closest('.bt-col');
       if (!tile || tile.disabled || tile.dataset.col === state.col) return;
@@ -487,6 +542,13 @@
       checkout();
     });
     $$('[data-play-beat]', beatRoot).forEach((b) => b.addEventListener('click', () => togglePlay(beat.id)));
+    $$('.bp-save', beatRoot).forEach((btn) => {
+      const on = saved.has(beat.id);
+      btn.classList.toggle('is-saved', on);
+      btn.setAttribute('aria-pressed', String(on));
+      btn.setAttribute('aria-label', `${on ? 'Remove' : 'Save'} ${beat.title}${on ? ' from saved' : ''}`);
+      $('.bt-save-text', btn).textContent = on ? 'Saved' : 'Save';
+    });
     const share = $('#bp-share');
     if (share) share.addEventListener('click', async () => {
       const url = location.href.split('#')[0];

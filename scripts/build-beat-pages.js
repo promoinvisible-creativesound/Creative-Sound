@@ -110,11 +110,6 @@ function mainFor(b) {
       <div class="bp-section-head"><h2 id="bp-more-title">More from ${esc(b.producer)}</h2><a href="beats.html">See all beats</a></div>
       <div class="bp-row" id="bp-more"></div>
     </section>
-
-    <section class="bp-section" aria-labelledby="bp-related-title">
-      <div class="bp-section-head"><h2 id="bp-related-title">Related tracks</h2></div>
-      <div class="bp-row" id="bp-related"></div>
-    </section>
   </div>
 </main>`;
 }

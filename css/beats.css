@@ -849,3 +849,74 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 }
 .bt-player-time{ width:auto; min-width:84px; white-space:nowrap; }
 .bt-player-viz{ right:96px; width:calc(100% - 96px); }
+
+/* ============================== Player v2 =================================
+   Three zones: track info | controls with the seek bar under them, times
+   either side | buy. Times in tabular figures so they don't jitter. */
+.bt-player-inner{
+  max-width:1360px; display:grid; grid-template-columns:minmax(0, 1fr) minmax(320px, 640px) minmax(0, 1fr);
+  align-items:center; gap:24px; padding:10px 24px calc(10px + env(safe-area-inset-bottom));
+}
+.bt-player-left{ display:flex; align-items:center; gap:14px; min-width:0; }
+.bt-player-cover{ width:56px; flex-shrink:0; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5), 0 0 24px -6px rgba(var(--fx), 0.6); }
+.bt-player-info{ min-width:0; gap:2px; }
+.bt-player-title{ font-family:var(--font-sans); font-size:15.5px; font-weight:700; letter-spacing:-0.1px; }
+.bt-player-producer, .bt-player-producer .bt-producer{ font-size:13.5px; color:var(--text-secondary); }
+
+.bt-player-center{ display:flex; flex-direction:column; align-items:stretch; gap:4px; min-width:0; }
+.bt-player-keys{ justify-content:center; gap:14px; }
+.bt-key{ width:40px; height:40px; }
+.bt-key-play{ width:46px; height:46px; box-shadow:0 0 0 4px rgba(var(--fx), 0.16), 0 8px 24px rgba(var(--fx), 0.35); }
+.bt-player.is-playing .bt-key-play{ box-shadow:0 0 0 6px rgba(var(--fx), 0.14), 0 8px 28px rgba(var(--fx), 0.45); }
+
+.bt-player-track{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; height:26px; }
+.bt-player-time{
+  width:auto; min-width:38px; white-space:nowrap;
+  font-family:var(--font-sans); font-size:12.5px; font-weight:600; color:var(--text-secondary);
+  font-variant-numeric:tabular-nums; letter-spacing:0.2px; text-align:left;
+}
+.bt-player-time-now{ text-align:right; color:var(--text); }
+.bt-player-barwrap{ position:relative; height:26px; display:flex; align-items:center; }
+.bt-player-viz{ position:absolute; left:0; right:0; top:-6px; width:100%; height:38px; }
+.bt-player-bar{ position:relative; width:100%; height:26px; flex:1; }
+.bt-player-bar::before{ height:4px; border-radius:3px; background:rgba(255,255,255,0.12); top:50%; transform:translateY(-50%); }
+.bt-player-fill{ height:4px; border-radius:3px; top:50%; margin-top:-2px; }
+.bt-player-knob{
+  position:absolute; top:50%; left:calc(var(--p, 0) * 100%); width:12px; height:12px; margin:-6px 0 0 -6px;
+  border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(var(--fx), 0.35), 0 2px 6px rgba(0,0,0,0.5);
+  transform:scale(0); transition:transform 160ms var(--ease-out);
+}
+.bt-player.is-playing .bt-player-knob, .bt-player-bar:hover .bt-player-knob, .bt-player-bar:focus-visible .bt-player-knob{ transform:scale(1); }
+.bt-player-bar:hover::before, .bt-player-bar:hover .bt-player-fill{ height:6px; }
+.bt-player-bar:hover .bt-player-fill{ margin-top:-3px; }
+
+.bt-player-right{ display:flex; justify-content:flex-end; }
+.bt-player-buy{
+  display:inline-flex; align-items:center; gap:10px; height:46px; padding:0 8px 0 18px; border-radius:12px;
+  background:rgb(var(--fx)); border:0; color:#0a0a09; font-family:var(--font-sans); font-size:14.5px; font-weight:700;
+  box-shadow:0 8px 24px rgba(var(--fx), 0.3); transition:transform 160ms var(--ease-out), box-shadow 200ms ease;
+}
+.bt-player-buy strong{ display:inline-flex; align-items:center; height:32px; padding:0 10px; border-radius:8px; background:rgba(10,10,9,0.18); font-weight:800; font-variant-numeric:tabular-nums; }
+.bt-player-buy:active{ transform:scale(0.97); }
+@media (hover:hover) and (pointer:fine){ .bt-player-buy:hover{ box-shadow:0 10px 30px rgba(var(--fx), 0.45); } }
+
+@media (max-width:900px){
+  .bt-player-inner{ grid-template-columns:minmax(0, 1fr) auto; grid-template-areas:"left right" "center center"; gap:6px 12px; padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
+  .bt-player-left{ grid-area:left; }
+  .bt-player-right{ grid-area:right; gap:8px; }
+  .bt-player-center{ grid-area:center; flex-direction:row; align-items:center; gap:10px; }
+  .bt-player-keys{ order:0; gap:4px; }
+  .bt-player-keys #bt-prev, .bt-player-keys #bt-next{ display:none; }
+  .bt-player-track{ flex:1; order:1; height:auto; grid-template-columns:auto 1fr auto; }
+  .bt-player-track{ grid-column:auto; }
+  .bt-player-buy{ height:42px; padding:0 6px 0 14px; font-size:13.5px; }
+  .bt-player-buy strong{ height:30px; }
+}
+@media (max-width:560px){
+  .bt-player-cover{ width:46px; }
+  .bt-player-title{ font-size:14.5px; }
+  .bt-player-buy span{ display:none; }
+  .bt-player-buy{ padding:0 6px; }
+  .bt-player-time{ font-size:12px; min-width:32px; }
+}
+@media (prefers-reduced-motion: reduce){ .bt-player-knob{ transition:none; } }

@@ -28,7 +28,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="css/style.css?v=114">
-<link rel="stylesheet" href="css/beats.css?v=12">
+<link rel="stylesheet" href="css/beats.css?v=13">
 </head>
 <body>
 <div id="grain"></div>
@@ -182,11 +182,6 @@
       <div class="bp-section-head"><h2 id="bp-more-title">More from Invisible</h2><a href="beats.html">See all beats</a></div>
       <div class="bp-row" id="bp-more"></div>
     </section>
-
-    <section class="bp-section" aria-labelledby="bp-related-title">
-      <div class="bp-section-head"><h2 id="bp-related-title">Related tracks</h2></div>
-      <div class="bp-row" id="bp-related"></div>
-    </section>
   </div>
 </main>
 
@@ -245,27 +240,37 @@
 <!-- Persistent player -->
 <div class="bt-player" id="bt-player" aria-label="Player" hidden>
   <div class="bt-player-inner">
-    <div class="bt-player-cover" id="bt-player-cover"></div>
-    <div class="bt-player-info">
-      <a class="bt-player-title" id="bt-player-title" href="beats.html"></a>
-      <span class="bt-player-producer" id="bt-player-producer"></span>
-    </div>
-    <div class="bt-player-keys">
-      <button type="button" class="bt-key" id="bt-prev" aria-label="Previous beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z" fill="currentColor"/></svg></button>
-      <button type="button" class="bt-key bt-key-play" id="bt-play" aria-label="Play">
-        <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
-        <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
-      </button>
-      <button type="button" class="bt-key" id="bt-next" aria-label="Next beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z" fill="currentColor"/></svg></button>
-    </div>
-    <div class="bt-player-track">
-      <canvas class="bt-player-viz" id="bt-player-viz" aria-hidden="true"></canvas>
-      <div class="bt-player-bar" id="bt-player-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <span class="bt-player-fill" id="bt-player-fill"></span>
+    <div class="bt-player-left">
+      <div class="bt-player-cover" id="bt-player-cover"></div>
+      <div class="bt-player-info">
+        <a class="bt-player-title" id="bt-player-title" href="beats.html"></a>
+        <span class="bt-player-producer" id="bt-player-producer"></span>
       </div>
-      <span class="bt-player-time"><span id="bt-time">0:00</span> / <span id="bt-dur">0:00</span></span>
     </div>
-    <button type="button" class="btn btn-primary bt-player-buy" id="bt-player-buy"></button>
+    <div class="bt-player-center">
+      <div class="bt-player-keys">
+        <button type="button" class="bt-key" id="bt-prev" aria-label="Previous beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z" fill="currentColor"/></svg></button>
+        <button type="button" class="bt-key bt-key-play" id="bt-play" aria-label="Play">
+          <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+          <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+        </button>
+        <button type="button" class="bt-key" id="bt-next" aria-label="Next beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z" fill="currentColor"/></svg></button>
+      </div>
+      <div class="bt-player-track">
+        <span class="bt-player-time bt-player-time-now" id="bt-time">0:00</span>
+        <div class="bt-player-barwrap">
+          <canvas class="bt-player-viz" id="bt-player-viz" aria-hidden="true"></canvas>
+          <div class="bt-player-bar" id="bt-player-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="bt-player-fill" id="bt-player-fill"></span>
+            <span class="bt-player-knob" aria-hidden="true"></span>
+          </div>
+        </div>
+        <span class="bt-player-time" id="bt-dur">0:00</span>
+      </div>
+    </div>
+    <div class="bt-player-right">
+      <button type="button" class="bt-player-buy" id="bt-player-buy"></button>
+    </div>
   </div>
 </div>
 
@@ -322,7 +327,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=40"></script>
-<script src="js/beats.js?v=6"></script>
+<script src="js/beats.js?v=7"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

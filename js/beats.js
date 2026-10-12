@@ -601,7 +601,8 @@
     $('#bt-player-title').textContent = beat.title;
     $('#bt-player-title').href = beatUrl(beat);
     $('#bt-player-producer').innerHTML = producerLine(beat);
-    $('#bt-player-buy').textContent = `Buy · ${euro(minPrice(beat))}`;
+    $('#bt-player-buy').innerHTML = `<span>Buy</span><strong>${euro(minPrice(beat))}</strong>`;
+    $('#bt-player-buy').setAttribute('aria-label', `Buy ${beat.title}, from ${euro(minPrice(beat))}`);
     if (player.hidden) {
       player.hidden = false;
       document.body.classList.add('bt-has-player');
@@ -672,6 +673,7 @@
   const updateProgress = () => {
     const p = audio.duration ? audio.currentTime / audio.duration : 0;
     $('#bt-player-fill').style.transform = `scaleX(${p.toFixed(4)})`;
+    $('#bt-player-bar').style.setProperty('--p', p.toFixed(4));
     $('#bt-player-bar').setAttribute('aria-valuenow', String(Math.round(p * 100)));
     $('#bt-time').textContent = fmtTime(audio.currentTime);
     $('#bt-dur').textContent = fmtTime(audio.duration);

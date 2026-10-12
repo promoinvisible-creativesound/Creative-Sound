@@ -8,6 +8,8 @@ const {
   handleFile: handleProducerFile,
   handleSubmit: handleProducerSubmit,
   handleSubmissions: handleProducerSubmissions,
+  handleAdminList: handleReviewList,
+  handleAdminReview: handleReviewDecide,
 } = require('./_lib/producer');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -39,7 +41,13 @@ module.exports = async (req, res) => {
     return;
   }
   // Producer uploads and review queue, see _lib/producer.js.
-  const producerRoutes = { 'producer-file': handleProducerFile, 'producer-submit': handleProducerSubmit, 'producer-submissions': handleProducerSubmissions };
+  const producerRoutes = {
+    'producer-file': handleProducerFile,
+    'producer-submit': handleProducerSubmit,
+    'producer-submissions': handleProducerSubmissions,
+    'review-list': handleReviewList,
+    'review-decide': handleReviewDecide,
+  };
   if (req.query && producerRoutes[req.query.action]) {
     await producerRoutes[req.query.action](req, res);
     return;

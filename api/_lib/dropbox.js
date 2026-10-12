@@ -70,4 +70,10 @@ async function fileSize(path) {
   }
 }
 
-module.exports = { MAX_UPLOAD_BYTES, configured, uploadLink, fileSize };
+// Short-lived (4 h) direct link to read a file, for the review panel.
+async function readLink(path) {
+  const data = await rpc('files/get_temporary_link', { path });
+  return data.link;
+}
+
+module.exports = { MAX_UPLOAD_BYTES, configured, uploadLink, fileSize, readLink };

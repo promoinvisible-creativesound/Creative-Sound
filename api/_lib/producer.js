@@ -266,4 +266,100 @@ async function handleSubmissions(req, res) {
   }
 }
 
-module.exports = { FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, handleFile, handleSubmit, handleSubmissions };
+/* --------------------------------- Review ---------------------------------
+   For the site owner only: ADMIN_EMAILS (comma-separated) lists the
+   accounts allowed to review. Nobody is an admin if it isn't set. */
+function isAdmin(session) {
+  const list = String(process.env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return !!(session && list.includes(String(session.email).toLowerCase()));
+}
+
+// GET ?status=pending|approved|rejected -> submissions with read links.
+async function handleAdminList(req, res) {
+  if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const status = ['pending', 'approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
+    // Oldest first in the queue, newest first in the history.
+    const rows = status === 'pending'
+      ? await sql`SELECT * FROM beat_submissions WHERE status = 'pending' ORDER BY submitted_at ASC LIMIT 100`
+      : await sql`SELECT * FROM beat_submissions WHERE status = ${status} ORDER BY reviewed_at DESC NULLS LAST LIMIT 100`;
+    const out = [];
+    for (const r of rows) {
+      const links = {};
+      if (dropbox.configured()) {
+        for (const [kind, f] of Object.entries(r.files || {})) {
+          try { links[kind] = await dropbox.readLink(f.path); } catch (err) { links[kind] = null; }
+        }
+      }
+      out.push({
+        id: r.id, status: r.status, email: r.email, producerName: r.producer_name, title: r.title, bpm: r.bpm,
+        key: r.musical_key, genre: r.genre, mood: r.mood, tags: r.tags, typeBeat: r.type_beat, about: r.about,
+        prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
+      });
+    }
+    const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE status = 'pending'`;
+    res.status(200).json({ submissions: out, pendingCount: n });
+  } catch (err) {
+    console.error('admin list error:', err);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
+// POST { id, decision: 'approve' | 'reject', note } -> updates and emails the producer.
+async function handleAdminReview(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const body = req.body || {};
+    const id = Number(body.id);
+    const decision = body.decision === 'approve' ? 'approved' : body.decision === 'reject' ? 'rejected' : null;
+    const note = String(body.note || '').trim().slice(0, 1000);
+    if (!decision) { res.status(400).json({ error: 'Choose approve or reject.' }); return; }
+    if (decision === 'rejected' && !note) { res.status(400).json({ error: 'Tell the producer what to fix.' }); return; }
+    const [sub] = await sql`
+      UPDATE beat_submissions SET status = ${decision}, review_note = ${note || null}, reviewed_at = now(), updated_at = now()
+      WHERE id = ${id} AND status <> 'draft' RETURNING *
+    `;
+    if (!sub) { res.status(404).json({ error: 'Submission not found.' }); return; }
+
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const site = process.env.SITE_URL || 'https://creativesound.io';
+      const ok = decision === 'approved';
+      const { error: mailError } = await resend.emails.send({
+        from: process.env.FROM_EMAIL,
+        to: sub.email,
+        replyTo: 'hello@creativesound.io',
+        subject: ok ? `Approved: ${sub.title}` : `Changes needed: ${sub.title}`,
+        html: `
+          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:32px;">
+            <h1 style="color:#FFB347;font-size:20px;">${ok ? 'Your track is approved' : 'Your track needs a few changes'}</h1>
+            <p><strong>${esc(sub.title)}</strong> ${ok ? 'passed review and will go on sale in the Creative Sound store.' : "didn't pass review yet."}</p>
+            ${note ? `<p style="white-space:pre-wrap;background:#141210;padding:14px;border-radius:8px;">${esc(note)}</p>` : ''}
+            <p><a href="${site}/profile-producer.html" style="color:#FFB347;">Open your producer area</a></p>
+            <p style="margin-top:28px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
+          </div>`,
+      });
+      if (mailError) console.error('review email error:', mailError);
+    } catch (err) {
+      console.error('review email error:', err);
+    }
+    res.status(200).json({ ok: true, id: sub.id, status: sub.status });
+  } catch (err) {
+    console.error('admin review error:', err);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
+module.exports = {
+  FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
+  handleFile, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview,
+};

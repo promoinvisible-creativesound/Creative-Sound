@@ -50,6 +50,14 @@
     {
       "source": "/api/producer/submissions",
       "destination": "/api/tickets?action=producer-submissions"
+    },
+    {
+      "source": "/api/review/list",
+      "destination": "/api/tickets?action=review-list"
+    },
+    {
+      "source": "/api/review/decide",
+      "destination": "/api/tickets?action=review-decide"
     }
   ]
 }

@@ -2515,3 +2515,8 @@ body.search-open{ overflow:hidden; }
 .btn-buy-large{ padding:16px 24px; font-size:15px; }
 .header-icon-btn.header-cart-icon{ clip-path:none !important; border-radius:999px !important; }
 .auth-card-v2 .auth-submit, .auth-alt-btn{ border-radius:999px; }
+/* Slightly smaller buttons */
+.btn{ font-size:13.5px; padding:10px 20px; }
+.btn-buy{ font-size:12.5px; padding:8px 16px; }
+.btn-buy-large{ padding:13px 22px; font-size:14px; }
+.btn{ line-height:1.2; }

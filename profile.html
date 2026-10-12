@@ -26,7 +26,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=117">
+<link rel="stylesheet" href="css/style.css?v=118">
 <link rel="stylesheet" href="css/header-menu.css?v=1">
 </head>
 <body>
@@ -101,6 +101,41 @@
   </div>
 
   <div id="account-hub" class="account-hub">
+    <a href="welcome.html" class="account-card account-card-accent" id="hub-role" hidden>
+      <div class="account-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.6"></circle>
+          <path d="M4.5 20.2a7.5 7.5 0 0 1 15 0"></path>
+        </svg>
+      </div>
+      <div class="account-card-body">
+        <h2 class="account-card-title">Choose your account type</h2>
+        <p class="account-card-sub">One quick step</p>
+        <p class="account-card-desc">Producer, artist or just exploring. Producers can upload tracks for review.</p>
+      </div>
+      <span class="account-card-cta">
+        Choose
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+
+    <a href="profile-producer.html" class="account-card account-card-accent" id="hub-producer" hidden>
+      <div class="account-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 4v16M12 4v16M19 4v16"></path>
+          <rect x="3" y="12" width="4" height="3" rx="1"></rect><rect x="10" y="7" width="4" height="3" rx="1"></rect><rect x="17" y="14" width="4" height="3" rx="1"></rect>
+        </svg>
+      </div>
+      <div class="account-card-body">
+        <h2 class="account-card-title">Producer area</h2>
+        <p class="account-card-sub">Upload tracks and follow their review</p>
+        <p class="account-card-desc">Every track you upload is checked by our team before it goes on sale.</p>
+      </div>
+      <span class="account-card-cta">
+        Open
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
     <a href="profile-license.html" class="account-card reveal-up">
       <div class="account-card-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -275,7 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=42"></script>
 <script src="js/header-menu.js?v=2"></script>
-<script src="js/auth.js?v=38"></script>
+<script src="js/auth.js?v=39"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -2417,3 +2417,9 @@ body.search-open{ overflow:hidden; }
 .update-ticker-item{ text-transform:none; letter-spacing:0.6px; }
 .footer-col-title{ text-transform:none; font-family:var(--font-sans); font-size:13px; font-weight:600; letter-spacing:0.2px; color:var(--text-secondary); }
 .footer-brand-name{ letter-spacing:0.6px; color:var(--text); }
+
+/* Account hub: cards shown only to some accounts (producer area, account
+   type prompt), with an amber edge so they stand out from the rest. */
+.account-card[hidden]{ display:none; }
+.account-card-accent{ border-color:rgba(232,134,44,0.45); background:radial-gradient(90% 120% at 0% 0%, rgba(232,134,44,0.12), transparent 60%), var(--panel); }
+.account-card-accent .account-card-icon{ color:var(--amber-text); }

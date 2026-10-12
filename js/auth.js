@@ -392,12 +392,17 @@
         if (data.licenses.length) licenseParts.push(`${data.licenses.length} license${data.licenses.length > 1 ? 's' : ''}`);
         if (packCount) licenseParts.push(`${packCount} pack${packCount > 1 ? 's' : ''}`);
         const beatCount = (data.beats || []).length;
-        if (beatCount) licenseParts.push(`${beatCount} beat${beatCount > 1 ? 's' : ''}`);
+        if (beatCount) licenseParts.push(`${beatCount} track${beatCount > 1 ? 's' : ''}`);
         const savedEl = document.getElementById('hub-saved-sub');
         if (savedEl) {
           const n = (data.savedBeats || []).length;
-          savedEl.textContent = n ? `${n} saved beat${n > 1 ? 's' : ''}` : 'Nothing saved yet';
+          savedEl.textContent = n ? `${n} saved track${n > 1 ? 's' : ''}` : 'Nothing saved yet';
         }
+        // Producers get their area first; accounts without a type are asked once.
+        const producerCard = document.getElementById('hub-producer');
+        if (producerCard) producerCard.hidden = data.role !== 'producer';
+        const roleCard = document.getElementById('hub-role');
+        if (roleCard) roleCard.hidden = !!data.role;
         document.getElementById('hub-license-sub').textContent = licenseParts.length ? licenseParts.join(' · ') : 'No license yet';
         const orderCount = data.orders.length + (data.packs || []).length;
         document.getElementById('hub-orders-sub').textContent = orderCount

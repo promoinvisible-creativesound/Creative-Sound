@@ -435,6 +435,23 @@
       .catch(() => {});
   }
 
+  /* --------------------------- Footer on phones ----------------------------- */
+  // Product / Company / Legal collapse into tappable rows on small screens
+  // (css/style.css shows the chevron and hides the links until opened).
+  document.querySelectorAll('#site-footer .footer-col:not(.footer-col-brand) .footer-col-title').forEach((title) => {
+    const col = title.parentElement;
+    title.setAttribute('role', 'button');
+    title.setAttribute('tabindex', '0');
+    title.setAttribute('aria-expanded', 'false');
+    title.insertAdjacentHTML('beforeend', '<svg class="footer-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>');
+    const toggle = () => {
+      const open = col.classList.toggle('is-open');
+      title.setAttribute('aria-expanded', String(open));
+    };
+    title.addEventListener('click', toggle);
+    title.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
+
   /* ------------------------------ Click tracking ----------------------------- */
   // Vercel Web Analytics custom events for the clicks that matter: Buy, free
   // demo, demo download, pack download and pack preview. window.va queues

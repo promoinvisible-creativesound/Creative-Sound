@@ -1466,3 +1466,10 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-dd-custom-go, .bt-reset, .bt-view, .bt-count{ border-radius:999px; }
 .bt-view-btn:first-child{ border-radius:999px 0 0 999px; }
 .bt-view-btn:last-child{ border-radius:0 999px 999px 0; }
+/* Phones: small text floor 12px */
+@media (max-width:600px){
+  .bt-spec{ font-size:12.5px; }
+  .bt-col-count, .bt-tier-badge{ font-size:12.5px; }
+  .bt-dd-label{ font-size:12px; }
+  .bt-dd-custom-title{ font-size:12.5px; }
+}

@@ -2,6 +2,7 @@ const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { getSession } = require('./_lib/auth');
 const { handleNotify } = require('./_lib/notify');
+const { handleCheckout: handleBeatsCheckout } = require('./_lib/beats');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -15,6 +16,11 @@ module.exports = async (req, res) => {
   // Public "notify me" sign-ups share this function (see _lib/notify.js).
   if (req.query && req.query.action === 'notify') {
     await handleNotify(req, res);
+    return;
+  }
+  // Beat store checkout shares this function too (see _lib/beats.js).
+  if (req.query && req.query.action === 'beats-checkout') {
+    await handleBeatsCheckout(req, res);
     return;
   }
 

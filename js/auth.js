@@ -310,6 +310,27 @@
     `).join('');
   }
 
+  function renderBeats(data) {
+    const list = document.getElementById('profile-beats');
+    if (!list) return;
+    const beats = data.beats || [];
+    if (!beats.length) {
+      list.innerHTML = '<p class="profile-empty">No beats on this account yet — browse the <a href="beats.html">beat store</a>.</p>';
+      return;
+    }
+    list.innerHTML = beats.map((b) => `
+      <div class="profile-license">
+        <div class="profile-pack-name">${escapeHtml(b.title)} <span style="color:var(--text-muted); font-weight:400;">· ${escapeHtml(b.tier_name)}</span></div>
+        <div class="profile-license-date">prod. ${escapeHtml(b.producer)} · License ${escapeHtml(b.license_id)} · ${new Date(b.created_at).toLocaleDateString()}</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          ${b.files.length
+            ? b.files.map((f) => `<a href="${escapeHtml(f.url)}" class="btn ${f.type === 'wav' ? 'btn-primary' : 'btn-ghost'}">${escapeHtml(f.label)}</a>`).join('')
+            : '<span class="profile-empty" style="padding:0;">Your files are being prepared. Contact support if they do not appear soon.</span>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
   function renderOrders(data) {
     const orders = document.getElementById('profile-orders');
     if (!orders) return;
@@ -404,6 +425,7 @@
         document.getElementById('profile-email').textContent = data.email;
         renderLicenses(data);
         renderPacks(data);
+        renderBeats(data);
       } catch (err) {
         licenseRoot.innerHTML = `<p class="auth-error visible">${err.message}</p>`;
       }

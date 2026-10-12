@@ -8,6 +8,7 @@
     "bcryptjs": "^3.0.3",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",
+    "pdf-lib": "^1.17.1",
     "resend": "^4.0.1",
     "stripe": "^17.4.0"
   }

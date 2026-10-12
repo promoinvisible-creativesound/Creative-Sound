@@ -4,6 +4,7 @@ const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
 const { PACKS, downloadUrl, ensureTable, classifySession } = require('./_lib/packs');
 const { renderEmail, button, codeBlock, steps, paragraph, accountLine } = require('./_lib/emailTemplate');
+const { handleBeatPurchase } = require('./_lib/beats');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -125,6 +126,22 @@ module.exports = async (req, res) => {
 
     if (email) {
       const normalizedEmail = email.trim().toLowerCase();
+
+      // Beat store orders carry their own metadata and never mint a
+      // Creative Dist license; checked first so a paid beat order can't
+      // fall through to the license flow below.
+      if (session.metadata && session.metadata.kind === 'beats') {
+        console.log('checkout', session.id, 'beats', session.metadata.items);
+        try {
+          await handleBeatPurchase({ session, email: normalizedEmail, resend, renderEmail, button, paragraph, steps, accountLine });
+        } catch (err) {
+          console.error('Failed to deliver beat order, asking Stripe to retry:', err);
+          res.status(500).json({ error: 'Temporary error, please retry.' });
+          return;
+        }
+        res.status(200).json({ received: true });
+        return;
+      }
 
       // Decide what was bought. A license is only ever minted for Creative
       // Dist: packs never get one, and a free checkout we can't identify

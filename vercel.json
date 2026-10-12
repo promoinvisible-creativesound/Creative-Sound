@@ -26,6 +26,10 @@
     {
       "source": "/api/notify",
       "destination": "/api/tickets?action=notify"
+    },
+    {
+      "source": "/api/beats/checkout",
+      "destination": "/api/tickets?action=beats-checkout"
     }
   ]
 }

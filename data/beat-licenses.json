@@ -1,0 +1,68 @@
+{
+  "_readme": "The four license tiers, shared by beats.html (what each card shows) and the server (checkout names, delivered files, license PDF). Usage caps for the MP3 tier are placeholders to confirm before publishing. WAV and above are Unlimited.",
+  "order": ["mp3", "wav", "trackout", "project"],
+  "tiers": {
+    "mp3": {
+      "name": "MP3 Lease",
+      "short": "MP3",
+      "files": ["mp3"],
+      "unlimited": false,
+      "highlights": ["Untagged MP3", "Limited commercial use", "Credit: prod. by"],
+      "terms": {
+        "streams": "Up to 100,000 audio streams",
+        "sales": "Up to 2,500 sales / downloads",
+        "videos": "1 music video",
+        "performances": "Non-profit live performances",
+        "radio": "Not included"
+      }
+    },
+    "wav": {
+      "name": "WAV Unlimited",
+      "short": "WAV",
+      "files": ["wav", "mp3"],
+      "unlimited": true,
+      "highlights": ["Untagged WAV + MP3", "Unlimited use", "Credit: prod. by"],
+      "terms": {
+        "streams": "Unlimited",
+        "sales": "Unlimited",
+        "videos": "Unlimited",
+        "performances": "Unlimited, profit and non-profit",
+        "radio": "Unlimited radio stations"
+      }
+    },
+    "trackout": {
+      "name": "Trackout Unlimited",
+      "short": "Stems",
+      "files": ["wav", "mp3", "stems"],
+      "unlimited": true,
+      "highlights": ["WAV + MP3 + track stems", "Unlimited use", "Mix it your way"],
+      "terms": {
+        "streams": "Unlimited",
+        "sales": "Unlimited",
+        "videos": "Unlimited",
+        "performances": "Unlimited, profit and non-profit",
+        "radio": "Unlimited radio stations"
+      }
+    },
+    "project": {
+      "name": "Project Unlimited",
+      "short": "FLP",
+      "files": ["flp", "wav", "mp3", "stems"],
+      "unlimited": true,
+      "highlights": ["FL Studio project + WAV, MP3, stems", "Unlimited use", "Edit the arrangement"],
+      "terms": {
+        "streams": "Unlimited",
+        "sales": "Unlimited",
+        "videos": "Unlimited",
+        "performances": "Unlimited, profit and non-profit",
+        "radio": "Unlimited radio stations"
+      }
+    }
+  },
+  "fileLabels": {
+    "mp3": "MP3",
+    "wav": "WAV",
+    "stems": "Stems (zip)",
+    "flp": "FL Studio project (zip)"
+  }
+}

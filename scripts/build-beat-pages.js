@@ -10,6 +10,10 @@
 
    It also removes pages of beats no longer in the catalogue and keeps
    sitemap.xml in sync (demo beats are noindex and stay out of it). */
+// Private preview: the store is only visible to the accounts in
+// ADMIN_EMAILS (see js/preview-gate.js). Pages stay noindex and out of the
+// sitemap until this is set to false for the public launch.
+const PREVIEW = true;
 const fs = require('fs');
 const path = require('path');
 
@@ -145,7 +149,7 @@ function pageFor(b) {
   html = html.split(`${SITE}/beats.html`).join(url);
   // Pages live in /beats/, assets are linked relatively from the site root.
   html = html.replace('<meta charset="UTF-8">', `<meta charset="UTF-8">${EOL}<base href="/">`);
-  const robots = b.demo ? `${EOL}<meta name="robots" content="noindex,follow">` : '';
+  const robots = b.demo || PREVIEW ? `${EOL}<meta name="robots" content="noindex,follow">` : '';
   html = html.replace(/(<link rel="canonical"[^>]*>)/, `$1${robots}${EOL}<script type="application/ld+json">${JSON.stringify(ld)}</script>`);
   const a = html.indexOf('<main');
   const z = html.indexOf('</main>') + '</main>'.length;
@@ -172,7 +176,8 @@ const smEol = sm.includes('\r\n') ? '\r\n' : '\n';
 sm = sm.replace(/\s*<url>\s*<loc>https:\/\/creativesound\.io\/beats(\.html|\/[^<]+)<\/loc>[\s\S]*?<\/url>/g, '');
 const today = new Date().toISOString().slice(0, 10);
 const entry = (loc, pri) => `  <url>${smEol}    <loc>${loc}</loc>${smEol}    <lastmod>${today}</lastmod>${smEol}    <changefreq>weekly</changefreq>${smEol}    <priority>${pri}</priority>${smEol}  </url>${smEol}`;
-const add = [entry(`${SITE}/beats.html`, '0.8'), ...beats.filter((b) => !b.demo).map((b) => entry(`${SITE}/beats/${b.id}.html`, '0.6'))].join('');
+// While the store is in private preview nothing goes in the sitemap.
+const add = PREVIEW ? '' : [entry(`${SITE}/beats.html`, '0.8'), ...beats.filter((b) => !b.demo).map((b) => entry(`${SITE}/beats/${b.id}.html`, '0.6'))].join('');
 sm = sm.replace('</urlset>', `${add}</urlset>`);
 fs.writeFileSync(smPath, sm);
 

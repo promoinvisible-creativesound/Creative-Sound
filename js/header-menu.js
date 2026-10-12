@@ -249,7 +249,11 @@
 
   /* ---------------------------------- Boot ---------------------------------- */
   const me = window.csMe || fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  Promise.resolve(me).then((data) => {
+  // Private preview: the new header only for allowed accounts; everyone
+  // else keeps the plain icons.
+  const allowed = window.csPreview || Promise.resolve(false);
+  Promise.all([me, allowed]).then(([data, ok]) => {
+    if (!ok) return;
     const cluster = document.createElement('div');
     cluster.className = 'hm-cluster';
     if (data && data.email) {

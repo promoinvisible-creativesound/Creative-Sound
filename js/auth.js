@@ -28,6 +28,13 @@
   function welcomeUrl() {
     return `welcome.html${location.search}`;
   }
+  // Private preview: only allowed accounts see the account-type step.
+  function goAfterSignup() {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((me) => { window.location.href = me && me.preview && !me.role ? welcomeUrl() : getNextUrl(); });
+  }
 
   // Carry a pending checkout across to the other form if someone lands on
   // signup but already has an account (or vice versa), so switching between
@@ -105,7 +112,7 @@
           verifyStep.style.display = 'block';
           document.getElementById('verify-code').focus();
         } else {
-          window.location.href = welcomeUrl();
+          goAfterSignup();
         }
       } catch (err) {
         showError(errorEl, err.message);
@@ -141,7 +148,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = welcomeUrl();
+        goAfterSignup();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -202,7 +209,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
         // Accounts from before account types existed choose one first.
-        window.location.href = data.role ? getNextUrl() : welcomeUrl();
+        window.location.href = data.preview && !data.role ? welcomeUrl() : getNextUrl();
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -424,9 +431,9 @@
         }
         // Producers get their area first; accounts without a type are asked once.
         const producerCard = document.getElementById('hub-producer');
-        if (producerCard) producerCard.hidden = data.role !== 'producer';
+        if (producerCard) producerCard.hidden = !(data.preview && data.role === 'producer');
         const roleCard = document.getElementById('hub-role');
-        if (roleCard) roleCard.hidden = !!data.role;
+        if (roleCard) roleCard.hidden = !data.preview || !!data.role;
         document.getElementById('hub-license-sub').textContent = licenseParts.length ? licenseParts.join(' · ') : 'No license yet';
         const orderCount = data.orders.length + (data.packs || []).length;
         document.getElementById('hub-orders-sub').textContent = orderCount

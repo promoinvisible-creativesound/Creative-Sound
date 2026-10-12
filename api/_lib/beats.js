@@ -13,6 +13,7 @@
 const Stripe = require('stripe');
 const { sql } = require('./db');
 const { getSession } = require('./auth');
+const { previewAllowed } = require('./account');
 const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
@@ -55,6 +56,10 @@ async function handleCheckout(req, res) {
   const session = getSession(req);
   if (!session) {
     res.status(401).json({ error: 'Please sign in to check out.' });
+    return;
+  }
+  if (!previewAllowed(session)) {
+    res.status(403).json({ error: 'The track store is not open yet.' });
     return;
   }
   const { items, error } = validateItems(req.body && req.body.items);
@@ -373,6 +378,10 @@ async function handleSaved(req, res) {
   const session = getSession(req);
   if (!session) {
     res.status(401).json({ error: 'Not signed in.' });
+    return;
+  }
+  if (!previewAllowed(session)) {
+    res.status(403).json({ error: 'The track store is not open yet.' });
     return;
   }
   try {

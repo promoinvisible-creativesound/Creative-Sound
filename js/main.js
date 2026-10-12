@@ -416,6 +416,12 @@
   window.csMe = fetch('/api/auth/me')
     .then((res) => (res.ok ? res.json() : null))
     .catch(() => null);
+  // Private preview: new features show only to allowed accounts (and on a
+  // local preview). css/style.css hides their links until this class is set.
+  window.csPreview = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)
+    ? Promise.resolve(true)
+    : window.csMe.then((me) => !!(me && me.preview));
+  window.csPreview.then((on) => { if (on) document.documentElement.classList.add('is-preview'); });
   const headerAccountLink = document.getElementById('header-account-link');
   if (headerAccountLink) {
     window.csMe
@@ -558,9 +564,14 @@
 
     function runSearch(query) {
       const q = query.trim().toLowerCase();
+      // Private preview: Home and Tracks only for allowed accounts.
+      const PREVIEW_URLS = ['home.html', 'beats.html'];
+      const index = document.documentElement.classList.contains('is-preview')
+        ? SEARCH_INDEX
+        : SEARCH_INDEX.filter((item) => !PREVIEW_URLS.includes(item.url));
       const items = q
-        ? SEARCH_INDEX.filter((item) => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q))
-        : SEARCH_INDEX;
+        ? index.filter((item) => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q))
+        : index;
       renderResults(items.slice(0, 8));
     }
 

@@ -12,7 +12,7 @@
 const { Resend } = require('resend');
 const { sql } = require('./db');
 const { getSession } = require('./auth');
-const { roleFor } = require('./account');
+const { roleFor, previewAllowed } = require('./account');
 const dropbox = require('./dropbox');
 const inspect = require('./inspect');
 const LICENSES = require('../../data/beat-licenses.json');
@@ -80,6 +80,7 @@ const ext = (name) => (String(name).toLowerCase().match(/\.([a-z0-9]+)$/) || [])
 async function producerSession(req, res) {
   const session = getSession(req);
   if (!session) { res.status(401).json({ error: 'Please sign in.' }); return null; }
+  if (!previewAllowed(session)) { res.status(403).json({ error: 'Not available yet.' }); return null; }
   if ((await roleFor(session.uid)) !== 'producer') {
     res.status(403).json({ error: 'This is for producer accounts. You can switch in Settings.' });
     return null;

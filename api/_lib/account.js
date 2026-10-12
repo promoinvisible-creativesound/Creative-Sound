@@ -6,6 +6,15 @@ const { getSession } = require('./auth');
 
 const ROLES = ['producer', 'artist', 'listener'];
 
+// Private preview: the new features (track store, account types, producer
+// uploads, review) only answer the accounts listed in ADMIN_EMAILS. Set
+// PREVIEW_OPEN=1 on Vercel to open them to everyone at launch.
+function previewAllowed(session) {
+  if (process.env.PREVIEW_OPEN === '1') return true;
+  const list = String(process.env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return !!(session && session.email && list.includes(String(session.email).toLowerCase()));
+}
+
 let ready = null;
 function ensureColumns() {
   if (!ready) {
@@ -32,6 +41,7 @@ async function handleRole(req, res) {
     return;
   }
   try {
+    if (!previewAllowed(session)) { res.status(403).json({ error: 'Not available yet.' }); return; }
     if (req.method === 'GET') {
       res.status(200).json({ role: await roleFor(session.uid) });
       return;
@@ -54,4 +64,4 @@ async function handleRole(req, res) {
   }
 }
 
-module.exports = { ROLES, roleFor, handleRole };
+module.exports = { ROLES, roleFor, handleRole, previewAllowed };

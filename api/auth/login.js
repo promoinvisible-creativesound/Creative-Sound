@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { sql } = require('../_lib/db');
 const { signToken, setSessionCookie } = require('../_lib/auth');
-const { roleFor } = require('../_lib/account');
+const { roleFor, previewAllowed } = require('../_lib/account');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
     // The account type decides where the login lands; never block on it.
     let role = null;
     try { role = await roleFor(user.id); } catch (err) { console.error('login role error:', err); }
-    res.status(200).json({ email: user.email, role });
+    res.status(200).json({ email: user.email, role, preview: previewAllowed({ email: user.email }) });
   } catch (err) {
     console.error('login error:', err);
     res.status(500).json({ error: 'Something went wrong, please try again.' });

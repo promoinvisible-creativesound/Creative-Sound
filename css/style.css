@@ -2520,3 +2520,16 @@ body.search-open{ overflow:hidden; }
 .btn-buy{ font-size:12.5px; padding:8px 16px; }
 .btn-buy-large{ padding:13px 22px; font-size:14px; }
 .btn{ line-height:1.2; }
+
+/* ============================ Private preview =============================
+   Links and blocks for the new features only show once the account is
+   allowed (html.is-preview, set by js/main.js from /api/auth/me, or by
+   js/preview-gate.js). Remove this block at the public launch. */
+html:not(.is-preview) a[href="home.html"],
+html:not(.is-preview) a[href="beats.html"],
+html:not(.is-preview) a[href^="beats/"],
+html:not(.is-preview) a[href="profile-saved.html"],
+html:not(.is-preview) a[href="profile-producer.html"],
+html:not(.is-preview) a[href="upload-beat.html"],
+html:not(.is-preview) a[href="welcome.html"],
+html:not(.is-preview) .pv-only{ display:none !important; }

@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=4">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="css/style.css?v=113">
-<link rel="stylesheet" href="css/beats.css?v=3">
+<link rel="stylesheet" href="css/beats.css?v=6">
 </head>
 <body>
 <div id="grain"></div>
@@ -100,43 +100,30 @@
   </div>
 
   <section class="section section-tight bt-section" aria-label="Beat catalogue">
-    <div class="bt-toolbar reveal-up">
-      <div class="bt-cats" role="tablist" aria-label="Collections">
-        <button type="button" class="bt-cat is-active" role="tab" aria-selected="true" data-cat="all">All beats</button>
-        <button type="button" class="bt-cat" role="tab" aria-selected="false" data-cat="new">New</button>
-        <button type="button" class="bt-cat" role="tab" aria-selected="false" data-cat="under30">Under €30</button>
-        <button type="button" class="bt-cat" role="tab" aria-selected="false" data-cat="stems">With stems</button>
-        <button type="button" class="bt-cat" role="tab" aria-selected="false" data-cat="project">With FLP</button>
+    <div class="bt-explore reveal-up">
+      <div class="bt-explore-head">
+        <h2 class="bt-explore-title">Explore</h2>
+        <div class="bt-explore-nav">
+          <button type="button" class="bt-round" id="bt-cats-prev" aria-label="Scroll collections left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="bt-round" id="bt-cats-next" aria-label="Scroll collections right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="bt-hide" id="bt-cats-hide" aria-expanded="true" aria-controls="bt-cats-wrap">Hide <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
       </div>
+      <div class="bt-cats-wrap" id="bt-cats-wrap">
+        <div class="bt-cats-clip">
+          <div class="bt-cats" id="bt-cats" role="tablist" aria-label="Collections"></div>
+        </div>
+      </div>
+    </div>
 
+    <div class="bt-toolbar reveal-up">
       <div class="bt-controls">
         <label class="bt-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
           <span class="sr-only">Search beats</span>
           <input type="search" id="bt-q" placeholder="Search title, producer, type beat…" autocomplete="off">
         </label>
-        <div class="bt-selects">
-          <label class="bt-select"><span class="sr-only">Genre</span><select id="bt-genre"><option value="">Genre</option></select></label>
-          <label class="bt-select"><span class="sr-only">Mood</span><select id="bt-mood"><option value="">Mood</option></select></label>
-          <label class="bt-select"><span class="sr-only">BPM</span>
-            <select id="bt-bpm">
-              <option value="">BPM</option>
-              <option value="0-89">Under 90</option>
-              <option value="90-119">90–119</option>
-              <option value="120-139">120–139</option>
-              <option value="140-999">140+</option>
-            </select>
-          </label>
-          <label class="bt-select"><span class="sr-only">Key</span><select id="bt-key"><option value="">Key</option></select></label>
-          <label class="bt-select"><span class="sr-only">Sort</span>
-            <select id="bt-sort">
-              <option value="new">Newest</option>
-              <option value="price-asc">Price: low to high</option>
-              <option value="price-desc">Price: high to low</option>
-              <option value="bpm-asc">BPM: slow to fast</option>
-            </select>
-          </label>
-        </div>
+        <div class="bt-selects" id="bt-dds"></div>
       </div>
 
       <div class="bt-subbar">
@@ -229,7 +216,7 @@
   <div class="bt-player-inner">
     <div class="bt-player-cover" id="bt-player-cover"></div>
     <div class="bt-player-info">
-      <span class="bt-player-title" id="bt-player-title"></span>
+      <a class="bt-player-title" id="bt-player-title" href="beats.html"></a>
       <span class="bt-player-producer" id="bt-player-producer"></span>
     </div>
     <div class="bt-player-keys">
@@ -304,7 +291,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=40"></script>
-<script src="js/beats.js?v=1"></script>
+<script src="js/beats.js?v=2"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

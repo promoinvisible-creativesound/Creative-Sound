@@ -1,16 +1,21 @@
-/* Beats page (beats.html): catalogue, filters, persistent player, license
-   picker, cart and checkout.
+/* Beat store: catalogue (beats.html) and single beat pages (beats/<id>.html).
 
-   Data comes from data/beats.json (catalogue + per-tier prices in cents) and
-   data/beat-licenses.json (the four tiers). The server re-reads prices from
-   the same file at checkout, so nothing priced in the browser is trusted.
+   Data: data/beats.json (catalogue, producers, prices in cents per tier)
+   and data/beat-licenses.json (the four tiers). The server re-reads prices
+   at checkout, so nothing priced in the browser is trusted.
 
-   Motion follows the rules in css/beats.css: entrance stagger once, CSS
-   transitions for state, WAAPI only for the add-to-cart flight and the
-   cart badge, everything gentler with prefers-reduced-motion. */
+   Shared on both pages: persistent player with visualizer, license picker,
+   cart drawer. Catalogue only: collection tiles, search, custom filter
+   dropdowns, tag chips, grid/list. Beat page only: inline licensing, more
+   from the producer, related tracks.
+
+   Motion (Emil Kowalski rules, see css/beats.css): transform/opacity, strong
+   curves, UI under 300ms, drawers 400ms, dropdowns grow from their trigger,
+   WAAPI only for the add-to-cart flight and badge, reduced motion = gentler. */
 (function () {
-  const root = document.querySelector('.beats-page');
-  if (!root) return;
+  const catalogueRoot = document.querySelector('.beats-page');
+  const beatRoot = document.querySelector('[data-beat-id]');
+  if (!catalogueRoot && !beatRoot) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
@@ -28,10 +33,13 @@
 
   let BEATS = [];
   let LIC = null;
+  let PRODUCERS = {};
   let byId = new Map();
 
-  /* ------------------------------- Rendering ------------------------------- */
-  const tintClass = (b) => `bt-tint-${['amber', 'blue', 'red', 'violet', 'green'].includes(b.tint) ? b.tint : 'amber'}`;
+  /* ------------------------------ Shared markup ---------------------------- */
+  const TINTS = ['amber', 'blue', 'red', 'violet', 'green'];
+  const tintClass = (b) => `bt-tint-${TINTS.includes(b.tint) ? b.tint : 'amber'}`;
+  const beatUrl = (b) => `beats/${encodeURIComponent(b.id)}.html`;
   const art = (b) => `
     <div class="bt-art">
       ${b.cover
@@ -39,12 +47,15 @@
         : `<div class="bt-art-gen" aria-hidden="true"></div><span class="bt-art-word" aria-hidden="true">${esc(b.title)}</span>`}
       <span class="bt-art-bpm" aria-hidden="true">${b.bpm} BPM</span>
     </div>`;
+  const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><path d="M12 1.8l2.5 1.9 3.1-.2.9 3 2.6 1.7-.9 3 .9 3-2.6 1.7-.9 3-3.1-.2L12 22.2l-2.5-1.9-3.1.2-.9-3-2.6-1.7.9-3-.9-3 2.6-1.7.9-3 3.1.2z" fill="currentColor"/><path d="M8.2 12.3l2.5 2.5 5.1-5.3" fill="none" stroke="#0a0a09" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const isVerified = (name) => !!(PRODUCERS[name] && PRODUCERS[name].verified);
+  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${isVerified(b.producer) ? VERIFIED : ''}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
 
   const cardHtml = (b, i) => `
     <article class="bt-card ${tintClass(b)}" data-id="${esc(b.id)}" style="--i:${Math.min(i, 12)}">
-      <div class="bt-cover-wrap" style="position:relative">
+      <div class="bt-cover-wrap">
         ${art(b)}
         <button type="button" class="bt-play" aria-label="Play ${esc(b.title)}" aria-pressed="false">
           <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
@@ -54,42 +65,191 @@
       </div>
       <div class="bt-body">
         <div class="bt-titles">
-          <span class="bt-name">${esc(b.title)}</span>
-          <span class="bt-by">prod. <b>${esc(b.producer)}</b>${b.typeBeat && b.typeBeat.length ? ` · ${esc(b.typeBeat.join(', '))} type beat` : ''}</span>
+          <a class="bt-name" href="${beatUrl(b)}">${esc(b.title)}</a>
+          ${producerLine(b)}
         </div>
-        <div class="bt-facts">
-          <span class="bt-fact">${b.bpm} BPM</span>
-          <span class="bt-fact">${esc(b.key)}</span>
-          <span class="bt-fact">${esc(b.genre)}</span>
+        <div class="bt-specs" aria-label="Details">
+          <span><b>${b.bpm}</b> BPM</span><i aria-hidden="true"></i><span>${esc(b.key)}</span><i aria-hidden="true"></i><span>${esc(b.genre)}</span>
         </div>
         <button type="button" class="bt-buy" data-buy aria-label="Choose a license for ${esc(b.title)}, from ${euro(minPrice(b))}">
-          <span>License from</span><strong>${euro(minPrice(b))}</strong>
+          <span class="bt-buy-text"><span class="bt-buy-label">Licenses from</span><span class="bt-buy-price">${euro(minPrice(b))}</span></span>
+          <span class="bt-buy-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1.4 10.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7V5.8a3 3 0 0 1 6 0V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
         </button>
       </div>
     </article>`;
 
-  /* -------------------------------- Filters -------------------------------- */
+  // Entrance once, when a list first scrolls into view.
+  const enter = (container) => {
+    const cards = $$('.bt-card', container);
+    cards.forEach((c) => c.classList.add('bt-enter'));
+    const go = () => cards.forEach((c) => { c.classList.remove('bt-enter'); c.classList.add('bt-in'); });
+    if (!('IntersectionObserver' in window)) { go(); return; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { io.disconnect(); go(); }
+    }, { threshold: 0.1 });
+    io.observe(container);
+  };
+
+  const bindCardClicks = (container) => {
+    container.addEventListener('click', (e) => {
+      const card = e.target.closest('.bt-card');
+      if (!card) return;
+      const beat = byId.get(card.dataset.id);
+      if (e.target.closest('.bt-play')) togglePlay(beat.id);
+      else if (e.target.closest('[data-buy]')) openLicense(beat, e.target.closest('[data-buy]'));
+    });
+  };
+
+  /* --------------------------- Collections (tiles) -------------------------- */
+  const NEW_DAYS = 30;
+  const ICONS = {
+    all: '<path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    new: '<path d="M12 3l2.3 5.4 5.7.5-4.3 3.8 1.3 5.6L12 15.4 7 18.3l1.3-5.6L4 8.9l5.7-.5z" fill="currentColor"/>',
+    under30: '<path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.6" fill="currentColor"/>',
+    stems: '<path d="M5 18V9M10 18V5M15 18v-7M20 18V8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+    project: '<path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+    genre: '<path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/>',
+  };
+  const collections = () => {
+    const base = [
+      { id: 'all', label: 'All beats', icon: 'all', test: () => true },
+      { id: 'new', label: 'New', icon: 'new', test: (b) => (Date.now() - new Date(b.released).getTime()) / 864e5 <= NEW_DAYS },
+      { id: 'under30', label: 'Under €30', icon: 'under30', test: (b) => minPrice(b) < 3000 },
+      { id: 'stems', label: 'With stems', icon: 'stems', test: (b) => b.prices.trackout > 0 },
+      { id: 'project', label: 'With FLP', icon: 'project', test: (b) => b.prices.project > 0 },
+    ];
+    const genres = [...new Set(BEATS.map((b) => b.genre))].sort();
+    return base.concat(genres.map((g) => ({ id: `genre:${g}`, label: g, icon: 'genre', test: (b) => b.genre === g })));
+  };
+  let COLLECTIONS = [];
+
+  /* ------------------------------ Dropdowns -------------------------------- */
+  // Custom listbox: trigger pill + panel that grows from the trigger, a
+  // highlight that glides between options, options settle in with a short
+  // stagger. Keyboard: arrows, Home/End, Enter/Space, Escape, Tab.
+  const openDropdowns = new Set();
+  const makeDropdown = ({ key, label, options, value, onChange, alwaysSet }) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bt-dd';
+    wrap.dataset.key = key;
+    const id = `bt-dd-${key}`;
+    wrap.innerHTML = `
+      <button type="button" class="bt-dd-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="${id}">
+        <span class="bt-dd-label">${esc(label)}</span>
+        <span class="bt-dd-value"></span>
+        <svg class="bt-dd-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="bt-dd-panel" id="${id}" role="listbox" aria-label="${esc(label)}" tabindex="-1">
+        <span class="bt-dd-glide" aria-hidden="true"></span>
+        ${options.map((o, i) => `
+          <div class="bt-dd-opt" role="option" id="${id}-${i}" data-value="${esc(o.value)}" aria-selected="false" style="--k:${i}">
+            <span class="bt-dd-check" aria-hidden="true"></span>
+            <span class="bt-dd-text">${esc(o.label)}</span>
+            ${o.count != null ? `<span class="bt-dd-count">${o.count}</span>` : ''}
+          </div>`).join('')}
+      </div>`;
+    const btn = $('.bt-dd-btn', wrap);
+    const panel = $('.bt-dd-panel', wrap);
+    const glide = $('.bt-dd-glide', wrap);
+    const opts = $$('.bt-dd-opt', wrap);
+    let current = value;
+    let active = -1;
+
+    const paintValue = () => {
+      const o = options.find((x) => x.value === current) || options[0];
+      $('.bt-dd-value', wrap).textContent = o.short || o.label;
+      wrap.classList.toggle('is-set', !alwaysSet && current !== options[0].value);
+      opts.forEach((el) => el.setAttribute('aria-selected', String(el.dataset.value === current)));
+    };
+    const moveGlide = (i, instant) => {
+      const el = opts[i];
+      if (!el) { glide.style.opacity = '0'; return; }
+      if (instant) glide.style.transition = 'none';
+      glide.style.opacity = '1';
+      glide.style.transform = `translateY(${el.offsetTop}px)`;
+      glide.style.height = `${el.offsetHeight}px`;
+      if (instant) { void glide.offsetWidth; glide.style.transition = ''; }
+    };
+    const setActive = (i, instant) => {
+      active = Math.max(0, Math.min(opts.length - 1, i));
+      opts.forEach((el, k) => el.classList.toggle('is-active', k === active));
+      panel.setAttribute('aria-activedescendant', opts[active].id);
+      moveGlide(active, instant);
+    };
+    const open = () => {
+      openDropdowns.forEach((close) => close(true));
+      wrap.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      const sel = Math.max(0, opts.findIndex((el) => el.dataset.value === current));
+      setActive(sel, true);
+      panel.focus({ preventScroll: true });
+      openDropdowns.add(close);
+    };
+    function close(silent) {
+      if (!wrap.classList.contains('is-open')) return;
+      wrap.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      openDropdowns.delete(close);
+      if (!silent) btn.focus({ preventScroll: true });
+    }
+    const choose = (i) => {
+      const v = opts[i].dataset.value;
+      if (v !== current) { current = v; paintValue(); onChange(v); }
+      close();
+    };
+
+    btn.addEventListener('click', () => (wrap.classList.contains('is-open') ? close() : open()));
+    btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } });
+    panel.addEventListener('pointermove', (e) => {
+      const el = e.target.closest('.bt-dd-opt');
+      if (el) { const i = opts.indexOf(el); if (i !== active) setActive(i); }
+    });
+    panel.addEventListener('click', (e) => { const el = e.target.closest('.bt-dd-opt'); if (el) choose(opts.indexOf(el)); });
+    panel.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'Tab') close(true);
+    });
+    paintValue();
+    return {
+      el: wrap,
+      reset() { current = options[0].value; paintValue(); },
+    };
+  };
+  document.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.bt-dd')) openDropdowns.forEach((close) => close(true));
+  });
+
+  /* ------------------------------ Catalogue page --------------------------- */
   const grid = $('#bt-grid');
   const state = {
-    cat: 'all', q: '', genre: '', mood: '', bpm: '', key: '', sort: 'new',
+    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', sort: 'new',
     tags: new Set(), view: store.get('bt-view', 'grid'),
   };
-  let firstRender = true;
   let visible = [];
+  let firstRender = true;
+  const dropdowns = {};
 
-  const NEW_DAYS = 30;
-  const matches = (b) => {
-    if (state.cat === 'new' && (Date.now() - new Date(b.released).getTime()) / 864e5 > NEW_DAYS) return false;
-    if (state.cat === 'under30' && minPrice(b) >= 3000) return false;
-    if (state.cat === 'stems' && !(b.prices.trackout > 0)) return false;
-    if (state.cat === 'project' && !(b.prices.project > 0)) return false;
-    if (state.genre && b.genre !== state.genre) return false;
-    if (state.mood && b.mood !== state.mood) return false;
-    if (state.key && b.key !== state.key) return false;
-    if (state.bpm) {
-      const [lo, hi] = state.bpm.split('-').map(Number);
-      if (b.bpm < lo || b.bpm > hi) return false;
-    }
+  const BPM_RANGES = [
+    { value: '', label: 'Any tempo', short: 'Any' },
+    { value: '0-89', label: 'Slow · under 90' },
+    { value: '90-119', label: 'Mid · 90–119' },
+    { value: '120-139', label: 'Up · 120–139' },
+    { value: '140-999', label: 'Fast · 140+' },
+  ];
+  const inBpm = (b, range) => { const [lo, hi] = range.split('-').map(Number); return b.bpm >= lo && b.bpm <= hi; };
+
+  const matches = (b, skip) => {
+    const col = COLLECTIONS.find((c) => c.id === state.col);
+    if (col && !col.test(b)) return false;
+    if (skip !== 'genre' && state.genre && b.genre !== state.genre) return false;
+    if (skip !== 'mood' && state.mood && b.mood !== state.mood) return false;
+    if (skip !== 'key' && state.key && b.key !== state.key) return false;
+    if (skip !== 'bpm' && state.bpm && !inBpm(b, state.bpm)) return false;
     for (const t of state.tags) if (!(b.tags || []).includes(t)) return false;
     if (state.q) {
       const hay = [b.title, b.producer, b.genre, b.mood, b.key, ...(b.tags || []), ...(b.typeBeat || [])].join(' ').toLowerCase();
@@ -103,7 +263,7 @@
     'price-desc': (a, b) => minPrice(b) - minPrice(a),
     'bpm-asc': (a, b) => a.bpm - b.bpm,
   };
-  const isFiltered = () => state.cat !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.tags.size;
+  const isFiltered = () => state.col !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.tags.size;
 
   const paint = () => {
     grid.innerHTML = visible.map(cardHtml).join('');
@@ -112,48 +272,103 @@
     $('#bt-count').textContent = `${visible.length} beat${visible.length === 1 ? '' : 's'}`;
     $('#bt-reset').hidden = !isFiltered();
     syncCards();
+    renderCart();
   };
-
   const render = () => {
-    visible = BEATS.filter(matches).sort(sorters[state.sort]);
-    if (firstRender) {
-      firstRender = false;
-      paint();
-      // Entrance once, when the grid first scrolls into view.
-      const cards = $$('.bt-card', grid);
-      cards.forEach((c) => c.classList.add('bt-enter'));
-      const go = () => cards.forEach((c) => { c.classList.remove('bt-enter'); c.classList.add('bt-in'); });
-      if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((entries) => {
-          if (entries.some((e) => e.isIntersecting)) { io.disconnect(); go(); }
-        }, { threshold: 0.1 });
-        io.observe(grid);
-      } else go();
-      return;
-    }
-    // Filtering happens often: a quick fade, no movement.
+    visible = BEATS.filter((b) => matches(b)).sort(sorters[state.sort]);
+    if (firstRender) { firstRender = false; paint(); enter(grid); return; }
     if (reduceMotion) { paint(); return; }
     grid.classList.add('is-swapping');
     setTimeout(() => { paint(); grid.classList.remove('is-swapping'); }, 150);
   };
 
-  const fillSelect = (id, values) => {
-    const sel = $(id);
-    values.forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+  const renderCollections = () => {
+    COLLECTIONS = collections();
+    const row = $('#bt-cats');
+    row.innerHTML = COLLECTIONS.map((c) => {
+      const items = BEATS.filter(c.test);
+      // Up to four covers of the collection make the tile's collage.
+      const mosaic = items.slice(0, 4).map((b) => `<span class="bt-col-tile ${tintClass(b)}">${art(b)}</span>`).join('');
+      return `
+        <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${items.length ? '' : 'disabled'}>
+          <span class="bt-col-disc">
+            <span class="bt-col-mosaic n${Math.min(items.length, 4)}" aria-hidden="true">${mosaic}</span>
+            <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[c.icon]}</svg></span>
+            <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
+          </span>
+          <span class="bt-col-label">${esc(c.label)}</span>
+          <span class="bt-col-count">${items.length} beat${items.length === 1 ? '' : 's'}</span>
+        </button>`;
+    }).join('');
+    row.addEventListener('click', (e) => {
+      const tile = e.target.closest('.bt-col');
+      if (!tile || tile.disabled || tile.dataset.col === state.col) return;
+      state.col = tile.dataset.col;
+      $$('.bt-col', row).forEach((t) => { const on = t === tile; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); });
+      render();
+    });
+
+    const clip = $('.bt-cats-clip');
+    const prev = $('#bt-cats-prev');
+    const next = $('#bt-cats-next');
+    const updateArrows = () => {
+      prev.disabled = row.scrollLeft < 4;
+      next.disabled = row.scrollLeft + row.clientWidth > row.scrollWidth - 4;
+      clip.classList.toggle('fade-l', !prev.disabled);
+      clip.classList.toggle('fade-r', !next.disabled);
+    };
+    const page = (dir) => row.scrollBy({ left: dir * row.clientWidth * 0.8, behavior: reduceMotion ? 'auto' : 'smooth' });
+    prev.addEventListener('click', () => page(-1));
+    next.addEventListener('click', () => page(1));
+    row.addEventListener('scroll', updateArrows, { passive: true });
+    window.addEventListener('resize', updateArrows);
+    updateArrows();
+
+    const hide = $('#bt-cats-hide');
+    const wrap = $('#bt-cats-wrap');
+    const setHidden = (hidden) => {
+      wrap.classList.toggle('is-collapsed', hidden);
+      hide.setAttribute('aria-expanded', String(!hidden));
+      hide.firstChild.textContent = hidden ? 'Show ' : 'Hide ';
+      hide.classList.toggle('is-collapsed', hidden);
+      prev.hidden = hidden;
+      next.hidden = hidden;
+      store.set('bt-cats-hidden', hidden);
+    };
+    hide.addEventListener('click', () => setHidden(!wrap.classList.contains('is-collapsed')));
+    if (store.get('bt-cats-hidden', false)) setHidden(true);
   };
 
-  const setupFilters = () => {
-    const uniq = (k) => [...new Set(BEATS.map((b) => b[k]).filter(Boolean))].sort();
-    fillSelect('#bt-genre', uniq('genre'));
-    fillSelect('#bt-mood', uniq('mood'));
-    fillSelect('#bt-key', uniq('key'));
+  const countOptions = (key, values) => values.map((v) => ({ value: v, label: v, count: BEATS.filter((b) => b[key] === v && matches(b, key)).length }));
 
-    // Most used tags first, capped so the row stays one glance.
+  const setupDropdowns = () => {
+    const box = $('#bt-dds');
+    const uniq = (k) => [...new Set(BEATS.map((b) => b[k]).filter(Boolean))].sort();
+    const add = (key, label, options, extra = {}) => {
+      const dd = makeDropdown({ key, label, options, value: state[key], onChange: (v) => { state[key] = v; render(); }, ...extra });
+      dropdowns[key] = dd;
+      box.appendChild(dd.el);
+    };
+    add('genre', 'Genre', [{ value: '', label: 'Any genre', short: 'Any' }, ...countOptions('genre', uniq('genre'))]);
+    add('mood', 'Mood', [{ value: '', label: 'Any mood', short: 'Any' }, ...countOptions('mood', uniq('mood'))]);
+    add('bpm', 'BPM', BPM_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => inBpm(b, r.value)).length } : r)));
+    add('key', 'Key', [{ value: '', label: 'Any key', short: 'Any' }, ...countOptions('key', uniq('key'))]);
+    add('sort', 'Sort', [
+      { value: 'new', label: 'Newest first', short: 'Newest' },
+      { value: 'price-asc', label: 'Price: low to high', short: 'Price ↑' },
+      { value: 'price-desc', label: 'Price: high to low', short: 'Price ↓' },
+      { value: 'bpm-asc', label: 'BPM: slow to fast', short: 'BPM ↑' },
+    ], { alwaysSet: true });
+  };
+
+  const setupCatalogue = () => {
+    renderCollections();
+    setupDropdowns();
+
     const counts = new Map();
     BEATS.forEach((b) => (b.tags || []).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
     const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12).map(([t]) => t);
     $('#bt-tags').innerHTML = tags.map((t) => `<button type="button" class="bt-tag" aria-pressed="false" data-tag="${esc(t)}">#${esc(t)}</button>`).join('');
-
     $('#bt-tags').addEventListener('click', (e) => {
       const btn = e.target.closest('.bt-tag');
       if (!btn) return;
@@ -164,31 +379,18 @@
       render();
     });
 
-    $$('.bt-cat').forEach((btn) => btn.addEventListener('click', () => {
-      state.cat = btn.dataset.cat;
-      $$('.bt-cat').forEach((b) => { b.classList.toggle('is-active', b === btn); b.setAttribute('aria-selected', String(b === btn)); });
-      render();
-    }));
-
     let qTimer = 0;
     $('#bt-q').addEventListener('input', (e) => {
       clearTimeout(qTimer);
       qTimer = setTimeout(() => { state.q = e.target.value.trim().toLowerCase(); render(); }, 160);
     });
-    [['#bt-genre', 'genre'], ['#bt-mood', 'mood'], ['#bt-bpm', 'bpm'], ['#bt-key', 'key'], ['#bt-sort', 'sort']].forEach(([id, k]) => {
-      $(id).addEventListener('change', (e) => {
-        state[k] = e.target.value;
-        if (k !== 'sort') e.target.classList.toggle('is-set', !!e.target.value);
-        render();
-      });
-    });
 
     const reset = () => {
-      Object.assign(state, { cat: 'all', q: '', genre: '', mood: '', bpm: '', key: '' });
+      Object.assign(state, { col: 'all', q: '', genre: '', mood: '', bpm: '', key: '' });
       state.tags.clear();
       $('#bt-q').value = '';
-      ['#bt-genre', '#bt-mood', '#bt-bpm', '#bt-key'].forEach((id) => { $(id).value = ''; $(id).classList.remove('is-set'); });
-      $$('.bt-cat').forEach((b) => { b.classList.toggle('is-active', b.dataset.cat === 'all'); b.setAttribute('aria-selected', String(b.dataset.cat === 'all')); });
+      ['genre', 'mood', 'bpm', 'key'].forEach((k) => dropdowns[k].reset());
+      $$('.bt-col').forEach((t) => { const on = t.dataset.col === 'all'; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); });
       $$('.bt-tag').forEach((b) => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
       render();
     };
@@ -206,18 +408,15 @@
     }));
     $$('.bt-view-btn').forEach((b) => { b.classList.toggle('is-active', b.dataset.view === state.view); b.setAttribute('aria-pressed', String(b.dataset.view === state.view)); });
 
-    grid.addEventListener('click', (e) => {
-      const card = e.target.closest('.bt-card');
-      if (!card) return;
-      const beat = byId.get(card.dataset.id);
-      if (e.target.closest('.bt-play')) togglePlay(beat.id);
-      else if (e.target.closest('[data-buy]')) openLicense(beat, e.target.closest('[data-buy]'));
-    });
+    bindCardClicks(grid);
+    renderTierGrid();
+    render();
   };
 
-  /* ------------------------------ License tiers ---------------------------- */
   const renderTierGrid = () => {
-    $('#bt-tier-grid').innerHTML = LIC.order.map((id) => {
+    const el = $('#bt-tier-grid');
+    if (!el) return;
+    el.innerHTML = LIC.order.map((id) => {
       const t = LIC.tiers[id];
       return `
         <div class="bt-tier-card${t.unlimited ? ' is-unlimited' : ''}">
@@ -234,6 +433,86 @@
     }).join('');
   };
 
+  /* -------------------------------- Beat page ------------------------------ */
+  const USAGE_ICONS = {
+    recording: '<path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    sales: '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+    streams: '<path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    videos: '<rect x="3" y="6" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 10l5-3v10l-5-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+    performances: '<path d="M4 20l6-6M14.5 4.5a4.95 4.95 0 1 1 5 5l-6 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>',
+    radio: '<rect x="3" y="9" width="18" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9l10-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="14.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+  };
+  const usageRows = (t) => [
+    ['recording', 'Use it to record one new song'],
+    ['sales', `Sales & downloads: ${t.terms.sales}`],
+    ['streams', `Audio streams: ${t.terms.streams}`],
+    ['videos', `Music videos: ${t.terms.videos}`],
+    ['performances', `Live: ${t.terms.performances}`],
+    ['radio', `Radio: ${t.terms.radio}`],
+  ];
+
+  const setupBeatPage = () => {
+    const beat = byId.get(beatRoot.dataset.beatId);
+    if (!beat) return;
+    let tier = tiersOf(beat).includes('wav') ? 'wav' : tiersOf(beat)[0];
+    const inCart = cart.find((c) => c.id === beat.id);
+    if (inCart && tiersOf(beat).includes(inCart.tier)) tier = inCart.tier;
+
+    const paintTier = () => {
+      $$('.bp-tier', beatRoot).forEach((el) => {
+        const on = el.dataset.tier === tier;
+        el.classList.toggle('is-selected', on);
+        $('input', el).checked = on;
+      });
+      const t = LIC.tiers[tier];
+      $('#bp-total').textContent = euro(beat.prices[tier]);
+      $('#bp-usage-title').textContent = `${t.name}${t.unlimited ? ' · Unlimited' : ''}`;
+      $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('');
+      const c = cart.find((x) => x.id === beat.id);
+      $('#bp-add').textContent = c && c.tier === tier ? 'In cart' : (c ? 'Update cart' : 'Add to cart');
+    };
+    $('#bp-tiers').addEventListener('change', (e) => { if (e.target.name === 'bp-tier') { tier = e.target.value; paintTier(); } });
+    $('#bp-add').addEventListener('click', (e) => {
+      const c = cart.find((x) => x.id === beat.id);
+      if (c && c.tier === tier) { openCart(); return; }
+      addToCart(beat.id, tier);
+      track('Beat add to cart', { beat: beat.id, tier, from: 'beat-page' });
+      paintTier();
+      flyToCart(beat, $('.bp-cover', beatRoot).getBoundingClientRect());
+      e.currentTarget.blur();
+    });
+    $('#bp-buy').addEventListener('click', () => {
+      addToCart(beat.id, tier);
+      paintTier();
+      checkout();
+    });
+    $$('[data-play-beat]', beatRoot).forEach((b) => b.addEventListener('click', () => togglePlay(beat.id)));
+    const share = $('#bp-share');
+    if (share) share.addEventListener('click', async () => {
+      const url = location.href.split('#')[0];
+      try {
+        if (navigator.share) await navigator.share({ title: `${beat.title} by ${beat.producer}`, url });
+        else { await navigator.clipboard.writeText(url); share.querySelector('span').textContent = 'Link copied'; setTimeout(() => { share.querySelector('span').textContent = 'Share'; }, 1800); }
+      } catch (e) {}
+    });
+    paintTier();
+
+    const more = BEATS.filter((b) => b.producer === beat.producer && b.id !== beat.id).slice(0, 8);
+    const related = BEATS.filter((b) => b.id !== beat.id && !more.includes(b))
+      .map((b) => ({ b, score: (b.genre === beat.genre ? 3 : 0) + (b.mood === beat.mood ? 2 : 0) + (b.tags || []).filter((t) => (beat.tags || []).includes(t)).length - Math.abs(b.bpm - beat.bpm) / 40 }))
+      .sort((x, y) => y.score - x.score).slice(0, 8).map((x) => x.b);
+    [['#bp-more', more], ['#bp-related', related]].forEach(([sel, list]) => {
+      const box = $(sel);
+      if (!box) return;
+      const section = box.closest('section');
+      if (!list.length) { section.hidden = true; return; }
+      box.innerHTML = list.map(cardHtml).join('');
+      bindCardClicks(box);
+      enter(box);
+    });
+    syncCards();
+  };
+
   /* --------------------------------- Player -------------------------------- */
   const player = $('#bt-player');
   const audio = new Audio();
@@ -248,12 +527,15 @@
   const vizCanvas = $('#bt-player-viz');
   const vg = vizCanvas.getContext('2d');
 
+  const queue = () => (catalogueRoot ? (visible.length ? visible : BEATS) : BEATS);
+
   const showPlayer = (beat) => {
     player.className = `bt-player ${tintClass(beat)}${audio.paused ? '' : ' is-playing'}${player.classList.contains('is-visible') ? ' is-visible' : ''}`;
     $('#bt-player-cover').innerHTML = art(beat);
     $('#bt-player-title').textContent = beat.title;
-    $('#bt-player-producer').textContent = `prod. ${beat.producer}`;
-    $('#bt-player-buy').textContent = `Buy · from ${euro(minPrice(beat))}`;
+    $('#bt-player-title').href = beatUrl(beat);
+    $('#bt-player-producer').innerHTML = producerLine(beat);
+    $('#bt-player-buy').textContent = `Buy · ${euro(minPrice(beat))}`;
     if (player.hidden) {
       player.hidden = false;
       document.body.classList.add('bt-has-player');
@@ -265,15 +547,21 @@
   };
 
   const syncCards = () => {
-    $$('.bt-card', grid).forEach((c) => {
+    $$('.bt-card').forEach((c) => {
       const cur = c.dataset.id === currentId;
       const playing = cur && !audio.paused;
       c.classList.toggle('is-current', cur);
       c.classList.toggle('is-playing', playing);
       const btn = $('.bt-play', c);
+      if (!btn) return;
       btn.setAttribute('aria-pressed', String(playing));
       btn.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${byId.get(c.dataset.id).title}`);
     });
+    if (beatRoot) {
+      const playing = beatRoot.dataset.beatId === currentId && !audio.paused;
+      beatRoot.classList.toggle('is-playing', playing);
+      $$('[data-play-beat]', beatRoot).forEach((b) => b.setAttribute('aria-label', playing ? 'Pause preview' : 'Play preview'));
+    }
     player.classList.toggle('is-playing', !audio.paused);
     $('#bt-play').setAttribute('aria-label', audio.paused ? 'Play' : 'Pause');
   };
@@ -306,19 +594,22 @@
     if (actx && actx.state === 'suspended') { try { await actx.resume(); } catch (e) {} }
     try { await audio.play(); } catch (e) { syncCards(); }
   };
-  const togglePlay = (id) => {
-    if (id === currentId && !audio.paused) audio.pause();
-    else play(id);
-  };
+  const togglePlay = (id) => { if (id === currentId && !audio.paused) audio.pause(); else play(id); };
   const step = (dir) => {
-    const list = visible.length ? visible : BEATS;
+    const list = queue();
     const i = list.findIndex((b) => b.id === currentId);
     const next = list[(i + dir + list.length) % list.length];
     if (next) play(next.id);
   };
 
-  // Visualizer + progress, drawn only while playing (and while settling).
   const rgbOf = (el) => (getComputedStyle(el).getPropertyValue('--fx') || '232,134,44').trim();
+  const updateProgress = () => {
+    const p = audio.duration ? audio.currentTime / audio.duration : 0;
+    $('#bt-player-fill').style.transform = `scaleX(${p.toFixed(4)})`;
+    $('#bt-player-bar').setAttribute('aria-valuenow', String(Math.round(p * 100)));
+    $('#bt-time').textContent = fmtTime(audio.currentTime);
+    $('#bt-dur').textContent = fmtTime(audio.duration);
+  };
   const drawViz = () => {
     raf = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -350,12 +641,11 @@
         const maxH = h * 0.48;
         const stepX = w / (bands.length - 1);
         const grad = vg.createLinearGradient(0, base - maxH, 0, base + maxH);
-        grad.addColorStop(0, `rgba(${rgb}, 0.0)`);
+        grad.addColorStop(0, `rgba(${rgb}, 0)`);
         grad.addColorStop(0.35, `rgba(${rgb}, 0.28)`);
         grad.addColorStop(0.5, `rgba(${rgb}, 0.38)`);
         grad.addColorStop(0.65, `rgba(${rgb}, 0.28)`);
-        grad.addColorStop(1, `rgba(${rgb}, 0.0)`);
-        // Mirrored silhouette around the progress line.
+        grad.addColorStop(1, `rgba(${rgb}, 0)`);
         vg.beginPath();
         vg.moveTo(0, base);
         bands.forEach((v, i) => vg.lineTo(i * stepX, base - v * maxH));
@@ -383,13 +673,6 @@
     updateProgress();
     raf = requestAnimationFrame(drawViz);
   };
-  const updateProgress = () => {
-    const p = audio.duration ? audio.currentTime / audio.duration : 0;
-    $('#bt-player-fill').style.transform = `scaleX(${p.toFixed(4)})`;
-    $('#bt-player-bar').setAttribute('aria-valuenow', String(Math.round(p * 100)));
-    $('#bt-time').textContent = fmtTime(audio.currentTime);
-    $('#bt-dur').textContent = fmtTime(audio.duration);
-  };
 
   audio.addEventListener('play', () => { syncCards(); if (!raf) raf = requestAnimationFrame(drawViz); });
   audio.addEventListener('pause', () => { syncCards(); if (!raf) raf = requestAnimationFrame(drawViz); });
@@ -416,10 +699,9 @@
       if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); e.preventDefault(); }
       if (e.key === 'ArrowLeft') { audio.currentTime = Math.max(0, audio.currentTime - 5); e.preventDefault(); }
     });
-    // Space toggles play when focus isn't in a field or on a button.
     document.addEventListener('keydown', (e) => {
       if (e.code !== 'Space' || !currentId) return;
-      if (e.target.closest('input, select, textarea, button, a, [role="slider"], dialog')) return;
+      if (e.target.closest('input, select, textarea, button, a, [role="slider"], [role="listbox"], dialog')) return;
       e.preventDefault();
       togglePlay(currentId);
     });
@@ -438,26 +720,20 @@
       rows.map(([label, fn]) => `<tr><th>${label}</th>${tiers.map((id) => `<td>${esc(fn(LIC.tiers[id]))}</td>`).join('')}</tr>`).join('')
     }</tbody></table><p>Every license is non-exclusive and requires the credit "prod. by ${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
   };
-
   const selectTier = (id) => {
     modalTier = id;
-    $$('.bt-tier', modal).forEach((el) => {
-      const on = el.dataset.tier === id;
-      el.classList.toggle('is-selected', on);
-      $('input', el).checked = on;
-    });
+    $$('.bt-tier', modal).forEach((el) => { const on = el.dataset.tier === id; el.classList.toggle('is-selected', on); $('input', el).checked = on; });
     $('#bt-license-total').textContent = euro(modalBeat.prices[id]);
     const inCart = cart.find((c) => c.id === modalBeat.id);
     $('#bt-license-add').textContent = inCart ? (inCart.tier === id ? 'In cart · View cart' : 'Update cart') : 'Add to cart';
   };
-
   const openLicense = (beat, trigger) => {
     modalBeat = beat;
     modalTrigger = trigger || null;
     modal.className = `bt-modal ${tintClass(beat)}`;
     $('#bt-license-cover').innerHTML = art(beat);
-    $('#bt-license-title').textContent = beat.title;
-    $('#bt-license-sub').textContent = `prod. ${beat.producer} · ${beat.bpm} BPM · ${beat.key}`;
+    $('#bt-license-title').innerHTML = `<a href="${beatUrl(beat)}">${esc(beat.title)}</a>`;
+    $('#bt-license-sub').innerHTML = `${producerLine(beat)} · ${beat.bpm} BPM · ${esc(beat.key)}`;
     $('#bt-license-tiers').innerHTML = tiersOf(beat).map((id) => {
       const t = LIC.tiers[id];
       return `
@@ -478,20 +754,18 @@
     modal.classList.remove('is-closing');
     modal.showModal();
   };
-
   const closeLicense = (after) => {
     if (!modal.open) { if (after) after(); return; }
     if (reduceMotion) { modal.close(); if (after) after(); return; }
     modal.classList.add('is-closing');
     setTimeout(() => { modal.close(); modal.classList.remove('is-closing'); if (after) after(); }, 160);
   };
-
   const setupModal = () => {
     $('#bt-license-tiers').addEventListener('change', (e) => { if (e.target.name === 'bt-tier') selectTier(e.target.value); });
     $('.bt-modal-close', modal).addEventListener('click', (e) => { e.preventDefault(); closeLicense(); });
     modal.addEventListener('cancel', (e) => { e.preventDefault(); closeLicense(); });
     modal.addEventListener('click', (e) => { if (e.target === modal) closeLicense(); });
-    modal.addEventListener('close', () => { if (modalTrigger && document.contains(modalTrigger)) modalTrigger.focus(); });
+    modal.addEventListener('close', () => { if (modalTrigger && document.contains(modalTrigger)) modalTrigger.focus({ preventScroll: true }); });
     $('#bt-license-add').addEventListener('click', () => {
       const existing = cart.find((c) => c.id === modalBeat.id);
       if (existing && existing.tier === modalTier) { closeLicense(() => openCart()); return; }
@@ -509,19 +783,15 @@
   const drawer = $('#bt-cart');
   let drawerReturn = null;
 
-  const cleanCart = () => {
-    cart = cart.filter((c) => byId.has(c.id) && byId.get(c.id).prices[c.tier] > 0);
-  };
+  const cleanCart = () => { cart = cart.filter((c) => byId.has(c.id) && byId.get(c.id).prices[c.tier] > 0); };
   const saveCart = () => { store.set('bt-cart', cart); renderCart(); };
   const addToCart = (id, tier) => {
     const i = cart.findIndex((c) => c.id === id);
     if (i >= 0) cart[i].tier = tier; else cart.push({ id, tier });
     saveCart();
-    $$('.bt-card', grid).forEach((c) => { if (c.dataset.id === id) $('.bt-buy', c).classList.add('in-cart'); });
   };
   const cartTotal = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);
-
-  const renderCart = () => {
+  function renderCart() {
     const n = cart.length;
     $('#bt-cart-count').textContent = String(n);
     fab.hidden = n === 0;
@@ -534,13 +804,12 @@
       return `
         <li class="bt-cart-item ${tintClass(b)}" data-id="${esc(b.id)}">
           ${art(b)}
-          <span><span class="bt-cart-name">${esc(b.title)}</span><span class="bt-cart-tier">${esc(LIC.tiers[c.tier].name)} · prod. ${esc(b.producer)}</span></span>
+          <span><a class="bt-cart-name" href="${beatUrl(b)}">${esc(b.title)}</a><span class="bt-cart-tier">${esc(LIC.tiers[c.tier].name)} · ${esc(b.producer)}</span></span>
           <span class="bt-cart-side"><span class="bt-cart-price">${euro(b.prices[c.tier])}</span><button type="button" class="bt-cart-remove" aria-label="Remove ${esc(b.title)} from cart">Remove</button></span>
         </li>`;
     }).join('');
-    $$('.bt-card', grid).forEach((c) => { const b = $('.bt-buy', c); if (b) b.classList.toggle('in-cart', cart.some((x) => x.id === c.dataset.id)); });
-  };
-
+    $$('.bt-card').forEach((c) => { const b = $('.bt-buy', c); if (b) b.classList.toggle('in-cart', cart.some((x) => x.id === c.dataset.id)); });
+  }
   const openCart = () => {
     drawerReturn = document.activeElement;
     drawer.inert = false;
@@ -554,11 +823,10 @@
     drawer.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     setTimeout(() => { drawer.inert = true; }, reduceMotion ? 0 : 400);
-    if (drawerReturn && document.contains(drawerReturn)) drawerReturn.focus();
+    if (drawerReturn && document.contains(drawerReturn)) drawerReturn.focus({ preventScroll: true });
   };
-
-  // The cover flies from the license picker into the cart button, then the
-  // badge pulses: shows where the beat went (spatial consistency).
+  // The cover flies into the cart button, then the badge pulses: shows
+  // where the beat went (spatial consistency).
   const flyToCart = (beat, fromRect) => {
     const bump = () => {
       if (reduceMotion) return;
@@ -567,19 +835,21 @@
     };
     if (reduceMotion || !fromRect || !fromRect.width) { bump(); return; }
     const toRect = fab.getBoundingClientRect();
+    const size = Math.min(fromRect.width, 120);
     const fly = document.createElement('div');
     fly.className = `bt-fly ${tintClass(beat)}`;
     fly.innerHTML = art(beat);
-    Object.assign(fly.style, { left: `${fromRect.left}px`, top: `${fromRect.top}px`, width: `${fromRect.width}px` });
+    const left = fromRect.left + (fromRect.width - size) / 2;
+    const top = fromRect.top + (fromRect.height - size) / 2;
+    Object.assign(fly.style, { left: `${left}px`, top: `${top}px`, width: `${size}px` });
     document.body.appendChild(fly);
-    const dx = toRect.left + toRect.width / 2 - (fromRect.left + fromRect.width / 2);
-    const dy = toRect.top + toRect.height / 2 - (fromRect.top + fromRect.height / 2);
+    const dx = toRect.left + toRect.width / 2 - (left + size / 2);
+    const dy = toRect.top + toRect.height / 2 - (top + size / 2);
     fly.animate([
       { transform: 'translate(0, 0) scale(1)', opacity: 1 },
       { transform: `translate(${dx}px, ${dy}px) scale(0.3)`, opacity: 0.4 },
     ], { duration: 560, easing: EASE_IN_OUT }).finished.then(() => { fly.remove(); bump(); }, () => fly.remove());
   };
-
   const setupCart = () => {
     cleanCart();
     renderCart();
@@ -591,7 +861,7 @@
       if (!btn) return;
       const li = btn.closest('.bt-cart-item');
       const id = li.dataset.id;
-      const done = () => { cart = cart.filter((c) => c.id !== id); saveCart(); if (!cart.length) $('.bt-modal-close', drawer).focus(); };
+      const done = () => { cart = cart.filter((c) => c.id !== id); saveCart(); if (beatRoot) $('#bp-add') && $('#bp-tiers').dispatchEvent(new Event('change')); if (!cart.length) $('.bt-modal-close', drawer).focus(); };
       if (reduceMotion) { done(); return; }
       li.classList.add('is-leaving');
       setTimeout(done, 180);
@@ -599,8 +869,7 @@
     $('#bt-checkout').addEventListener('click', checkout);
     if (new URLSearchParams(location.search).get('cart') === '1' && cart.length) openCart();
   };
-
-  const checkout = async () => {
+  async function checkout() {
     const btn = $('#bt-checkout');
     const note = $('#bt-cart-note');
     btn.disabled = true;
@@ -614,39 +883,38 @@
         body: JSON.stringify({ items: cart }),
       });
       if (res.status === 401) {
-        // Purchases are tied to an account, same as the rest of the shop.
-        location.href = `signup.html?next=${encodeURIComponent('/beats.html?cart=1')}`;
+        location.href = `/signup.html?next=${encodeURIComponent('/beats.html?cart=1')}`;
         return;
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.url) throw new Error(data.error || 'Checkout is not available right now. Please try again.');
       location.href = data.url;
     } catch (err) {
+      if (!drawer.classList.contains('is-open')) openCart();
       note.textContent = err.message;
       note.classList.add('is-error');
       btn.disabled = false;
       btn.textContent = 'Checkout';
     }
-  };
+  }
 
   /* ---------------------------------- Boot --------------------------------- */
   Promise.all([
-    fetch('data/beats.json', { cache: 'no-cache' }).then((r) => r.json()),
-    fetch('data/beat-licenses.json', { cache: 'no-cache' }).then((r) => r.json()),
+    fetch('/data/beats.json', { cache: 'no-cache' }).then((r) => r.json()),
+    fetch('/data/beat-licenses.json', { cache: 'no-cache' }).then((r) => r.json()),
   ]).then(([catalogue, licenses]) => {
     LIC = licenses;
+    PRODUCERS = catalogue.producers || {};
     BEATS = (catalogue.beats || []).filter((b) => b.status !== 'hidden' && tiersOf(b).length);
     byId = new Map(BEATS.map((b) => [b.id, b]));
-    setupFilters();
     setupPlayer();
     setupModal();
     setupCart();
-    renderTierGrid();
-    render();
+    if (catalogueRoot) setupCatalogue();
+    if (beatRoot) setupBeatPage();
   }).catch((err) => {
     console.error('beats: catalogue failed to load', err);
-    $('#bt-count').textContent = '';
-    $('#bt-empty').hidden = false;
-    $('#bt-empty p').textContent = 'The catalogue could not be loaded. Please refresh the page.';
+    const empty = $('#bt-empty');
+    if (empty) { empty.hidden = false; $('p', empty).textContent = 'The catalogue could not be loaded. Please refresh the page.'; }
   });
 })();

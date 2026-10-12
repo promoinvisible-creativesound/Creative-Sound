@@ -1416,3 +1416,4 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-dd-custom input{ flex:0 0 72px; width:72px; height:32px; padding:0 6px; border-radius:7px; font-size:16px; }
   .bt-dd-custom-go{ height:30px; padding:0 10px; font-size:12.5px; }
 }
+@media (max-width:560px){ .bt-dd-custom-row{ justify-content:center; } .bt-dd-custom-title{ text-align:center; } }

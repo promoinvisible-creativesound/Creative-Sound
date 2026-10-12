@@ -1400,3 +1400,9 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-dd-label{ font-size:11px; }
   .bt-dd-value{ font-size:13.5px; }
 }
+
+/* Slimmer typed BPM row */
+.bt-dd-custom{ padding:10px 6px 4px; gap:7px; }
+.bt-dd-custom input{ height:34px; font-size:14px; border-radius:8px; }
+.bt-dd-custom-go{ height:34px; padding:0 12px; font-size:13px; border-radius:8px; }
+@media (max-width:560px){ .bt-dd-custom input{ height:38px; font-size:16px; } .bt-dd-custom-go{ height:38px; } }

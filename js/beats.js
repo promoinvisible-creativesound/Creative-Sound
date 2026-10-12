@@ -252,7 +252,6 @@
             <input type="number" inputmode="numeric" name="hi" min="${custom.min}" max="${custom.max}" placeholder="Max" aria-label="Maximum ${esc(label)}">
             <button type="submit" class="bt-dd-custom-go">Apply</button>
           </div>
-          <span class="bt-dd-custom-hint">Same number twice for an exact ${esc(label)}</span>
         </form>` : ''}
       </div>`;
     const btn = $('.bt-dd-btn', wrap);

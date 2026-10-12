@@ -1461,3 +1461,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (prefers-reduced-motion: reduce){
   .bt-card.bt-in .bt-art{ animation:none; }
 }
+
+/* Rounded buttons, like the rest of the site */
+.bt-dd-custom-go, .bt-reset, .bt-view, .bt-count{ border-radius:999px; }
+.bt-view-btn:first-child{ border-radius:999px 0 0 999px; }
+.bt-view-btn:last-child{ border-radius:0 999px 999px 0; }

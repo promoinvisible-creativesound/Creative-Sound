@@ -344,3 +344,6 @@
 .rv-zip-list li:first-child{ border-top:0; }
 .rv-zip-list span{ color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .rv-zip-list small{ flex-shrink:0; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+
+/* Rounded buttons, like the rest of the site */
+.up-btn, .rv-dl, .rv-peek, .up-dd-custom-go, .pa-filter, .pa-filter button{ border-radius:999px; }

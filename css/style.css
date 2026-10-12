@@ -2505,3 +2505,13 @@ body.search-open{ overflow:hidden; }
   .auth-card-v2{ padding:24px 20px; border-radius:20px; }
 }
 @media (prefers-reduced-motion: reduce){ .auth-card-v2{ animation:none; } }
+
+/* ============================ Rounded buttons =============================
+   Every button is a pill like the home page ones: no cut corners, fully
+   rounded, sans label in sentence case. */
+.btn, .btn-buy{ clip-path:none; border-radius:999px; }
+.btn{ font-family:var(--font-sans); font-size:14px; font-weight:600; letter-spacing:0; padding:12px 24px; }
+.btn-buy{ font-size:13px; padding:9px 18px; }
+.btn-buy-large{ padding:16px 24px; font-size:15px; }
+.header-icon-btn.header-cart-icon{ clip-path:none !important; border-radius:999px !important; }
+.auth-card-v2 .auth-submit, .auth-alt-btn{ border-radius:999px; }

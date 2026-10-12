@@ -155,3 +155,6 @@
 .hm-guest-intro b{ font-size:14px; color:#fff; }
 .hm-guest-intro span{ font-size:12.5px; line-height:1.5; color:var(--text-muted); }
 @media (max-width:900px){ .hm-support{ display:none; } }
+
+/* Rounded buttons, like the rest of the site */
+.hm-checkout, .hm-cta{ border-radius:999px; }

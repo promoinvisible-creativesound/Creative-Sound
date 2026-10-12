@@ -1386,3 +1386,17 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-search svg{ width:15px; height:15px; }
 .bt-search input{ font-size:14px; }
 @media (max-width:560px){ .bt-search{ flex:1 1 100%; } .bt-search input{ font-size:16px; } }
+
+/* Slimmer filter controls: dropdowns match the 40px search; tags, count,
+   clear and layout toggle step down with them. */
+.bt-dd-btn{ height:40px; padding:0 12px 0 14px; gap:7px; border-radius:10px; font-size:13.5px; }
+.bt-dd-chev{ width:14px; height:14px; }
+.bt-tag{ height:30px; padding:0 12px; }
+.bt-count, .bt-reset{ height:36px; padding:0 12px; font-size:13px; }
+.bt-view-btn{ width:40px; height:34px; }
+.bt-view-btn svg{ width:14px; height:14px; }
+@media (max-width:560px){
+  .bt-dd-btn{ height:46px; padding:0 10px 0 12px; gap:2px; }
+  .bt-dd-label{ font-size:11px; }
+  .bt-dd-value{ font-size:13.5px; }
+}

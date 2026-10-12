@@ -327,7 +327,7 @@
   /* ------------------------------ Catalogue page --------------------------- */
   const grid = $('#bt-grid');
   const state = {
-    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', sort: 'new',
+    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '', sort: 'new',
     tags: new Set(), view: store.get('bt-view', 'grid'),
   };
   let visible = [];
@@ -341,6 +341,17 @@
     { value: '120-139', label: 'Up · 120–139' },
     { value: '140-999', label: 'Fast · 140+' },
   ];
+  // Upload date windows, in days.
+  const ADDED_RANGES = [
+    { value: '', label: 'Any time', short: 'Any' },
+    { value: '3', label: 'Last 3 days', short: '3 days' },
+    { value: '7', label: 'Last week', short: '1 week' },
+    { value: '14', label: 'Last 2 weeks', short: '2 weeks' },
+    { value: '30', label: 'Last month', short: '1 month' },
+    { value: '90', label: 'Last 3 months', short: '3 months' },
+    { value: '365', label: 'Last year', short: '1 year' },
+  ];
+  const addedWithin = (b, days) => (Date.now() - new Date(b.released).getTime()) / 864e5 <= Number(days);
   const inBpm = (b, range) => { const [lo, hi] = range.split('-').map(Number); return b.bpm >= lo && b.bpm <= hi; };
 
   const matches = (b, skip) => {
@@ -350,6 +361,7 @@
     if (skip !== 'mood' && state.mood && b.mood !== state.mood) return false;
     if (skip !== 'key' && state.key && b.key !== state.key) return false;
     if (skip !== 'bpm' && state.bpm && !inBpm(b, state.bpm)) return false;
+    if (skip !== 'added' && state.added && !addedWithin(b, state.added)) return false;
     for (const t of state.tags) if (!(b.tags || []).includes(t)) return false;
     if (state.q) {
       const hay = [b.title, b.producer, b.genre, b.mood, b.key, ...(b.tags || []), ...(b.typeBeat || [])].join(' ').toLowerCase();
@@ -363,7 +375,7 @@
     'price-desc': (a, b) => minPrice(b) - minPrice(a),
     'bpm-asc': (a, b) => a.bpm - b.bpm,
   };
-  const isFiltered = () => state.col !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.tags.size;
+  const isFiltered = () => state.col !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.added || state.tags.size;
 
   const paint = () => {
     grid.innerHTML = visible.map(cardHtml).join('');
@@ -486,6 +498,7 @@
     add('mood', 'Mood', [{ value: '', label: 'Any mood', short: 'Any' }, ...countOptions('mood', uniq('mood'))]);
     add('bpm', 'BPM', BPM_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => inBpm(b, r.value)).length } : r)));
     add('key', 'Key', [{ value: '', label: 'Any key', short: 'Any' }, ...countOptions('key', uniq('key'))]);
+    add('added', 'Added', ADDED_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => addedWithin(b, r.value)).length } : r)));
     add('sort', 'Sort', [
       { value: 'new', label: 'Newest first', short: 'Newest' },
       { value: 'price-asc', label: 'Price: low to high', short: 'Price ↑' },
@@ -519,10 +532,10 @@
     });
 
     const reset = () => {
-      Object.assign(state, { col: 'all', q: '', genre: '', mood: '', bpm: '', key: '' });
+      Object.assign(state, { col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '' });
       state.tags.clear();
       $('#bt-q').value = '';
-      ['genre', 'mood', 'bpm', 'key'].forEach((k) => dropdowns[k].reset());
+      ['genre', 'mood', 'bpm', 'key', 'added'].forEach((k) => dropdowns[k].reset());
       $$('.bt-col').forEach((t) => { const on = t.dataset.col === 'all'; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); });
       $$('.bt-tag').forEach((b) => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
       render();
@@ -691,27 +704,19 @@
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>
         ${b.about ? `<p class="bt-feat-about">${esc(b.about)}</p>` : ''}
-        <div class="bt-feat-actions">
-          <button type="button" class="btn btn-primary bt-feat-buy" data-feat-buy>License from ${euro(minPrice(b))}</button>
-          <a href="${beatUrl(b)}" class="btn btn-ghost">View beat</a>
-          ${saveButton(b).replace('class="bt-save', 'class="bt-save bt-feat-save')}
-        </div>
+        <span class="bt-feat-open">Open beat <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
     </div>`;
-  const renderFeatured = (animate) => {
+  const ARROW = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // dir: 1 = next (comes in from the right), -1 = previous, 0 = no slide.
+  const renderFeatured = (dir = 0) => {
     const box = $('#bt-featured');
     if (!box) return;
     const list = featuredList();
     if (!list.length) { box.hidden = true; return; }
-    const b = list[featIndex % list.length];
-    const others = list.map((x, i) => `
-      <button type="button" class="bt-feat-pick${i === featIndex ? ' is-active' : ''} ${tintClass(x)}" data-feat-index="${i}" aria-pressed="${i === featIndex}" aria-label="Show ${esc(x.title)}">
-        <span class="bt-feat-rank">${i + 1}</span>
-        <span class="bt-feat-thumb">${art(x)}</span>
-        <span class="bt-feat-pick-text"><b>${esc(x.title)}</b><small>${esc(x.producer)} · ${x.bpm} BPM</small></span>
-      </button>`).join('');
+    const b = list[featIndex];
     // The frame (header with this week's dates, light running round the
-    // border, HUD corners) is built once; only the body swaps.
+    // border, HUD corners, arrows, picks) is built once; only the spotlight swaps.
     if (!$('.bt-top-body', box)) {
       box.innerHTML = `
         <div class="bt-top-frame">
@@ -728,39 +733,80 @@
               <span class="bt-top-pill">${list.length} picks</span>
             </div>
           </header>
-          <div class="bt-top-body"></div>
+          <div class="bt-top-body">
+            <div class="bt-feat-stage">
+              <div class="bt-feat-slot" aria-live="polite"></div>
+              <button type="button" class="bt-feat-nav prev" data-feat-step="-1" aria-label="Previous track">${ARROW('M15 5l-7 7 7 7')}</button>
+              <button type="button" class="bt-feat-nav next" data-feat-step="1" aria-label="Next track">${ARROW('M9 5l7 7-7 7')}</button>
+              <div class="bt-feat-dots" aria-hidden="true">${list.map(() => '<span></span>').join('')}</div>
+            </div>
+            <div class="bt-feat-list" role="group" aria-label="Top tracks this week">${list.map((x, i) => `
+              <button type="button" class="bt-feat-pick ${tintClass(x)}" data-feat-index="${i}" aria-label="Show ${esc(x.title)}">
+                <span class="bt-feat-rank">${i + 1}</span>
+                <span class="bt-feat-thumb">${art(x)}</span>
+                <span class="bt-feat-pick-text"><b>${esc(x.title)}</b><small>${esc(x.producer)} · ${x.bpm} BPM</small></span>
+              </button>`).join('')}
+            </div>
+          </div>
         </div>`;
     }
-    const body = $('.bt-top-body', box);
+    $$('.bt-feat-pick', box).forEach((p, i) => { p.classList.toggle('is-active', i === featIndex); p.setAttribute('aria-pressed', String(i === featIndex)); });
+    $$('.bt-feat-dots span', box).forEach((d, i) => d.classList.toggle('is-active', i === featIndex));
+    const slot = $('.bt-feat-slot', box);
+    const old = $('.bt-feat-spot', slot);
     const swap = () => {
-      body.innerHTML = `${spotHtml(b, featIndex + 1)}<div class="bt-feat-list" role="group" aria-label="Top tracks this week">${others}</div>`;
+      slot.innerHTML = spotHtml(b, featIndex + 1);
       syncCards();
-      if (animate && !reduceMotion) {
-        $('.bt-feat-spot', box).animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE_OUT });
+      if (dir && !reduceMotion) {
+        $('.bt-feat-spot', slot).animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE_OUT });
       }
     };
-    const spot = $('.bt-feat-spot', box);
-    if (animate && spot && !reduceMotion) {
-      spot.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: EASE_OUT }).finished.then(swap, swap);
+    if (dir && old && !reduceMotion) {
+      old.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${dir * -20}px)` }], { duration: 140, easing: EASE_OUT, fill: 'forwards' }).finished.then(swap, swap);
     } else swap();
   };
   const setupFeatured = () => {
     const box = $('#bt-featured');
     if (!box) return;
-    box.addEventListener('click', (e) => {
-      const pick = e.target.closest('[data-feat-index]');
-      if (pick) {
-        const i = Number(pick.dataset.featIndex);
-        if (i !== featIndex) { featIndex = i; renderFeatured(true); }
-        return;
+    const go = (i, dir) => {
+      const n = featuredList().length;
+      const next = (i + n) % n;
+      if (next === featIndex) return;
+      featIndex = next;
+      renderFeatured(dir);
+    };
+    // Swipe left/right on the spotlight (touch). A swipe swallows the click
+    // that follows so it doesn't open the beat.
+    let x0 = null; let y0 = 0; let swiped = false;
+    box.addEventListener('touchstart', (e) => {
+      if (!e.target.closest('.bt-feat-stage')) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; swiped = false;
+    }, { passive: true });
+    box.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      const dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        swiped = true;
+        setTimeout(() => { swiped = false; }, 400);
+        go(featIndex + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
       }
+    }, { passive: true });
+    box.addEventListener('click', (e) => {
+      if (swiped) { swiped = false; e.preventDefault(); return; }
+      const step = e.target.closest('[data-feat-step]');
+      if (step) { const d = Number(step.dataset.featStep); go(featIndex + d, d); return; }
+      const pick = e.target.closest('[data-feat-index]');
+      if (pick) { const i = Number(pick.dataset.featIndex); go(i, i > featIndex ? 1 : -1); return; }
       const spot = e.target.closest('.bt-feat-spot');
       if (!spot) return;
       const beat = byId.get(spot.dataset.id);
-      if (e.target.closest('[data-feat-play]')) togglePlay(beat.id);
-      else if (e.target.closest('[data-feat-buy]')) openLicense(beat, e.target.closest('[data-feat-buy]'));
+      if (e.target.closest('[data-feat-play]')) { togglePlay(beat.id); return; }
+      // The whole spotlight opens the beat page (no cart from here).
+      if (!e.target.closest('a')) location.href = beatUrl(beat);
     });
-    renderFeatured(false);
+    renderFeatured(0);
   };
 
   /* ---------------------------------- Tilt --------------------------------- */

@@ -1171,3 +1171,55 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-top-beam{ animation:none; --bt-angle:200deg; }
 }
 @media (max-width:640px){ .bt-top-body .bt-feat-spot{ grid-template-columns:120px 1fr; gap:14px; align-items:start; } .bt-top-body .bt-feat-cover{ max-width:none; } .bt-feat-play{ width:48px; height:48px; margin:-24px 0 0 -24px; } .bt-feat-play svg{ width:20px; height:20px; } .bt-feat-title{ font-size:24px; } .bt-feat-about{ display:none; } .bt-feat-actions{ grid-column:1 / -1; } .bt-feat-specs .bt-spec:last-child{ display:none; } }
+
+/* ==================== Top tracks: showcase + arrows =====================
+   No cart here: the spotlight is a news item that opens the beat page.
+   Arrows (and swipe on touch) step through the week's picks. */
+.bt-feat-stage{ position:relative; min-width:0; }
+.bt-feat-slot{ height:100%; }
+.bt-feat-slot .bt-feat-spot{ height:100%; cursor:pointer; transition:border-color 200ms ease; }
+@media (hover:hover) and (pointer:fine){
+  .bt-feat-slot .bt-feat-spot:hover{ border-color:rgba(var(--fx), 0.6); }
+  .bt-feat-slot .bt-feat-spot:hover .bt-feat-open svg{ transform:translateX(3px); }
+}
+.bt-feat-open{ display:inline-flex; align-items:center; gap:8px; margin-top:20px; font-family:var(--font-sans); font-size:14.5px; font-weight:600; color:rgb(var(--fx-soft)); }
+.bt-feat-open svg{ width:18px; height:18px; transition:transform 200ms var(--ease-out); }
+
+.bt-feat-nav{
+  position:absolute; z-index:3; bottom:clamp(16px, 2.4vw, 24px); width:44px; height:44px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  border:1px solid rgba(255,255,255,0.16); background:rgba(10,10,9,0.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transition:border-color 200ms ease, background-color 200ms ease, transform 160ms var(--ease-out);
+}
+.bt-feat-nav svg{ width:20px; height:20px; }
+.bt-feat-nav.next{ right:clamp(16px, 2.4vw, 24px); }
+.bt-feat-nav.prev{ right:calc(clamp(16px, 2.4vw, 24px) + 54px); }
+.bt-feat-nav:active{ transform:scale(0.92); }
+@media (hover:hover) and (pointer:fine){ .bt-feat-nav:hover{ border-color:var(--accent); background:rgba(232,134,44,0.16); } }
+.bt-feat-nav:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+.bt-feat-dots{ display:none; justify-content:center; gap:8px; margin-top:14px; }
+.bt-feat-dots span{ width:7px; height:7px; border-radius:4px; background:rgba(255,255,255,0.22); transition:width 240ms var(--ease-out), background-color 200ms ease; }
+.bt-feat-dots span.is-active{ width:22px; background:var(--accent); }
+
+/* Phone: cover centred, details centred below, arrows either side of
+   the cover, dots instead of the picks list. */
+@media (max-width:640px){
+  .bt-top-body .bt-feat-spot{ grid-template-columns:1fr; gap:18px; justify-items:center; text-align:center; padding:18px 14px 22px; }
+  .bt-top-body .bt-feat-cover{ width:min(220px, 62vw); max-width:none; }
+  .bt-feat-play{ width:56px; height:56px; margin:-28px 0 0 -28px; }
+  .bt-feat-play svg{ width:22px; height:22px; }
+  .bt-feat-info{ display:flex; flex-direction:column; align-items:center; }
+  .bt-feat-kicker{ justify-content:center; }
+  .bt-feat-title{ font-size:28px; }
+  .bt-feat-producer .bt-producer{ justify-content:center; }
+  .bt-feat-specs{ justify-content:center; }
+  .bt-feat-specs .bt-spec:last-child{ display:inline-flex; }
+  .bt-feat-about{ display:none; }
+  .bt-feat-open{ margin-top:16px; }
+  .bt-feat-nav{ bottom:auto; top:calc(18px + min(110px, 31vw) - 22px); }
+  .bt-feat-nav.prev{ right:auto; left:6px; }
+  .bt-feat-nav.next{ right:6px; }
+  .bt-feat-dots{ display:flex; }
+  .bt-top-body .bt-feat-list{ display:none; }
+}

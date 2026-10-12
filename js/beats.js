@@ -197,12 +197,12 @@
   // on the 24px grid so they stay crisp at 26px over the cover collage.
   const ICONS = {
     all: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
-    saved: '<path d="M12 19.5s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.5c0 5.1-7 9.4-7 9.4z"/>',
-    new: '<path d="M12 3.5l1.9 5.2 5.2 1.9-5.2 1.9L12 17.7l-1.9-5.2-5.2-1.9 5.2-1.9z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+    saved: '<path d="M12 18.7s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 6.8a3.9 3.9 0 0 1 7 2.5c0 5.1-7 9.4-7 9.4z"/>',
+    new: '<path d="M12 3.8l2.1 6.1 6.1 2.1-6.1 2.1L12 20.2l-2.1-6.1L3.8 12l6.1-2.1z"/>',
     under30: '<path d="M4 12.2V5.5A1.5 1.5 0 0 1 5.5 4h6.7l7.4 7.4a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8.5" cy="8.5" r="1.4"/>',
-    stems: '<path d="M5 17.5v-5M9.7 17.5V6.5M14.3 17.5v-8M19 17.5v-3"/><path d="M3.5 20.5h17"/>',
-    project: '<path d="M3.8 7.5A1.8 1.8 0 0 1 5.6 5.7h3.9l2 2h6.9a1.8 1.8 0 0 1 1.8 1.8v7.8a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z"/><path d="M8.5 13.5h7"/>',
-    genre: '<path d="M9.5 17V6.2l9-2v10.6"/><circle cx="7.2" cy="17" r="2.3"/><circle cx="16.2" cy="14.8" r="2.3"/>',
+    stems: '<path d="M5.5 15.5v-7M9.8 19V5M14.2 16.5v-9M18.5 14v-4"/>',
+    project: '<path d="M3.8 7.1A1.8 1.8 0 0 1 5.6 5.3h3.9l2 2h6.9a1.8 1.8 0 0 1 1.8 1.8v7.8a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z"/><path d="M8.5 13.1h7"/>',
+    genre: '<path d="M9.8 17.2V6.4l9-2v10.6"/><circle cx="7.5" cy="17.2" r="2.3"/><circle cx="16.5" cy="15" r="2.3"/>',
   };
   const collections = () => {
     const base = [
@@ -386,13 +386,10 @@
 
   const tileHtml = (c) => {
     const items = BEATS.filter(c.test);
-    // Up to four covers of the collection make the tile's collage.
-    const mosaic = items.slice(0, 4).map((b) => `<span class="bt-col-tile ${tintClass(b)}">${art(b)}</span>`).join('');
     const empty = !items.length && c.id !== 'saved';
     return `
       <button type="button" class="bt-col${c.id === state.col ? ' is-active' : ''}" role="tab" aria-selected="${c.id === state.col}" data-col="${esc(c.id)}" ${empty ? 'disabled' : ''}>
         <span class="bt-col-disc">
-          <span class="bt-col-mosaic n${Math.min(items.length, 4)}" aria-hidden="true">${mosaic}</span>
           <span class="bt-col-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[c.icon]}</svg></span>
           <svg class="bt-col-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48"/></svg>
         </span>

@@ -934,3 +934,13 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-col.is-active .bt-col-icon::before{ background:rgba(8,8,7,0.72); box-shadow:inset 0 0 0 1px rgba(232,134,44,0.45); }
 .bt-col[data-col="saved"].is-active .bt-col-icon svg path{ fill:currentColor; }
 @media (max-width:560px){ .bt-col-icon::before{ width:38px; height:38px; margin:-19px 0 0 -19px; } .bt-col-icon svg{ width:21px; height:21px; } }
+
+/* Collection discs: plain black, no cover collage, no backing circle */
+.bt-col-icon::before{ content:none; }
+.bt-col-disc{ background:radial-gradient(circle at 50% 35%, #161513 0%, #070706 70%); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+.bt-col-icon{ inset:0; display:flex; align-items:center; justify-content:center; color:var(--text); }
+.bt-col-icon svg{ width:28px; height:28px; display:block; }
+@media (hover:hover) and (pointer:fine){ .bt-col:not(:disabled):hover .bt-col-icon{ color:#fff; } .bt-col:not(:disabled):hover .bt-col-disc{ box-shadow:inset 0 0 0 1px rgba(255,255,255,0.14); } }
+.bt-col.is-active .bt-col-disc{ background:radial-gradient(circle at 50% 35%, rgba(232,134,44,0.18) 0%, #070706 72%); }
+.bt-col.is-active .bt-col-icon{ color:var(--amber-bright); }
+@media (max-width:560px){ .bt-col-icon svg{ width:24px; height:24px; } }

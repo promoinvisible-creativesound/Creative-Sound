@@ -1275,3 +1275,11 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (max-width:640px){ .bt-feat-nav{ bottom:auto; } .bt-feat-nav.prev{ left:6px; right:auto; } .bt-feat-nav.next{ right:6px; left:auto; } }
 @media (max-width:1000px){ .bt-feat-slot, .bt-feat-slot .bt-feat-spot{ height:auto; } }
 @media (max-width:640px){ .bt-feat-dots{ margin:14px 0 4px; } }
+
+
+
+/* Phone: header group centred, equal space either side */
+@media (max-width:640px){
+  .bt-top-head{ justify-content:center; padding:2px 0 14px; }
+  .bt-top-titles{ justify-content:center; }
+}

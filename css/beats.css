@@ -1505,3 +1505,69 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-usage-box > p{ font-size:13px; color:#86868b; }
 .bp-usage li{ gap:12px; padding:10px 0; border-bottom-color:rgba(255,255,255,0.06); font-size:14.5px; color:#e8e8ed; }
 .bp-usage svg{ width:30px; height:30px; padding:6px; border-radius:8px; background:rgba(var(--fx), 0.12); color:rgb(var(--fx-soft)); }
+
+/* ============================ Track page: phone ============================
+   Sized for a phone like a music app: centred, smaller cover; title block
+   centred; the four facts on one row; compact actions; slimmer license
+   cards and usage list; less padding everywhere. */
+@media (max-width:560px){
+  .beat-page{ padding-top:96px; }
+  .bp-wrap{ padding:0 14px; }
+  .bp-crumbs{ margin-bottom:12px; font-size:12px; }
+  .bp-hero{ gap:16px; padding:16px 14px 18px; border-radius:20px; justify-items:center; text-align:center; }
+  .bp-cover{ width:min(220px, 62vw); max-width:none; border-radius:16px; }
+  .bp-cover-play{ width:56px; height:56px; margin:-28px 0 0 -28px; }
+  .bp-cover-play svg{ width:22px; height:22px; }
+  .bp-cover .bt-art-word{ font-size:22px; left:12px; bottom:10px; }
+  .bp-info{ width:100%; display:flex; flex-direction:column; align-items:center; }
+  .bp-kicker{ font-size:11px; letter-spacing:1.2px; margin-bottom:6px; }
+  .bp-title{ font-size:24px; }
+  .bp-producer{ justify-content:center; font-size:14.5px; margin-top:4px; }
+  .bp-facts{ width:100%; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; margin-top:14px; }
+  .bp-facts li{ padding:8px 4px; border-radius:10px; text-align:center; min-width:0; }
+  .bp-facts span{ font-size:9.5px; letter-spacing:0.8px; }
+  .bp-facts b{ margin-top:2px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bp-facts li:nth-child(n+5){ display:none; }
+  .bp-tags{ justify-content:center; margin-top:12px; gap:5px; }
+  .bp-tags a{ font-size:12px; padding:4px 9px; }
+  .bp-actions{ width:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; }
+  .bp-actions .btn{ height:38px; min-height:38px; padding:0 10px; font-size:13px; justify-content:center; }
+  .bp-actions .btn[data-play-beat]{ grid-column:1 / -1; }
+  .bp-actions .btn svg{ width:15px; height:15px; }
+  .bp-section{ margin-top:30px; }
+  .bp-section-head{ margin-bottom:12px; }
+  .bp-section-head h2{ font-size:20px; }
+  .bp-licensing{ gap:12px; }
+  .bp-license-box, .bp-usage-box{ padding:14px; border-radius:18px; }
+  .bp-license-top{ margin-bottom:12px; gap:12px; }
+  .bp-total strong{ font-size:24px; }
+  .bp-license-buttons .btn{ height:38px; font-size:13px; }
+  .bp-tier{ gap:10px; padding:11px 12px; border-radius:12px; }
+  .bp-tier .bt-tier-radio{ width:18px; height:18px; }
+  .bp-tier-name{ font-size:14px; gap:6px; }
+  .bp-tier-files{ font-size:11.5px; }
+  .bp-tier-price{ font-size:15px; }
+  .bt-tier-pill{ height:18px; font-size:10.5px; padding:0 6px 0 5px; }
+  .bp-usage-box h3{ font-size:15px; }
+  .bp-usage-box > p{ font-size:12px; margin-bottom:8px; }
+  .bp-usage li{ gap:10px; padding:8px 0; font-size:13px; }
+  .bp-usage svg{ width:26px; height:26px; padding:5px; }
+  .bp-about{ font-size:14px; }
+}
+@media (max-width:560px){
+  .bp-actions{ grid-template-columns:1fr 38px 38px; }
+  .bp-actions .bp-save, .bp-actions #bp-share{ width:38px; padding:0; }
+  .bp-actions .bp-save .bt-save-text, .bp-actions #bp-share span{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+}
+/* Store cards on phones: same card, tighter. */
+@media (max-width:560px){
+  .bt-grid[data-view="grid"]{ gap:10px; }
+  .bt-grid[data-view="grid"] .bt-body{ padding:10px 10px 11px; gap:7px; }
+  .bt-grid[data-view="grid"] .bt-name{ font-size:14.5px; }
+  .bt-grid[data-view="grid"] .bt-producer{ font-size:12.5px; }
+  .bt-grid[data-view="grid"] .bt-spec{ height:24px; padding:0 7px; font-size:11.5px; }
+  .bt-grid[data-view="grid"] .bt-buy{ min-height:40px; padding:4px 5px 4px 10px; }
+  .bt-grid[data-view="grid"] .bt-buy-price{ font-size:15px; }
+  .bt-grid[data-view="grid"] .bt-buy-icon{ width:30px; height:30px; }
+  .bt-grid[data-view="grid"] .bt-play{ width:42px; height:42px; margin:-21px 0 0 -21px; }
+}

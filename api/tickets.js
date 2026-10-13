@@ -4,6 +4,7 @@ const { getSession } = require('./_lib/auth');
 const { handleNotify } = require('./_lib/notify');
 const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = require('./_lib/beats');
 const { handleRole } = require('./_lib/account');
+const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catalogue');
 const {
   handleFile: handleProducerFile,
   handleChunk: handleProducerChunk,
@@ -34,6 +35,12 @@ module.exports = async (req, res) => {
   // Beat store checkout shares this function too (see _lib/beats.js).
   if (req.query && req.query.action === 'beats-checkout') {
     await handleBeatsCheckout(req, res);
+    return;
+  }
+  // Live catalogue, producer track media and bought files (_lib/catalogue.js).
+  const catalogueRoutes = { 'beats-catalogue': handleCatalogue, 'beats-media': handleMedia, 'beats-file': handleBoughtFile };
+  if (req.query && catalogueRoutes[req.query.action]) {
+    await catalogueRoutes[req.query.action](req, res);
     return;
   }
   if (req.query && req.query.action === 'beats-saved') {

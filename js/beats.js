@@ -14,9 +14,11 @@
    WAAPI only for the add-to-cart flight and badge, reduced motion = gentler. */
 (function () {
   const catalogueRoot = document.querySelector('.beats-page');
-  const beatRoot = document.querySelector('[data-beat-id]');
+  let beatRoot = document.querySelector('[data-beat-id]');
   const savedRoot = document.querySelector('[data-saved-page]');
-  if (!catalogueRoot && !beatRoot && !savedRoot) return;
+  // track.html: the page for producer uploads, built from the live catalogue.
+  const trackPage = document.querySelector('[data-track-page]');
+  if (!catalogueRoot && !beatRoot && !savedRoot && !trackPage) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
@@ -40,7 +42,8 @@
   /* ------------------------------ Shared markup ---------------------------- */
   const TINTS = ['amber', 'blue', 'red', 'violet', 'green'];
   const tintClass = (b) => `bt-tint-${TINTS.includes(b.tint) ? b.tint : 'amber'}`;
-  const beatUrl = (b) => `beats/${encodeURIComponent(b.id)}.html`;
+  // Catalogue beats have static pages; approved producer uploads use track.html.
+  const beatUrl = (b) => (b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`);
   const art = (b) => `
     <div class="bt-art">
       ${b.cover
@@ -49,7 +52,10 @@
     </div>`;
   const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><title>Verified producer</title><path class="bt-verified-seal" d="M12.0 1.0L12.9 1.4L13.7 2.3L14.4 2.9L15.4 2.8L16.5 2.4L17.5 2.5L18.1 3.3L18.3 4.5L18.6 5.4L19.5 5.7L20.7 5.9L21.5 6.5L21.6 7.5L21.2 8.6L21.1 9.6L21.7 10.3L22.6 11.1L23.0 12.0L22.6 12.9L21.7 13.7L21.1 14.4L21.2 15.4L21.6 16.5L21.5 17.5L20.7 18.1L19.5 18.3L18.6 18.6L18.3 19.5L18.1 20.7L17.5 21.5L16.5 21.6L15.4 21.2L14.4 21.1L13.7 21.7L12.9 22.6L12.0 23.0L11.1 22.6L10.3 21.7L9.6 21.1L8.6 21.2L7.5 21.6L6.5 21.5L5.9 20.7L5.7 19.5L5.4 18.6L4.5 18.3L3.3 18.1L2.5 17.5L2.4 16.5L2.8 15.4L2.9 14.4L2.3 13.7L1.4 12.9L1.0 12.0L1.4 11.1L2.3 10.3L2.9 9.6L2.8 8.6L2.4 7.5L2.5 6.5L3.3 5.9L4.5 5.7L5.4 5.4L5.7 4.5L5.9 3.3L6.5 2.5L7.5 2.4L8.6 2.8L9.6 2.9L10.3 2.3L11.1 1.4Z"/><path class="bt-verified-tick" d="M7.6 12.4l3 3 5.8-6.2"/></svg>';
   const isVerified = (name) => !!(PRODUCERS[name] && PRODUCERS[name].verified);
-  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${isVerified(b.producer) ? VERIFIED : ''}</span>`;
+  // A producer upload carries its own badge (set by the owner on the review
+  // page), so nobody gets it by picking a verified producer's name.
+  const beatVerified = (b) => (typeof b.verified === 'boolean' ? b.verified : isVerified(b.producer));
+  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${beatVerified(b) ? VERIFIED : ''}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
 
@@ -874,6 +880,11 @@
   const player = $('#bt-player');
   const audio = new Audio();
   audio.preload = 'none';
+  // Producer previews come from Dropbox (another origin). Asking for CORS lets
+  // the visualizer read them; if that is refused the preview reloads without
+  // it and plays with the visualizer off (noViz), never silent.
+  audio.crossOrigin = 'anonymous';
+  let noViz = false;
   let currentId = null;
   let actx = null;
   let analyser = null;
@@ -946,7 +957,7 @@
   };
 
   const ensureAnalyser = async () => {
-    if (reduceMotion || analyser || !(window.AudioContext || window.webkitAudioContext)) return;
+    if (reduceMotion || noViz || analyser || !(window.AudioContext || window.webkitAudioContext)) return;
     try {
       actx = new (window.AudioContext || window.webkitAudioContext)();
       const src = actx.createMediaElementSource(audio);
@@ -973,6 +984,14 @@
     if (actx && actx.state === 'suspended') { try { await actx.resume(); } catch (e) {} }
     try { await audio.play(); } catch (e) { syncCards(); }
   };
+  audio.addEventListener('error', () => {
+    const beat = byId.get(currentId);
+    if (!beat || beat.source !== 'producer' || !audio.crossOrigin || analyser) return;
+    noViz = true;
+    audio.removeAttribute('crossorigin');
+    audio.src = beat.preview;
+    audio.play().catch(() => syncCards());
+  });
   const togglePlay = (id) => { if (id === currentId && !audio.paused) audio.pause(); else play(id); };
   const step = (dir) => {
     const list = queue();
@@ -1295,8 +1314,13 @@
   }
 
   /* ---------------------------------- Boot --------------------------------- */
+  // Live catalogue (data/beats.json + approved producer uploads); the static
+  // file is the fallback (local preview, API down).
+  const loadCatalogue = () => fetch('/api/beats/catalogue', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`catalogue ${r.status}`))))
+    .catch(() => fetch('/data/beats.json', { cache: 'no-cache' }).then((r) => r.json()));
   Promise.all([
-    fetch('/data/beats.json', { cache: 'no-cache' }).then((r) => r.json()),
+    loadCatalogue(),
     fetch('/data/beat-licenses.json', { cache: 'no-cache' }).then((r) => r.json()),
   ]).then(([catalogue, licenses]) => {
     LIC = licenses;
@@ -1307,6 +1331,17 @@
     setupModal();
     setupCart();
     if (catalogueRoot) setupCatalogue();
+    if (trackPage) {
+      const beat = byId.get(new URLSearchParams(location.search).get('id') || '');
+      if (!beat || !window.CSBeatMarkup) {
+        trackPage.innerHTML = '<div class="bp-wrap"><div class="bt-empty"><p>This track is not available.</p><a href="beats.html" class="btn btn-primary">Browse tracks</a></div></div>';
+      } else {
+        trackPage.insertAdjacentHTML('afterend', window.CSBeatMarkup.beatMainHtml(beat, { LIC, producers: PRODUCERS }));
+        trackPage.remove();
+        beatRoot = document.querySelector('[data-beat-id]');
+        document.title = `${beat.title} (prod. ${beat.producer}) | ${beat.genre} track | Creative Sound`;
+      }
+    }
     if (beatRoot) setupBeatPage();
     if (savedRoot) renderSavedPage();
     syncSaved();

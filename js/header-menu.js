@@ -34,7 +34,7 @@
   // Beat titles and prices, loaded once when a beat menu first opens.
   let catalogue = null;
   const loadCatalogue = () => catalogue || (catalogue = Promise.all([
-    fetch('/data/beats.json').then((r) => r.json()),
+    fetch('/api/beats/catalogue').then((r) => (r.ok ? r.json() : Promise.reject())).catch(() => fetch('/data/beats.json').then((r) => r.json())),
     fetch('/data/beat-licenses.json').then((r) => r.json()),
   ]).then(([b, l]) => ({ byId: new Map(b.beats.map((x) => [x.id, x])), lic: l })).catch(() => ({ byId: new Map(), lic: { tiers: {} } })));
 
@@ -129,8 +129,8 @@
         panel.innerHTML = `
           <div class="hm-head"><b>Saved tracks</b>${list.length ? `<span>${list.length}</span>` : ''}</div>
           ${list.length ? `<div class="hm-beats">${list.slice(0, 4).map((b) => `
-            <a href="beats/${encodeURIComponent(b.id)}.html" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
-              <span class="hm-beat-art" aria-hidden="true"></span>
+            <a href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
+              <span class="hm-beat-art" aria-hidden="true"${b.cover ? ` style="background:url('${esc(b.cover)}') center/cover"` : ''}></span>
               <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc(b.producer)} · ${b.bpm} BPM</small></span>
             </a>`).join('')}</div>
             <a href="profile-saved.html" class="hm-foot" role="menuitem">View all saved</a>`
@@ -192,8 +192,8 @@
           ${cart.length ? `<div class="hm-beats">${cart.map((c) => {
             const b = byId.get(c.id);
             return `
-            <a href="beats/${encodeURIComponent(b.id)}.html" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
-              <span class="hm-beat-art" aria-hidden="true"></span>
+            <a href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
+              <span class="hm-beat-art" aria-hidden="true"${b.cover ? ` style="background:url('${esc(b.cover)}') center/cover"` : ''}></span>
               <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc((lic.tiers[c.tier] || {}).name || c.tier)}</small></span>
               <span class="hm-beat-price">${euro(b.prices[c.tier])}</span>
             </a>`;

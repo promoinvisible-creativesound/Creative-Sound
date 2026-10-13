@@ -14,13 +14,13 @@ const Stripe = require('stripe');
 const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { previewAllowed } = require('./account');
+const { getBeat, liveBeats, producerFiles } = require('./catalogue');
 const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
 const LICENSOR = 'Emanuele Paparella p/k/a Invisible, trading as Creative Sound (P.IVA 17024071007)';
 
-const beatsById = new Map((CATALOGUE.beats || []).map((b) => [b.id, b]));
 const isProduction = () => process.env.VERCEL_ENV === 'production';
 
 function priceOf(beat, tier) {
@@ -28,8 +28,9 @@ function priceOf(beat, tier) {
   return Number.isInteger(p) && p > 0 ? p : null;
 }
 
-// Validates the cart sent by the browser against the catalogue.
-function validateItems(raw) {
+// Validates the cart sent by the browser against the live catalogue
+// (data/beats.json plus approved producer uploads).
+async function validateItems(raw) {
   if (!Array.isArray(raw) || !raw.length) return { error: 'Your cart is empty.' };
   if (raw.length > MAX_ITEMS) return { error: `Up to ${MAX_ITEMS} beats per order.` };
   const seen = new Set();
@@ -37,7 +38,7 @@ function validateItems(raw) {
   for (const it of raw) {
     const id = String((it && it.id) || '');
     const tier = String((it && it.tier) || '');
-    const beat = beatsById.get(id);
+    const beat = await getBeat(id);
     if (!beat || beat.status === 'hidden') return { error: 'One of the beats in your cart is no longer available.' };
     if (beat.demo && isProduction()) return { error: 'One of the beats in your cart is not for sale yet.' };
     if (!LICENSES.tiers[tier] || !priceOf(beat, tier)) return { error: `The selected license is not available for "${beat.title}".` };
@@ -62,7 +63,7 @@ async function handleCheckout(req, res) {
     res.status(403).json({ error: 'The track store is not open yet.' });
     return;
   }
-  const { items, error } = validateItems(req.body && req.body.items);
+  const { items, error } = await validateItems(req.body && req.body.items);
   if (error) {
     res.status(400).json({ error });
     return;
@@ -149,19 +150,28 @@ function ensureTables() {
 // Dropbox share links open a preview page with dl=0; dl=1 starts the download.
 const directUrl = (url) => String(url).trim().replace(/([?&])dl=0(?=&|$)/, '$1dl=1');
 
-async function filesFor(beatId, tier) {
+// Delivery links for one bought beat. Producer uploads get signed links to
+// their Dropbox files (catalogue.js); catalogue beats use the beat_files table.
+async function filesFor(beat, tier, email) {
+  if (beat.source === 'producer') {
+    const siteUrl = (process.env.SITE_URL || 'https://creativesound.io').replace(/\/$/, '');
+    return producerFiles(beat, tier, email, siteUrl);
+  }
+  const beatId = beat.id;
   const wanted = LICENSES.tiers[tier].files;
   const rows = await sql`SELECT file_type, url FROM beat_files WHERE beat_id = ${beatId}`;
   const map = new Map(rows.map((r) => [r.file_type, directUrl(r.url)]));
   return wanted.map((type) => ({ type, label: LICENSES.fileLabels[type], url: map.get(type) || null }));
 }
 
-function parseItems(metadataItems) {
-  return String(metadataItems || '')
-    .split(',')
-    .map((s) => s.split(':'))
-    .filter(([id, tier]) => beatsById.has(id) && LICENSES.tiers[tier])
-    .map(([id, tier]) => ({ beat: beatsById.get(id), tier }));
+async function parseItems(metadataItems) {
+  const out = [];
+  for (const [id, tier] of String(metadataItems || '').split(',').map((x) => x.split(':'))) {
+    if (!LICENSES.tiers[tier]) continue;
+    const beat = await getBeat(id);
+    if (beat) out.push({ beat, tier });
+  }
+  return out;
 }
 
 const licenseIdFor = (sessionId, index) => `CS-B-${String(sessionId).slice(-10).toUpperCase()}-${index + 1}`;
@@ -251,7 +261,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
 // Throws when something must be retried (DB down, delivery files missing),
 // so Stripe retries the webhook; the inserts are idempotent per session.
 async function handleBeatPurchase({ session, email, resend, renderEmail, button, paragraph, steps, accountLine }) {
-  const items = parseItems(session.metadata && session.metadata.items);
+  const items = await parseItems(session.metadata && session.metadata.items);
   if (!items.length) throw new Error(`Beat checkout ${session.id} has no readable items.`);
   const buyerName = (session.customer_details && session.customer_details.name) || '';
   const currency = session.currency || CATALOGUE.currency || 'eur';
@@ -266,7 +276,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
       VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id})
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
-    delivered.push({ beat, tier, licenseId, files: await filesFor(beat.id, tier) });
+    delivered.push({ beat, tier, licenseId, files: await filesFor(beat, tier, email) });
   }
 
   const missing = delivered.flatMap((d) => d.files.filter((f) => !f.url).map((f) => `${d.beat.id}:${f.type}`));
@@ -345,7 +355,7 @@ async function beatsForAccount(email) {
   `;
   const out = [];
   for (const r of rows) {
-    const beat = beatsById.get(r.beat_id);
+    const beat = await getBeat(r.beat_id);
     if (!beat || !LICENSES.tiers[r.tier]) continue;
     out.push({
       beat_id: r.beat_id,
@@ -355,7 +365,7 @@ async function beatsForAccount(email) {
       tier_name: LICENSES.tiers[r.tier].name,
       license_id: r.license_id,
       created_at: r.created_at,
-      files: (await filesFor(r.beat_id, r.tier)).filter((f) => f.url),
+      files: (await filesFor(beat, r.tier, email)).filter((f) => f.url),
     });
   }
   return out;
@@ -371,7 +381,8 @@ async function beatsForAccount(email) {
 async function savedForAccount(email) {
   await ensureTables();
   const rows = await sql`SELECT beat_id FROM beat_saves WHERE email = ${email} ORDER BY created_at DESC`;
-  return rows.map((r) => r.beat_id).filter((id) => beatsById.has(id));
+  const known = new Set((await liveBeats()).map((b) => b.id));
+  return rows.map((r) => r.beat_id).filter((id) => known.has(id));
 }
 
 async function handleSaved(req, res) {
@@ -395,14 +406,15 @@ async function handleSaved(req, res) {
     }
     await ensureTables();
     const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const known = new Set((await liveBeats()).map((b) => b.id));
     if (Array.isArray(body.merge)) {
-      const ids = [...new Set(body.merge.map(String))].filter((id) => beatsById.has(id)).slice(0, 200);
+      const ids = [...new Set(body.merge.map(String))].filter((id) => known.has(id)).slice(0, 200);
       for (const id of ids) {
         await sql`INSERT INTO beat_saves (email, beat_id) VALUES (${session.email}, ${id}) ON CONFLICT DO NOTHING`;
       }
     } else {
       const id = String(body.beatId || '');
-      if (!beatsById.has(id)) {
+      if (!known.has(id)) {
         res.status(400).json({ error: 'Unknown beat.' });
         return;
       }

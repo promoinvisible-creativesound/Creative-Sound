@@ -92,6 +92,18 @@
     {
       "source": "/api/producer/verify-request",
       "destination": "/api/tickets?action=producer-verify-request"
+    },
+    {
+      "source": "/api/beats/catalogue",
+      "destination": "/api/tickets?action=beats-catalogue"
+    },
+    {
+      "source": "/api/beats/media",
+      "destination": "/api/tickets?action=beats-media"
+    },
+    {
+      "source": "/api/beats/file",
+      "destination": "/api/tickets?action=beats-file"
     }
   ],
   "headers": [

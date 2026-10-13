@@ -101,7 +101,7 @@
             </div>
             <p class="up-error rv-card-error" role="alert" hidden></p>
           </div>`
-        : `<p class="rv-result ${s.status === 'approved' ? 'is-ok' : 'is-bad'}">${s.status === 'approved' ? 'Approved' : 'Sent back'} ${esc(when(s.reviewedAt))}${s.reviewNote ? ` · “${esc(s.reviewNote)}”` : ''}</p>`}
+        : `<p class="rv-result ${s.status === 'approved' ? 'is-ok' : 'is-bad'}">${s.status === 'approved' ? 'Approved' : 'Sent back'} ${esc(when(s.reviewedAt))}${s.reviewNote ? ` · “${esc(s.reviewNote)}”` : ''}${s.storeUrl ? ` · <a href="${esc(s.storeUrl)}" target="_blank" rel="noopener">View in store</a>` : ''}</p>`}
       </article>`;
   }
 

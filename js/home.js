@@ -24,9 +24,9 @@
   let playing = null;
 
   const card = (b, i) => `
-    <a class="ho-track t-${TINTS.includes(b.tint) ? b.tint : 'amber'}" href="beats/${encodeURIComponent(b.id)}.html" style="--i:${i}">
+    <a class="ho-track t-${TINTS.includes(b.tint) ? b.tint : 'amber'}" href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" style="--i:${i}">
       <span class="ho-track-art">
-        <span class="ho-cover"></span>
+        ${b.cover ? `<img class="ho-cover-img" src="${esc(b.cover)}" alt="" loading="lazy">` : '<span class="ho-cover"></span>'}
         <button type="button" class="ho-play" data-src="${esc(b.preview)}" aria-label="Play ${esc(b.title)}">
           <svg class="ho-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
           <svg class="ho-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
@@ -34,14 +34,16 @@
       </span>
       <span class="ho-track-body">
         <b class="ho-track-title">${esc(b.title)}</b>
-        <span class="ho-track-producer">${esc(b.producer)}${producers[b.producer] && producers[b.producer].verified ? VERIFIED : ''}</span>
+        <span class="ho-track-producer">${esc(b.producer)}${(typeof b.verified === 'boolean' ? b.verified : !!(producers[b.producer] && producers[b.producer].verified)) ? VERIFIED : ''}</span>
         <span class="ho-track-specs"><span>${b.bpm} BPM</span><span>${esc(b.key)}</span><span class="ho-track-genre">${esc(b.genre)}</span></span>
         <span class="ho-track-foot"><b>${euro(minPrice(b))}</b></span>
       </span>
     </a>`;
 
-  fetch('/data/beats.json')
-    .then((r) => r.json())
+  // Live catalogue (approved producer uploads included); static file as fallback.
+  fetch('/api/beats/catalogue')
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .catch(() => fetch('/data/beats.json').then((r) => r.json()))
     .then((data) => {
       producers = data.producers || {};
       const latest = (data.beats || [])

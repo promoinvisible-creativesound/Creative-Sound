@@ -40,6 +40,7 @@
           <div class="pa-row-side">
             <span class="hm-status pa-status ${st.cls}">${st.label}</span>
             <small>${s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`}</small>
+            ${s.storeUrl ? `<a class="pa-store-link" href="${esc(s.storeUrl)}">View in store</a>` : ''}
           </div>
         </article>`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';

@@ -15,6 +15,7 @@ const { getSession } = require('./auth');
 const { roleFor, previewAllowed, isAdmin } = require('./account');
 const dropbox = require('./dropbox');
 const inspect = require('./inspect');
+const { trackId } = require('./catalogue');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MB = 1024 * 1024;
@@ -329,6 +330,7 @@ async function handleSubmissions(req, res) {
       submissions: rows.map((r) => ({
         id: r.id, status: r.status, title: r.title, bpm: r.bpm, key: r.musical_key, genre: r.genre, mood: r.mood,
         prices: r.prices, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
+        storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null,
       })),
     });
   } catch (err) {
@@ -366,7 +368,8 @@ async function handleAdminList(req, res) {
         id: r.id, status: r.status, email: r.email, producerName: r.producer_name, title: r.title, bpm: r.bpm,
         key: r.musical_key, genre: r.genre, mood: r.mood, tags: r.tags, typeBeat: r.type_beat, about: r.about,
         prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
-        userId: r.user_id, producerVerified: !!r.producer_verified, verifyRequested: !!r.verify_requested_at && !r.producer_verified,
+        userId: r.user_id, producerVerified: !!r.producer_verified,
+        storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null, verifyRequested: !!r.verify_requested_at && !r.producer_verified,
       });
     }
     const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE status = 'pending'`;

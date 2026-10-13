@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order History | Creative Sound</title>
+<title>Orders | Creative Sound</title>
 <meta name="description" content="Your Creative Sound order history.">
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://creativesound.io/profile-orders.html">
@@ -28,6 +28,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=128">
 <link rel="stylesheet" href="css/header-menu.css?v=13">
+<link rel="stylesheet" href="css/profile.css?v=12">
 </head>
 <body>
 <div id="grain"></div>
@@ -94,18 +95,28 @@
   </div>
 </header>
 
-<main>
-  <div class="page-hero" style="padding-bottom:0;">
-    <a href="profile.html" class="account-back reveal-up">← Back to account</a>
-    <p class="kicker reveal-up">ACCOUNT</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Order History</h1>
+<main class="pf-page lp-page or-page">
+  <a href="profile.html" class="pe-back">‹ Account</a>
+  <h1 class="st-title">Orders</h1>
+  <p class="lp-sub">Everything you bought on Creative Sound. Your files are in <a href="profile-license.html" class="lp-link">Licenses &amp; downloads ›</a></p>
+
+  <div class="or-stats">
+    <div class="or-stat"><span>Total spent</span><b id="or-total">–</b></div>
+    <div class="or-stat"><span>Items</span><b id="or-count">–</b></div>
+    <div class="or-stat"><span>Last order</span><b id="or-last">–</b></div>
   </div>
 
-  <div id="orders-root" class="account-detail">
-    <section class="account-section glass-panel reveal-up">
-      <div id="profile-orders"></div>
-    </section>
+  <div class="lp-seg" id="or-seg" role="group" aria-label="Show">
+    <button type="button" class="is-on" data-show="all" aria-pressed="true">All</button>
+    <button type="button" data-show="plugins" aria-pressed="false">Plugins</button>
+    <button type="button" data-show="packs" aria-pressed="false">Packs</button>
+    <button type="button" data-show="tracks" aria-pressed="false">Tracks</button>
   </div>
+
+  <div id="orders-v2" aria-busy="true">
+    <div id="or-list"><div class="lp-list"><div class="lp-skel"></div></div></div>
+  </div>
+  <p class="or-note">Need an invoice or help with an order? <a href="profile-tickets.html" class="lp-link">Contact support ›</a></p>
 </main>
 
 <footer id="site-footer">
@@ -163,6 +174,7 @@
 <script src="js/main.js?v=46"></script>
 <script src="js/header-menu.js?v=10"></script>
 <script src="js/auth.js?v=45"></script>
+<script src="js/orders.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

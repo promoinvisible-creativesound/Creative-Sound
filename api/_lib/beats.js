@@ -353,7 +353,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
 async function beatsForAccount(email) {
   await ensureTables();
   const rows = await sql`
-    SELECT beat_id, tier, license_id, created_at FROM beat_purchases
+    SELECT beat_id, tier, license_id, created_at, price_cents, currency, stripe_session_id FROM beat_purchases
     WHERE email = ${email}
     ORDER BY created_at DESC
   `;
@@ -369,6 +369,9 @@ async function beatsForAccount(email) {
       tier_name: LICENSES.tiers[r.tier].name,
       license_id: r.license_id,
       cover: beat.cover || null,
+      price_cents: r.price_cents,
+      currency: r.currency,
+      order_ref: String(r.stripe_session_id || "").slice(-8).toUpperCase(),
       created_at: r.created_at,
       files: (await filesFor(beat, r.tier, email)).filter((f) => f.url),
     });

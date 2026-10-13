@@ -663,3 +663,14 @@
 .up-page .up-listen{ font-size:11.5px; padding:0 11px 0 9px; gap:5px; }
 .up-page .up-listen svg{ width:11px; height:11px; }
 .up-page .up-file .up-btn-ghost{ padding:0 10px; font-size:12.5px; }
+/* Readability pass 2: small text brighter and a touch heavier */
+.up-page .up-sub, .up-page .up-card-head p{ color:#d1d1d6; }
+.up-page .up-group-title span, .up-page .up-file-text small, .up-page .up-file-done small,
+.up-page .up-taghint, .up-page .up-contact-head small, .up-page .up-tier-files, .up-page .up-tier-lock,
+.up-page .up-checklist li, .up-page .up-seek-time, .up-page .up-preview-producer{ color:#c7c7cc; }
+.up-page .up-file-text small, .up-page .up-group-title span, .up-page .up-taghint, .up-page .up-contact-head small, .up-page .up-tier-files{ font-size:14px; font-weight:450; }
+.up-page .up-field > span{ color:#e5e5ea; }
+.up-page .up-field > span i{ color:#aeaeb2; font-size:13px; }
+.up-page .up-checklist li{ font-size:14.5px; }
+.up-page .up-steps a{ color:#d1d1d6; }
+.up-page .up-field input::placeholder, .up-page .up-field textarea::placeholder, #up-taginput::placeholder, .up-tags-own input::placeholder{ color:#8e8e93; }

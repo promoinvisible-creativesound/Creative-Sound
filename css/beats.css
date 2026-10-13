@@ -1604,3 +1604,38 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (hover:none){ .bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play{ transform:none; } }
 .bt-grid[data-view="grid"] .bt-play:active, .bp-row .bt-play:active{ transform:scale(0.92); }
 @media (max-width:560px){ .bt-grid[data-view="grid"] .bt-play{ left:10px; bottom:10px; width:38px; height:38px; margin:0; } }
+
+/* ============================ Top tracks: Apple ============================
+   Quiet card, no HUD corners or running light; sans title with a small
+   "This week" label; spotlight as a soft panel with a frosted play button;
+   the list as simple rows with the rank, active row lightly highlighted. */
+.bt-top-frame{ border:1px solid rgba(255,255,255,0.07) !important; border-radius:26px !important; background:#121211 !important; box-shadow:none !important; padding:24px !important; }
+.bt-top-frame::before, .bt-top-frame::after{ display:none !important; }
+.bt-top-beam, .bt-top-corner{ display:none !important; }
+.bt-top-head{ padding:0 4px 16px !important; margin:0 !important; border:0 !important; }
+.bt-top-titles{ flex-direction:row !important; align-items:baseline; gap:12px !important; }
+.bt-top-title{ order:-1; font-family:var(--font-sans) !important; font-size:clamp(24px, 2.6vw, 30px) !important; font-weight:700 !important; letter-spacing:-0.02em; color:#f5f5f7 !important; }
+.bt-top-live{ font-size:14px !important; font-weight:500 !important; letter-spacing:0 !important; text-transform:none !important; color:#86868b !important; }
+.bt-top-live .bt-feat-dot{ display:none; }
+.bt-feat-spot{ border:0 !important; border-radius:20px !important; background:rgba(255,255,255,0.03) !important; box-shadow:none !important; }
+.bt-feat-cover{ border-radius:14px !important; box-shadow:0 20px 50px -24px rgba(0,0,0,0.9) !important; }
+.bt-feat-play{ width:52px !important; height:52px !important; margin:-26px 0 0 -26px !important; border:0 !important; background:rgba(28,28,30,0.5) !important; -webkit-backdrop-filter:blur(16px) saturate(160%); backdrop-filter:blur(16px) saturate(160%); color:#fff !important; box-shadow:0 8px 24px -8px rgba(0,0,0,0.7) !important; }
+.bt-feat-play svg{ width:20px !important; height:20px !important; }
+.bt-feat-spot.is-playing .bt-feat-play{ background:#fff !important; color:#0a0a09 !important; }
+.bt-feat-rank-big{ font-family:var(--font-sans) !important; font-size:13px !important; font-weight:600 !important; letter-spacing:0 !important; color:#86868b !important; text-shadow:none !important; }
+.bt-feat-rank-big::before{ content:'No. '; }
+.bt-feat-title{ font-family:var(--font-sans) !important; font-size:clamp(28px, 3.2vw, 40px) !important; font-weight:700 !important; letter-spacing:-0.025em; }
+.bt-feat-open{ font-family:var(--font-sans); font-size:15px; font-weight:500; color:#f0a35b !important; }
+.bt-feat-open svg{ display:none; }
+.bt-feat-open::after{ content:' ›'; }
+.bt-feat-nav{ width:36px !important; height:36px !important; border:0 !important; background:rgba(255,255,255,0.08) !important; color:#f5f5f7 !important; }
+@media (hover:hover) and (pointer:fine){ .bt-feat-nav:hover{ background:rgba(255,255,255,0.14) !important; } }
+.bt-feat-list{ gap:2px !important; }
+.bt-feat-pick{ border:0 !important; border-radius:14px !important; background:transparent !important; box-shadow:none !important; padding:10px !important; }
+.bt-feat-pick::before{ display:none !important; }
+.bt-feat-pick.is-active{ background:rgba(255,255,255,0.06) !important; }
+@media (hover:hover) and (pointer:fine){ .bt-feat-pick:not(.is-active):hover{ background:rgba(255,255,255,0.04) !important; } }
+.bt-feat-pick-rank, .bt-feat-pick .bt-feat-rank{ font-family:var(--font-sans) !important; font-size:15px !important; font-weight:600 !important; color:#86868b !important; text-shadow:none !important; }
+.bt-feat-pick.is-active .bt-feat-pick-rank, .bt-feat-pick.is-active .bt-feat-rank{ color:#f5f5f7 !important; }
+.bt-feat-thumb{ border-radius:8px !important; }
+.bt-feat-pick-text b{ font-weight:600 !important; color:#f5f5f7; }

@@ -327,3 +327,28 @@
   .or-item{ flex-wrap:nowrap; }
   .or-item .lp-main{ flex:1 1 auto; }
 }
+
+/* ------------------------------- Saved tracks -------------------------------
+   profile-saved.html: account-style header, a slim bar (count, Play all,
+   browse) above the store's own track cards, and a calmer empty state. */
+.sv-page{ padding:120px 20px 90px; }
+.sv-head{ max-width:1180px; margin:0 auto; }
+.sv-wrap{ max-width:1180px; margin:26px auto 0; }
+.sv-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; padding:10px 12px 10px 10px; border-radius:16px; background:#141413; }
+.sv-count{ display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:600; color:#f5f5f7; }
+.sv-count-tile{ width:30px !important; height:30px !important; flex:0 0 30px !important; border-radius:8px !important; }
+.sv-count-tile .hm-ic{ width:17px; height:17px; }
+.sv-actions{ display:flex; align-items:center; gap:14px; }
+.sv-play{ height:32px; display:inline-flex; align-items:center; gap:6px; padding:0 14px 0 11px; border:0; border-radius:16px; background:var(--accent); color:#0a0a09; font-family:var(--font-sans); font-size:13px; font-weight:600; cursor:pointer; transition:filter 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.sv-play svg{ width:14px; height:14px; fill:currentColor; }
+.sv-play:active{ transform:scale(0.96); }
+@media (hover:hover) and (pointer:fine){ .sv-play:hover{ filter:brightness(1.08); } }
+.sv-empty{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:56px 20px; border-radius:20px; background:#141413; }
+.sv-empty-tile{ width:56px !important; height:56px !important; flex:0 0 56px !important; border-radius:16px !important; margin-bottom:8px; }
+.sv-empty-tile .hm-ic{ width:28px; height:28px; }
+.sv-empty h2{ margin:0; font-family:var(--font-sans); font-size:20px; font-weight:600; color:#f5f5f7; }
+.sv-empty p{ margin:0 0 10px; max-width:380px; font-size:14.5px; line-height:1.5; color:#86868b; }
+@media (max-width:640px){
+  .sv-page{ padding:108px 14px 70px; }
+  .sv-page .st-title{ font-size:28px; }
+}

@@ -137,7 +137,17 @@
     if (!grid) return;
     const list = savedList();
     $('#bt-saved-empty').hidden = list.length > 0;
-    $('#bt-saved-count').textContent = list.length ? `${list.length} saved track${list.length === 1 ? '' : 's'}` : '';
+    $('#bt-saved-count').textContent = `${list.length} saved track${list.length === 1 ? '' : 's'}`;
+    grid.hidden = !list.length;
+    // "Play all": starts the first saved track; the player then follows the saved list.
+    const playAll = $('#sv-play');
+    if (playAll) {
+      playAll.hidden = !list.length;
+      if (!playAll.dataset.bound) {
+        playAll.addEventListener('click', () => { const first = grid.querySelector('.bt-play'); if (first) first.click(); });
+        playAll.dataset.bound = '1';
+      }
+    }
     grid.innerHTML = list.map(cardHtml).join('');
     if (!grid.dataset.bound) { bindCardClicks(grid); bindTilt(grid); grid.dataset.bound = '1'; }
     syncCards();

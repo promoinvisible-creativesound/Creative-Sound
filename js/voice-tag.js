@@ -5,7 +5,7 @@
 // Only this tagged file is ever played in the store; buyers get clean files.
 (() => {
   'use strict';
-  const TAG_URL = 'assets/audio/voice-tag.wav';
+  const TAG_URL = 'assets/audio/voice-tag.wav?v=2';
   const LAME_URL = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js';
   const FIRST = 1;       // seconds
   const EVERY = 30;      // seconds between tags

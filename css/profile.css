@@ -199,3 +199,5 @@
   .st-role-card b{ font-size:13.5px; }
   .st-role-card small{ font-size:11.5px; }
 }
+/* Selected account type: solid amber tile. */
+.st-role input:checked + .st-role-card .st-role-tile{ --t1:#f7a24b; --t2:#de7a1f; color:#0a0a09; box-shadow:0 8px 24px -10px rgba(232,134,44,0.7); }

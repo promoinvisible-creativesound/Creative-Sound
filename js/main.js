@@ -510,34 +510,64 @@
   });
 
   /* ------------------------------- Site search -------------------------------- */
-  // Lightweight client-side search over the site's own pages/sections — no
-  // backend involved. The trigger button lives in every page's header; the
-  // overlay itself is built once here and shared.
+  // Spotlight-style search over the site's pages, plugin features and the
+  // live track catalogue (titles, producers, genres, moods). Built once,
+  // opened from the header button or Ctrl/Cmd+K.
   const SEARCH_INDEX = [
-    { name: 'Creative Dist 2.0', desc: 'Modular distortion plugin — overview & pricing', url: 'creative-dist-2' },
-    { name: 'Saturation', desc: '18 saturation modes', url: 'creative-dist-2#saturation' },
-    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'creative-dist-2#noise' },
-    { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: 'creative-dist-2#bode' },
-    { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: 'creative-dist-2#flux' },
-    { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: 'creative-dist-2#eq' },
-    { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: 'creative-dist-2#output' },
-    { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: 'creative-dist-2#pricing' },
-    { name: 'Sound Packs', desc: 'Free Serum preset packs', url: 'packs.html' },
-    { name: 'Home', desc: 'Creative Sound: plugins, sound packs and tracks', url: '/' },
-    { name: 'Tracks', desc: 'Buy tracks: MP3, WAV, stems, FLP licenses', url: 'beats.html' },
-    { name: 'Support / Tickets', desc: 'Open or check a support ticket', url: 'profile-tickets.html' },
-    { name: 'Your account', desc: 'License, orders, tickets, settings', url: 'profile.html' },
-    { name: 'License & Download', desc: 'Your license key and download links', url: 'profile-license.html' },
-    { name: 'Order history', desc: 'Your past purchases', url: 'profile-orders.html' },
-    { name: 'Account settings', desc: 'Name and password', url: 'profile-settings.html' },
-    { name: 'Work with us', desc: 'Apply to join Creative Sound', url: 'work-with-us.html' },
-    { name: 'About', desc: 'Who we are', url: 'about.html' },
-    { name: 'Contact', desc: 'Get in touch', url: 'contact.html' },
-    { name: 'Refund policy', desc: 'How refunds work', url: 'refund.html' },
-    { name: 'Privacy policy', desc: 'How we handle your data', url: 'privacy.html' },
-    { name: 'Log in', desc: 'Sign in to your account', url: 'login.html' },
-    { name: 'Create account', desc: 'Sign up for Creative Sound', url: 'signup.html' },
+    { name: 'Creative Dist 2.0', desc: 'Modular distortion plugin, overview and pricing', url: 'creative-dist-2', group: 'Plugin', icon: 'plugin' },
+    { name: 'Saturation', desc: '18 saturation modes', url: 'creative-dist-2#saturation', group: 'Plugin', icon: 'plugin' },
+    { name: 'Noise', desc: 'Procedural noise layered under your signal', url: 'creative-dist-2#noise', group: 'Plugin', icon: 'plugin' },
+    { name: 'Bode Shifter', desc: 'Frequency shifting with Key Follow', url: 'creative-dist-2#bode', group: 'Plugin', icon: 'plugin' },
+    { name: 'Flux', desc: 'New in 2.0: morphs between two of nine algorithms', url: 'creative-dist-2#flux', group: 'Plugin', icon: 'plugin' },
+    { name: 'Equalizer', desc: '5-band EQ, Pre/Post, Linear Phase', url: 'creative-dist-2#eq', group: 'Plugin', icon: 'plugin' },
+    { name: 'Output', desc: 'Auto Gain, Input Gain, Level, Soft Clip', url: 'creative-dist-2#output', group: 'Plugin', icon: 'plugin' },
+    { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: 'creative-dist-2#pricing', group: 'Plugin', icon: 'plugin' },
+    { name: 'Tutorial', desc: 'Learn Creative Dist step by step', url: 'tutorial.html', group: 'Plugin', icon: 'play' },
+    { name: 'Home', desc: 'Plugins, sound packs and tracks', url: '/', group: 'Pages', icon: 'home' },
+    { name: 'Tracks', desc: 'License tracks: MP3, WAV, stems, project files', url: 'beats.html', group: 'Pages', icon: 'music' },
+    { name: 'Sound packs', desc: 'Free Serum preset packs', url: 'packs.html', group: 'Pages', icon: 'box' },
+    { name: 'Sell your tracks', desc: 'Upload as a producer and keep 80% of each sale', url: 'signup.html?role=producer', group: 'Pages', icon: 'upload' },
+    { name: 'FAQ', desc: 'Answers to common questions', url: 'faq.html', group: 'Help', icon: 'help' },
+    { name: 'Support', desc: 'Open or check a support request', url: 'profile-tickets.html', group: 'Help', icon: 'help' },
+    { name: 'Contact', desc: 'Get in touch', url: 'contact.html', group: 'Help', icon: 'mail' },
+    { name: 'Refund policy', desc: 'How refunds work', url: 'refund.html', group: 'Help', icon: 'doc' },
+    { name: 'Privacy policy', desc: 'How we handle your data', url: 'privacy.html', group: 'Help', icon: 'doc' },
+    { name: 'Your account', desc: 'Profile, orders, downloads, settings', url: 'profile.html', group: 'Account', icon: 'user' },
+    { name: 'Licenses & downloads', desc: 'Your license keys and files', url: 'profile-license.html', group: 'Account', icon: 'key' },
+    { name: 'Orders', desc: 'Everything you bought', url: 'profile-orders.html', group: 'Account', icon: 'box' },
+    { name: 'Saved tracks', desc: 'Tracks you saved with the heart', url: 'profile-saved.html', group: 'Account', icon: 'heart' },
+    { name: 'Settings', desc: 'Name, account type and password', url: 'profile-settings.html', group: 'Account', icon: 'gear' },
+    { name: 'Producer area', desc: 'Your uploads and payouts', url: 'profile-producer.html', group: 'Account', icon: 'upload' },
+    { name: 'Work with us', desc: 'Apply to join Creative Sound', url: 'work-with-us.html', group: 'Pages', icon: 'doc' },
+    { name: 'About', desc: 'Who we are', url: 'about.html', group: 'Pages', icon: 'doc' },
+    { name: 'Log in', desc: 'Sign in to your account', url: 'login.html', group: 'Account', icon: 'user' },
+    { name: 'Create account', desc: 'Sign up for Creative Sound', url: 'signup.html', group: 'Account', icon: 'user' },
   ];
+  const QUICK = [
+    { name: 'Creative Dist 2.0', url: 'creative-dist-2' },
+    { name: 'Tracks', url: 'beats.html' },
+    { name: 'Sound packs', url: 'packs.html' },
+    { name: 'Support', url: 'profile-tickets.html' },
+  ];
+  const GROUP_ORDER = ['Tracks', 'Plugin', 'Pages', 'Help', 'Account'];
+  const SI = {
+    plugin: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="12" r="2.2"/><circle cx="15.5" cy="12" r="2.2"/>',
+    play: '<circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/>',
+    home: '<path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/>',
+    music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+    box: '<path d="M4 7.5L12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+    upload: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.3"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/>',
+    doc: '<path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.2a7.5 7.5 0 0 1 15 0"/>',
+    key: '<circle cx="7.5" cy="15.5" r="3.5"/><path d="M10 13l9-9M15.5 7.5l2.5 2.5"/>',
+    heart: '<path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  };
+  const sEsc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const sIcon = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${SI[k] || SI.doc}</svg>`;
 
   const searchBtn = document.getElementById('header-search-btn');
   if (searchBtn) {
@@ -546,14 +576,12 @@
     overlay.innerHTML = `
       <div class="site-search-panel" role="dialog" aria-modal="true" aria-label="Search the site">
         <div class="site-search-field">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"></circle>
-            <path d="M21 21l-4.3-4.3"></path>
-          </svg>
-          <input type="text" placeholder="Search plugins, support, pages…" aria-label="Search the site" autocomplete="off" spellcheck="false">
-          <button type="button" class="site-search-close">ESC</button>
+          ${sIcon('search')}
+          <input type="search" placeholder="Search tracks, plugins, help…" aria-label="Search the site" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="site-search-results">
+          <button type="button" class="site-search-close" aria-label="Close search">Cancel</button>
         </div>
-        <div class="site-search-results"></div>
+        <div class="site-search-results" id="site-search-results" role="listbox"></div>
+        <div class="site-search-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -563,33 +591,64 @@
     const closeBtn = overlay.querySelector('.site-search-close');
     let activeIndex = -1;
     let currentResults = [];
+    let tracks = null; // loaded on first open
 
-    function renderResults(items) {
+    const loadTracks = () => {
+      if (tracks) return;
+      tracks = [];
+      const toItems = (data) => (data.beats || []).filter((b) => b.status !== 'hidden').map((b) => ({
+        name: b.title,
+        desc: [b.producer, b.genre, b.bpm ? `${b.bpm} BPM` : '', b.key].filter(Boolean).join(' · '),
+        hay: [b.title, b.producer, b.genre, b.mood, b.key, b.typeBeat, ...(b.tags || [])].join(' ').toLowerCase(),
+        url: b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`,
+        cover: b.cover || '', group: 'Tracks', icon: 'music',
+      }));
+      fetch('/api/beats/catalogue').then((r) => (r.ok ? r.json() : Promise.reject()))
+        .catch(() => fetch('data/beats.json').then((r) => r.json()))
+        .then((d) => { tracks = toItems(d); if (overlay.classList.contains('open') && input.value.trim()) runSearch(input.value); })
+        .catch(() => {});
+    };
+
+    const rowHtml = (item, i) => `
+      <button type="button" class="site-search-result${i === 0 ? ' active' : ''}" role="option" data-i="${i}" data-url="${sEsc(item.url)}">
+        ${item.cover ? `<img class="ss-art" src="${sEsc(item.cover)}" alt="" loading="lazy">` : `<span class="ss-tile">${sIcon(item.icon)}</span>`}
+        <span class="ss-text"><span class="site-search-result-name">${sEsc(item.name)}</span><span class="site-search-result-desc">${sEsc(item.desc)}</span></span>
+        <svg class="ss-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+      </button>`;
+
+    function renderResults(items, q) {
       currentResults = items;
       activeIndex = items.length ? 0 : -1;
       if (!items.length) {
-        resultsEl.innerHTML = '<p class="site-search-empty">No matches — try Creative Dist, support or pricing.</p>';
+        resultsEl.innerHTML = `<div class="site-search-empty"><b>No results for “${sEsc(q)}”</b><span>Try a track name, a genre like trap, or “support”.</span></div>`;
         return;
       }
-      resultsEl.innerHTML = items.map((item, i) => `
-        <button type="button" class="site-search-result${i === 0 ? ' active' : ''}" data-url="${item.url}">
-          <span class="site-search-result-name">${item.name}</span>
-          <span class="site-search-result-desc">${item.desc}</span>
-        </button>
-      `).join('');
+      let i = 0;
+      const groups = GROUP_ORDER.map((g) => [g, items.filter((it) => it.group === g)]).filter(([, list]) => list.length);
+      currentResults = groups.flatMap(([, list]) => list);
+      resultsEl.innerHTML = groups.map(([g, list]) => `<p class="ss-group">${g}</p>${list.map((it) => rowHtml(it, i++)).join('')}`).join('');
+    }
+
+    function renderHome() {
+      currentResults = SEARCH_INDEX.filter((it) => ['Home', 'Tracks', 'Creative Dist 2.0', 'Support'].includes(it.name));
+      activeIndex = -1;
+      resultsEl.innerHTML = `
+        <p class="ss-group">Quick links</p>
+        <div class="ss-quick">${QUICK.map((q) => `<a href="${q.url}" class="ss-chip">${sEsc(q.name)}</a>`).join('')}</div>
+        <p class="ss-group">Suggested</p>
+        ${currentResults.map((it, i) => rowHtml(it, i)).join('')}`;
+      resultsEl.querySelectorAll('.site-search-result').forEach((b) => b.classList.remove('active'));
     }
 
     function runSearch(query) {
       const q = query.trim().toLowerCase();
-      // Private preview: Home and Tracks only for allowed accounts.
-      const PREVIEW_URLS = ['/', 'beats.html'];
-      const index = document.documentElement.classList.contains('is-preview')
-        ? SEARCH_INDEX
-        : SEARCH_INDEX.filter((item) => !PREVIEW_URLS.includes(item.url));
-      const items = q
-        ? index.filter((item) => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q))
-        : index;
-      renderResults(items.slice(0, 8));
+      if (!q) { renderHome(); return; }
+      const words = q.split(/\s+/);
+      const hit = (it) => { const h = it.hay || `${it.name} ${it.desc}`.toLowerCase(); return words.every((w) => h.includes(w)); };
+      const score = (it) => (it.name.toLowerCase().startsWith(q) ? 0 : it.name.toLowerCase().includes(q) ? 1 : 2);
+      const pages = SEARCH_INDEX.filter(hit).sort((a, b) => score(a) - score(b)).slice(0, 8);
+      const found = (tracks || []).filter(hit).sort((a, b) => score(a) - score(b)).slice(0, 6);
+      renderResults([...found, ...pages], query.trim());
     }
 
     function setActive(index) {
@@ -597,11 +656,13 @@
       buttons.forEach((b) => b.classList.remove('active'));
       if (buttons[index]) {
         buttons[index].classList.add('active');
+        buttons[index].scrollIntoView({ block: 'nearest' });
         activeIndex = index;
       }
     }
 
     function openSearch() {
+      loadTracks();
       overlay.classList.add('open');
       document.body.classList.add('search-open');
       input.value = '';

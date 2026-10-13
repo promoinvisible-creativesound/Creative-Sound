@@ -380,8 +380,14 @@ async function handleCheck(req, res) {
       const r = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } });
       const d = await r.json().catch(() => ({}));
       const dom = (d.data || []).find((x) => x.name === fromDomain);
-      out.email.domainStatus = dom ? dom.status : (r.ok ? 'not added to Resend' : `Resend ${r.status}`);
-      out.email.ok = !!dom && dom.status === 'verified';
+      if (r.status === 401 || r.status === 403) {
+        // Sending-only API key (recommended): it can't list domains. Use ?test=1 to check delivery.
+        out.email.domainStatus = 'sending-only key (domain list not readable)';
+        out.email.ok = null;
+      } else {
+        out.email.domainStatus = dom ? dom.status : (r.ok ? 'not added to Resend' : `Resend ${r.status}`);
+        out.email.ok = !!dom && dom.status === 'verified';
+      }
     } catch (err) {
       out.email.ok = false;
       out.email.error = err.message;

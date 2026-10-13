@@ -15,7 +15,7 @@ const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { previewAllowed } = require('./account');
 const { getBeat, liveBeats, producerFiles } = require('./catalogue');
-const { recordEarnings } = require('./payouts');
+const { recordEarnings, emailProducers } = require('./payouts');
 const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
@@ -280,7 +280,8 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     delivered.push({ beat, tier, licenseId, files: await filesFor(beat, tier, email) });
   }
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
-  await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
+  const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
+  await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });
 
   const missing = delivered.flatMap((d) => d.files.filter((f) => !f.url).map((f) => `${d.beat.id}:${f.type}`));
   if (missing.length) {
@@ -317,11 +318,11 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   ].join(''));
   const html = renderEmail({
     siteUrl,
-    preheader: 'Your beats and license PDFs are ready.',
+    preheader: 'Your tracks and license PDFs are ready.',
     kicker: 'Order confirmed',
     title: delivered.length === 1 ? delivered[0].beat.title : `${delivered.length} beats`,
     content: [
-      paragraph('Thanks for your order. Your files are below and your license agreement for each beat is attached as a PDF.'),
+      paragraph('Thanks for your order. Your files are below and your license agreement for each track is attached as a PDF.'),
       ...blocks,
       steps([
         'Download your files with the buttons above (the stems and project files are zip archives).',
@@ -337,7 +338,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     const { error } = await resend.emails.send({
       from: process.env.FROM_EMAIL,
       to: email,
-      subject: delivered.length === 1 ? `Your beat: ${delivered[0].beat.title}` : `Your beats (${delivered.length})`,
+      subject: delivered.length === 1 ? `Your track: ${delivered[0].beat.title}` : `Your tracks (${delivered.length})`,
       html,
       attachments,
     });

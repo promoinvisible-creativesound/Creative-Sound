@@ -73,15 +73,51 @@ function ensureTables() {
 // Webhook: one earning per producer track in a paid beat order.
 async function recordEarnings(session, items) {
   const own = items.filter(({ beat }) => beat.source === 'producer' && beat._userId);
-  if (!own.length) return;
+  if (!own.length) return [];
   await ensureTables();
   const currency = session.currency || 'eur';
+  const added = [];
   for (const { beat, tier, price } of own) {
-    await sql`
+    const rows = await sql`
       INSERT INTO producer_earnings (user_id, session_id, payment_intent, beat_id, title, tier, gross_cents, share_cents, currency)
       VALUES (${beat._userId}, ${session.id}, ${session.payment_intent || null}, ${beat.id}, ${beat.title}, ${tier}, ${price}, ${shareOf(price)}, ${currency})
       ON CONFLICT (session_id, beat_id) DO NOTHING
+      RETURNING id
     `;
+    if (rows.length) added.push({ userId: beat._userId, title: beat.title, tier, gross: price, share: shareOf(price) });
+  }
+  // Only the new rows, so a webhook retry never emails the producer twice.
+  return added;
+}
+
+// "New sale" email to each producer whose track was just bought.
+async function emailProducers(sales, { resend, renderEmail, paragraph, button, tierName }) {
+  if (!sales || !sales.length) return;
+  const siteUrl = process.env.SITE_URL || '';
+  const euro = (c) => `€${(c / 100).toFixed(2)}`;
+  for (const userId of [...new Set(sales.map((s) => s.userId))]) {
+    try {
+      const [u] = await sql`SELECT email, first_name FROM users WHERE id = ${userId}`;
+      if (!u || !u.email) continue;
+      const mine = sales.filter((s) => s.userId === userId);
+      const total = mine.reduce((n, s) => n + s.share, 0);
+      const html = renderEmail({
+        siteUrl,
+        preheader: `You earned ${euro(total)} on Creative Sound.`,
+        kicker: 'New sale',
+        title: mine.length === 1 ? `You sold ${mine[0].title}` : `You sold ${mine.length} licenses`,
+        content: [
+          paragraph(`Good news${u.first_name ? `, ${u.first_name}` : ''}: someone just licensed your music.`),
+          ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
+          paragraph(`Each sale is on hold for ${HOLD_DAYS} days (refund window), then paid out on the next Monday to the payout method in your producer area.`),
+          button(`${siteUrl}/profile-producer.html#payouts`, 'See your payouts'),
+        ].join(''),
+      });
+      const { error } = await resend.emails.send({ from: process.env.FROM_EMAIL, to: u.email, subject: `New sale: you earned ${euro(total)}`, html });
+      if (error) console.error('Resend rejected the producer sale email:', error);
+    } catch (err) {
+      console.error('producer sale email failed:', err);
+    }
   }
 }
 
@@ -306,4 +342,4 @@ async function handleRun(req, res) {
   }
 }
 
-module.exports = { SHARE, recordEarnings, handleRefund, handlePayouts, handleRun };
+module.exports = { SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };

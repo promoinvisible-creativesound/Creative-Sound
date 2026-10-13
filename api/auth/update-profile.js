@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const { sql } = require('../_lib/db');
 const { getSession } = require('../_lib/auth');
+const { Resend } = require('resend');
+const { renderEmail, paragraph, button } = require('../_lib/emailTemplate');
 
 // Handles both profile-field updates and password changes — kept in a
 // single function (instead of two) to stay under Vercel's Hobby-plan cap
@@ -28,7 +30,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-      const [user] = await sql`SELECT password_hash FROM users WHERE id = ${session.uid}`;
+      const [user] = await sql`SELECT email, password_hash FROM users WHERE id = ${session.uid}`;
       if (!user) {
         res.status(401).json({ error: 'Not signed in.' });
         return;
@@ -42,6 +44,30 @@ module.exports = async (req, res) => {
 
       const newHash = await bcrypt.hash(String(newPassword), 10);
       await sql`UPDATE users SET password_hash = ${newHash} WHERE id = ${session.uid}`;
+      // Security notice: tell the owner of the account the password changed.
+      try {
+        const siteUrl = process.env.SITE_URL || '';
+        const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
+          from: process.env.FROM_EMAIL,
+          to: user.email,
+          subject: 'Your Creative Sound password was changed',
+          html: renderEmail({
+            siteUrl,
+            preheader: 'Your password was just changed.',
+            kicker: 'Security',
+            title: 'Password changed',
+            content: [
+              paragraph(`The password of your Creative Sound account (${user.email}) was changed on ${new Date().toUTCString()}.`),
+              paragraph('If this was you, there is nothing else to do.'),
+              paragraph("If it wasn't you, reset your password now and write to hello@creativesound.io."),
+              button(`${siteUrl}/forgot-password.html`, 'Reset password'),
+            ].join(''),
+          }),
+        });
+        if (error) console.error('Resend rejected the password email:', error);
+      } catch (err) {
+        console.error('password changed email failed:', err);
+      }
       res.status(200).json({ ok: true });
     } catch (err) {
       console.error('change-password error:', err);

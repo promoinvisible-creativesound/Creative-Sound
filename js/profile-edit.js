@@ -39,6 +39,7 @@
       form.bio.value = profile.bio;
       form.instagram.value = profile.instagram ? `@${profile.instagram}` : '';
       form.tiktok.value = profile.tiktok ? `@${profile.tiktok}` : '';
+      form.contactEmail.value = profile.contactEmail || '';
       $('#pe-genres-label').textContent = profile.role === 'producer' ? 'Genres you produce' : 'Genres you like';
       paintCount();
       $('#pe-genres').innerHTML = data.genres.map((g) => `
@@ -77,6 +78,7 @@
           bio: form.bio.value,
           instagram: form.instagram.value,
           tiktok: form.tiktok.value,
+          contactEmail: form.contactEmail.value,
           genres: [...form.querySelectorAll('input[name="genres"]:checked')].map((i) => i.value),
         }),
       });

@@ -34,6 +34,8 @@ function toBeat(row) {
     producer: row.producer_name,
     verified: !!row.producer_verified,
     producerHandle: row.producer_handle || null,
+    // Contact for private requests, only what the producer chose to share.
+    contact: row.producer_instagram || row.producer_email ? { instagram: row.producer_instagram || null, email: row.producer_email || null } : null,
     bpm: row.bpm,
     key: row.musical_key,
     genre: row.genre,
@@ -61,12 +63,12 @@ async function approvedRows(id) {
     await require('./profile').ensureColumns();
     if (id != null) {
       return await sql`
-        SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+        SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
         WHERE s.id = ${id} AND s.status = 'approved'
       `;
     }
     return await sql`
-      SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+      SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
       WHERE s.status = 'approved' ORDER BY s.reviewed_at DESC LIMIT 1000
     `;
   } catch (err) {

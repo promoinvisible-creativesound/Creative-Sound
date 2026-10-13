@@ -266,6 +266,11 @@ async function handleSubmit(req, res) {
     const badAudio = await audioError(files);
     if (badAudio) { res.status(400).json({ error: badAudio }); return; }
 
+    // Optional contact for private requests (Instagram, email), kept on the profile.
+    if ('contactInstagram' in body || 'contactEmail' in body) {
+      const contactError = await require('./profile').saveContact(session.uid, body.contactInstagram, body.contactEmail);
+      if (contactError) { res.status(400).json({ error: contactError }); return; }
+    }
     await sql`UPDATE users SET producer_name = ${data.producerName} WHERE id = ${session.uid}`;
     await sql`
       UPDATE beat_submissions SET

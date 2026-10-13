@@ -62,6 +62,13 @@
         </div>
       </section>
 
+      ${b.contact ? `<section class="bp-contact" aria-label="Contact the producer">
+        <div><b>Contact ${esc(b.producer)}</b><small>For exclusives, custom beats or collabs, reach out directly.</small></div>
+        <div class="bp-contact-links">
+          ${b.contact.instagram ? `<a class="btn btn-ghost" href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Instagram</a>` : ''}
+          ${b.contact.email ? `<a class="btn btn-ghost" href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>Email</a>` : ''}
+        </div>
+      </section>` : ''}
       <section class="bp-section" id="licensing" aria-labelledby="bp-licensing-title">
         <div class="bp-section-head"><h2 id="bp-licensing-title">Licensing</h2></div>
         <div class="bp-licensing">

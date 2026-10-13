@@ -1571,3 +1571,15 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-grid[data-view="grid"] .bt-buy-icon{ width:30px; height:30px; }
   .bt-grid[data-view="grid"] .bt-play{ width:42px; height:42px; margin:-21px 0 0 -21px; }
 }
+/* Contact the producer (track page) */
+.bp-contact{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-top:14px; padding:14px 16px; border-radius:18px; border:1px solid rgba(255,255,255,0.07); background:#121211; }
+.bp-contact > div:first-child{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.bp-contact b{ font-size:15px; font-weight:600; color:#f5f5f7; }
+.bp-contact small{ font-size:13px; color:#86868b; }
+.bp-contact-links{ display:flex; gap:8px; }
+.bp-contact-links .btn svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+@media (max-width:560px){
+  .bp-contact{ flex-direction:column; align-items:stretch; text-align:center; padding:14px; }
+  .bp-contact-links{ display:grid; grid-template-columns:1fr 1fr; }
+  .bp-contact-links .btn{ justify-content:center; }
+}

@@ -28,6 +28,7 @@ function ensureColumns() {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS genres JSONB NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_path TEXT`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_email TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_name TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_verified BOOLEAN NOT NULL DEFAULT false`;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_handle_idx ON users (lower(handle)) WHERE handle IS NOT NULL`;
@@ -46,6 +47,26 @@ const social = (v, host) => {
   return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : null;
 };
 
+// Public contact email (optional): '' when empty, null when invalid.
+const contactEmailOf = (v) => {
+  const s = clean(v, 120).toLowerCase();
+  if (!s) return '';
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s) ? s : null;
+};
+
+// Upload page: the producer's contact for private requests (Instagram,
+// email). Saved on the profile so every track and the public page use it.
+// Returns an error message or ''.
+async function saveContact(uid, igRaw, emailRaw) {
+  await ensureColumns();
+  const instagram = social(igRaw, 'instagram.com');
+  const email = contactEmailOf(emailRaw);
+  if (instagram === null) return 'Instagram: use your @username or profile link.';
+  if (email === null) return 'Contact email: check the address.';
+  await sql`UPDATE users SET instagram = ${instagram || null}, contact_email = ${email || null} WHERE id = ${uid}`;
+  return '';
+}
+
 const photoUrl = (row) => (row.avatar_path && row.handle ? `/api/profile/photo?u=${encodeURIComponent(row.handle)}&v=${encodeURIComponent(String(row.avatar_path).split('?v=')[1] || '1')}` : null);
 const shape = (row, role) => ({
   handle: row.handle || '',
@@ -53,6 +74,7 @@ const shape = (row, role) => ({
   bio: row.bio || '',
   instagram: row.instagram || '',
   tiktok: row.tiktok || '',
+  contactEmail: row.contact_email || '',
   genres: row.genres || [],
   photo: photoUrl(row),
   role: role || row.role || null,
@@ -77,17 +99,19 @@ async function handleMe(req, res) {
     const bio = String(b.bio || '').trim().slice(0, 400);
     const instagram = social(b.instagram, 'instagram.com');
     const tiktok = social(b.tiktok, 'tiktok.com');
+    const contactEmail = contactEmailOf(b.contactEmail);
     const genres = [...new Set((Array.isArray(b.genres) ? b.genres : []).filter((g) => GENRES.includes(g)))].slice(0, 6);
     if (!displayName) { res.status(400).json({ error: 'Add the name people will see.' }); return; }
     if (!handleOk(handle)) { res.status(400).json({ error: 'Username: 3 to 30 characters, letters, numbers, dots, dashes or underscores.' }); return; }
     if (RESERVED.has(handle)) { res.status(400).json({ error: 'That username is reserved. Pick another one.' }); return; }
     if (instagram === null) { res.status(400).json({ error: 'Instagram: use your @username or profile link.' }); return; }
     if (tiktok === null) { res.status(400).json({ error: 'TikTok: use your @username or profile link.' }); return; }
+    if (contactEmail === null) { res.status(400).json({ error: 'Contact email: check the address.' }); return; }
     const [taken] = await sql`SELECT id FROM users WHERE lower(handle) = ${handle} AND id <> ${session.uid}`;
     if (taken) { res.status(409).json({ error: 'That username is taken. Pick another one.' }); return; }
     const [row] = await sql`
       UPDATE users SET display_name = ${displayName}, handle = ${handle}, bio = ${bio || null},
-        instagram = ${instagram || null}, tiktok = ${tiktok || null}, genres = ${JSON.stringify(genres)}::jsonb
+        instagram = ${instagram || null}, tiktok = ${tiktok || null}, contact_email = ${contactEmail || null}, genres = ${JSON.stringify(genres)}::jsonb
       WHERE id = ${session.uid} RETURNING *
     `;
     res.status(200).json({ profile: shape(row, role) });
@@ -159,4 +183,4 @@ async function handlePublic(req, res) {
   }
 }
 
-module.exports = { GENRES, ensureColumns, handleMe, handleAvatar, handlePhoto, handlePublic };
+module.exports = { GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };

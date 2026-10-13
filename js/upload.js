@@ -381,6 +381,8 @@
           tags: val('tags'),
           typeBeat: val('typeBeat'),
           about: form.elements.about.value,
+          contactInstagram: val('contactInstagram'),
+          contactEmail: val('contactEmail'),
           prices: pricesInEuros(),
           agree: form.elements.agree.checked,
         }),
@@ -401,6 +403,16 @@
 
   /* --------------------------------- Boot --------------------------------- */
   // Signed out -> sign in; not a producer -> explain how to become one.
+  // Contact fields start from the producer's profile.
+  fetch('/api/profile/me')
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      const p = data && data.profile;
+      if (!p) return;
+      if (p.instagram && !val('contactInstagram')) form.elements.contactInstagram.value = `@${p.instagram}`;
+      if (p.contactEmail && !val('contactEmail')) form.elements.contactEmail.value = p.contactEmail;
+    })
+    .catch(() => {});
   fetch('/api/auth/me')
     .then((res) => {
       if (res.status === 401) { window.location.href = 'login.html'; return null; }

@@ -679,7 +679,7 @@
       });
       const t = LIC.tiers[tier];
       $('#bp-total').textContent = euro(beat.prices[tier]);
-      $('#bp-usage-title').textContent = `${t.name}${t.unlimited ? ' · Unlimited' : ''}`;
+      $('#bp-usage-title').innerHTML = `${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? ' <span class="bt-tier-pill">Unlimited</span>' : ''}`;
       $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('');
       const c = cart.find((x) => x.id === beat.id);
       $('#bp-add').textContent = !canBuy ? SOON : c && c.tier === tier ? 'In cart' : (c ? 'Update cart' : 'Add to cart');
@@ -1175,7 +1175,7 @@
           <input type="radio" name="bt-tier" value="${id}">
           <span class="bt-tier-radio" aria-hidden="true"></span>
           <span>
-            <span class="bt-tier-name">${esc(t.name)}${t.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}</span>
+            <span class="bt-tier-name">${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}</span>
             <span class="bt-tier-files">${esc(t.files.map((f) => LIC.fileLabels[f]).join(' + '))}</span>
           </span>
           <span class="bt-tier-price">${euro(beat.prices[id])}</span>

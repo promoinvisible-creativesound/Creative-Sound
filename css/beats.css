@@ -1477,3 +1477,31 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Producer name links to their public profile */
 .bp-producer a{ color:inherit; text-decoration:none; }
 .bp-producer a:hover{ text-decoration:underline; text-underline-offset:3px; }
+
+/* ============================ Licensing v2 ================================
+   Track page license box and the license picker: calmer cards, a clear
+   selected state, and an "Unlimited" tag with an infinity mark instead of
+   the loud mono label. */
+.bt-tier-pill{
+  display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 8px 0 6px; border-radius:10px;
+  font-family:var(--font-sans); font-size:11px; font-weight:600; letter-spacing:0; text-transform:none;
+  color:#f5b06a; background:rgba(232,134,44,0.14); box-shadow:inset 0 0 0 1px rgba(232,134,44,0.3);
+}
+.bt-tier-pill::before{ content:'∞'; font-size:14px; line-height:1; font-weight:500; margin-top:-1px; }
+.bp-license-box, .bp-usage-box{ padding:22px; border-radius:20px; border:1px solid rgba(255,255,255,0.08); background:linear-gradient(180deg, #141413, #0f0f0e); box-shadow:inset 0 1px 0 rgba(255,255,255,0.04); }
+.bp-license-top{ margin-bottom:18px; align-items:flex-end; }
+.bp-total span{ font-family:var(--font-sans); font-size:12.5px; letter-spacing:0; text-transform:none; color:#86868b; }
+.bp-total strong{ display:block; margin-top:2px; font-size:30px; line-height:1.1; font-variant-numeric:tabular-nums; }
+.bp-license-buttons .btn{ height:38px; padding:0 18px; }
+.bp-tiers{ gap:6px; }
+.bp-tier{ padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.025); transition:border-color 160ms ease, background-color 160ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+@media (hover:hover) and (pointer:fine){ .bp-tier:not(.is-selected):hover{ border-color:rgba(255,255,255,0.16); background:rgba(255,255,255,0.045); } }
+.bp-tier.is-selected{ border-color:rgba(var(--fx), 0.85); background:linear-gradient(90deg, rgba(var(--fx), 0.12), rgba(var(--fx), 0.04)); box-shadow:0 0 0 1px rgba(var(--fx), 0.25); }
+.bp-tier-name{ font-size:15px; }
+.bp-tier-files{ font-size:12.5px; color:#86868b; }
+.bp-tier-price{ font-size:18px; font-variant-numeric:tabular-nums; }
+.bp-tier.is-selected .bp-tier-price{ color:rgb(var(--fx-soft)); }
+.bp-usage-box h3{ display:flex; align-items:center; gap:8px; font-size:17px; }
+.bp-usage-box > p{ font-size:13px; color:#86868b; }
+.bp-usage li{ gap:12px; padding:10px 0; border-bottom-color:rgba(255,255,255,0.06); font-size:14.5px; color:#e8e8ed; }
+.bp-usage svg{ width:30px; height:30px; padding:6px; border-radius:8px; background:rgba(var(--fx), 0.12); color:rgb(var(--fx-soft)); }

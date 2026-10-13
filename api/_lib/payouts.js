@@ -373,6 +373,8 @@ async function handleCheck(req, res) {
   // Dropbox (producer uploads, profile photos, track files).
   const dropbox = require('./dropbox');
   out.dropbox = { configured: dropbox.configured() };
+  // Length only (never the value): a refresh token is ~60+ characters, an authorization code ~43.
+  out.dropbox.tokenLength = String(process.env.DROPBOX_REFRESH_TOKEN || '').trim().replace(/^['"]+|['",]+$/g, '').length;
   if (out.dropbox.configured) {
     try {
       out.dropbox.ok = await dropbox.check();

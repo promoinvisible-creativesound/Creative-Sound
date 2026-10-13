@@ -17,14 +17,17 @@ function configured() {
   return !!(process.env.DROPBOX_APP_KEY && process.env.DROPBOX_REFRESH_TOKEN);
 }
 
+// Values pasted into Vercel sometimes keep quotes, spaces or line breaks.
+const clean = (v) => String(v || '').trim().replace(/^['"]+|['",]+$/g, '').trim();
+
 let cached = { token: null, expires: 0 };
 async function refresh(withSecret) {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
-    refresh_token: process.env.DROPBOX_REFRESH_TOKEN,
-    client_id: process.env.DROPBOX_APP_KEY,
+    refresh_token: clean(process.env.DROPBOX_REFRESH_TOKEN),
+    client_id: clean(process.env.DROPBOX_APP_KEY),
   });
-  if (withSecret) body.set('client_secret', process.env.DROPBOX_APP_SECRET);
+  if (withSecret) body.set('client_secret', clean(process.env.DROPBOX_APP_SECRET));
   const res = await fetch('https://api.dropboxapi.com/oauth2/token', { method: 'POST', body });
   const data = await res.json().catch(() => ({}));
   return { res, data };

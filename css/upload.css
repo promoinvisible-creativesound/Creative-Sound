@@ -504,3 +504,25 @@
 .up-page .up-contact-head b{ font-size:14.5px; font-weight:600; color:#f5f5f7; }
 .up-page .up-contact-head b i{ margin-left:6px; font-style:normal; font-weight:500; font-size:12.5px; color:#86868b; }
 .up-page .up-contact-head small{ font-size:12.5px; line-height:1.45; color:#86868b; max-width:560px; }
+
+/* ============================== Cover cropper ============================= */
+.cc-modal{ width:min(460px, calc(100vw - 24px)); padding:20px; border:1px solid rgba(255,255,255,0.08); border-radius:22px; background:#141413; color:#f5f5f7; box-shadow:0 40px 100px -24px rgba(0,0,0,0.95); }
+.cc-modal::backdrop{ background:rgba(5,5,4,0.6); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+.cc-modal[open]{ animation:ccIn 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes ccIn{ from{ opacity:0; transform:translateY(8px) scale(0.98); } to{ opacity:1; transform:none; } }
+.cc-head h2{ margin:0; font-family:var(--font-sans); font-size:19px; font-weight:600; letter-spacing:-0.01em; }
+.cc-head p{ margin:4px 0 14px; font-size:13.5px; color:#86868b; }
+.cc-stage{ position:relative; width:100%; aspect-ratio:1; overflow:hidden; border-radius:14px; background:#0a0a09; cursor:grab; touch-action:none; outline:none; }
+.cc-stage:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
+.cc-stage.is-drag{ cursor:grabbing; }
+.cc-stage img{ position:absolute; left:0; top:0; max-width:none; user-select:none; pointer-events:none; }
+.cc-grid{ position:absolute; inset:0; pointer-events:none; border-radius:14px; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.35);
+  background:linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(255,255,255,0.22) 33.33%, transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255,255,255,0.22) 66.66%, transparent calc(66.66% + 0.5px)),
+             linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(255,255,255,0.22) 33.33%, transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255,255,255,0.22) 66.66%, transparent calc(66.66% + 0.5px)); }
+.cc-zoom{ display:flex; align-items:center; gap:10px; margin-top:14px; }
+.cc-zoom svg{ width:18px; height:18px; flex-shrink:0; fill:none; stroke:#86868b; stroke-width:1.8; stroke-linecap:round; }
+.cc-zoom input{ flex:1; accent-color:var(--accent); }
+.cc-note{ min-height:18px; margin:8px 0 0; font-size:12.5px; color:#86868b; text-align:center; }
+.cc-note.is-bad{ color:#ff9c86; }
+.cc-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+@media (prefers-reduced-motion: reduce){ .cc-modal[open]{ animation:none; } }

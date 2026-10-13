@@ -233,6 +233,13 @@
     const spec = KINDS[kind];
     if (busy.has(kind)) return;
     if (!spec.exts.includes(extOf(file.name))) { paintIdle(row, `Use ${spec.exts.map((e) => `.${e}`).join(' / ')}`); return; }
+    // Cover: not square, too big or too heavy -> crop it to a square first.
+    if (kind === 'artwork' && window.CSCoverCrop) {
+      const out = await window.CSCoverCrop.prepare(file);
+      if (!out) { if (!done.artwork) paintIdle(row); return; }
+      if (out.error) { paintIdle(row, out.error); return; }
+      file = out.file;
+    }
     if (file.size > spec.max) { paintIdle(row, `Max ${Math.round(spec.max / MB)} MB`); return; }
 
     const problem = await audioProblem(kind, file).catch(() => null);

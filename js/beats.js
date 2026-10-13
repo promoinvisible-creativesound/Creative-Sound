@@ -204,7 +204,7 @@
           ${producerLine(b)}
         </div>
         <div class="bt-specs" aria-label="Details">
-          <span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span>
+          <span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-meta-line">${b.bpm} BPM · ${esc(b.key)} · ${esc(b.genre)}</span>
         </div>
         <button type="button" class="bt-buy" data-buy aria-label="Choose a license for ${esc(b.title)}, from ${euro(minPrice(b))}">
           <span class="bt-buy-text"><span class="bt-buy-label">From</span><span class="bt-buy-price">${euro(minPrice(b))}</span></span>
@@ -656,15 +656,15 @@
       const t = LIC.tiers[id];
       return `
         <div class="bt-tier-card${t.unlimited ? ' is-unlimited' : ''}">
-          <span class="bt-tier-badge">${t.unlimited ? 'Unlimited' : 'Lease'}</span>
-          <h3>${esc(t.name)}</h3>
-          <ul>
-            <li>${esc(t.files.map((f) => LIC.fileLabels[f]).join(' + '))}</li>
-            <li>Streams: ${esc(t.terms.streams)}</li>
-            <li>Sales: ${esc(t.terms.sales)}</li>
-            <li>Music videos: ${esc(t.terms.videos)}</li>
-            <li>Radio: ${esc(t.terms.radio)}</li>
-          </ul>
+          <span class="bt-tier-badge">${t.unlimited ? '∞ Unlimited' : 'Lease'}</span>
+          <h3>${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}</h3>
+          <p class="bt-tier-files">${esc(t.files.map((f) => LIC.fileLabels[f]).join(' · '))}</p>
+          <dl class="bt-tier-terms">
+            <div><dt>Streams</dt><dd>${esc(t.terms.streams)}</dd></div>
+            <div><dt>Sales</dt><dd>${esc(t.terms.sales)}</dd></div>
+            <div><dt>Music videos</dt><dd>${esc(t.terms.videos)}</dd></div>
+            <div><dt>Radio</dt><dd>${esc(t.terms.radio)}</dd></div>
+          </dl>
         </div>`;
     }).join('');
   };

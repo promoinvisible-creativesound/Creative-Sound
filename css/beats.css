@@ -1653,3 +1653,50 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .beats-page .bt-featured, .beats-page .bt-explore, .beats-page .bt-toolbar, .beats-page .bt-grid, .beats-page .bt-empty{ max-width:1240px; }
 .beats-page .bt-grid[data-view="grid"]{ grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); gap:16px; }
 @media (max-width:560px){ .beats-page .bt-section{ padding-left:10px; padding-right:10px; padding-top:88px; } }
+
+/* ============================ Track card v3 ================================
+   Grid cards, Apple-style: details as one line of text (never cut off),
+   price in the normal sans with a round cart button, no "From". */
+.bt-meta-line{ display:none; }
+.bt-grid[data-view="grid"] .bt-card .bt-spec{ display:none; }
+.bt-grid[data-view="grid"] .bt-card .bt-specs{ margin:0; }
+.bt-grid[data-view="grid"] .bt-card .bt-meta-line{ display:block; font-size:13px; color:#a1a1a6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bt-grid[data-view="grid"] .bt-card .bt-body{ gap:8px; padding:14px 14px 14px; }
+.bt-grid[data-view="grid"] .bt-card .bt-name{ font-family:var(--font-sans); font-size:16px; font-weight:600; letter-spacing:-0.01em; }
+.bt-grid[data-view="grid"] .bt-card .bt-buy{
+  display:flex; align-items:center; justify-content:space-between; min-height:0; margin-top:4px; padding:0; border:0; background:none !important; box-shadow:none !important;
+}
+.bt-grid[data-view="grid"] .bt-card .bt-buy-label{ display:none; }
+.bt-grid[data-view="grid"] .bt-card .bt-buy-price{ font-family:var(--font-sans); font-size:17px; font-weight:700; letter-spacing:-0.01em; color:#f5f5f7; }
+.bt-grid[data-view="grid"] .bt-card .bt-buy-icon{ width:36px; height:36px; border-radius:50%; background:rgb(var(--fx)); color:#0a0a09; box-shadow:0 6px 16px -6px rgba(var(--fx), 0.7); transition:transform 160ms cubic-bezier(0.23, 1, 0.32, 1), filter 150ms ease; }
+.bt-grid[data-view="grid"] .bt-card .bt-buy-icon svg{ width:17px; height:17px; }
+.bt-grid[data-view="grid"] .bt-card .bt-buy:active .bt-buy-icon{ transform:scale(0.92); }
+@media (hover:hover) and (pointer:fine){ .bt-grid[data-view="grid"] .bt-card .bt-buy:hover .bt-buy-icon{ filter:brightness(1.1); } }
+.bt-grid[data-view="grid"] .bt-card{ border-radius:20px; }
+.bt-grid[data-view="grid"] .bt-cover-wrap{ border-radius:20px 20px 0 0; }
+@media (max-width:560px){
+  .bt-grid[data-view="grid"] .bt-card .bt-body{ padding:11px 11px 12px; gap:6px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-name{ font-size:15px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-meta-line{ font-size:12px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-buy-price{ font-size:15.5px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-buy-icon{ width:32px; height:32px; }
+}
+
+/* ============================ License tiers v2 =============================
+   Apple-style plan cards: small pill (Lease / ∞ Unlimited), sans title,
+   the files as one line, terms as label/value rows with hairlines. */
+.bt-licenses .section-head h2{ font-family:var(--font-sans); font-weight:700; letter-spacing:-0.025em; }
+.bt-licenses .section-lede{ color:#b4b4b9; }
+.beats-page .bt-tier-grid{ max-width:1240px; gap:14px; }
+.bt-tier-card{ display:flex; flex-direction:column; padding:22px 20px 18px; border:1px solid rgba(255,255,255,0.07); border-radius:22px; background:#121211; }
+.bt-tier-card.is-unlimited{ border-color:rgba(232,134,44,0.35); background:linear-gradient(180deg, rgba(232,134,44,0.07), #121211 55%); }
+.bt-tier-badge{ align-self:flex-start; height:24px; display:inline-flex; align-items:center; padding:0 10px; border-radius:12px; background:rgba(255,255,255,0.07); font-family:var(--font-sans); font-size:12px; font-weight:600; letter-spacing:0; text-transform:none; color:#d1d1d6; }
+.bt-tier-card.is-unlimited .bt-tier-badge{ background:rgba(232,134,44,0.16); color:#f5b06a; }
+.bt-tier-card h3{ margin:14px 0 4px; font-family:var(--font-sans); font-size:22px; font-weight:700; letter-spacing:-0.02em; color:#f5f5f7; }
+.bt-tier-files{ margin:0 0 14px; font-size:14px; font-weight:500; color:#f0a35b; }
+.bt-tier-card:not(.is-unlimited) .bt-tier-files{ color:#d1d1d6; }
+.bt-tier-terms{ margin:0; padding:0; }
+.bt-tier-terms > div{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.07); }
+.bt-tier-terms dt{ font-size:13.5px; color:#a1a1a6; flex-shrink:0; }
+.bt-tier-terms dd{ margin:0; font-size:13.5px; font-weight:600; color:#f5f5f7; text-align:right; }
+@media (max-width:560px){ .bt-tier-card{ padding:18px 16px 14px; } .bt-tier-card h3{ font-size:20px; } }

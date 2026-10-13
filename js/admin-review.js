@@ -101,7 +101,8 @@
             </div>
             <p class="up-error rv-card-error" role="alert" hidden></p>
           </div>`
-        : `<p class="rv-result ${s.status === 'approved' ? 'is-ok' : 'is-bad'}">${s.status === 'approved' ? 'Approved' : 'Sent back'} ${esc(when(s.reviewedAt))}${s.reviewNote ? ` · “${esc(s.reviewNote)}”` : ''}${s.storeUrl ? ` · <a href="${esc(s.storeUrl)}" target="_blank" rel="noopener">View in store</a>` : ''}</p>`}
+        : `<p class="rv-result ${s.status === 'approved' ? 'is-ok' : 'is-bad'}">${s.status === 'approved' ? 'Approved' : 'Sent back'} ${esc(when(s.reviewedAt))}${s.reviewNote ? ` · “${esc(s.reviewNote)}”` : ''}${s.storeUrl ? ` · <a href="${esc(s.storeUrl)}" target="_blank" rel="noopener">View in store</a>` : ''}</p>
+          <div class="rv-reopen"><button type="button" class="btn btn-ghost" data-reopen="${s.id}">Move back to review</button><small>Takes it off the store until you approve it again (new voice tag, new check).</small></div>`}
       </article>`;
   }
 
@@ -254,6 +255,25 @@
       err.hidden = false;
       btn.textContent = label;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
+    }
+  });
+
+  // Put an approved / sent-back track back in the review queue.
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-reopen]');
+    if (!btn) return;
+    if (!window.confirm('Move this track back to review? It leaves the store until you approve it again.')) return;
+    btn.disabled = true;
+    btn.textContent = 'Moving…';
+    try {
+      const res = await fetch('/api/review/decide', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: Number(btn.dataset.reopen), decision: 'reopen' }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not move it back.');
+      load();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Move back to review';
+      window.alert(err.message);
     }
   });
 

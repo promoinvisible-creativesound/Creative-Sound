@@ -7,8 +7,10 @@
     "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
     "formidable": "^3.5.4",
+    "jpeg-js": "^0.4.4",
     "jsonwebtoken": "^9.0.3",
     "pdf-lib": "^1.17.1",
+    "pngjs": "^7.0.0",
     "resend": "^4.0.1",
     "stripe": "^17.4.0"
   }

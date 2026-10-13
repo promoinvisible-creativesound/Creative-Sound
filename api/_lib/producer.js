@@ -400,6 +400,22 @@ async function handleSubmissions(req, res) {
    accounts allowed to review. Nobody is an admin if it isn't set. */
 
 // GET ?status=pending|approved|rejected -> submissions with read links.
+// Cover colour for tracks that don't have one (uploaded before the upload
+// page picked it): read the cover from Dropbox and compute it here.
+async function ensureAccent(row) {
+  const f = row && row.files && row.files.artwork;
+  if (!row || row.accent || !f || !dropbox.configured() || (f.size && f.size > 12 * 1024 * 1024)) return row && row.accent;
+  try {
+    const buf = await dropbox.readRange(f.path, 0, (f.size || 12 * 1024 * 1024) - 1);
+    const hex = require('./accent').accentFromImage(buf);
+    if (hex) await sql`UPDATE beat_submissions SET accent = ${hex} WHERE id = ${row.id}`;
+    return hex;
+  } catch (err) {
+    console.error('cover accent failed for', row.id, err.message);
+    return null;
+  }
+}
+
 async function handleAdminList(req, res) {
   if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
   const session = getSession(req);
@@ -412,6 +428,11 @@ async function handleAdminList(req, res) {
     const rows = status === 'pending'
       ? await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' ORDER BY s.submitted_at ASC LIMIT 100`
       : await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = ${status} ORDER BY s.reviewed_at DESC NULLS LAST LIMIT 100`;
+    // Approved tracks still missing a cover colour get one (a few per call).
+    let fixes = 0;
+    for (const r of rows) {
+      if (r.status === 'approved' && !r.accent && r.files && r.files.artwork && fixes < 3) { fixes++; r.accent = await ensureAccent(r); }
+    }
     const out = [];
     for (const r of rows) {
       const links = {};
@@ -446,6 +467,12 @@ async function handleAdminReview(req, res) {
     await ensureTables();
     const body = req.body || {};
     const id = Number(body.id);
+    if (body.decision === 'reopen') {
+      const [back] = await sql`UPDATE beat_submissions SET status = 'pending', reviewed_at = NULL, updated_at = now() WHERE id = ${Number(body.id)} AND status IN ('approved', 'rejected') RETURNING id`;
+      if (!back) { res.status(404).json({ error: 'Submission not found.' }); return; }
+      res.status(200).json({ ok: true, id: back.id, status: 'pending' });
+      return;
+    }
     const decision = body.decision === 'approve' ? 'approved' : body.decision === 'reject' ? 'rejected' : null;
     const note = String(body.note || '').trim().slice(0, 1000);
     if (!decision) { res.status(400).json({ error: 'Choose approve or reject.' }); return; }
@@ -467,6 +494,7 @@ async function handleAdminReview(req, res) {
       WHERE id = ${id} AND status <> 'draft' RETURNING *
     `;
     if (!sub) { res.status(404).json({ error: 'Submission not found.' }); return; }
+    if (decision === 'approved') await ensureAccent(sub);
 
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);

@@ -723,3 +723,8 @@
 
 /* Upload preview card shows the colour picked from the cover */
 .up-page .up-preview.has-accent{ border-color:var(--acc); box-shadow:0 0 0 1px var(--acc), 0 20px 50px -24px var(--acc); transition:border-color 300ms ease, box-shadow 300ms ease; }
+
+/* Move back to review (approved / sent-back cards) */
+.rv-reopen{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; }
+.rv-reopen .btn{ min-height:32px; padding:6px 14px; font-size:13px; }
+.rv-reopen small{ font-size:13px; color:#a1a1a6; }

@@ -203,3 +203,6 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
 .hm-who .hm-avatar.is-lg{ width:48px; height:48px; font-size:17px; margin-bottom:8px; }
 .hm-who .hm-role{ margin-top:8px; }
 @media (max-width:900px){ .hm-account .hm-panel{ max-height:calc(100dvh - 104px); } }
+/* Clearer separation between the account menu sections. */
+.hm-account .hm-group{ padding:5px 0; border-top:1px solid rgba(255,255,255,0.12); }
+.hm-account .hm-who + .hm-group{ border-top-color:rgba(255,255,255,0.14); }

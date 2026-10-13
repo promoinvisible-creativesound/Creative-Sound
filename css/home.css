@@ -220,3 +220,54 @@
 /* Producer uploads show their real cover */
 .ho-cover-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 600ms var(--ease-out); }
 @media (hover:hover) and (pointer:fine){ .ho-track:hover .ho-cover-img{ transform:scale(1.04); } }
+
+/* ============================ Sell your tracks ============================
+   Three steps joined by a line that fills in, a travelling light on the
+   line, then a "New sale" toast. Plays once when the tile scrolls into
+   view (.is-in, js/home.js). Site amber instead of the old violet. */
+.ho-tile-sell, .ho-tile.ho-tile-sell{ background:radial-gradient(70% 55% at 50% 100%, rgba(232,134,44,0.14), transparent 70%), rgba(16,15,14,0.6); }
+.ho-sell-kicker{ font-size:13px; font-weight:600; letter-spacing:0.02em; color:#f0a35b; }
+.ho-line-s b{ color:#f5f5f7; font-weight:600; }
+.ho-tile-sell .ho-line-s{ max-width:380px; }
+.ho-sf{ position:relative; list-style:none; margin:clamp(30px, 4vw, 44px) 0 0; padding:0; width:100%; max-width:560px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+.ho-sf::before, .ho-sf::after{ content:''; position:absolute; top:27px; left:16.6%; right:16.6%; height:2px; border-radius:2px; }
+.ho-sf::before{ background:rgba(255,255,255,0.08); }
+.ho-sf::after{ background:linear-gradient(90deg, rgba(232,134,44,0.2), #e8862c); transform:scaleX(0); transform-origin:left; transition:transform 1100ms cubic-bezier(0.77, 0, 0.175, 1) 250ms; }
+.ho-tile-sell.is-in .ho-sf::after{ transform:scaleX(1); }
+.ho-sf-step{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0; transform:translateY(12px); transition:opacity 500ms var(--ease-out), transform 500ms var(--ease-out); transition-delay:calc(var(--i) * 140ms); }
+.ho-tile-sell.is-in .ho-sf-step{ opacity:1; transform:none; }
+.ho-sf-icon{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:16px; margin-bottom:6px; background:#1b1a18; border:1px solid rgba(255,255,255,0.08); color:#f5b06a; box-shadow:0 10px 30px -14px rgba(0,0,0,0.9); transition:background-color 400ms ease, border-color 400ms ease, color 400ms ease; transition-delay:calc(250ms + var(--i) * 330ms); }
+.ho-tile-sell.is-in .ho-sf-icon{ background:linear-gradient(180deg, #f7a24b, #de7a1f); border-color:transparent; color:#0a0a09; }
+.ho-sf-icon svg{ width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.ho-sf-step b{ display:flex; align-items:center; gap:6px; font-size:15px; font-weight:600; color:#f5f5f7; }
+.ho-sf-step b i{ font-style:normal; font-size:12px; font-weight:600; color:#86868b; }
+.ho-sf-step small{ font-size:13px; line-height:1.4; color:#86868b; max-width:160px; }
+/* Travelling light along the line, after the fill */
+.ho-sf-step:first-child::after{ content:''; position:absolute; top:24px; left:50%; width:8px; height:8px; border-radius:50%; background:#ffd29e; box-shadow:0 0 12px 3px rgba(232,134,44,0.7); opacity:0; }
+.ho-tile-sell.is-in .ho-sf-step:first-child::after{ animation:hoTravel 2600ms linear 1600ms infinite; }
+@keyframes hoTravel{ 0%{ opacity:0; transform:translateX(0); } 10%{ opacity:1; } 85%{ opacity:1; } 100%{ opacity:0; transform:translateX(calc(var(--sf-span, 360px))); } }
+.ho-sale{ white-space:nowrap; display:flex; align-items:center; gap:10px; margin-top:clamp(26px, 3.4vw, 36px); padding:10px 14px 10px 12px; border-radius:14px; background:rgba(26,25,23,0.9); border:1px solid rgba(255,255,255,0.08); box-shadow:0 18px 40px -20px rgba(0,0,0,0.9); font-size:13.5px; color:#d2d2d7; opacity:0; transform:translateY(10px) scale(0.97); transition:opacity 450ms var(--ease-out) 1500ms, transform 450ms var(--ease-out) 1500ms; }
+.ho-tile-sell.is-in .ho-sale{ opacity:1; transform:none; }
+.ho-sale b{ color:#f5f5f7; font-weight:600; margin-right:4px; }
+.ho-sale-dot{ width:8px; height:8px; border-radius:50%; background:#7fe0a4; box-shadow:0 0 0 4px rgba(127,224,164,0.15); }
+.ho-sale-amount{ white-space:nowrap; margin-left:6px; font-weight:700; color:#f5b06a; font-variant-numeric:tabular-nums; }
+.ho-sell-facts{ list-style:none; margin:auto 0 0; padding:26px 0 0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+.ho-sell-facts li{ height:30px; display:flex; align-items:center; padding:0 12px; border-radius:15px; background:rgba(255,255,255,0.05); font-size:12.5px; font-weight:500; color:#a1a1a6; }
+.ho-sell-facts li::before{ content:''; width:5px; height:5px; margin-right:8px; border-radius:50%; background:#e8862c; }
+@media (max-width:560px){
+  .ho-sf{ grid-template-columns:1fr; gap:14px; max-width:300px; }
+  .ho-sf::before, .ho-sf::after, .ho-sf-step:first-child::after{ display:none; }
+  .ho-sf-step{ display:grid; grid-template-columns:44px 1fr; column-gap:12px; row-gap:2px; align-items:center; text-align:left; }
+  .ho-sf-icon{ width:44px; height:44px; border-radius:12px; margin:0; grid-row:1 / span 2; }
+  .ho-sf-icon svg{ width:22px; height:22px; }
+  .ho-sf-step b{ align-self:end; }
+  .ho-sf-step small{ align-self:start; max-width:none; }
+  .ho-sale{ font-size:12.5px; }
+  .ho-sale-sub{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .ho-sf-step, .ho-sale{ opacity:1; transform:none; transition:none; }
+  .ho-sf::after{ transform:scaleX(1); transition:none; }
+  .ho-sf-icon{ transition:none; }
+  .ho-tile-sell.is-in .ho-sf-step:first-child::after{ animation:none; }
+}

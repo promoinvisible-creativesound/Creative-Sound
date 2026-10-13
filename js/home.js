@@ -95,4 +95,25 @@
   audio.addEventListener('play', sync);
   audio.addEventListener('pause', sync);
   audio.addEventListener('ended', sync);
+
+  // "Sell your tracks": play the step animation once the tile is in view,
+  // and size the travelling light to the line between the first and last step.
+  const sell = document.getElementById('ho-sell');
+  if (sell) {
+    const flow = sell.querySelector('.ho-sf');
+    const span = () => {
+      const s = flow.querySelectorAll('.ho-sf-step');
+      if (s.length > 2) flow.style.setProperty('--sf-span', `${s[2].offsetLeft - s[0].offsetLeft}px`);
+    };
+    span();
+    window.addEventListener('resize', span, { passive: true });
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((en) => en.isIntersecting)) { sell.classList.add('is-in'); io.disconnect(); }
+      }, { threshold: 0.35 });
+      io.observe(sell);
+    } else {
+      sell.classList.add('is-in');
+    }
+  }
 })();

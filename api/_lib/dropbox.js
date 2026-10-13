@@ -38,7 +38,7 @@ async function accessToken() {
   // A PKCE token must be refreshed without the secret: retry once without it.
   if (!res.ok && process.env.DROPBOX_APP_SECRET && /invalid_client/.test(JSON.stringify(data))) ({ res, data } = await refresh(false));
   if (!res.ok || !data.access_token) throw new Error(`Dropbox token error: ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
-  cached = { token: data.access_token, expires: Date.now() + (data.expires_in || 3600) * 1000 };
+  cached = { token: data.access_token, expires: Date.now() + (data.expires_in || 3600) * 1000, scope: data.scope || '' };
   return cached.token;
 }
 
@@ -131,10 +131,17 @@ const sessionFinish = (id, offset, chunk, path) => content('files/upload_session
 
 // Health check for the admin: token refresh, read (list the app folder)
 // and write (a one-off upload link; nothing is uploaded).
+// Permissions the site needs: read file names, upload, and download
+// (cover, previews, voice tag, buyer files).
+const NEEDED_SCOPES = ['files.metadata.read', 'files.content.write', 'files.content.read'];
 async function check() {
+  cached = { token: null, expires: 0 }; // fresh token, so the scope list is current
+  await accessToken();
+  const have = String(cached.scope || '').split(/\s+/).filter(Boolean);
+  const missing = have.length ? NEEDED_SCOPES.filter((s) => !have.includes(s)) : [];
   await rpc('files/list_folder', { path: '', limit: 1 });
   await uploadLink('/.healthcheck.txt');
-  return true;
+  return { ok: !missing.length, scopes: have, missing };
 }
 
 module.exports = {

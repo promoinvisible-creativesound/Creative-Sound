@@ -377,7 +377,7 @@ async function handleCheck(req, res) {
   out.dropbox.tokenLength = String(process.env.DROPBOX_REFRESH_TOKEN || '').trim().replace(/^['"]+|['",]+$/g, '').length;
   if (out.dropbox.configured) {
     try {
-      out.dropbox.ok = await dropbox.check();
+      Object.assign(out.dropbox, await dropbox.check());
     } catch (err) {
       out.dropbox.ok = false;
       out.dropbox.error = err.message.slice(0, 200);

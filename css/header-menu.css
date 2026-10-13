@@ -206,3 +206,24 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
 /* Clearer separation between the account menu sections. */
 .hm-account .hm-group{ padding:5px 0; border-top:1px solid rgba(255,255,255,0.12); }
 .hm-account .hm-who + .hm-group{ border-top-color:rgba(255,255,255,0.14); }
+
+/* Updates (bell): status tile, title, what happened, time, unread dot */
+.hm-updates .hm-panel{ width:340px; }
+.hm-updates-list{ gap:2px; padding:2px 0 4px; }
+.hm-update{ position:relative; flex-direction:row; align-items:center; gap:11px; padding:10px 10px 10px 8px; border-radius:12px; }
+.hm-update-ic{ width:34px; height:34px; flex:0 0 34px; display:flex; align-items:center; justify-content:center; border-radius:10px; }
+.hm-update-ic svg{ width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.hm-update-ic.is-ok{ background:rgba(76,201,122,0.16); color:#7fe0a4; }
+.hm-update-ic.is-pending{ background:rgba(232,134,44,0.16); color:#f5b06a; }
+.hm-update-ic.is-bad{ background:rgba(255,99,71,0.15); color:#ff9c86; }
+.hm-update-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.hm-update-text b{ font-size:14px; font-weight:600; color:#f5f5f7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hm-update-text small{ font-size:12.5px; color:#a1a1a6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hm-update-text em{ font-style:normal; font-weight:600; }
+.hm-update-text em.is-ok{ color:#7fe0a4; }
+.hm-update-text em.is-pending{ color:#f5b06a; }
+.hm-update-text em.is-bad{ color:#ff9c86; }
+.hm-update time{ flex-shrink:0; align-self:flex-start; margin-top:2px; font-size:11.5px; color:#86868b; font-variant-numeric:tabular-nums; }
+.hm-update.is-unread{ background:rgba(232,134,44,0.06); }
+.hm-update.is-unread::after{ content:''; position:absolute; right:10px; bottom:14px; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px rgba(232,134,44,0.7); }
+@media (hover:hover) and (pointer:fine){ .hm-update:hover{ background:rgba(255,255,255,0.06); } }

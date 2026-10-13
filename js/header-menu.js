@@ -161,17 +161,42 @@
     const m = makeMenu({
       id: 'updates', label: 'Updates', cls: 'hm-updates', buttonHtml: `${icon('bell', 'hm-btn-ic')}<span class="hm-dot" hidden></span>`,
       onOpen: (panel) => {
+        store.set(SEEN + '-prev', store.get(SEEN, 0));
         store.set(SEEN, Date.now());
         m.btn.querySelector('.hm-dot').hidden = true;
-        const STATUS = { pending: ['In review', 'is-pending'], approved: ['Approved', 'is-ok'], rejected: ['Needs changes', 'is-bad'] };
+        // Each update: a status tile (clock / check / alert), the track, what
+        // happened and when; unread ones (since the previous open) get a dot.
+        const seenAt = store.get(SEEN + '-prev', 0);
+        const STATUS = {
+          pending: ['In review', 'is-pending', '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', 'Sent for review'],
+          approved: ['Approved', 'is-ok', '<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'Live in the store'],
+          rejected: ['Needs changes', 'is-bad', '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5"/><path d="M12 16.5v.1"/>', 'Check the note and upload again'],
+        };
+        const ago = (d) => {
+          if (!d) return '';
+          const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
+          if (s < 60) return 'now';
+          if (s < 3600) return `${Math.floor(s / 60)}m`;
+          if (s < 86400) return `${Math.floor(s / 3600)}h`;
+          if (s < 604800) return `${Math.floor(s / 86400)}d`;
+          return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        };
         panel.innerHTML = `
-          <div class="hm-head"><b>Updates</b></div>
-          ${items.length ? `<div class="hm-updates-list">${items.slice(0, 5).map((s) => `
-            <a href="profile-producer.html" class="hm-update" role="menuitem">
-              <span class="hm-status ${STATUS[s.status][1]}">${STATUS[s.status][0]}</span>
-              <b>${esc(s.title)}</b>
-              ${s.reviewNote ? `<small>${esc(s.reviewNote)}</small>` : ''}
-            </a>`).join('')}</div>
+          <div class="hm-head"><b>Updates</b>${items.length ? `<span>${items.length}</span>` : ''}</div>
+          ${items.length ? `<div class="hm-updates-list">${items.slice(0, 6).map((s) => {
+            const st = STATUS[s.status];
+            const when = s.status === 'pending' ? s.submittedAt : (s.reviewedAt || s.submittedAt);
+            const unread = s.status !== 'pending' && s.reviewedAt && new Date(s.reviewedAt).getTime() > seenAt;
+            return `
+            <a href="profile-producer.html" class="hm-update${unread ? ' is-unread' : ''}" role="menuitem">
+              <span class="hm-update-ic ${st[1]}" aria-hidden="true"><svg viewBox="0 0 24 24">${st[2]}</svg></span>
+              <span class="hm-update-text">
+                <b>${esc(s.title || 'Untitled track')}</b>
+                <small><em class="${st[1]}">${st[0]}</em> · ${s.status === 'rejected' && s.reviewNote ? esc(s.reviewNote) : st[3]}</small>
+              </span>
+              <time>${ago(when)}</time>
+            </a>`;
+          }).join('')}</div>
             <a href="profile-producer.html" class="hm-foot" role="menuitem">Open producer area</a>`
           : empty('bell', "You're all caught up", me.role === 'producer' ? 'Review results for your tracks will show up here.' : 'News about your orders and the site will show up here.')}`;
       },

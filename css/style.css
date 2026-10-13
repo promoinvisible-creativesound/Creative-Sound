@@ -2704,3 +2704,9 @@ html:not(.is-preview) .pv-only{ display:none !important; }
 .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 .btn:disabled, .btn[aria-disabled="true"]{ opacity:1; filter:none; cursor:not-allowed; transform:none; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); color:#86868b; box-shadow:none; }
 @media (prefers-reduced-motion: reduce){ .btn{ transition:none; } .btn-primary:hover{ transform:none; } }
+/* Deeper orange for filled buttons (still from --accent, so themes follow). */
+:root .btn-primary, :root .ho-link-fill, :root .hm-checkout, :root .hm-cta, :root .sv-play{
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, #fff) 0%, color-mix(in srgb, var(--accent) 86%, #000) 48%, color-mix(in srgb, var(--accent) 70%, #000) 100%);
+  color:#140b02;
+}
+.btn-primary{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.22), 0 6px 18px -8px color-mix(in srgb, var(--accent) 70%, transparent); }

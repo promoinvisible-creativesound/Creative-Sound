@@ -104,6 +104,22 @@
     {
       "source": "/api/beats/file",
       "destination": "/api/tickets?action=beats-file"
+    },
+    {
+      "source": "/api/profile/me",
+      "destination": "/api/tickets?action=profile-me"
+    },
+    {
+      "source": "/api/profile/avatar",
+      "destination": "/api/tickets?action=profile-avatar"
+    },
+    {
+      "source": "/api/profile/photo",
+      "destination": "/api/tickets?action=profile-photo"
+    },
+    {
+      "source": "/api/profile/public",
+      "destination": "/api/tickets?action=profile-public"
     }
   ],
   "headers": [

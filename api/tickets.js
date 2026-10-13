@@ -5,6 +5,7 @@ const { handleNotify } = require('./_lib/notify');
 const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = require('./_lib/beats');
 const { handleRole } = require('./_lib/account');
 const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catalogue');
+const profile = require('./_lib/profile');
 const {
   handleFile: handleProducerFile,
   handleChunk: handleProducerChunk,
@@ -38,7 +39,16 @@ module.exports = async (req, res) => {
     return;
   }
   // Live catalogue, producer track media and bought files (_lib/catalogue.js).
-  const catalogueRoutes = { 'beats-catalogue': handleCatalogue, 'beats-media': handleMedia, 'beats-file': handleBoughtFile };
+  const catalogueRoutes = {
+    'beats-catalogue': handleCatalogue,
+    'beats-media': handleMedia,
+    'beats-file': handleBoughtFile,
+    // Public profiles (_lib/profile.js)
+    'profile-me': profile.handleMe,
+    'profile-avatar': profile.handleAvatar,
+    'profile-photo': profile.handlePhoto,
+    'profile-public': profile.handlePublic,
+  };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);
     return;

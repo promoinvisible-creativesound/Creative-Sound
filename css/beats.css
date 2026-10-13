@@ -1473,3 +1473,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-dd-label{ font-size:12px; }
   .bt-dd-custom-title{ font-size:12.5px; }
 }
+
+/* Producer name links to their public profile */
+.bp-producer a{ color:inherit; text-decoration:none; }
+.bp-producer a:hover{ text-decoration:underline; text-underline-offset:3px; }

@@ -100,6 +100,7 @@
         ${item('upload-beat.html', 'upload', 'Upload a track', '<span class="hm-new">New</span>')}
       </div>` : ''}
       <div class="hm-group">
+        ${item('profile-public.html', 'user', 'Public profile')}
         ${item('profile-saved.html', 'heart', 'Saved tracks')}
         ${item('profile-license.html', 'key', 'Licenses &amp; downloads')}
         ${item('profile-orders.html', 'receipt', 'Orders')}

@@ -33,6 +33,7 @@ function toBeat(row) {
     title: row.title,
     producer: row.producer_name,
     verified: !!row.producer_verified,
+    producerHandle: row.producer_handle || null,
     bpm: row.bpm,
     key: row.musical_key,
     genre: row.genre,
@@ -48,20 +49,24 @@ function toBeat(row) {
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
     _submissionId: row.id,
+    _userId: row.user_id,
   };
 }
-const publicBeat = (b) => { const { _files, _submissionId, ...rest } = b; return rest; };
+// Strip server-only fields (anything starting with _) before sending.
+const publicBeat = (b) => Object.fromEntries(Object.entries(b).filter(([k]) => !k.startsWith('_')));
 
 async function approvedRows(id) {
   try {
+    // Profile columns (handle, display name) are read below; make sure they exist.
+    await require('./profile').ensureColumns();
     if (id != null) {
       return await sql`
-        SELECT s.*, u.producer_verified FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+        SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
         WHERE s.id = ${id} AND s.status = 'approved'
       `;
     }
     return await sql`
-      SELECT s.*, u.producer_verified FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+      SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
       WHERE s.status = 'approved' ORDER BY s.reviewed_at DESC LIMIT 1000
     `;
   } catch (err) {

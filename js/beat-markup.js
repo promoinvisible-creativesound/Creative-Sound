@@ -46,7 +46,7 @@
         <div class="bp-info">
           <p class="bp-kicker">${esc(b.genre)} · ${esc(b.mood)}${b.typeBeat && b.typeBeat.length ? ` · ${esc(b.typeBeat.join(', '))} type beat` : ''}</p>
           <h1 class="bp-title">${esc(b.title)}</h1>
-          <p class="bp-producer">${esc(b.producer)}${verified ? VERIFIED : ''}</p>
+          <p class="bp-producer">${b.producerHandle ? `<a href="artist.html?u=${encodeURIComponent(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${verified ? VERIFIED : ''}</p>
           <ul class="bp-facts">${facts.map(([k, v]) => `<li><span>${k}</span><b>${esc(v)}</b></li>`).join('')}</ul>
           ${b.tags && b.tags.length ? `<div class="bp-tags">${b.tags.map((t) => `<a href="beats.html">#${esc(t)}</a>`).join('')}</div>` : ''}
           <div class="bp-actions">

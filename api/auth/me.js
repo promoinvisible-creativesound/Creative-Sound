@@ -17,7 +17,11 @@ module.exports = async (req, res) => {
       WHERE email = ${session.email}
       ORDER BY created_at DESC
     `;
-    const [user] = await sql`SELECT first_name, last_name FROM users WHERE id = ${session.uid}`;
+    const [user] = await sql`SELECT * FROM users WHERE id = ${session.uid}`;
+    // Profile photo (public profile) for the header avatar.
+    const photo = user && user.avatar_path && user.handle
+      ? `/api/profile/photo?u=${encodeURIComponent(user.handle)}&v=${encodeURIComponent(String(user.avatar_path).split('?v=')[1] || '1')}`
+      : null;
 
     // Pack purchases are separate from licenses. A failure here must never
     // stop the account pages from loading, so it just yields an empty list.
@@ -65,6 +69,7 @@ module.exports = async (req, res) => {
       savedBeats,
       firstName: (user && user.first_name) || '',
       lastName: (user && user.last_name) || '',
+      photo,
       licenses,
       orders: licenses,
       packs,

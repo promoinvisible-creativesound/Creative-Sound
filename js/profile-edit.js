@@ -116,7 +116,10 @@
       const up = await fetch(data.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
       if (!up.ok) throw new Error('The upload failed. Please try again.');
       // Show it straight away from the file itself.
-      $('#pe-avatar').innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
+      const local = URL.createObjectURL(file);
+      $('#pe-avatar').innerHTML = `<img src="${local}" alt="">`;
+      // Same photo in the header avatar(s), without a reload.
+      document.querySelectorAll('.hm-avatar').forEach((a) => { a.classList.add('has-photo'); a.innerHTML = `<img src="${local}" alt="">`; });
       say('Photo updated.', 'ok');
     } catch (err) {
       say(err.message, 'bad');

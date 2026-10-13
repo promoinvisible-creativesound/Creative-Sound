@@ -89,7 +89,7 @@
   function accountMenu(me) {
     const name = [me.firstName, me.lastName].filter(Boolean).join(' ');
     const initials = (name ? name.split(' ').map((w) => w[0]).join('') : me.email[0]).slice(0, 2).toUpperCase();
-    const avatar = (size) => `<span class="hm-avatar ${size}" aria-hidden="true">${esc(initials)}</span>`;
+    const avatar = (size) => `<span class="hm-avatar ${size}${me.photo ? ' has-photo' : ''}" aria-hidden="true">${me.photo ? `<img src="${esc(me.photo)}" alt="">` : esc(initials)}</span>`;
     const producer = me.role === 'producer';
     const m = makeMenu({ id: 'account', label: 'Account menu', cls: 'hm-account', buttonHtml: avatar('') });
     // Profile, orders and downloads come first; for the admin they sit
@@ -144,9 +144,10 @@
           ${list.length ? `<div class="hm-beats">${list.slice(0, 4).map((b) => `
             <a href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
               <span class="hm-beat-art" aria-hidden="true"${b.cover ? ` style="background:url('${esc(b.cover)}') center/cover"` : ''}></span>
-              <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc(b.producer)} · ${b.bpm} BPM</small></span>
+              <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc(b.producer)} · ${b.bpm} BPM${b.key ? ` · ${esc(b.key)}` : ''}</small></span>
+              ${Object.values(b.prices || {}).filter((p) => p > 0).length ? `<span class="hm-beat-price">€${(Math.min(...Object.values(b.prices).filter((p) => p > 0)) / 100).toFixed(0)}</span>` : ''}
             </a>`).join('')}</div>
-            <a href="profile-saved.html" class="hm-foot" role="menuitem">View all saved</a>`
+            <a href="profile-saved.html" class="hm-foot hm-foot-link" role="menuitem">View all saved ›</a>`
           : empty('heart', 'Nothing saved yet', 'Tap the heart on any track to keep it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse tracks</a>')}`;
       },
     });

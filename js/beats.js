@@ -770,7 +770,8 @@
     return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 3);
   };
   const spotHtml = (b, rank) => `
-    <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}">
+    <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.cover, location.href).href)}')"` : ''}>
+      <span class="bt-feat-ambient" aria-hidden="true"></span>
       <div class="bt-feat-cover">
         ${art(b)}
         <button type="button" class="bt-feat-play" data-feat-play aria-label="Play ${esc(b.title)}">

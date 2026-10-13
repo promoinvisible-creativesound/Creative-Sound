@@ -681,3 +681,21 @@
 .up-page .up-checklist li, .up-page .up-seek-time, .up-page .up-preview-producer{ color:#b0b0b5; }
 .up-page .up-field > span i{ color:#9a9a9f; }
 .up-page .up-steps a{ color:#c2c2c7; }
+
+/* Track review (admin): readable secondary text */
+.rv-page .up-title{ font-family:var(--font-sans); font-weight:700; letter-spacing:-0.02em; }
+.rv-page .up-sub{ color:#c2c2c7; font-size:15.5px; }
+.rv-page .rv-id{ font-size:13px; color:#b0b0b5; }
+.rv-page .rv-by{ font-size:15px; color:#d1d1d6; }
+.rv-page .rv-tags{ font-size:14px; color:#b0b0b5; }
+.rv-page .rv-prices{ font-size:15px; color:#e5e5ea; }
+.rv-page .rv-about{ font-size:14.5px; line-height:1.55; color:#c7c7cc; }
+.rv-page .rv-files-wrap h3, .rv-page .rv-fhead b{ color:#f5f5f7; }
+.rv-page .rv-fmeta{ font-size:13.5px; color:#b0b0b5; }
+.rv-page .rv-fnote, .rv-page .rv-fhint{ font-size:13.5px; color:#b0b0b5; }
+.rv-page .rv-time{ font-size:12.5px; color:#b0b0b5; }
+.rv-page .rv-decide label, .rv-page .rv-decide > span{ color:#e5e5ea; }
+.rv-page .rv-decide textarea{ font-size:15px; }
+.rv-page .rv-decide textarea::placeholder{ color:#8e8e93; }
+.rv-page .rv-producer-stats{ font-size:13.5px; color:#b0b0b5; }
+.rv-page .rv-tabs button{ font-size:14px; }

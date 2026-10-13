@@ -190,5 +190,11 @@
     "api/tickets.js": {
       "maxDuration": 60
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
   }
 }

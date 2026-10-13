@@ -1583,3 +1583,24 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bp-contact-links{ display:grid; grid-template-columns:1fr 1fr; }
   .bp-contact-links .btn{ justify-content:center; }
 }
+/* Card play button, Apple Music style: small frosted circle bottom-left,
+   white glyph, no coloured ring; white with a dark glyph while playing. */
+.bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play{
+  left:12px; top:auto; bottom:12px; width:42px; height:42px; margin:0;
+  background:rgba(28,28,30,0.5); -webkit-backdrop-filter:blur(16px) saturate(160%); backdrop-filter:blur(16px) saturate(160%);
+  border:0; color:#fff; box-shadow:0 6px 18px -6px rgba(0,0,0,0.6);
+  transform:translateY(4px) scale(0.96);
+}
+.bt-grid[data-view="grid"] .bt-play svg, .bp-row .bt-play svg{ width:17px; height:17px; }
+.bt-grid[data-view="grid"] .bt-play .bt-ic-play, .bp-row .bt-play .bt-ic-play{ margin-left:2px; }
+.bt-grid[data-view="grid"] .bt-card.is-playing .bt-play, .bp-row .bt-card.is-playing .bt-play{ background:#fff; color:#0a0a09; }
+.bt-grid[data-view="grid"] .bt-card:focus-within .bt-play, .bt-grid[data-view="grid"] .bt-card.is-current .bt-play,
+.bp-row .bt-card:focus-within .bt-play, .bp-row .bt-card.is-current .bt-play{ transform:none; }
+@media (hover:hover) and (pointer:fine){
+  .bt-grid[data-view="grid"] .bt-card:hover .bt-play, .bp-row .bt-card:hover .bt-play{ transform:none; }
+  .bt-grid[data-view="grid"] .bt-play:hover, .bp-row .bt-play:hover{ background:rgba(44,44,46,0.65); }
+  .bt-grid[data-view="grid"] .bt-card.is-playing .bt-play:hover{ background:#fff; }
+}
+@media (hover:none){ .bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play{ transform:none; } }
+.bt-grid[data-view="grid"] .bt-play:active, .bp-row .bt-play:active{ transform:scale(0.92); }
+@media (max-width:560px){ .bt-grid[data-view="grid"] .bt-play{ left:10px; bottom:10px; width:38px; height:38px; margin:0; } }

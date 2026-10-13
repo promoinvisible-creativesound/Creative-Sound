@@ -41,6 +41,7 @@
   let submissionId = null;
   // Edit mode (?edit=<id>): changes to an approved track, reviewed again.
   const editId = Number(new URLSearchParams(location.search).get('edit')) || null;
+  const changed = new Set(); // file kinds uploaded in this visit
   const done = {}; // kind -> { name, size }
   const busy = new Set();
   let licenses = null;
@@ -226,7 +227,26 @@
 
   // Confirmation after a successful submit: a check mark draws itself in a
   // circle with "Everything was sent successfully" below, then fades away.
-  function celebrate(title) {
+  async function autoPublish(id, btn) {
+    const needsTag = !editId || changed.has('preview');
+    if (needsTag) {
+      if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
+      btn.textContent = 'Adding the voice tag…';
+      const prep = await fetch('/api/review/tag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, changes: !!editId }) });
+      const urls = await prep.json().catch(() => ({}));
+      if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
+      const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; });
+      btn.textContent = 'Uploading tagged preview…';
+      const up = await fetch(urls.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
+      if (!up.ok) throw new Error('Could not upload the tagged preview. Your track is saved: approve it from Track review.');
+    }
+    btn.textContent = 'Publishing…';
+    const res = await fetch('/api/review/decide', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, decision: editId ? 'approve-changes' : 'approve', note: '' }) });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`${out.error || 'Could not publish.'} Your track is saved: approve it from Track review.`);
+  }
+
+  function celebrate(title, custom) {
     player.pause();
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const el = document.createElement('div');
@@ -239,8 +259,8 @@
           <circle class="up-sent-ring" cx="48" cy="48" r="40"/>
           <path class="up-sent-check" d="M30 49.5l12 12L67 35"/>
         </svg>
-        <b>Everything was sent successfully</b>
-        <small>${esc(title || 'Your track')} is now in review. We'll email you the result.</small>
+        <b>${custom ? esc(custom.title) : 'Everything was sent successfully'}</b>
+        <small>${custom ? esc(custom.text) : `${esc(title || 'Your track')} is now in review. We'll email you the result.`}</small>
       </div>`;
     document.body.appendChild(el);
     return new Promise((resolve) => {
@@ -495,6 +515,7 @@
       if (link.chunked) await sendChunks(kind, file, link.chunkSize, (p) => setProgress(row, p));
       else await sendFile(link.uploadUrl, file, (p) => setProgress(row, p));
       done[kind] = { name: file.name, size: file.size };
+      changed.add(kind);
       paintDone(row, file);
     } catch (err) {
       paintIdle(row, err.message);
@@ -642,6 +663,13 @@
       if (editId) {
         $('#up-done h2').textContent = 'Changes sent for review';
         $('#up-done p').innerHTML = `Your changes to <b>${esc(val('title'))}</b> are in review. The store keeps the current version until they are approved, and we'll email you.`;
+      }
+      // Site owner: publish right away (voice tag + approve), no review.
+      if (data.autoPublish) {
+        await autoPublish(data.id, btn);
+        await celebrate(val('title'), { title: 'Published', text: `${val('title')} is live in the store.` });
+        window.location.href = 'profile-producer.html';
+        return;
       }
       await celebrate(val('title'));
       form.hidden = true;

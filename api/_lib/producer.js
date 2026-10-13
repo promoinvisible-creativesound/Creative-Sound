@@ -109,6 +109,12 @@ async function ownDraft(session, id) {
   return row && row.status === 'draft' ? row : null;
 }
 
+// Uploads from the site owner's account skip the review queue: the upload
+// page adds the voice tag and approves them right away (it uses the admin
+// endpoints, so only this account can). Nobody else, not even other admins.
+const AUTO_PUBLISH = ['promo.invisible@gmail.com'];
+const autoPublishes = (session) => AUTO_PUBLISH.includes(String(session.email || '').toLowerCase());
+
 // The producer's own approved track (for edits).
 async function ownApproved(session, id) {
   const [row] = await sql`SELECT * FROM beat_submissions WHERE id = ${id} AND user_id = ${session.uid}`;
@@ -330,7 +336,7 @@ async function submitChanges(session, body, res) {
     });
     if (mailError) console.error('changes email error:', mailError);
   } catch (err) { console.error('changes email error:', err); }
-  res.status(200).json({ ok: true, id: live.id, status: 'approved', changesStatus: 'pending' });
+  res.status(200).json({ ok: true, id: live.id, status: 'approved', changesStatus: 'pending', autoPublish: autoPublishes(session) });
 }
 
 async function handleSubmit(req, res) {
@@ -377,9 +383,9 @@ async function handleSubmit(req, res) {
       WHERE id = ${sub.id}
     `;
 
-    try {
+    // The owner's own uploads publish at once: no review notice or receipt.
+    if (!autoPublishes(session)) try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const prices = Object.entries(data.prices).map(([t, c]) => `${LICENSES.tiers[t].name} €${(c / 100).toFixed(2)}`).join(' · ');
       const site = process.env.SITE_URL || 'https://creativesound.io';
       const facts = [
@@ -436,7 +442,7 @@ async function handleSubmit(req, res) {
       console.error('producer submit email error:', err);
     }
 
-    res.status(200).json({ ok: true, id: sub.id, status: 'pending' });
+    res.status(200).json({ ok: true, id: sub.id, status: 'pending', autoPublish: autoPublishes(session) });
   } catch (err) {
     console.error('producer submit error:', err);
     res.status(500).json({ error: `Could not submit the track (${String((err && err.message) || err).slice(0, 140)}). Please try again.` });

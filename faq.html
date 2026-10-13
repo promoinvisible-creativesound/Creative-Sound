@@ -24,7 +24,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=130">
+<link rel="stylesheet" href="css/style.css?v=132">
 <link rel="stylesheet" href="css/header-menu.css?v=13">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How many devices can I use with the same license?","acceptedAnswer":{"@type":"Answer","text":"Up to 3 devices."}},{"@type":"Question","name":"Are updates free? Even ones that add new modules?","acceptedAnswer":{"@type":"Answer","text":"Yes, all updates are free."}},{"@type":"Question","name":"My license isn't working. What should I do?","acceptedAnswer":{"@type":"Answer","text":"Contact support directly from your profile and we'll get back to you as soon as possible."}},{"@type":"Question","name":"How can I contact you?","acceptedAnswer":{"@type":"Answer","text":"Open a support ticket and we'll reply as soon as possible."}},{"@type":"Question","name":"I'm having issues, I can't hear the plugin working.","acceptedAnswer":{"@type":"Answer","text":"This is usually a small DAW issue. Try updating the plugin, running a rescan, or simply closing and reopening your DAW, that should fix it."}},{"@type":"Question","name":"Where can I find my order?","acceptedAnswer":{"@type":"Answer","text":"You'll find it in your profile under Order History, or in the email you received right after your purchase."}},{"@type":"Question","name":"How does Creative Dist 2.0 work?","acceptedAnswer":{"@type":"Answer","text":"The installer includes a PDF covering all the plugin's main features, and we'll also be releasing videos showing how to get the most out of it."}},{"@type":"Question","name":"How do I install Creative Dist 2.0?","acceptedAnswer":{"@type":"Answer","text":"The installer includes everything the plugin needs, including presets and a PDF with all the plugin info."}},{"@type":"Question","name":"How do I install it on Mac?","acceptedAnswer":{"@type":"Answer","text":"Just allow the installation: go to Settings, then Privacy, and grant permission at the bottom of the page using your Mac password."}},{"@type":"Question","name":"Logic, Studio One or another DAW can't find or open the plugin on Mac","acceptedAnswer":{"@type":"Answer","text":"Creative Dist isn't notarized through Apple's paid Developer Program, so macOS can sometimes block your DAW from loading it even after you've allowed the installer. Run the quarantine-removal command shown on this page in Terminal, then restart your DAW and rescan plugins."}},{"@type":"Question","name":"Which versions are supported on Mac?","acceptedAnswer":{"@type":"Answer","text":"VST3 and AU are both available on Mac."}},{"@type":"Question","name":"Which versions are supported on Windows?","acceptedAnswer":{"@type":"Answer","text":"Only VST3 is available on Windows, and it requires Windows 11 or later."}},{"@type":"Question","name":"Is there an AAX version?","acceptedAnswer":{"@type":"Answer","text":"Not at the moment, it hasn't been implemented yet."}},{"@type":"Question","name":"Where can I find the Creative Dist 2.0 manual?","acceptedAnswer":{"@type":"Answer","text":"It's downloaded automatically into the plugin folder during installation."}}]}</script>
 </head>
@@ -188,7 +188,7 @@
   <div class="footer-inner">
     <div class="footer-col footer-col-brand">
       <span class="footer-brand-name">Creative Sound</span>
-      <span class="footer-brand-sub">Sound tools by Invisible</span>
+      <span class="footer-brand-sub">Plugins, sound packs and tracks for producers.</span>
       <div class="footer-social">
         <a href="https://www.instagram.com/creativesound.io/" class="footer-social-link" target="_blank" rel="noopener noreferrer me" aria-label="Creative Sound on Instagram">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -203,33 +203,45 @@
             <path d="M16 4a5 5 0 0 0 5 5"></path>
           </svg>
         </a>
+        <a href="mailto:hello@creativesound.io" class="footer-social-link" aria-label="Email Creative Sound">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2.5"></rect>
+            <path d="M3.5 6.5l8.5 6 8.5-6"></path>
+          </svg>
+        </a>
       </div>
-      <p class="footer-credit">Visual by: <a href="https://www.instagram.com/drawdee4/" target="_blank" rel="noopener noreferrer">drawdee4</a></p>
     </div>
-    <div class="footer-col">
-      <span class="footer-col-title">Product</span>
+    <nav class="footer-col" aria-label="Shop">
+      <span class="footer-col-title">Shop</span>
       <a href="creative-dist-2">Creative Dist 2.0</a>
-      <a href="packs.html">Packs</a>
-        <a href="beats.html">Tracks</a>
+      <a href="beats.html">Tracks</a>
+      <a href="packs.html">Sound packs</a>
       <a href="tutorial.html">Tutorial</a>
+    </nav>
+    <nav class="footer-col" aria-label="Producers">
+      <span class="footer-col-title">Producers</span>
+      <a href="signup.html?role=producer">Sell your tracks</a>
+      <a href="profile-producer.html">Producer area</a>
+      <a href="upload-beat.html">Upload a track</a>
+    </nav>
+    <nav class="footer-col" aria-label="Help">
+      <span class="footer-col-title">Help</span>
       <a href="faq.html">FAQ</a>
-    </div>
-    <div class="footer-col">
+      <a href="profile-tickets.html">Support</a>
+      <a href="contact.html">Contact</a>
+      <a href="refund.html">Refund policy</a>
+    </nav>
+    <nav class="footer-col" aria-label="Company">
       <span class="footer-col-title">Company</span>
       <a href="about.html">About</a>
-      <a href="creative-dist-2#artists">Artists Community</a>
+      <a href="creative-dist-2#artists">Artists community</a>
       <a href="work-with-us.html">Work with us</a>
-      <a href="profile-tickets.html">Contact</a>
-    </div>
-    <div class="footer-col">
-      <span class="footer-col-title">Legal</span>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="refund.html">Refund Policy</a>
-    </div>
+      <a href="privacy.html">Privacy policy</a>
+    </nav>
   </div>
   <div class="footer-bottom">
-    <span class="footer-copy">© 2026 Creative Sound. All rights reserved. · P.IVA 17024071007</span>
-    <a href="mailto:hello@creativesound.io" class="footer-email">hello@creativesound.io</a>
+    <span class="footer-copy">© 2026 Creative Sound · P.IVA 17024071007</span>
+    <span class="footer-bottom-links"><a href="mailto:hello@creativesound.io" class="footer-email">hello@creativesound.io</a><span class="footer-credit">Visual by <a href="https://www.instagram.com/drawdee4/" target="_blank" rel="noopener noreferrer">drawdee4</a></span></span>
   </div>
 </footer>
 

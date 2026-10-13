@@ -8,7 +8,7 @@
   const TAG_URL = 'assets/audio/voice-tag.wav?v=2';
   const LAME_URL = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js';
   const FIRST = 1;       // seconds
-  const EVERY = 30;      // seconds between tags
+  const EVERY = 20;      // seconds between tags
   const DUCK = 0.45;     // music level under the voice
   const TAG_GAIN = 1.15;
   const RATE = 44100;

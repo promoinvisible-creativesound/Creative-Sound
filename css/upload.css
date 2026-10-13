@@ -433,3 +433,68 @@
 .up-price .up-earn{ position:absolute; right:0; top:calc(100% + 3px); font-size:11.5px; font-weight:600; color:#f5b06a; white-space:nowrap; }
 .up-tier.is-on{ padding-bottom:24px; }
 .up-share{ color:#f5b06a; font-weight:600; }
+
+/* =========================== Upload page v2 ===============================
+   Minimal and easier to follow: a steps bar under the title that ticks as
+   each part is done, quieter cards, file groups with clear labels, file rows
+   that read as one tappable line, and a calm side summary. */
+.up-page .up-title{ font-family:var(--font-sans); font-size:clamp(28px, 4vw, 36px); font-weight:700; letter-spacing:-0.02em; }
+.up-page .up-sub{ font-size:15px; color:#86868b; max-width:560px; }
+.up-steps{ list-style:none; display:flex; gap:6px; margin:20px 0 0; padding:4px; border-radius:14px; background:#141413; width:max-content; max-width:100%; overflow-x:auto; scrollbar-width:none; }
+.up-steps::-webkit-scrollbar{ display:none; }
+.up-steps a{ height:34px; display:flex; align-items:center; gap:8px; padding:0 14px 0 6px; border-radius:10px; color:#a1a1a6; font-size:13.5px; font-weight:500; text-decoration:none; white-space:nowrap; transition:background-color 150ms ease, color 150ms ease; }
+.up-steps i{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.08); color:#d2d2d7; font-style:normal; font-size:12px; font-weight:600; transition:background-color 200ms ease, color 200ms ease; }
+.up-steps li.is-ok a{ color:#f5f5f7; }
+.up-steps li.is-ok i{ background:var(--accent); color:#0a0a09; font-size:0; }
+.up-steps li.is-ok i::before{ content:''; width:10px; height:6px; border:solid #0a0a09; border-width:0 0 2px 2px; transform:translateY(-1px) rotate(-45deg); }
+@media (hover:hover) and (pointer:fine){ .up-steps a:hover{ background:rgba(255,255,255,0.05); color:#f5f5f7; } }
+
+.up-page .up-card{ padding:22px; border-radius:20px; border:1px solid rgba(255,255,255,0.06); background:#121211; box-shadow:none; scroll-margin-top:100px; }
+.up-page .up-card-head{ gap:12px; margin-bottom:16px; }
+.up-page .up-card-head h2{ font-size:19px; font-weight:600; letter-spacing:-0.01em; }
+.up-page .up-card-head p{ font-size:13.5px; color:#86868b; }
+.up-page .up-step{ width:28px; height:28px; border:0; border-radius:50%; background:rgba(232,134,44,0.16); color:#f5b06a; font-size:13px; font-weight:700; }
+.up-page .up-group-title{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin:18px 2px 8px; font-size:13px; font-weight:600; color:#f5f5f7; }
+.up-page .up-card-head + .up-group-title{ margin-top:0; }
+.up-page .up-group-title span{ font-size:12.5px; font-weight:400; color:#86868b; }
+.up-page .up-files{ border-radius:14px; background:rgba(255,255,255,0.025); overflow:hidden; gap:0; }
+.up-page .up-file{ position:relative; margin:0; padding:12px 14px; border:0; border-radius:0; background:none; gap:12px; transition:background-color 150ms ease; }
+.up-page .up-file + .up-file::before{ content:''; position:absolute; top:0; left:62px; right:0; height:1px; background:rgba(255,255,255,0.06); }
+@media (hover:hover) and (pointer:fine){ .up-page .up-file:not(.is-busy):hover{ background:rgba(255,255,255,0.03); } }
+.up-page .up-file.is-drag{ background:rgba(232,134,44,0.08); box-shadow:inset 0 0 0 1.5px rgba(232,134,44,0.6); }
+.up-page .up-file.is-done .up-file-icon, .up-page .up-file.is-done .up-art-thumb{ box-shadow:inset 0 0 0 1.5px rgba(76,201,122,0.7); }
+.up-page .up-file-icon{ width:36px; height:36px; border-radius:10px; border:0; background:rgba(255,255,255,0.06); color:#d2d2d7; font-size:10.5px; font-weight:700; letter-spacing:0.02em; }
+.up-page .up-art-thumb{ width:36px; height:36px; border-radius:10px; border:0; background:rgba(255,255,255,0.06); }
+.up-page .up-file-text b{ font-size:14.5px; font-weight:600; color:#f5f5f7; }
+.up-page .up-file-text b em{ margin-left:6px; padding:1px 7px; border-radius:9px; background:rgba(232,134,44,0.14); color:#f5b06a; font-size:10.5px; font-style:normal; font-weight:600; vertical-align:1px; }
+.up-page .up-file-text small{ font-size:12.5px; color:#86868b; }
+.up-page .up-btn{ height:32px; padding:0 12px; border-radius:16px; border:0; background:rgba(255,255,255,0.08); color:#f5f5f7; font-size:12.5px; font-weight:500; }
+.up-page .up-btn svg{ width:14px; height:14px; }
+@media (hover:hover) and (pointer:fine){ .up-page .up-btn:hover{ background:rgba(232,134,44,0.18); color:#f5b06a; } }
+.up-page .up-btn-ghost{ background:none; color:#a1a1a6; }
+
+.up-page .up-field > span{ font-size:12.5px; font-weight:500; color:#a1a1a6; }
+.up-page .up-field input, .up-page .up-field select, .up-page .up-field textarea{ border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:#0a0a09; font-size:15px; }
+.up-page .up-tier{ padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.025); }
+.up-page .up-tier.is-on{ border-color:rgba(232,134,44,0.6); background:linear-gradient(90deg, rgba(232,134,44,0.1), rgba(232,134,44,0.02)); }
+.up-page .up-tier.is-locked{ opacity:0.55; }
+.up-page .up-check{ padding:14px; border-radius:14px; background:rgba(255,255,255,0.025); }
+
+.up-page .up-preview{ border-radius:20px; border:1px solid rgba(255,255,255,0.06); background:#121211; }
+.up-page .up-checklist{ padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,0.06); background:#121211; gap:9px; }
+.up-page .up-checklist li{ font-size:13px; }
+.up-page .up-checklist li.is-ok::before{ border-color:var(--accent); background-color:var(--accent); }
+.up-page .up-submit{ height:46px; font-size:15px; }
+@media (max-width:640px){
+  .up-steps{ width:100%; }
+  .up-steps a{ padding:0 10px 0 5px; font-size:12.5px; gap:6px; }
+  .up-page .up-card{ padding:16px 14px; border-radius:18px; }
+  .up-page .up-file{ padding:11px 12px; }
+  .up-page .up-file + .up-file::before{ left:12px; }
+}
+.up-page .up-preview-title{ font-family:var(--font-sans); font-size:17px; font-weight:600; letter-spacing:-0.01em; }
+/* Phones and tablets: fill the form first, then preview, checklist and Submit. */
+@media (max-width:980px){
+  .up-page .up-main{ order:1; }
+  .up-page .up-side{ order:2; position:static; }
+}

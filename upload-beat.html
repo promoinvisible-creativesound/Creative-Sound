@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=134">
 <link rel="stylesheet" href="css/header-menu.css?v=14">
-<link rel="stylesheet" href="css/upload.css?v=12">
+<link rel="stylesheet" href="css/upload.css?v=14">
 </head>
 <body>
 <div id="grain"></div>
@@ -104,7 +104,13 @@
         Producer area
       </a>
       <h1 class="up-title">Upload a track</h1>
-      <p class="up-sub">Every track is reviewed by our team before it goes on sale. You'll get an email when it's done.</p>
+      <p class="up-sub">Four short steps. We review every track before it goes on sale and email you the result.</p>
+      <ol class="up-steps" id="up-steps" aria-label="Steps">
+        <li data-step="files"><a href="#up-s1"><i>1</i>Files</a></li>
+        <li data-step="details"><a href="#up-s2"><i>2</i>Details</a></li>
+        <li data-step="license"><a href="#up-s3"><i>3</i>Licenses</a></li>
+        <li data-step="agree"><a href="#up-s4"><i>4</i>Rights</a></li>
+      </ol>
     </div>
   </header>
 
@@ -133,9 +139,10 @@
       <section class="up-card" aria-labelledby="up-s1">
         <div class="up-card-head">
           <span class="up-step">1</span>
-          <div><h2 id="up-s1">Files</h2><p>Drop files on a row or click Upload. Same file rules as BeatStars.</p></div>
+          <div><h2 id="up-s1">Files</h2><p>Click a row or drop a file on it. Large files upload in parts, keep this tab open.</p></div>
         </div>
 
+        <h3 class="up-group-title">For the store <span>What people see and hear before buying.</span></h3>
         <div class="up-files">
           <div class="up-file up-file-art" data-kind="artwork">
             <div class="up-art-thumb" aria-hidden="true"><img alt="" hidden><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5l-5-5-9 9"/></svg></div>
@@ -144,12 +151,12 @@
           </div>
           <div class="up-file" data-kind="preview">
             <span class="up-file-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg></span>
-            <div class="up-file-text"><b>Preview MP3 <em>Required</em></b><small>Tagged version people hear in the store. MP3, 320 kbps, stereo. Max 150 MB.</small></div>
+            <div class="up-file-text"><b>Preview MP3 <em>Required</em></b><small>What people hear in the store. We add the Creative Sound voice tag for you. MP3, 320 kbps, stereo.</small></div>
             <div class="up-file-ctrl"></div>
           </div>
         </div>
 
-        <h3 class="up-group-title">License files <span>Delivered to buyers. Each one unlocks a license below.</span></h3>
+        <h3 class="up-group-title">For buyers <span>Clean files, no tags. Each one unlocks a license in step 3.</span></h3>
         <div class="up-files">
           <div class="up-file" data-kind="mp3">
             <span class="up-file-icon" aria-hidden="true">MP3</span>
@@ -307,7 +314,7 @@
 <script src="js/main.js?v=48"></script>
 <script src="js/header-menu.js?v=11"></script>
 <script src="js/auth.js?v=46"></script>
-<script src="js/upload.js?v=4"></script>
+<script src="js/upload.js?v=5"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

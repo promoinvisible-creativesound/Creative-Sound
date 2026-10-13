@@ -82,7 +82,7 @@
   function paintIdle(row, error) {
     $('.up-file-ctrl', row).innerHTML = `
       ${error ? `<span class="up-file-err">${esc(error)}</span>` : ''}
-      <button type="button" class="up-btn" data-pick>${ICON_UP}Upload</button>`;
+      <button type="button" class="up-btn" data-pick>${ICON_UP}Choose file</button>`;
     row.classList.remove('is-busy', 'is-done');
     row.classList.toggle('is-error', !!error);
   }
@@ -338,6 +338,9 @@
       agree: form.elements.agree.checked,
     };
     $$('#up-checklist li').forEach((li) => li.classList.toggle('is-ok', !!checks[li.dataset.check]));
+    // Steps bar: done when every check of that step passes.
+    const steps = { files: checks.artwork && checks.preview, details: checks.details, license: checks.license, agree: checks.agree };
+    $$('#up-steps li').forEach((li) => li.classList.toggle('is-ok', !!steps[li.dataset.step]));
 
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
     $('#up-pv-producer').textContent = val('producerName') || 'Your producer name';

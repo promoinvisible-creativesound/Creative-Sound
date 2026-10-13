@@ -165,3 +165,19 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
   .hm-guest .hm-btn, .hm-account .hm-btn{ height:38px; padding:0 4px 0 6px; gap:3px; }
   .hm-btn-ic{ width:21px; height:21px; }
 }
+
+/* Menu icons: white glyph on a coloured rounded tile (Apple Settings). */
+.hm-item{ height:40px; gap:11px; padding:0 8px; color:#e8e8ed; }
+.hm-tile, .hm-item .hm-tile{ width:26px; height:26px; flex:0 0 26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:#fff;
+  background:linear-gradient(180deg, var(--t1), var(--t2)); box-shadow:inset 0 0.5px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.35); }
+.hm-tile .hm-ic{ width:16px; height:16px; stroke-width:1.9; color:#fff; }
+.hm-tile.is-amber{ --t1:#f7a24b; --t2:#de7a1f; }
+.hm-tile.is-blue{ --t1:#3d9bff; --t2:#0a6cf0; }
+.hm-tile.is-pink{ --t1:#ff5a7e; --t2:#e5254f; }
+.hm-tile.is-yellow{ --t1:#ffbf2e; --t2:#f09a00; }
+.hm-tile.is-green{ --t1:#43d871; --t2:#1fb052; }
+.hm-tile.is-purple{ --t1:#c27bff; --t2:#9a4ce8; }
+.hm-tile.is-teal{ --t1:#4fd2ff; --t2:#1aa6dd; }
+.hm-tile.is-red{ --t1:#ff6159; --t2:#e5372e; }
+.hm-tile.is-gray{ --t1:#9a9aa0; --t2:#6d6d73; }
+@media (hover:hover) and (pointer:fine){ .hm-item:hover .hm-tile .hm-ic{ color:#fff; } }

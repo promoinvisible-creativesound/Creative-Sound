@@ -19,15 +19,21 @@
     heart: '<path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"/>',
     bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
     bag: '<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
-    key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l7-7M15 8l3 3"/>',
+    key: '<circle cx="7.5" cy="15.5" r="3.5"/><path d="M10 13l9-9M15.5 7.5l2.5 2.5M13 10l2 2"/>',
+    box: '<path d="M4 7.5L12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+    seal: '<path d="M12 2.8l2.3 1.7 2.8-.1.9 2.7 2.3 1.6-.9 2.7.9 2.7-2.3 1.6-.9 2.7-2.8-.1L12 21.2l-2.3-1.7-2.8.1-.9-2.7-2.3-1.6.9-2.7-.9-2.7 2.3-1.6.9-2.7 2.8.1z"/><path d="M8.8 12.2l2.2 2.2 4.2-4.4"/>',
+    profile: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.6 18.4a6.4 6.4 0 0 1 10.8 0"/>',
+    logout: '<path d="M14.5 4H18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3.5M10 8l-4 4 4 4M6 12h10"/>',
     receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
-    studio: '<path d="M5 4v16M12 4v16M19 4v16"/><rect x="3" y="12" width="4" height="3" rx="1"/><rect x="10" y="7" width="4" height="3" rx="1"/><rect x="17" y="14" width="4" height="3" rx="1"/>',
-    upload: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
-    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 0-2l1.2-1.4-1.5-2.6-1.8.5a1.7 1.7 0 0 0-1.7-1L15 4.6h-3l-.6 1.9a1.7 1.7 0 0 0-1.7 1l-1.8-.5-1.5 2.6L7.6 11a1.7 1.7 0 0 0 0 2l-1.2 1.4 1.5 2.6 1.8-.5a1.7 1.7 0 0 0 1.7 1l.6 1.9h3l.6-1.9a1.7 1.7 0 0 0 1.7-1l1.8.5 1.5-2.6z"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.8v.1"/>',
+    studio: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+    upload: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.3"/><circle cx="12" cy="16.9" r=".6" fill="currentColor"/>',
     power: '<path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/>',
     music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
   };
+  const TONE = { studio: 'amber', upload: 'amber', seal: 'amber', profile: 'blue', user: 'blue', heart: 'pink', key: 'yellow', box: 'green', receipt: 'green', gear: 'gray', help: 'purple', headset: 'purple', mail: 'teal', play: 'red', music: 'red', login: 'blue', plus: 'green', logout: 'gray', power: 'gray' };
+  const tile = (name) => `<span class="hm-tile is-${TONE[name] || 'gray'}"><svg class="hm-ic" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg></span>`;
   const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg>`;
   const ROLE = { producer: 'Producer', artist: 'Artist', listener: 'Member' };
 
@@ -75,7 +81,7 @@
     if (open) { open.close(); open.btn.focus(); }
   });
 
-  const item = (href, ic, text, extra = '') => `<a href="${href}" class="hm-item" role="menuitem">${icon(ic, 'hm-ic')}<span>${text}</span>${extra}</a>`;
+  const item = (href, ic, text, extra = '') => `<a href="${href}" class="hm-item" role="menuitem">${tile(ic)}<span>${text}</span>${extra}</a>`;
   const empty = (ic, title, text, cta) => `
     <div class="hm-empty">${icon(ic, 'hm-empty-ic')}<b>${title}</b><span>${text}</span>${cta || ''}</div>`;
 
@@ -93,24 +99,24 @@
         ${me.role ? `<span class="hm-role">${ROLE[me.role]}</span>` : ''}
       </div>
       ${me.isAdmin ? `<div class="hm-group">
-        ${item('admin-review.html', 'receipt', 'Track review', '<span class="hm-new">Admin</span>')}
+        ${item('admin-review.html', 'seal', 'Track review', '<span class="hm-new">Admin</span>')}
       </div>` : ''}
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
         ${item('upload-beat.html', 'upload', 'Upload a track', '<span class="hm-new">New</span>')}
       </div>` : ''}
       <div class="hm-group">
-        ${item('profile-public.html', 'user', 'Public profile')}
+        ${item('profile-public.html', 'profile', 'Public profile')}
         ${item('profile-saved.html', 'heart', 'Saved tracks')}
         ${item('profile-license.html', 'key', 'Licenses &amp; downloads')}
-        ${item('profile-orders.html', 'receipt', 'Orders')}
+        ${item('profile-orders.html', 'box', 'Orders')}
       </div>
       <div class="hm-group">
         ${item('profile-settings.html', 'gear', 'Settings')}
         ${item('profile-tickets.html', 'help', 'Help &amp; support')}
       </div>
       <div class="hm-group">
-        <button type="button" class="hm-item hm-logout" role="menuitem">${icon('power', 'hm-ic')}<span>Log out</span></button>
+        <button type="button" class="hm-item hm-logout" role="menuitem">${tile('logout')}<span>Log out</span></button>
       </div>`;
     m.panel.querySelector('.hm-logout').addEventListener('click', async () => {
       try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}

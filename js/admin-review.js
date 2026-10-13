@@ -169,6 +169,35 @@
     load();
   });
 
+  // Panel in the card with a player for the tagged preview; resolves true on
+  // "Confirm & publish", false on "Cancel".
+  function confirmTagged(cardEl, mp3) {
+    const url = URL.createObjectURL(mp3);
+    const box = document.createElement('div');
+    box.className = 'rv-tagcheck';
+    box.innerHTML = `
+      <div class="rv-tagcheck-head"><b>Check the store preview</b><small>This is what people will hear, with the voice tag every 20 seconds. Publish it?</small></div>
+      <audio controls preload="auto" src="${url}"></audio>
+      <div class="rv-tagcheck-actions">
+        <button type="button" class="btn btn-ghost" data-tc="cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" data-tc="ok">Confirm &amp; publish</button>
+      </div>`;
+    const decide = cardEl.querySelector('.rv-decide') || cardEl;
+    decide.parentNode.insertBefore(box, decide.nextSibling);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return new Promise((resolve) => {
+      box.addEventListener('click', (ev) => {
+        const b = ev.target.closest('[data-tc]');
+        if (!b) return;
+        const audio = box.querySelector('audio');
+        audio.pause();
+        box.remove();
+        URL.revokeObjectURL(url);
+        resolve(b.dataset.tc === 'ok');
+      });
+    });
+  }
+
   list.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-decision]');
     if (!btn) return;
@@ -197,6 +226,13 @@
         const urls = await prep.json().catch(() => ({}));
         if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
         const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; });
+        // Listen to the tagged preview before it goes public.
+        btn.textContent = label;
+        const ok = await confirmTagged(cardEl, mp3);
+        if (!ok) {
+          cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
+          return;
+        }
         btn.textContent = 'Uploading tagged preview…';
         const up = await fetch(urls.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
         if (!up.ok) throw new Error('Could not upload the tagged preview. Try again.');

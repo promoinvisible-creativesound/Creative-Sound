@@ -544,3 +544,10 @@
 .up-tags-own > span i{ margin-left:6px; font-style:normal; color:#6e6e73; }
 .up-tags-own input{ height:42px; padding:0 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:#0a0a09; color:#f5f5f7; font-family:var(--font-sans); font-size:15px; outline:none; }
 .up-tags-own input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(232,134,44,0.15); }
+/* "You earn" sits under the price inside the card (it used to hang outside). */
+.up-page .up-price{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.up-page .up-price .up-earn{ position:static; font-size:11.5px; font-weight:600; color:#f5b06a; white-space:nowrap; }
+.up-page .up-price .up-earn:empty{ display:none; }
+.up-page .up-tier.is-on{ padding-bottom:12px; }
+.up-page .up-price-cur{ top:20px; }
+@media (max-width:640px){ .up-page .up-price{ align-items:stretch; } .up-page .up-price .up-earn{ text-align:right; } }

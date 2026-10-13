@@ -181,5 +181,10 @@
       "path": "/api/payouts/run",
       "schedule": "0 9 * * 1"
     }
-  ]
+  ],
+  "functions": {
+    "api/tickets.js": {
+      "maxDuration": 60
+    }
+  }
 }

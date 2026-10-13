@@ -426,7 +426,7 @@
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Something went wrong, please try again.');
+      if (!res.ok) throw new Error(data.error || (res.status === 504 ? 'The server took too long to check your files. Please try again.' : `Something went wrong (error ${res.status}). Please try again.`));
       $('#up-done-title').textContent = val('title');
       form.hidden = true;
       $('#up-done').hidden = false;

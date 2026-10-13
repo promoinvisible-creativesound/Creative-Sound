@@ -191,15 +191,16 @@ async function handleChunk(req, res) {
 // Checks uploaded audio against BeatStars' rules; returns an error or null.
 async function audioError(files) {
   const NAMES = { preview: 'preview MP3', mp3: 'untagged MP3', wav: 'WAV' };
-  for (const [kind, spec] of Object.entries(FILE_KINDS)) {
+  // All audio files are read in parallel (a few small ranges each).
+  const results = await Promise.all(Object.entries(FILE_KINDS).map(async ([kind, spec]) => {
     const f = files[kind];
-    if (!spec.audio || !f) continue;
+    if (!spec.audio || !f) return null;
     const read = (start, end) => dropbox.readRange(f.path, start, end);
     const info = spec.audio === 'wav' ? await inspect.wavInfo(read, f.size) : await inspect.mp3Info(read, f.size);
     const problems = inspect.audioProblems(spec.audio, info);
-    if (problems.length) return `The ${NAMES[kind]} ${problems.join(', ')}.`;
-  }
-  return null;
+    return problems.length ? `The ${NAMES[kind]} ${problems.join(', ')}.` : null;
+  }));
+  return results.find(Boolean) || null;
 }
 
 // Validates the details form; returns { data } or { error }.
@@ -264,13 +265,17 @@ async function handleSubmit(req, res) {
     const { data, error } = validateDetails(body, files);
     if (error) { res.status(400).json({ error }); return; }
 
-    // Every file the form says it uploaded must really be in Dropbox.
-    for (const [kind, f] of Object.entries(files)) {
-      const size = await dropbox.fileSize(f.path);
+    // Every file the form says it uploaded must really be in Dropbox
+    // (checked in parallel: one Dropbox call per file).
+    const sizes = await Promise.all(Object.entries(files).map(async ([kind, f]) => [kind, await dropbox.fileSize(f.path)]));
+    for (const [kind, size] of sizes) {
       if (size == null) { res.status(400).json({ error: `The ${kind} file didn't finish uploading. Please upload it again.` }); return; }
-      files[kind] = { ...f, size };
+      files[kind] = { ...files[kind], size };
     }
-    const badAudio = await audioError(files);
+    // Audio format check. A Dropbox hiccup here must not block the upload:
+    // the admin inspects every file again before approving.
+    let badAudio = null;
+    try { badAudio = await audioError(files); } catch (err) { console.error('producer submit audio check skipped:', err); }
     if (badAudio) { res.status(400).json({ error: badAudio }); return; }
 
     // Optional contact for private requests (Instagram, email), kept on the profile.
@@ -316,7 +321,7 @@ async function handleSubmit(req, res) {
     res.status(200).json({ ok: true, id: sub.id, status: 'pending' });
   } catch (err) {
     console.error('producer submit error:', err);
-    res.status(500).json({ error: 'Something went wrong, please try again.' });
+    res.status(500).json({ error: `Could not submit the track (${String((err && err.message) || err).slice(0, 140)}). Please try again.` });
   }
 }
 

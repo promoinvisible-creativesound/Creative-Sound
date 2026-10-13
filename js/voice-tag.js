@@ -1,6 +1,6 @@
 // Voice tag for public previews (used by admin-review.js on Approve).
 // Decodes the producer's preview, lays the "Creative Sound" tag over it at
-// 1s and then every 30s (music ducked under the voice so it stays clear),
+// 1s and then every 20s (music ducked under the voice so it stays clear),
 // and encodes the result to a 192 kbps stereo MP3 with lamejs.
 // Only this tagged file is ever played in the store; buyers get clean files.
 (() => {

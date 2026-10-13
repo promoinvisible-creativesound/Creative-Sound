@@ -80,6 +80,18 @@
     {
       "source": "/api/producer/chunk",
       "destination": "/api/tickets?action=producer-chunk"
+    },
+    {
+      "source": "/api/review/verify",
+      "destination": "/api/tickets?action=review-verify"
+    },
+    {
+      "source": "/api/review/producers",
+      "destination": "/api/tickets?action=review-producers"
+    },
+    {
+      "source": "/api/producer/verify-request",
+      "destination": "/api/tickets?action=producer-verify-request"
     }
   ],
   "headers": [

@@ -12,7 +12,7 @@
 const { Resend } = require('resend');
 const { sql } = require('./db');
 const { getSession } = require('./auth');
-const { roleFor, previewAllowed } = require('./account');
+const { roleFor, previewAllowed, isAdmin } = require('./account');
 const dropbox = require('./dropbox');
 const inspect = require('./inspect');
 const LICENSES = require('../../data/beat-licenses.json');
@@ -43,6 +43,9 @@ function ensureTables() {
   if (!ready) {
     ready = (async () => {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_name TEXT`;
+      // Verified badge: only set by the owner from the review page.
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_verified BOOLEAN NOT NULL DEFAULT false`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_requested_at TIMESTAMPTZ`;
       await sql`
         CREATE TABLE IF NOT EXISTS beat_submissions (
           id SERIAL PRIMARY KEY,
@@ -310,7 +313,7 @@ async function handleSubmissions(req, res) {
   try {
     const session = await producerSession(req, res);
     if (!session) return;
-    const [user] = await sql`SELECT producer_name FROM users WHERE id = ${session.uid}`;
+    const [user] = await sql`SELECT producer_name, producer_verified, verify_requested_at FROM users WHERE id = ${session.uid}`;
     const rows = await sql`
       SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at
       FROM beat_submissions
@@ -320,6 +323,8 @@ async function handleSubmissions(req, res) {
     `;
     res.status(200).json({
       producerName: (user && user.producer_name) || '',
+      producerVerified: !!(user && user.producer_verified),
+      verifyRequestedAt: (user && user.verify_requested_at) || null,
       uploadsEnabled: dropbox.configured(),
       submissions: rows.map((r) => ({
         id: r.id, status: r.status, title: r.title, bpm: r.bpm, key: r.musical_key, genre: r.genre, mood: r.mood,
@@ -335,10 +340,6 @@ async function handleSubmissions(req, res) {
 /* --------------------------------- Review ---------------------------------
    For the site owner only: ADMIN_EMAILS (comma-separated) lists the
    accounts allowed to review. Nobody is an admin if it isn't set. */
-function isAdmin(session) {
-  const list = String(process.env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return !!(session && list.includes(String(session.email).toLowerCase()));
-}
 
 // GET ?status=pending|approved|rejected -> submissions with read links.
 async function handleAdminList(req, res) {
@@ -351,8 +352,8 @@ async function handleAdminList(req, res) {
     const status = ['pending', 'approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
     // Oldest first in the queue, newest first in the history.
     const rows = status === 'pending'
-      ? await sql`SELECT * FROM beat_submissions WHERE status = 'pending' ORDER BY submitted_at ASC LIMIT 100`
-      : await sql`SELECT * FROM beat_submissions WHERE status = ${status} ORDER BY reviewed_at DESC NULLS LAST LIMIT 100`;
+      ? await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' ORDER BY s.submitted_at ASC LIMIT 100`
+      : await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = ${status} ORDER BY s.reviewed_at DESC NULLS LAST LIMIT 100`;
     const out = [];
     for (const r of rows) {
       const links = {};
@@ -365,6 +366,7 @@ async function handleAdminList(req, res) {
         id: r.id, status: r.status, email: r.email, producerName: r.producer_name, title: r.title, bpm: r.bpm,
         key: r.musical_key, genre: r.genre, mood: r.mood, tags: r.tags, typeBeat: r.type_beat, about: r.about,
         prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
+        userId: r.user_id, producerVerified: !!r.producer_verified, verifyRequested: !!r.verify_requested_at && !r.producer_verified,
       });
     }
     const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE status = 'pending'`;
@@ -457,7 +459,104 @@ async function handleAdminInspect(req, res) {
   }
 }
 
+// POST { userId, verified } -> turns the verified badge on or off for a
+// producer. Owner only.
+async function handleAdminVerify(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const userId = Number(req.body && req.body.userId);
+    const verified = !!(req.body && req.body.verified);
+    const [row] = await sql`UPDATE users SET producer_verified = ${verified}, verify_requested_at = NULL WHERE id = ${userId} RETURNING id, producer_verified`;
+    if (!row) { res.status(404).json({ error: 'Producer not found.' }); return; }
+    res.status(200).json({ userId: row.id, verified: row.producer_verified });
+  } catch (err) {
+    console.error('admin verify error:', err);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
+// POST: a producer asks for the verified badge. The owner gets an email and
+// the request shows on the review page. Once a day at most.
+async function handleVerifyRequest(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  try {
+    const session = await producerSession(req, res);
+    if (!session) return;
+    const [user] = await sql`SELECT producer_name, producer_verified, verify_requested_at FROM users WHERE id = ${session.uid}`;
+    if (user && user.producer_verified) { res.status(200).json({ verified: true }); return; }
+    if (user && user.verify_requested_at && Date.now() - new Date(user.verify_requested_at).getTime() < 864e5) {
+      res.status(200).json({ requestedAt: user.verify_requested_at });
+      return;
+    }
+    const [row] = await sql`UPDATE users SET verify_requested_at = now() WHERE id = ${session.uid} RETURNING verify_requested_at`;
+    const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE user_id = ${session.uid} AND status <> 'draft'`;
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const esc = (x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const site = process.env.SITE_URL || 'https://creativesound.io';
+      const { error: mailError } = await resend.emails.send({
+        from: process.env.FROM_EMAIL,
+        to: 'hello@creativesound.io',
+        replyTo: session.email,
+        subject: `Verification request: ${(user && user.producer_name) || session.email}`,
+        html: `
+          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:32px;">
+            <h1 style="color:#FFB347;font-size:18px;">A producer asked to be verified</h1>
+            <p><strong>${esc((user && user.producer_name) || 'No producer name yet')}</strong> (${esc(session.email)})</p>
+            <p>${n} track${n === 1 ? '' : 's'} submitted so far.</p>
+            <p><a href="${site}/admin-review.html#producers" style="color:#FFB347;">Open the producers list</a></p>
+          </div>`,
+      });
+      if (mailError) console.error('verify request email error:', mailError);
+    } catch (err) {
+      console.error('verify request email error:', err);
+    }
+    res.status(200).json({ requestedAt: row.verify_requested_at });
+  } catch (err) {
+    console.error('verify request error:', err);
+    res.status(500).json({ error: 'Something went wrong, please try again.' });
+  }
+}
+
+// GET: every producer account with their submission counts (owner only).
+async function handleAdminProducers(req, res) {
+  if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const rows = await sql`
+      SELECT u.id, u.email, u.producer_name, u.producer_verified, u.verify_requested_at, u.role_set_at,
+        count(s.id) FILTER (WHERE s.status <> 'draft')::int AS total,
+        count(s.id) FILTER (WHERE s.status = 'pending')::int AS pending,
+        count(s.id) FILTER (WHERE s.status = 'approved')::int AS approved,
+        count(s.id) FILTER (WHERE s.status = 'rejected')::int AS rejected,
+        max(s.submitted_at) AS last_submitted
+      FROM users u LEFT JOIN beat_submissions s ON s.user_id = u.id
+      WHERE u.role = 'producer'
+      GROUP BY u.id
+      ORDER BY (u.verify_requested_at IS NOT NULL AND NOT u.producer_verified) DESC, max(s.submitted_at) DESC NULLS LAST, u.id DESC
+      LIMIT 500
+    `;
+    res.status(200).json({
+      producers: rows.map((r) => ({
+        userId: r.id, email: r.email, name: r.producer_name || '', verified: !!r.producer_verified,
+        verifyRequested: !!r.verify_requested_at && !r.producer_verified, since: r.role_set_at,
+        total: r.total, pending: r.pending, approved: r.approved, rejected: r.rejected, lastSubmitted: r.last_submitted,
+      })),
+    });
+  } catch (err) {
+    console.error('admin producers error:', err);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
 module.exports = {
   FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
-  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect,
+  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers,
 };

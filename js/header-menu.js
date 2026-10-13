@@ -92,6 +92,9 @@
         <span class="hm-who-text"><b>${esc(name || me.email.split('@')[0])}</b><small>${esc(me.email)}</small></span>
         ${me.role ? `<span class="hm-role">${ROLE[me.role]}</span>` : ''}
       </div>
+      ${me.isAdmin ? `<div class="hm-group">
+        ${item('admin-review.html', 'receipt', 'Track review', '<span class="hm-new">Admin</span>')}
+      </div>` : ''}
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
         ${item('upload-beat.html', 'upload', 'Upload a track', '<span class="hm-new">New</span>')}

@@ -2,7 +2,7 @@ const { sql } = require('../_lib/db');
 const { getSession } = require('../_lib/auth');
 const { PACKS, downloadUrl, ensureTable } = require('../_lib/packs');
 const { beatsForAccount, savedForAccount } = require('../_lib/beats');
-const { roleFor, previewAllowed } = require('../_lib/account');
+const { roleFor, previewAllowed, isAdmin } = require('../_lib/account');
 
 module.exports = async (req, res) => {
   const session = getSession(req);
@@ -60,6 +60,7 @@ module.exports = async (req, res) => {
       email: session.email,
       role,
       preview: previewAllowed(session),
+      isAdmin: isAdmin(session),
       beats,
       savedBeats,
       firstName: (user && user.first_name) || '',

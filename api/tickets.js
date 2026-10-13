@@ -12,6 +12,9 @@ const {
   handleAdminList: handleReviewList,
   handleAdminReview: handleReviewDecide,
   handleAdminInspect: handleReviewInspect,
+  handleAdminVerify: handleReviewVerify,
+  handleAdminProducers: handleReviewProducers,
+  handleVerifyRequest,
 } = require('./_lib/producer');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -51,6 +54,9 @@ module.exports = async (req, res) => {
     'review-list': handleReviewList,
     'review-decide': handleReviewDecide,
     'review-inspect': handleReviewInspect,
+    'review-verify': handleReviewVerify,
+    'review-producers': handleReviewProducers,
+    'producer-verify-request': handleVerifyRequest,
   };
   if (req.query && producerRoutes[req.query.action]) {
     await producerRoutes[req.query.action](req, res);

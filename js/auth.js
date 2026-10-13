@@ -432,6 +432,8 @@
         // Producers get their area first; accounts without a type are asked once.
         const producerCard = document.getElementById('hub-producer');
         if (producerCard) producerCard.hidden = !(data.preview && data.role === 'producer');
+        const reviewCard = document.getElementById('hub-review');
+        if (reviewCard) reviewCard.hidden = !data.isAdmin;
         const roleCard = document.getElementById('hub-role');
         if (roleCard) roleCard.hidden = !data.preview || !!data.role;
         document.getElementById('hub-license-sub').textContent = licenseParts.length ? licenseParts.join(' · ') : 'No license yet';

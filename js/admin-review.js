@@ -75,6 +75,11 @@
             <span class="rv-id">#${s.id} · ${esc(when(s.submittedAt))}</span>
             <h2>${esc(s.title)}</h2>
             <p class="rv-by">${esc(s.producerName)} · <a href="mailto:${esc(s.email)}">${esc(s.email)}</a></p>
+            <div class="rv-verify" data-user="${s.userId}">
+              ${s.verifyRequested ? '<span class="rv-verify-ask">Asked for verification</span>' : ''}
+              <span class="rv-verify-state ${s.producerVerified ? 'is-on' : ''}">${s.producerVerified ? 'Verified producer' : 'Not verified'}</span>
+              <button type="button" class="rv-verify-btn" data-verify="${s.producerVerified ? '0' : '1'}">${s.producerVerified ? 'Remove verification' : 'Verify producer'}</button>
+            </div>
             <div class="up-preview-chips rv-chips">${[`${s.bpm} BPM`, s.key, s.genre, s.mood].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('')}</div>
             ${tags.length ? `<p class="rv-tags">${tags.map(esc).join(' · ')}</p>` : ''}
             <div class="rv-prices">${prices}</div>
@@ -100,12 +105,43 @@
       </article>`;
   }
 
+  // Producers tab: everyone who uploads, verification requests first.
+  function producerRow(p) {
+    return `
+      <article class="up-card rv-producer">
+        <div class="rv-producer-main">
+          <b>${esc(p.name || 'No producer name yet')}</b>
+          <a href="mailto:${esc(p.email)}">${esc(p.email)}</a>
+          <span class="rv-producer-stats">${p.total} sent · ${p.pending} in review · ${p.approved} approved · ${p.rejected} sent back${p.lastSubmitted ? ` · last ${esc(when(p.lastSubmitted))}` : ''}</span>
+        </div>
+        <div class="rv-verify" data-user="${p.userId}">
+          ${p.verifyRequested ? '<span class="rv-verify-ask">Asked for verification</span>' : ''}
+          <span class="rv-verify-state ${p.verified ? 'is-on' : ''}">${p.verified ? 'Verified producer' : 'Not verified'}</span>
+          <button type="button" class="rv-verify-btn" data-verify="${p.verified ? '0' : '1'}">${p.verified ? 'Remove verification' : 'Verify producer'}</button>
+        </div>
+      </article>`;
+  }
+  async function loadProducers() {
+    const res = await fetch('/api/review/producers');
+    if (res.status === 401) { window.location.href = 'login.html'; return; }
+    if (res.status === 403) { $('#rv-body').hidden = true; $('#rv-gate').hidden = false; return; }
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error((data && data.error) || 'Could not load the producers.');
+    const asks = data.producers.filter((p) => p.verifyRequested).length;
+    $('#rv-np').textContent = asks ? String(asks) : '';
+    list.innerHTML = data.producers.length ? data.producers.map(producerRow).join('') : '<p class="pa-none">No producer accounts yet.</p>';
+  }
+
   async function load() {
     // The list is rebuilt, so stop whatever preview was playing.
     audio.pause();
     current = null;
     list.setAttribute('aria-busy', 'true');
     $('#rv-error').hidden = true;
+    if (status === 'producers') {
+      try { await loadProducers(); } catch (err) { list.innerHTML = ''; $('#rv-error').textContent = err.message; $('#rv-error').hidden = false; } finally { list.removeAttribute('aria-busy'); }
+      return;
+    }
     try {
       const res = await fetch(`/api/review/list?status=${status}`);
       if (res.status === 401) { window.location.href = 'login.html'; return; }
@@ -163,6 +199,41 @@
       err.textContent = e2.message;
       err.hidden = false;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
+    }
+  });
+
+  /* ---------------------------- Verified producer --------------------------- */
+  // The badge is only ever turned on here. Every card of the same producer
+  // updates together.
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-verify]');
+    if (!btn) return;
+    const box = btn.closest('.rv-verify');
+    const userId = Number(box.dataset.user);
+    const verified = btn.dataset.verify === '1';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/review/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, verified }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not save.');
+      list.querySelectorAll(`.rv-verify[data-user="${userId}"]`).forEach((el) => {
+        const state = el.querySelector('.rv-verify-state');
+        const b = el.querySelector('[data-verify]');
+        state.classList.toggle('is-on', data.verified);
+        state.textContent = data.verified ? 'Verified producer' : 'Not verified';
+        b.dataset.verify = data.verified ? '0' : '1';
+        b.textContent = data.verified ? 'Remove verification' : 'Verify producer';
+        const ask = el.querySelector('.rv-verify-ask');
+        if (ask) ask.remove();
+      });
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      btn.disabled = false;
     }
   });
 
@@ -286,5 +357,10 @@
     if (audio.duration) { audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + (e.key === 'ArrowRight' ? 5 : -5))); paint(); }
   });
 
+  // admin-review.html#producers (link in the verification email) opens that tab.
+  if (location.hash === '#producers') {
+    status = 'producers';
+    page.querySelectorAll('.rv-tabs button').forEach((b) => { const on = b.dataset.status === 'producers'; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', String(on)); });
+  }
   load();
 })();

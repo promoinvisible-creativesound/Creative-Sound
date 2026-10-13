@@ -63,6 +63,41 @@
     render();
   });
 
+  // Verified badge: producers ask, the Creative Sound team decides.
+  function paintVerify(data) {
+    const box = $('#pa-verify');
+    if (!box) return;
+    if (data.producerVerified) {
+      box.hidden = false;
+      box.className = 'pa-verify is-done';
+      box.innerHTML = '<b>You are a verified producer</b><span>The blue badge shows next to your name in the store.</span>';
+      return;
+    }
+    box.hidden = false;
+    box.className = 'pa-verify';
+    const asked = data.verifyRequestedAt;
+    box.innerHTML = `
+      <div><b>Get the verified badge</b><span>${asked ? `Request sent on ${date(asked)}. We'll look at your profile and tracks and email you.` : 'We check your profile and tracks, then add the blue badge next to your name in the store.'}</span></div>
+      <button type="button" class="btn ${asked ? 'btn-ghost' : 'btn-primary'}" id="pa-verify-btn" ${asked ? 'disabled' : ''}>${asked ? 'Requested' : 'Request verification'}</button>`;
+    const btn = $('#pa-verify-btn');
+    if (asked) return;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const res = await fetch('/api/producer/verify-request', { method: 'POST' });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Could not send the request.');
+        paintVerify({ producerVerified: !!out.verified, verifyRequestedAt: out.requestedAt || new Date().toISOString() });
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Request verification';
+        $('#pa-error').textContent = err.message;
+        $('#pa-error').hidden = false;
+      }
+    });
+  }
+
   fetch('/api/producer/submissions')
     .then(async (res) => {
       if (res.status === 401) { window.location.href = 'login.html'; return; }
@@ -70,7 +105,12 @@
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) throw new Error((data && data.error) || 'Could not load your tracks.');
       all = data.submissions || [];
-      if (data.producerName) $('#pa-sub').textContent = `Signed in as ${data.producerName}. Your tracks and where each one is in review.`;
+      if (data.producerName) {
+        // The verified badge is granted by the Creative Sound team, not
+        // self-selected; show where this producer stands.
+        $('#pa-sub').innerHTML = `Signed in as <b>${esc(data.producerName)}</b><span class="pa-verified ${data.producerVerified ? 'is-on' : ''}">${data.producerVerified ? 'Verified' : 'Not verified yet'}</span>. Your tracks and where each one is in review.`;
+      }
+      paintVerify(data);
       counts();
       render();
     })

@@ -36,7 +36,7 @@
         <b class="ho-track-title">${esc(b.title)}</b>
         <span class="ho-track-producer">${esc(b.producer)}${producers[b.producer] && producers[b.producer].verified ? VERIFIED : ''}</span>
         <span class="ho-track-specs"><span>${b.bpm} BPM</span><span>${esc(b.key)}</span><span class="ho-track-genre">${esc(b.genre)}</span></span>
-        <span class="ho-track-foot"><small>From</small><b>${euro(minPrice(b))}</b></span>
+        <span class="ho-track-foot"><b>${euro(minPrice(b))}</b></span>
       </span>
     </a>`;
 

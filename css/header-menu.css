@@ -158,3 +158,10 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
 
 /* Rounded buttons, like the rest of the site */
 .hm-checkout, .hm-cta{ border-radius:999px; }
+
+/* Phones: account icon like on desktop (same size, chevron kept) */
+@media (max-width:900px){
+  .hm-guest .hm-chev, .hm-account .hm-chev{ display:block; }
+  .hm-guest .hm-btn, .hm-account .hm-btn{ height:38px; padding:0 4px 0 6px; gap:3px; }
+  .hm-btn-ic{ width:21px; height:21px; }
+}

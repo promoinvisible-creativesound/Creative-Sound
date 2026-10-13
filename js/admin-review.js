@@ -18,7 +18,7 @@
 
   const ORDER = ['artwork', 'preview', 'mp3', 'wav', 'stems', 'project'];
   const HINTS = {
-    preview: 'Should have the voice tag.',
+    preview: 'Store preview. The Creative Sound voice tag is added when you approve.',
     mp3: 'Must be untagged.',
     wav: 'Must be untagged. 24-bit preferred.',
     stems: 'Every track of the beat, labelled.',
@@ -279,14 +279,14 @@
       img.addEventListener('error', () => note(info, 'Could not open the image.', true), { once: true });
     });
     // WAV: bit depth, sample rate, channels, length.
-    // Audio: format against BeatStars' rules (problems come from the server).
+    // Audio: format against the store's file rules (problems come from the server).
     list.querySelectorAll('[data-inspect]').forEach((el) => {
       const id = el.closest('.rv-card').dataset.id;
       inspect(id, el.dataset.inspect).then((d) => {
         if (!d.ok) { note(el, d.error, true); return; }
         const quality = d.kind === 'wav' ? (d.float ? '32-bit float' : `${d.bits}-bit`) : `${d.kbps} kbps${d.vbr ? ' VBR' : ''}`;
         const issues = d.problems || [];
-        note(el, `${quality} · ${(d.sampleRate / 1000).toFixed(1)} kHz · ${d.channels === 1 ? 'mono' : d.channels === 2 ? 'stereo' : `${d.channels} channels`}${d.duration ? ` · ${fmtDur(d.duration)}` : ''}${issues.length ? ` · ${issues.join(', ')}` : ' · OK for BeatStars rules'}`, issues.length > 0);
+        note(el, `${quality} · ${(d.sampleRate / 1000).toFixed(1)} kHz · ${d.channels === 1 ? 'mono' : d.channels === 2 ? 'stereo' : `${d.channels} channels`}${d.duration ? ` · ${fmtDur(d.duration)}` : ''}${issues.length ? ` · ${issues.join(', ')}` : ' · Meets the file rules'}`, issues.length > 0);
       }).catch((err) => note(el, err.message, true));
     });
   }

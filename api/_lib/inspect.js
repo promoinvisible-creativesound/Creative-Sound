@@ -133,8 +133,7 @@ async function mp3Info(read, size) {
   return { ok: false, error: 'Not a valid MP3 file.' };
 }
 
-// BeatStars' audio rules (help.beatstars.com, "What Type Of Audio Files Can
-// I Upload?"): 1-600 s, 44.1-48 kHz, stereo; WAV 16-32 bit; MP3 >= 320 kbps.
+// Store audio rules: 1-600 s, 44.1-48 kHz, stereo; WAV 16-32 bit; MP3 >= 320 kbps.
 const RULES = { minSec: 1, maxSec: 600, minRate: 44100, maxRate: 48000, minChannels: 2, minWavBits: 16, maxWavBits: 32, minMp3Kbps: 320 };
 function audioProblems(kind, info) {
   if (!info.ok) return [info.error];

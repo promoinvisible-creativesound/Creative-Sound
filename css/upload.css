@@ -699,3 +699,15 @@
 .rv-page .rv-decide textarea::placeholder{ color:#8e8e93; }
 .rv-page .rv-producer-stats{ font-size:13.5px; color:#b0b0b5; }
 .rv-page .rv-tabs button{ font-size:14px; }
+/* Track review: small text pass 2 (file notes, results, ZIP lists) */
+.rv-page .rv-fhead b{ font-size:15px; }
+.rv-page .rv-fmeta{ font-size:14px; color:#c2c2c7; }
+.rv-page .rv-fhint{ font-size:14px; color:#c2c2c7; }
+.rv-page .rv-fnote, .rv-page .rv-result{ font-size:14px; line-height:1.5; color:#c7c7cc; }
+.rv-page .rv-fnote.is-bad, .rv-page .rv-result.is-bad{ color:#ff9c86; }
+.rv-page .rv-zip-list{ font-size:13.5px; color:#c2c2c7; }
+.rv-page .rv-time{ font-size:13px; color:#c7c7cc; }
+.rv-page .rv-dl{ font-size:13.5px; }
+.rv-page .rv-tabs button{ color:#d1d1d6; }
+.rv-page .rv-fnote.is-ok, .rv-page .rv-result.is-ok{ color:#7fe0a4; }
+.rv-page .rv-zip-list li{ font-size:13.5px; }

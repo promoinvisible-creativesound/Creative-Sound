@@ -16,7 +16,7 @@
   const MB = 1024 * 1024;
 
   // Mirrors api/_lib/producer.js (the server re-checks everything).
-  // Same rules as BeatStars: WAV up to 300 MB, MP3 up to 150 MB, stems as
+  // Store file rules: WAV up to 300 MB, MP3 up to 150 MB, stems as
   // a ZIP; audio 1 s to 10 min, 44.1 or 48 kHz, stereo, WAV 16-32 bit,
   // MP3 at least 320 kbps.
   const KINDS = {

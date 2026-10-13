@@ -19,9 +19,9 @@ const { trackId } = require('./catalogue');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MB = 1024 * 1024;
-// What a producer can upload, matching BeatStars' upload rules: WAV up to
+// What a producer can upload (the store's file rules): WAV up to
 // 300 MB, MP3 (tagged or untagged) up to 150 MB, stems as a ZIP. The
-// project file (not a BeatStars slot) is a ZIP too. Audio is also checked
+// project file is a ZIP too. Audio is also checked
 // for length, sample rate, channels, bit depth / bitrate (see inspect.js).
 const FILE_KINDS = {
   artwork: { exts: ['jpg', 'jpeg', 'png'], max: 10 * MB, required: true },
@@ -188,7 +188,7 @@ async function handleChunk(req, res) {
   }
 }
 
-// Checks uploaded audio against BeatStars' rules; returns an error or null.
+// Checks uploaded audio against the store's file rules; returns an error or null.
 async function audioError(files) {
   const NAMES = { preview: 'preview MP3', mp3: 'untagged MP3', wav: 'WAV' };
   // All audio files are read in parallel (a few small ranges each).

@@ -38,6 +38,10 @@
   let LIC = null;
   let PRODUCERS = {};
   let byId = new Map();
+  // Track sales can be paused (catalogue.salesOpen === false): prices stay
+  // visible, buttons say "Coming soon". The admin can still buy to test.
+  let canBuy = true;
+  const SOON = 'Coming soon';
 
   /* ------------------------------ Shared markup ---------------------------- */
   const TINTS = ['amber', 'blue', 'red', 'violet', 'green'];
@@ -678,10 +682,13 @@
       $('#bp-usage-title').textContent = `${t.name}${t.unlimited ? ' · Unlimited' : ''}`;
       $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('');
       const c = cart.find((x) => x.id === beat.id);
-      $('#bp-add').textContent = c && c.tier === tier ? 'In cart' : (c ? 'Update cart' : 'Add to cart');
+      $('#bp-add').textContent = !canBuy ? SOON : c && c.tier === tier ? 'In cart' : (c ? 'Update cart' : 'Add to cart');
+      $('#bp-add').disabled = !canBuy;
+      $('#bp-buy').hidden = !canBuy;
     };
     $('#bp-tiers').addEventListener('change', (e) => { if (e.target.name === 'bp-tier') { tier = e.target.value; paintTier(); } });
     $('#bp-add').addEventListener('click', (e) => {
+      if (!canBuy) return;
       const c = cart.find((x) => x.id === beat.id);
       if (c && c.tier === tier) { openCart(); return; }
       addToCart(beat.id, tier);
@@ -691,6 +698,7 @@
       e.currentTarget.blur();
     });
     $('#bp-buy').addEventListener('click', () => {
+      if (!canBuy) return;
       addToCart(beat.id, tier);
       paintTier();
       checkout();
@@ -1150,7 +1158,8 @@
     $$('.bt-tier', modal).forEach((el) => { const on = el.dataset.tier === id; el.classList.toggle('is-selected', on); $('input', el).checked = on; });
     $('#bt-license-total').textContent = euro(modalBeat.prices[id]);
     const inCart = cart.find((c) => c.id === modalBeat.id);
-    $('#bt-license-add').textContent = inCart ? (inCart.tier === id ? 'In cart · View cart' : 'Update cart') : 'Add to cart';
+    $('#bt-license-add').textContent = !canBuy ? SOON : inCart ? (inCart.tier === id ? 'In cart · View cart' : 'Update cart') : 'Add to cart';
+    $('#bt-license-add').disabled = !canBuy;
   };
   const openLicense = (beat, trigger) => {
     modalBeat = beat;
@@ -1192,6 +1201,7 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) closeLicense(); });
     modal.addEventListener('close', () => { if (modalTrigger && document.contains(modalTrigger)) modalTrigger.focus({ preventScroll: true }); });
     $('#bt-license-add').addEventListener('click', () => {
+      if (!canBuy) return;
       const existing = cart.find((c) => c.id === modalBeat.id);
       if (existing && existing.tier === modalTier) { closeLicense(() => openCart()); return; }
       const fromRect = $('#bt-license-cover').getBoundingClientRect();
@@ -1211,6 +1221,7 @@
   const cleanCart = () => { cart = cart.filter((c) => byId.has(c.id) && byId.get(c.id).prices[c.tier] > 0); };
   const saveCart = () => { store.set('bt-cart', cart); renderCart(); };
   const addToCart = (id, tier) => {
+    if (!canBuy) return;
     const i = cart.findIndex((c) => c.id === id);
     if (i >= 0) cart[i].tier = tier; else cart.push({ id, tier });
     saveCart();
@@ -1297,6 +1308,7 @@
   async function checkout() {
     const btn = $('#bt-checkout');
     const note = $('#bt-cart-note');
+    if (!canBuy) { note.textContent = 'Track licensing opens soon.'; note.classList.add('is-error'); return; }
     btn.disabled = true;
     btn.textContent = 'Opening checkout…';
     note.classList.remove('is-error');
@@ -1337,6 +1349,17 @@
     PRODUCERS = catalogue.producers || {};
     BEATS = (catalogue.beats || []).filter((b) => b.status !== 'hidden' && tiersOf(b).length);
     byId = new Map(BEATS.map((b) => [b.id, b]));
+    canBuy = catalogue.salesOpen !== false;
+    document.documentElement.classList.toggle('bt-sales-closed', !canBuy);
+    if (!canBuy && window.csMe) {
+      Promise.resolve(window.csMe).then((me) => {
+        if (!me || !me.isAdmin) return;
+        canBuy = true;
+        document.documentElement.classList.remove('bt-sales-closed');
+        const picked = beatRoot && $('#bp-tiers input:checked');
+        if (picked) picked.dispatchEvent(new Event('change', { bubbles: true }));
+      }).catch(() => {});
+    }
     setupPlayer();
     setupModal();
     setupCart();

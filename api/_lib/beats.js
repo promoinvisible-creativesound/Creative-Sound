@@ -13,7 +13,7 @@
 const Stripe = require('stripe');
 const { sql } = require('./db');
 const { getSession } = require('./auth');
-const { previewAllowed } = require('./account');
+const { previewAllowed, isAdmin } = require('./account');
 const { getBeat, liveBeats, producerFiles } = require('./catalogue');
 const { recordEarnings, emailProducers } = require('./payouts');
 const CATALOGUE = require('../../data/beats.json');
@@ -23,6 +23,10 @@ const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
 const LICENSOR = 'Emanuele Paparella p/k/a Invisible, trading as Creative Sound (P.IVA 17024071007)';
 
 const isProduction = () => process.env.VERCEL_ENV === 'production';
+// Track sales are paused until the first real track is up: set
+// BEAT_SALES_OPEN=1 on Vercel (and redeploy) to open them. The admin can
+// always buy, to test the whole flow.
+const salesOpen = () => process.env.BEAT_SALES_OPEN === '1';
 
 function priceOf(beat, tier) {
   const p = beat && beat.prices && beat.prices[tier];
@@ -62,6 +66,10 @@ async function handleCheckout(req, res) {
   }
   if (!previewAllowed(session)) {
     res.status(403).json({ error: 'The track store is not open yet.' });
+    return;
+  }
+  if (!salesOpen() && !isAdmin(session)) {
+    res.status(403).json({ error: 'Track licensing opens soon. You can save tracks with the heart in the meantime.' });
     return;
   }
   const { items, error } = await validateItems(req.body && req.body.items);
@@ -436,7 +444,8 @@ async function handleSaved(req, res) {
   }
 }
 
-module.exports = { handleCheckout, handleBeatPurchase, beatsForAccount, savedForAccount, handleSaved, validateItems, licensePdf, ensureTables };
+module.exports = {
+  salesOpen, handleCheckout, handleBeatPurchase, beatsForAccount, savedForAccount, handleSaved, validateItems, licensePdf, ensureTables };
 
 /* README — making a beat buyable
    1. Add it to data/beats.json (id, title, producer, bpm, key, genre, mood,

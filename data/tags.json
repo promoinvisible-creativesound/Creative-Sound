@@ -1,0 +1,11 @@
+{
+  "note": "Standard track tags. Producers pick at least 2 of these (plus up to 2 of their own); the store's tag filter is built from them. Lowercase only.",
+  "min": 2,
+  "maxTotal": 8,
+  "maxCustom": 2,
+  "groups": [
+    { "name": "Style", "tags": ["trap", "drill", "uk drill", "rage", "plugg", "boom bap", "lo-fi", "rnb", "afrobeat", "pop", "hyperpop", "reggaeton", "jersey club", "west coast"] },
+    { "name": "Vibe", "tags": ["dark", "chill", "hard", "sad", "bright", "melodic", "emotional", "bouncy", "hype", "ambient", "summer", "love"] },
+    { "name": "Sound", "tags": ["808", "piano", "guitar", "synth", "strings", "bells", "pluck", "flute", "choir", "vocal chops", "bass", "sax", "distorted"] }
+  ]
+}

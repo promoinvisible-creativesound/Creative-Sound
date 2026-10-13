@@ -51,6 +51,37 @@
   fill('genre', GENRES, 'Choose genre');
   fill('mood', MOODS, 'Choose mood');
 
+  // Tags: standard list (data/tags.json) as chips, at least 2 of them, plus
+  // up to 2 of the producer's own. The hidden 'tags' input holds the result.
+  let TAG_RULES = { min: 2, maxTotal: 8, maxCustom: 2 };
+  const picked = new Set();
+  const ownTags = () => [...new Set(String(form.elements.tagsOwn.value || '').split(',').map((t) => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean))].slice(0, TAG_RULES.maxCustom);
+  const syncTags = () => {
+    const all = [...picked, ...ownTags().filter((t) => !picked.has(t))].slice(0, TAG_RULES.maxTotal);
+    form.elements.tags.value = all.join(', ');
+    const n = picked.size;
+    const label = $('#up-tags-count');
+    label.textContent = n < TAG_RULES.min ? `Pick at least ${TAG_RULES.min} · ${n} selected` : `${n} selected`;
+    label.classList.toggle('is-ok', n >= TAG_RULES.min);
+    $$('#up-tags .up-tag').forEach((b) => { b.disabled = !picked.has(b.dataset.tag) && all.length >= TAG_RULES.maxTotal; });
+  };
+  fetch('data/tags.json').then((r) => r.json()).then((cfg) => {
+    TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
+    $('#up-tags').innerHTML = cfg.groups.map((g) => `<div class="up-tag-group"><small>${esc(g.name)}</small><div>${g.tags.map((t) => `<button type="button" class="up-tag" data-tag="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div></div>`).join('');
+    syncTags();
+  }).catch(() => {});
+  $('#up-tags').addEventListener('click', (e) => {
+    const b = e.target.closest('.up-tag');
+    if (!b) return;
+    const t = b.dataset.tag;
+    if (picked.has(t)) picked.delete(t); else picked.add(t);
+    b.classList.toggle('is-on', picked.has(t));
+    b.setAttribute('aria-pressed', String(picked.has(t)));
+    syncTags();
+    refresh();
+  });
+  form.elements.tagsOwn.addEventListener('input', syncTags);
+
   /* -------------------------------- Files --------------------------------- */
   const ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>';
   const ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -340,7 +371,7 @@
     const checks = {
       artwork: !!done.artwork,
       preview: !!done.preview,
-      details: !!(val('producerName') && val('title') && Number.isInteger(bpm) && bpm >= 40 && bpm <= 250 && val('key') && val('genre') && val('mood')),
+      details: !!(val('producerName') && val('title') && Number.isInteger(bpm) && bpm >= 40 && bpm <= 250 && val('key') && val('genre') && val('mood') && picked.size >= TAG_RULES.min),
       license: valid.length > 0 && Object.keys(prices).length === valid.length,
       agree: form.elements.agree.checked,
     };

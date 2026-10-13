@@ -216,6 +216,13 @@ function validateDetails(body, files) {
   const typeBeat = list(body.typeBeat, 3, 40);
   const about = String(body.about || '').trim().slice(0, 600);
 
+  // Tags: at least TAGS.min from the standard list (data/tags.json) so the
+  // store filters stay meaningful, plus a few of the producer's own.
+  const TAGS = require('../../data/tags.json');
+  const standard = new Set(TAGS.groups.flatMap((g) => g.tags));
+  const stdCount = tags.filter((t) => standard.has(t)).length;
+  if (stdCount < TAGS.min) return { error: `Pick at least ${TAGS.min} tags from the list.` };
+  if (tags.length - stdCount > TAGS.maxCustom) return { error: `Up to ${TAGS.maxCustom} tags of your own.` };
   if (!producerName) return { error: 'Add your producer name.' };
   if (!title) return { error: 'Give the beat a title.' };
   if (!Number.isInteger(bpm) || bpm < 40 || bpm > 250) return { error: 'BPM must be a whole number between 40 and 250.' };

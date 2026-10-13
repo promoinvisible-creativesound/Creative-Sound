@@ -718,7 +718,7 @@
       .catch(() => {});
     roleSettings.addEventListener('change', async (e) => {
       const role = e.target.value;
-      status.textContent = 'Saving…';
+      status.textContent = '';
       try {
         const res = await fetch('/api/account/role', {
           method: 'POST',
@@ -728,9 +728,7 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Could not save, please try again.');
         saved = role;
-        status.innerHTML = role === 'producer'
-          ? 'Saved. You can now <a href="upload-beat.html">upload tracks</a>.'
-          : `Saved: ${LABELS[role]}.`;
+        status.textContent = '';
       } catch (err) {
         status.textContent = err.message;
         if (saved) select(saved); else e.target.checked = false;

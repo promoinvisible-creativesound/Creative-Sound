@@ -581,7 +581,6 @@
           <button type="button" class="site-search-close" aria-label="Close search">Cancel</button>
         </div>
         <div class="site-search-results" id="site-search-results" role="listbox"></div>
-        <div class="site-search-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
       </div>
     `;
     document.body.appendChild(overlay);

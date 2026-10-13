@@ -125,7 +125,7 @@ module.exports = async (req, res) => {
       `;
 
       try {
-        await resend.emails.send({
+        { const { error: sendError } = await resend.emails.send({
           from: process.env.FROM_EMAIL,
           to: 'hello@creativesound.io',
           replyTo: session.email,
@@ -139,7 +139,7 @@ module.exports = async (req, res) => {
               <p style="white-space:pre-wrap;">${escapeHtml(message)}</p>
             </div>
           `,
-        });
+        }); if (sendError) console.error('tickets email rejected by Resend:', sendError); }
       } catch (err) {
         // Ticket is already saved — log for manual follow-up rather than
         // failing the request over an email hiccup.

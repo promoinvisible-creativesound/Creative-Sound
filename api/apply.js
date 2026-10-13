@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    await resend.emails.send({
+    { const { error: sendError } = await resend.emails.send({
       from: process.env.FROM_EMAIL,
       to: 'hello@creativesound.io',
       replyTo: email,
@@ -81,7 +81,7 @@ module.exports = async (req, res) => {
         </div>
       `,
       attachments,
-    });
+    }); if (sendError) console.error('apply email rejected by Resend:', sendError); }
     res.status(200).json({ ok: true });
   } catch (err) {
     console.error('apply send error:', err);

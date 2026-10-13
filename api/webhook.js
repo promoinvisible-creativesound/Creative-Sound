@@ -125,7 +125,7 @@ module.exports = async (req, res) => {
   if (event.type === 'charge.refunded') {
     try {
       await handleRefund(event.data.object, async (text) => {
-        await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Refund after a producer payout', html: `<p>${text}</p>` });
+        { const { error: sendError } = await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Refund after a producer payout', html: `<p>${text}</p>` }); if (sendError) console.error('webhook email rejected by Resend:', sendError); }
       });
     } catch (err) {
       console.error('Refund handling failed, asking Stripe to retry:', err);
@@ -192,12 +192,12 @@ module.exports = async (req, res) => {
         }
         console.error('Unrecognised free checkout, no email sent:', session.id, session.payment_link, session.client_reference_id);
         try {
-          await resend.emails.send({
+          { const { error: sendError } = await resend.emails.send({
             from: process.env.FROM_EMAIL,
             to: 'hello@creativesound.io',
             subject: 'Unrecognised free checkout',
             html: `<p>A free checkout from ${normalizedEmail} did not match any known pack or product, so no email was sent to the buyer.</p><p>Stripe session: ${session.id}<br>Payment link: ${session.payment_link || 'none'}<br>client_reference_id: ${session.client_reference_id || 'none'}</p>`,
-          });
+          }); if (sendError) console.error('webhook email rejected by Resend:', sendError); }
         } catch (err) {
           console.error('Failed to send the unrecognised-checkout alert:', err);
         }

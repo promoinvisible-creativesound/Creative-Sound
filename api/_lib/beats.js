@@ -296,12 +296,12 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     // Misconfiguration: alert the studio and let Stripe retry once the
     // beat_files rows exist. The purchase rows are already saved.
     try {
-      await resend.emails.send({
+      { const { error: sendError } = await resend.emails.send({
         from: process.env.FROM_EMAIL,
         to: 'hello@creativesound.io',
         subject: 'Beat sale: delivery files missing',
         html: `<p>Order ${session.id} from ${email} is paid but these files have no link in beat_files:</p><p>${missing.join('<br>')}</p><p>Add them and Stripe will retry the delivery automatically.</p>`,
-      });
+      }); if (sendError) console.error('beats email rejected by Resend:', sendError); }
     } catch (err) { console.error('beat missing-files alert failed:', err); }
     throw new Error(`Missing beat files for ${session.id}: ${missing.join(', ')}`);
   }

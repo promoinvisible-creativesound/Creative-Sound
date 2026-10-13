@@ -329,10 +329,10 @@ async function handleRun(req, res) {
     if (report.length && process.env.RESEND_API_KEY) {
       try {
         const { Resend } = require('resend');
-        await new Resend(process.env.RESEND_API_KEY).emails.send({
+        { const { error: sendError } = await new Resend(process.env.RESEND_API_KEY).emails.send({
           from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Producer payouts',
           html: `<p>Payout run ${new Date().toISOString().slice(0, 10)}:</p><p>${report.map((l) => l.replace(/[<>&]/g, '')).join('<br>')}</p>`,
-        });
+        }); if (sendError) console.error('payouts email rejected by Resend:', sendError); }
       } catch (err) { console.error('payout report email failed:', err); }
     }
     res.status(200).json({ ok: true, report });
@@ -368,6 +368,36 @@ async function handleCheck(req, res) {
     } catch (err) {
       out.stripe.connect = false;
       out.stripe.error = err.message;
+    }
+  }
+  // Email (Resend): is the sending domain of FROM_EMAIL verified? With
+  // ?test=1 a test email goes to the signed-in admin.
+  const from = String(process.env.FROM_EMAIL || '');
+  const fromDomain = (from.match(/@([^>\s]+)/) || [])[1] || '';
+  out.email = { from, domain: fromDomain, apiKey: !!process.env.RESEND_API_KEY };
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const r = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } });
+      const d = await r.json().catch(() => ({}));
+      const dom = (d.data || []).find((x) => x.name === fromDomain);
+      out.email.domainStatus = dom ? dom.status : (r.ok ? 'not added to Resend' : `Resend ${r.status}`);
+      out.email.ok = !!dom && dom.status === 'verified';
+    } catch (err) {
+      out.email.ok = false;
+      out.email.error = err.message;
+    }
+    if (req.query && req.query.test === '1') {
+      try {
+        const tpl = require('./emailTemplate');
+        const { Resend } = require('resend');
+        const { data, error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
+          from, to: session.email, subject: 'Creative Sound test email',
+          html: tpl.renderEmail({ siteUrl: process.env.SITE_URL || 'https://creativesound.io', preheader: 'Delivery test', kicker: 'Test', title: 'Emails are working', content: tpl.paragraph('If you can read this in your inbox (not spam), delivery from the site works.') }),
+        });
+        out.email.test = error ? `failed: ${error.message || JSON.stringify(error)}` : `sent (id ${data && data.id})`;
+      } catch (err) {
+        out.email.test = `failed: ${err.message}`;
+      }
     }
   }
   // Dropbox (producer uploads, profile photos, track files).

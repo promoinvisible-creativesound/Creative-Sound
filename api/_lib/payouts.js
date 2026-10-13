@@ -370,6 +370,17 @@ async function handleCheck(req, res) {
       out.stripe.error = err.message;
     }
   }
+  // Dropbox (producer uploads, profile photos, track files).
+  const dropbox = require('./dropbox');
+  out.dropbox = { configured: dropbox.configured() };
+  if (out.dropbox.configured) {
+    try {
+      out.dropbox.ok = await dropbox.check();
+    } catch (err) {
+      out.dropbox.ok = false;
+      out.dropbox.error = err.message.slice(0, 200);
+    }
+  }
   res.status(200).json(out);
 }
 

@@ -118,7 +118,16 @@ const sessionFinish = (id, offset, chunk, path) => content('files/upload_session
   commit: { path, mode: 'overwrite', autorename: false, mute: true },
 }, chunk);
 
+// Health check for the admin: token refresh, read (list the app folder)
+// and write (a one-off upload link; nothing is uploaded).
+async function check() {
+  await rpc('files/list_folder', { path: '', limit: 1 });
+  await uploadLink('/.healthcheck.txt');
+  return true;
+}
+
 module.exports = {
+  check,
   MAX_UPLOAD_BYTES, configured, uploadLink, fileSize, readLink, readRange,
   sessionStart, sessionAppend, sessionFinish,
 };

@@ -75,6 +75,14 @@ function ensureTables() {
       await sql`CREATE INDEX IF NOT EXISTS beat_submissions_user_idx ON beat_submissions (user_id)`;
       // Accent colour picked from the cover in the producer's browser.
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS accent TEXT`;
+      // Edits to an approved track: new files go to /rev/, the new details
+      // wait in 'changes' until the admin approves them; the live version
+      // stays as it is meanwhile.
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS rev_files JSONB NOT NULL DEFAULT '{}'`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes JSONB`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_status TEXT`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_note TEXT`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_at TIMESTAMPTZ`;
     })().catch((err) => { ready = null; throw err; });
   }
   return ready;
@@ -101,6 +109,12 @@ async function ownDraft(session, id) {
   return row && row.status === 'draft' ? row : null;
 }
 
+// The producer's own approved track (for edits).
+async function ownApproved(session, id) {
+  const [row] = await sql`SELECT * FROM beat_submissions WHERE id = ${id} AND user_id = ${session.uid}`;
+  return row && row.status === 'approved' ? row : null;
+}
+
 // POST { submissionId?, kind, name, size } -> one-off Dropbox upload URL.
 async function handleFile(req, res) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -123,6 +137,19 @@ async function handleFile(req, res) {
     }
     if (!Number.isFinite(size) || size <= 0 || size > spec.max) {
       res.status(400).json({ error: `That file is too big (max ${Math.round(spec.max / MB)} MB).` });
+      return;
+    }
+
+    // Edit of an approved track: the file goes to /rev/ and waits for review.
+    if (body.editId) {
+      await ensureTables();
+      const live = await ownApproved(session, Number(body.editId));
+      if (!live) { res.status(404).json({ error: 'Track not found.' }); return; }
+      const revPath = `/submissions/${live.id}/rev/${kind}.${ext(name)}`;
+      const revFiles = { ...(live.rev_files || {}), [kind]: { path: revPath, name, size } };
+      await sql`UPDATE beat_submissions SET rev_files = ${JSON.stringify(revFiles)}::jsonb, updated_at = now() WHERE id = ${live.id}`;
+      if (needsChunks(size)) { res.status(200).json({ submissionId: live.id, editId: live.id, chunked: true, chunkSize: CHUNK }); return; }
+      res.status(200).json({ submissionId: live.id, editId: live.id, uploadUrl: await dropbox.uploadLink(revPath) });
       return;
     }
 
@@ -161,9 +188,10 @@ async function handleChunk(req, res) {
     const session = await producerSession(req, res);
     if (!session) return;
     const q = req.query || {};
-    const sub = await ownDraft(session, Number(q.submissionId));
     const kind = String(q.kind || '');
-    const f = sub && sub.files && sub.files[kind];
+    const editing = !!q.editId;
+    const sub = editing ? await ownApproved(session, Number(q.editId)) : await ownDraft(session, Number(q.submissionId));
+    const f = sub && (editing ? sub.rev_files : sub.files) && (editing ? sub.rev_files : sub.files)[kind];
     if (!f || !needsChunks(f.size)) { res.status(404).json({ error: 'This upload has expired. Please upload the file again.' }); return; }
     const chunk = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || []);
     const offset = Number(q.offset);
@@ -255,12 +283,63 @@ function validateDetails(body, files) {
 }
 
 // POST the details: the draft becomes "pending" and the owner gets an email.
+// Changes to an approved track: details, prices and any re-uploaded files
+// wait for the admin; the store keeps the current version until then.
+async function submitChanges(session, body, res) {
+  await ensureTables();
+  const live = await ownApproved(session, Number(body.editId));
+  if (!live) { res.status(404).json({ error: 'Track not found.' }); return; }
+  const revFiles = live.rev_files || {};
+  const merged = { ...(live.files || {}), ...revFiles };
+  const { data, error } = validateDetails(body, merged);
+  if (error) { res.status(400).json({ error }); return; }
+  const sizes = await Promise.all(Object.entries(revFiles).map(async ([kind, f]) => [kind, await dropbox.fileSize(f.path)]));
+  for (const [kind, size] of sizes) {
+    if (size == null) { res.status(400).json({ error: `The new ${kind} file didn't finish uploading. Please upload it again.` }); return; }
+    revFiles[kind] = { ...revFiles[kind], size };
+  }
+  let badAudio = null;
+  try { badAudio = await audioError(revFiles); } catch (err) { console.error('changes audio check skipped:', err); }
+  if (badAudio) { res.status(400).json({ error: badAudio }); return; }
+  if ('contactInstagram' in body || 'contactEmail' in body) {
+    const contactError = await require('./profile').saveContact(session.uid, body.contactInstagram, body.contactEmail);
+    if (contactError) { res.status(400).json({ error: contactError }); return; }
+  }
+  const accent = /^#[0-9a-f]{6}$/i.test(String(body.accent || '')) ? String(body.accent).toLowerCase() : null;
+  const changes = { data, files: revFiles, accent };
+  await sql`UPDATE beat_submissions SET changes = ${JSON.stringify(changes)}::jsonb, changes_status = 'pending', changes_note = NULL, changes_at = now(), updated_at = now() WHERE id = ${live.id}`;
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const site = process.env.SITE_URL || 'https://creativesound.io';
+    const { error: mailError } = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
+      to: 'hello@creativesound.io',
+      replyTo: session.email,
+      subject: `Changes to review: ${data.title} by ${data.producerName}`,
+      html: tpl.renderEmail({
+        siteUrl: site,
+        preheader: `${data.producerName} edited ${live.title}.`,
+        kicker: 'Track changes',
+        title: `Changes to ${live.title}`,
+        content: [
+          tpl.paragraph(`${tpl.esc(data.producerName)} (${tpl.esc(session.email)}) edited an approved track. The store keeps the current version until you approve.`),
+          tpl.details([['New files', Object.keys(revFiles).join(', ') || 'none'], ['Submission', `#${live.id}`]]),
+          `<div style="margin-top:22px;">${tpl.button(`${site}/admin-review.html`, 'Open Track review')}</div>`,
+        ].join(''),
+      }),
+    });
+    if (mailError) console.error('changes email error:', mailError);
+  } catch (err) { console.error('changes email error:', err); }
+  res.status(200).json({ ok: true, id: live.id, status: 'approved', changesStatus: 'pending' });
+}
+
 async function handleSubmit(req, res) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   try {
     const session = await producerSession(req, res);
     if (!session) return;
     const body = req.body || {};
+    if (body.editId) { await submitChanges(session, body, res); return; }
     const sub = await ownDraft(session, Number(body.submissionId));
     if (!sub) { res.status(404).json({ error: 'Upload the cover and preview first.' }); return; }
 
@@ -370,9 +449,11 @@ async function handleSubmissions(req, res) {
   try {
     const session = await producerSession(req, res);
     if (!session) return;
+    await ensureTables();
     const [user] = await sql`SELECT producer_name, producer_verified, verify_requested_at FROM users WHERE id = ${session.uid}`;
     const rows = await sql`
-      SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at
+      SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at, changes_status, changes_note, changes_at,
+        producer_name, tags, type_beat, about, files, rev_files
       FROM beat_submissions
       WHERE user_id = ${session.uid} AND status <> 'draft'
       ORDER BY submitted_at DESC NULLS LAST, id DESC
@@ -387,6 +468,10 @@ async function handleSubmissions(req, res) {
         id: r.id, status: r.status, title: r.title, bpm: r.bpm, key: r.musical_key, genre: r.genre, mood: r.mood,
         prices: r.prices, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null,
+        changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
+        // For the edit page
+        producerName: r.producer_name, tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '',
+        files: Object.fromEntries(Object.entries({ ...(r.files || {}) }).filter(([k]) => k !== 'tagged').map(([k, f]) => [k, { name: f.name, size: f.size }])),
       })),
     });
   } catch (err) {
@@ -426,7 +511,7 @@ async function handleAdminList(req, res) {
     const status = ['pending', 'approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
     // Oldest first in the queue, newest first in the history.
     const rows = status === 'pending'
-      ? await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' ORDER BY s.submitted_at ASC LIMIT 100`
+      ? await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' OR (s.status = 'approved' AND s.changes_status = 'pending') ORDER BY COALESCE(s.changes_at, s.submitted_at) ASC LIMIT 100`
       : await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = ${status} ORDER BY s.reviewed_at DESC NULLS LAST LIMIT 100`;
     // Approved tracks still missing a cover colour get one (a few per call).
     let fixes = 0;
@@ -440,6 +525,12 @@ async function handleAdminList(req, res) {
         for (const [kind, f] of Object.entries(r.files || {})) {
           try { links[kind] = await dropbox.readLink(f.path); } catch (err) { links[kind] = null; }
         }
+        // New files of pending changes: rev:<kind>
+        if (r.changes_status === 'pending') {
+          for (const [kind, f] of Object.entries((r.changes && r.changes.files) || {})) {
+            try { links[`rev:${kind}`] = await dropbox.readLink(f.path); } catch (err) { links[`rev:${kind}`] = null; }
+          }
+        }
       }
       out.push({
         id: r.id, status: r.status, email: r.email, producerName: r.producer_name, title: r.title, bpm: r.bpm,
@@ -447,9 +538,10 @@ async function handleAdminList(req, res) {
         prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         userId: r.user_id, producerVerified: !!r.producer_verified,
         storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null, verifyRequested: !!r.verify_requested_at && !r.producer_verified,
+        isChange: r.status === 'approved' && r.changes_status === 'pending', changes: r.changes_status === 'pending' ? r.changes : null,
       });
     }
-    const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE status = 'pending'`;
+    const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE status = 'pending' OR (status = 'approved' AND changes_status = 'pending')`;
     res.status(200).json({ submissions: out, pendingCount: n });
   } catch (err) {
     console.error('admin list error:', err);
@@ -467,6 +559,62 @@ async function handleAdminReview(req, res) {
     await ensureTables();
     const body = req.body || {};
     const id = Number(body.id);
+    if (body.decision === 'approve-changes' || body.decision === 'reject-changes') {
+      const [cur] = await sql`SELECT * FROM beat_submissions WHERE id = ${Number(body.id)} AND status = 'approved' AND changes_status = 'pending'`;
+      if (!cur) { res.status(404).json({ error: 'No pending changes for this track.' }); return; }
+      const ok = body.decision === 'approve-changes';
+      const cnote = String(body.note || '').trim().slice(0, 1000);
+      if (!ok && !cnote) { res.status(400).json({ error: 'Tell the producer what to fix.' }); return; }
+      if (ok) {
+        const d = cur.changes.data;
+        const files = { ...(cur.files || {}), ...(cur.changes.files || {}) };
+        // A new preview needs its voice-tagged copy (made by the admin page).
+        if (cur.changes.files && cur.changes.files.preview) {
+          const tagPath = `/submissions/${cur.id}/rev/preview-tagged.mp3`;
+          let size = 0;
+          try { size = await dropbox.fileSize(tagPath); } catch (err) { size = 0; }
+          if (!size) { res.status(400).json({ error: 'The voice-tagged preview is missing. Try Approve again.' }); return; }
+          files.tagged = { path: tagPath, name: 'preview-tagged.mp3', size };
+        }
+        let accent = cur.accent;
+        if (cur.changes.files && cur.changes.files.artwork) accent = cur.changes.accent || null;
+        await sql`
+          UPDATE beat_submissions SET
+            producer_name = ${d.producerName}, title = ${d.title}, bpm = ${d.bpm}, musical_key = ${d.key}, genre = ${d.genre}, mood = ${d.mood},
+            tags = ${JSON.stringify(d.tags)}::jsonb, type_beat = ${JSON.stringify(d.typeBeat)}::jsonb, about = ${d.about || null},
+            prices = ${JSON.stringify(d.prices)}::jsonb, files = ${JSON.stringify(files)}::jsonb, accent = ${accent},
+            changes = NULL, changes_status = NULL, changes_note = ${cnote || null}, rev_files = '{}'::jsonb, updated_at = now()
+          WHERE id = ${cur.id}`;
+        if (!accent) await ensureAccent({ ...cur, files, accent: null });
+      } else {
+        await sql`UPDATE beat_submissions SET changes_status = 'rejected', changes_note = ${cnote}, updated_at = now() WHERE id = ${cur.id}`;
+      }
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const site = process.env.SITE_URL || 'https://creativesound.io';
+        const title = ok ? cur.changes.data.title : cur.title;
+        const { error: mailError } = await resend.emails.send({
+          from: process.env.FROM_EMAIL,
+          to: cur.email,
+          replyTo: 'hello@creativesound.io',
+          subject: ok ? `Changes approved: ${title}` : `Changes not approved: ${title}`,
+          html: tpl.renderEmail({
+            siteUrl: site,
+            preheader: ok ? 'Your changes are live in the store.' : 'Your track stays as it was. See the note.',
+            kicker: ok ? 'Changes approved' : 'Changes not approved',
+            title: ok ? `Your changes to ${title} are live` : `Your changes to ${title} need work`,
+            content: [
+              tpl.paragraph(ok ? 'The store now shows the updated version of your track.' : 'The store keeps the current version. Here is what to fix before sending the changes again.'),
+              cnote ? tpl.note(cnote, { tone: ok ? 'ok' : 'bad' }) : '',
+              `<div style="margin-top:22px;">${tpl.button(`${site}/profile-producer.html`, 'Open your producer area')}</div>`,
+            ].join(''),
+          }),
+        });
+        if (mailError) console.error('changes decision email error:', mailError);
+      } catch (err) { console.error('changes decision email error:', err); }
+      res.status(200).json({ ok: true, id: cur.id });
+      return;
+    }
     if (body.decision === 'reopen') {
       const [back] = await sql`UPDATE beat_submissions SET status = 'pending', reviewed_at = NULL, updated_at = now() WHERE id = ${Number(body.id)} AND status IN ('approved', 'rejected') RETURNING id`;
       if (!back) { res.status(404).json({ error: 'Submission not found.' }); return; }
@@ -673,12 +821,13 @@ async function handleAdminTag(req, res) {
   try {
     await ensureTables();
     const id = Number((req.body || {}).id);
-    const [sub] = await sql`SELECT files FROM beat_submissions WHERE id = ${id}`;
-    const preview = sub && sub.files && sub.files.preview;
+    const forChanges = !!(req.body || {}).changes;
+    const [sub] = await sql`SELECT files, changes FROM beat_submissions WHERE id = ${id}`;
+    const preview = forChanges ? (sub && sub.changes && sub.changes.files && sub.changes.files.preview) : (sub && sub.files && sub.files.preview);
     if (!preview) { res.status(404).json({ error: 'This track has no preview.' }); return; }
     res.status(200).json({
       sourceUrl: await dropbox.readLink(preview.path),
-      uploadUrl: await dropbox.uploadLink(`/submissions/${id}/preview-tagged.mp3`),
+      uploadUrl: await dropbox.uploadLink(forChanges ? `/submissions/${id}/rev/preview-tagged.mp3` : `/submissions/${id}/preview-tagged.mp3`),
     });
   } catch (err) {
     console.error('review tag error:', err);

@@ -728,3 +728,23 @@
 .rv-reopen{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; }
 .rv-reopen .btn{ min-height:32px; padding:6px 14px; font-size:13px; }
 .rv-reopen small{ font-size:13px; color:#a1a1a6; }
+
+/* Producer area: edit an approved track, status of its changes */
+.pa-edit-link{ font-size:13px; font-weight:600; color:#f0a35b; text-decoration:none; }
+@media (hover:hover) and (pointer:fine){ .pa-edit-link:hover{ text-decoration:underline; text-underline-offset:3px; } }
+.pa-change{ display:inline-flex; align-items:center; height:22px; padding:0 9px; border-radius:11px; font-size:11.5px; font-weight:600; }
+.pa-change.is-pending{ background:rgba(232,134,44,0.16); color:#f5b06a; }
+.pa-change.is-bad{ background:rgba(255,99,71,0.14); color:#ff9c86; cursor:help; }
+
+/* Track review: changes to an approved track */
+.rv-card.is-change{ border-color:rgba(232,134,44,0.45); }
+.rv-changes{ display:flex; flex-direction:column; gap:6px; margin:0 0 16px; padding:14px 16px; border-radius:14px; background:rgba(232,134,44,0.08); }
+.rv-changes > b{ font-size:15px; color:#f5b06a; }
+.rv-changes > small{ font-size:13.5px; color:#c2c2c7; }
+.rv-changes ul{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.rv-changes li{ display:grid; grid-template-columns:110px 1fr 1fr; gap:10px; font-size:14px; align-items:baseline; }
+.rv-changes li span{ color:#a1a1a6; }
+.rv-changes del{ color:#8e8e93; text-decoration:line-through; }
+.rv-changes ins{ color:#f5f5f7; text-decoration:none; font-weight:600; }
+.rv-changes p{ margin:6px 0 0; font-size:14px; color:#e5e5ea; }
+@media (max-width:640px){ .rv-changes li{ grid-template-columns:1fr; gap:2px; } }

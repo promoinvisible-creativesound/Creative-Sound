@@ -39,6 +39,8 @@
   const extOf = (name) => (String(name).toLowerCase().match(/\.([a-z0-9]+)$/) || [])[1] || '';
 
   let submissionId = null;
+  // Edit mode (?edit=<id>): changes to an approved track, reviewed again.
+  const editId = Number(new URLSearchParams(location.search).get('edit')) || null;
   const done = {}; // kind -> { name, size }
   const busy = new Set();
   let licenses = null;
@@ -56,6 +58,8 @@
   // TAG_RULES.maxCustom of the producer's own (Enter or comma). The hidden
   // 'tags' input holds the result for the submit.
   let TAG_RULES = { min: 2, maxTotal: 8, maxCustom: 2 };
+  let tagsReady;
+  const tagsLoaded = new Promise((r) => { tagsReady = r; });
   let STANDARD = [];
   const picked = new Set(); // suggested (standard) tags
   const own = new Set();    // producer's own tags
@@ -104,6 +108,7 @@
   fetch('data/tags.json').then((r) => r.json()).then((cfg) => {
     TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
     STANDARD = cfg.groups.flatMap((g) => g.tags);
+    tagsReady();
     syncTags();
   }).catch(() => {});
   tagInput.addEventListener('input', paintSuggest);
@@ -355,7 +360,7 @@
       const res = await fetch('/api/producer/file', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId, kind, name: file.name, size: file.size }),
+        body: JSON.stringify({ submissionId, editId, kind, name: file.name, size: file.size }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not start the upload.');
@@ -446,7 +451,7 @@
       let tries = 0;
       for (;;) {
         try {
-          const res = await fetch(`/api/producer/chunk?submissionId=${submissionId}&kind=${kind}&offset=${off}&session=${encodeURIComponent(session)}`, {
+          const res = await fetch(`/api/producer/chunk?submissionId=${submissionId}&editId=${editId || ''}&kind=${kind}&offset=${off}&session=${encodeURIComponent(session)}`, {
             method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: piece,
           });
           const data = await res.json().catch(() => ({}));
@@ -614,6 +619,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           submissionId,
+          editId,
           producerName: val('producerName'),
           title: val('title'),
           bpm: Number(val('bpm')),
@@ -633,6 +639,10 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || (res.status === 504 ? 'The server took too long to check your files. Please try again.' : `Something went wrong (error ${res.status}). Please try again.`));
       $('#up-done-title').textContent = val('title');
+      if (editId) {
+        $('#up-done h2').textContent = 'Changes sent for review';
+        $('#up-done p').innerHTML = `Your changes to <b>${esc(val('title'))}</b> are in review. The store keeps the current version until they are approved, and we'll email you.`;
+      }
       await celebrate(val('title'));
       form.hidden = true;
       $('#up-done').hidden = false;
@@ -666,15 +676,56 @@
       if (me && me.role !== 'producer') { form.hidden = true; $('#up-gate').hidden = false; }
     })
     .catch(() => {});
+  let licensesReady;
+  const licensesLoaded = new Promise((r) => { licensesReady = r; });
   fetch('/api/producer/submissions')
     .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
+    .then(async (data) => {
       if (data && data.producerName && !val('producerName')) { form.elements.producerName.value = data.producerName; refresh(); }
+      if (!editId || !data) return;
+      const t = (data.submissions || []).find((x) => x.id === editId && x.status === 'approved');
+      if (!t) { $('#up-error').textContent = 'This track can not be edited.'; $('#up-error').hidden = false; return; }
+      startEdit(t);
     })
     .catch(() => {});
+
+  // Fill the form with the approved track; files already on sale count as done.
+  async function startEdit(t) {
+    document.title = `Edit ${t.title} | Creative Sound`;
+    $('.up-title').textContent = `Edit ${t.title}`;
+    $('.up-sub').textContent = 'Change details, prices or files. Your changes go to review; the store keeps the current version until they are approved.';
+    $('.up-submit').textContent = 'Send changes for review';
+    if (t.changesStatus === 'pending') { $('#up-error').textContent = 'Changes for this track are already in review. Sending again replaces them.'; $('#up-error').hidden = false; }
+    const set = (n, v) => { if (form.elements[n] != null && v != null) form.elements[n].value = v; };
+    set('producerName', t.producerName); set('title', t.title); set('bpm', t.bpm); set('key', t.key); set('genre', t.genre); set('mood', t.mood);
+    set('typeBeat', (t.typeBeat || []).join(', ')); set('about', t.about);
+    Object.entries(t.files || {}).forEach(([kind, f]) => {
+      const row = $(`.up-file[data-kind="${kind}"]`);
+      if (!row) return;
+      done[kind] = { name: f.name, size: f.size };
+      paintDone(row, { name: f.name, size: f.size });
+    });
+    if (t.storeUrl) {
+      const id = new URLSearchParams(t.storeUrl.split('?')[1]).get('id');
+      $$('.up-art-thumb img, .up-preview-cover img').forEach((img) => { img.hidden = false; img.src = `/api/beats/media?id=${encodeURIComponent(id)}&kind=artwork`; });
+      $('.up-preview-cover').classList.add('has-art');
+    }
+    await tagsLoaded;
+    (t.tags || []).forEach((tag) => { if (STANDARD.includes(tag)) picked.add(tag); else if (own.size < TAG_RULES.maxCustom) own.add(tag); });
+    syncTags();
+    await licensesLoaded;
+    Object.entries(t.prices || {}).forEach(([tier, cents]) => {
+      const sw = form.elements[`tier-${tier}`];
+      const price = form.elements[`price-${tier}`];
+      if (!sw || !price) return;
+      sw.checked = true;
+      price.value = (cents / 100).toFixed(2);
+    });
+    refresh();
+  }
   fetch('/data/beat-licenses.json')
     .then((res) => res.json())
-    .then((data) => { licenses = data; renderTiers(); refresh(); })
+    .then((data) => { licenses = data; renderTiers(); refresh(); licensesReady(); })
     .catch(() => {});
   refresh();
 })();

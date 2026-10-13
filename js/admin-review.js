@@ -63,12 +63,36 @@
       </div>`;
   }
 
+  // Changes to an approved track: show the proposed version (new details,
+  // new files where re-uploaded) plus a list of what changed.
+  function proposed(s) {
+    if (!s.isChange || !s.changes) return s;
+    const d = s.changes.data || {};
+    const newFiles = Object.keys(s.changes.files || {});
+    const money = (p) => Object.entries(p || {}).map(([t, c]) => `${TIER_LABELS[t] || t} €${(c / 100).toFixed(2)}`).join(', ') || 'none';
+    const rows = [
+      ['Title', s.title, d.title], ['Producer', s.producerName, d.producerName], ['BPM', s.bpm, d.bpm], ['Key', s.key, d.key],
+      ['Genre', s.genre, d.genre], ['Mood', s.mood, d.mood], ['Prices', money(s.prices), money(d.prices)],
+      ['Tags', (s.tags || []).join(', '), (d.tags || []).join(', ')], ['Description', s.about || '', d.about || ''],
+    ].filter(([, a, b]) => String(a == null ? '' : a) !== String(b == null ? '' : b));
+    const links = { ...(s.links || {}) };
+    newFiles.forEach((k) => { links[k] = s.links ? s.links[`rev:${k}`] : null; });
+    return {
+      ...s, title: d.title, producerName: d.producerName, bpm: d.bpm, key: d.key, genre: d.genre, mood: d.mood,
+      tags: d.tags, typeBeat: d.typeBeat, about: d.about, prices: d.prices,
+      files: { ...(s.files || {}), ...(s.changes.files || {}) }, links, diff: rows, newFiles,
+    };
+  }
+
   function card(s) {
+    s = proposed(s);
+    const reviewable = s.status === 'pending' || s.isChange;
     const prices = Object.entries(s.prices || {}).map(([t, c]) => `<span>${TIER_LABELS[t] || t}<b>€${(c / 100).toFixed(2)}</b></span>`).join('');
     const tags = [...(s.tags || []).map((t) => `#${t}`), ...(s.typeBeat || []).map((t) => `${t} type beat`)];
     const kinds = ORDER.filter((k) => (s.files || {})[k] || ['artwork', 'preview'].includes(k));
     return `
-      <article class="up-card rv-card" data-id="${s.id}">
+      <article class="up-card rv-card${s.isChange ? ' is-change' : ''}" data-id="${s.id}"${s.isChange ? ` data-change="1" data-new-preview="${(s.newFiles || []).includes('preview') ? '1' : '0'}"` : ''}>
+        ${s.isChange ? `<div class="rv-changes"><b>Changes to an approved track</b><small>The store keeps the current version until you approve.</small>${s.diff.length ? `<ul>${s.diff.map(([k, a, b]) => `<li><span>${esc(k)}</span><del>${esc(a == null || a === '' ? '—' : a)}</del><ins>${esc(b == null || b === '' ? '—' : b)}</ins></li>`).join('')}</ul>` : ''}${s.newFiles.length ? `<p>New files: ${s.newFiles.map((k) => esc(FILE_LABELS[k] || k)).join(', ')}</p>` : ''}</div>` : ''}
         <div class="rv-top">
           <div class="rv-cover">${s.links && s.links.artwork ? `<img src="${esc(s.links.artwork)}" alt="">` : '<span>No cover</span>'}</div>
           <div class="rv-info">
@@ -90,14 +114,14 @@
           <h3>Files <span>${Object.keys(s.files || {}).length} uploaded</span></h3>
           <div class="rv-files">${kinds.map((k) => fileRow(s, k)).join('')}</div>
         </div>
-        ${s.status === 'pending' ? `
+        ${reviewable ? `
           <div class="rv-decide">
             <label class="up-field up-field-wide"><span>Note to the producer <i>Required to send back, optional to approve</i></span>
               <textarea rows="2" maxlength="1000" placeholder="E.g. the WAV still has the voice tag at 0:12."></textarea>
             </label>
             <div class="rv-actions">
               <button type="button" class="btn btn-ghost rv-reject" data-decision="reject">Send back</button>
-              <button type="button" class="btn btn-primary rv-approve" data-decision="approve">Approve</button>
+              <button type="button" class="btn btn-primary rv-approve" data-decision="approve">${s.isChange ? 'Approve changes' : 'Approve'}</button>
             </div>
             <p class="up-error rv-card-error" role="alert" hidden></p>
           </div>`
@@ -217,12 +241,13 @@
     try {
       // Approve: first put the "Creative Sound" voice tag on the public
       // preview (mixed here, uploaded straight to Dropbox).
-      if (btn.dataset.decision === 'approve') {
+      const isChange = cardEl.dataset.change === '1';
+      if (btn.dataset.decision === 'approve' && (!isChange || cardEl.dataset.newPreview === '1')) {
         if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
         const prep = await fetch('/api/review/tag', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: Number(cardEl.dataset.id) }),
+          body: JSON.stringify({ id: Number(cardEl.dataset.id), changes: isChange }),
         });
         const urls = await prep.json().catch(() => ({}));
         if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
@@ -242,7 +267,7 @@
       const res = await fetch('/api/review/decide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: Number(cardEl.dataset.id), decision: btn.dataset.decision, note }),
+        body: JSON.stringify({ id: Number(cardEl.dataset.id), decision: isChange ? `${btn.dataset.decision}-changes` : btn.dataset.decision, note }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not save the decision.');

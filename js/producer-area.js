@@ -41,6 +41,8 @@
             <span class="hm-status pa-status ${st.cls}">${st.label}</span>
             <small>${s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`}</small>
             ${s.storeUrl ? `<a class="pa-store-link" href="${esc(s.storeUrl)}">View in store</a>` : ''}
+            ${s.status === 'approved' ? `<a class="pa-edit-link" href="upload-beat.html?edit=${s.id}">Edit</a>` : ''}
+            ${s.changesStatus === 'pending' ? '<span class="pa-change is-pending">Changes in review</span>' : s.changesStatus === 'rejected' ? `<span class="pa-change is-bad" title="${esc(s.changesNote || '')}">Changes not approved</span>` : ''}
           </div>
         </article>`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';

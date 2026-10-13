@@ -358,6 +358,33 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
 }
 
 /* ------------------------------- Account view ------------------------------ */
+// The license PDF of one purchase, for its buyer, from the account page.
+//   GET /api/beats/license?id=<license id>
+async function handleLicense(req, res) {
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  try {
+    await ensureTables();
+    const id = String((req.query && req.query.id) || '').slice(0, 40);
+    const [row] = await sql`SELECT * FROM beat_purchases WHERE license_id = ${id} AND email = ${session.email}`;
+    if (!row) { res.status(404).json({ error: 'License not found on this account.' }); return; }
+    const beat = await getBeat(row.beat_id);
+    if (!beat || !LICENSES.tiers[row.tier]) { res.status(404).json({ error: 'This track is no longer available.' }); return; }
+    const pdf = await licensePdf({
+      licenseId: row.license_id, beat, tier: row.tier, buyerName: row.buyer_name || '', buyerEmail: row.email,
+      date: new Date(row.created_at).toISOString().slice(0, 10), price: row.price_cents || priceOf(beat, row.tier), currency: row.currency || 'eur',
+    });
+    const name = `${beat.title} - ${LICENSES.tiers[row.tier].name} - ${row.license_id}.pdf`.replace(/[^\w .()-]+/g, '');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${req.query.view === '1' ? 'inline' : 'attachment'}; filename="${name}"`);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.status(200).send(pdf);
+  } catch (err) {
+    console.error('license pdf error:', err);
+    res.status(500).json({ error: 'Could not create the license PDF.' });
+  }
+}
+
 async function beatsForAccount(email) {
   await ensureTables();
   const rows = await sql`
@@ -445,7 +472,7 @@ async function handleSaved(req, res) {
 }
 
 module.exports = {
-  salesOpen, handleCheckout, handleBeatPurchase, beatsForAccount, savedForAccount, handleSaved, validateItems, licensePdf, ensureTables };
+  salesOpen, handleLicense, handleCheckout, handleBeatPurchase, beatsForAccount, savedForAccount, handleSaved, validateItems, licensePdf, ensureTables };
 
 /* README — making a beat buyable
    1. Add it to data/beats.json (id, title, producer, bpm, key, genre, mood,

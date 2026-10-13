@@ -2,7 +2,7 @@ const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { getSession } = require('./_lib/auth');
 const { handleNotify } = require('./_lib/notify');
-const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = require('./_lib/beats');
+const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved, handleLicense: handleBeatsLicense } = require('./_lib/beats');
 const { handleRole } = require('./_lib/account');
 const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catalogue');
 const profile = require('./_lib/profile');
@@ -45,6 +45,7 @@ module.exports = async (req, res) => {
     'beats-catalogue': handleCatalogue,
     'beats-media': handleMedia,
     'beats-file': handleBoughtFile,
+    'beats-license': handleBeatsLicense,
     // Public profiles (_lib/profile.js)
     'profile-me': profile.handleMe,
     'profile-avatar': profile.handleAvatar,

@@ -58,10 +58,11 @@
         <div class="lp-main">
           <b>${esc(b.title)}</b>
           <small>${esc(b.tier_name)} · prod. ${esc(b.producer)} · ${day(b.created_at)}</small>
-          <small class="lp-id">License ${esc(b.license_id)}</small>
+          <small class="lp-id">License ${esc(b.license_id)} · <a class="lp-link lp-view" href="/api/beats/license?id=${encodeURIComponent(b.license_id)}&view=1" target="_blank" rel="noopener">View terms</a></small>
         </div>
         <div class="lp-actions">
           ${b.files.length ? b.files.map((f) => pill(f.url, f.label, f.type === 'wav')).join('') : '<small class="lp-wait">Files being prepared</small>'}
+          ${pill(`/api/beats/license?id=${encodeURIComponent(b.license_id)}`, 'License PDF', false)}
         </div>
       </article>`).join('');
   }

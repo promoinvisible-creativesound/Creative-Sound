@@ -136,6 +136,10 @@
     {
       "source": "/api/review/tag",
       "destination": "/api/tickets?action=review-tag"
+    },
+    {
+      "source": "/api/beats/license",
+      "destination": "/api/tickets?action=beats-license"
     }
   ],
   "headers": [

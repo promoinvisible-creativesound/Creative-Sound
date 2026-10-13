@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Connect Dropbox | Creative Sound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --accent:#e8862c; --bg:#0a0a09; --tile:#141413; --text:#f5f5f7; --muted:#86868b; --font-sans:'Montserrat', -apple-system, 'Segoe UI', sans-serif; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:var(--font-sans); display:flex; justify-content:center; padding:64px 16px; }
+  main{ width:100%; max-width:560px; }
+  h1{ margin:0; font-size:30px; font-weight:700; letter-spacing:-0.02em; }
+  .lede{ margin:8px 0 28px; color:var(--muted); font-size:15px; line-height:1.5; }
+  .step{ padding:18px; border-radius:16px; background:var(--tile); margin-bottom:12px; }
+  .step h2{ margin:0 0 6px; font-size:16px; font-weight:600; }
+  .step p{ margin:0 0 12px; color:var(--muted); font-size:13.5px; line-height:1.5; }
+  input, textarea{ width:100%; height:40px; padding:0 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.14); background:#0a0a09; color:var(--text); font-family:var(--font-sans); font-size:14px; outline:none; }
+  textarea{ height:auto; min-height:76px; padding:10px 12px; font-family:ui-monospace, Consolas, monospace; font-size:12.5px; resize:none; }
+  input:focus, textarea:focus{ border-color:var(--accent); }
+  button{ height:34px; margin-top:10px; padding:0 16px; border:0; border-radius:999px; background:var(--accent); color:#0a0a09; font-family:var(--font-sans); font-size:13px; font-weight:600; cursor:pointer; }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+  .ghost{ background:rgba(255,255,255,0.08); color:var(--text); }
+  .msg{ margin-top:10px; font-size:13px; min-height:18px; }
+  .msg.bad{ color:#ff9c86; } .msg.ok{ color:#7fe0a4; }
+  .note{ color:var(--muted); font-size:12.5px; line-height:1.5; }
+  code{ color:#f5b06a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Connect Dropbox</h1>
+  <p class="lede">Makes a new Dropbox refresh token for the site without the app secret (PKCE). Everything happens in this browser: nothing is sent to the Creative Sound server.</p>
+
+  <section class="step">
+    <h2>1. App key</h2>
+    <p>From dropbox.com/developers → App Console → your app → Settings.</p>
+    <input id="key" autocomplete="off" spellcheck="false" placeholder="App key">
+    <button type="button" id="open">Open Dropbox and allow</button>
+    <p class="msg" id="m1"></p>
+  </section>
+
+  <section class="step">
+    <h2>2. Code</h2>
+    <p>After you click Allow, Dropbox shows a code. Paste it here (it works for a few minutes, once).</p>
+    <input id="code" autocomplete="off" spellcheck="false" placeholder="Authorization code">
+    <button type="button" id="swap">Get refresh token</button>
+    <p class="msg" id="m2"></p>
+  </section>
+
+  <section class="step" id="out" hidden>
+    <h2>3. Put it on Vercel</h2>
+    <p>Vercel → Settings → Environment Variables: set <code>DROPBOX_REFRESH_TOKEN</code> to this value and <code>DROPBOX_APP_KEY</code> to the same app key, then Redeploy.</p>
+    <textarea id="token" readonly></textarea>
+    <button type="button" class="ghost" id="copy">Copy token</button>
+    <p class="msg" id="m3"></p>
+  </section>
+
+  <p class="note">Then open <code>/api/payouts/check</code> while signed in as admin: <code>"dropbox"</code> should say <code>"ok":true</code>.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const say = (el, text, kind) => { el.textContent = text; el.className = `msg${kind ? ` ${kind}` : ''}`; };
+  const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const store = { get: (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} } };
+  if (store.get('dbx-key')) $('key').value = store.get('dbx-key');
+
+  $('open').addEventListener('click', async () => {
+    const key = $('key').value.trim();
+    if (!/^[a-z0-9]{8,}$/i.test(key)) { say($('m1'), 'Paste the app key first.', 'bad'); return; }
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+    const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    store.set('dbx-key', key);
+    store.set('dbx-verifier', verifier);
+    const url = `https://www.dropbox.com/oauth2/authorize?${new URLSearchParams({ client_id: key, response_type: 'code', token_access_type: 'offline', code_challenge: challenge, code_challenge_method: 'S256' })}`;
+    window.open(url, '_blank', 'noopener');
+    say($('m1'), 'Dropbox opened in a new tab. Click Continue, then Allow, and copy the code.', 'ok');
+  });
+
+  $('swap').addEventListener('click', async () => {
+    const key = store.get('dbx-key') || $('key').value.trim();
+    const verifier = store.get('dbx-verifier');
+    const code = $('code').value.trim();
+    if (!verifier) { say($('m2'), 'Do step 1 first, in this same tab.', 'bad'); return; }
+    if (!code) { say($('m2'), 'Paste the code from Dropbox.', 'bad'); return; }
+    $('swap').disabled = true;
+    say($('m2'), 'Asking Dropbox…');
+    try {
+      const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
+        method: 'POST',
+        body: new URLSearchParams({ code, grant_type: 'authorization_code', code_verifier: verifier, client_id: key }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.refresh_token) throw new Error(data.error_description || data.error || `Dropbox said ${res.status}`);
+      $('token').value = data.refresh_token;
+      $('out').hidden = false;
+      say($('m2'), 'Done. Your new refresh token is below.', 'ok');
+    } catch (err) {
+      say($('m2'), `${err.message}. If the code expired or was used already, do step 1 again.`, 'bad');
+    } finally {
+      $('swap').disabled = false;
+    }
+  });
+
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('token').value); say($('m3'), 'Copied.', 'ok'); } catch (e) { $('token').select(); say($('m3'), 'Select it and copy with Ctrl+C.'); }
+  });
+})();
+</script>
+</body>
+</html>

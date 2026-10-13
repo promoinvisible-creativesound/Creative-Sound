@@ -11,21 +11,29 @@
 
 const MAX_UPLOAD_BYTES = 150 * 1024 * 1024;
 
+// DROPBOX_APP_SECRET is optional: a refresh token made with PKCE
+// (dropbox-connect.html) is refreshed with the app key alone.
 function configured() {
-  return !!(process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET && process.env.DROPBOX_REFRESH_TOKEN);
+  return !!(process.env.DROPBOX_APP_KEY && process.env.DROPBOX_REFRESH_TOKEN);
 }
 
 let cached = { token: null, expires: 0 };
-async function accessToken() {
-  if (cached.token && Date.now() < cached.expires - 60_000) return cached.token;
+async function refresh(withSecret) {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: process.env.DROPBOX_REFRESH_TOKEN,
     client_id: process.env.DROPBOX_APP_KEY,
-    client_secret: process.env.DROPBOX_APP_SECRET,
   });
-  const res = await fetch('https://api.dropbox.com/oauth2/token', { method: 'POST', body });
+  if (withSecret) body.set('client_secret', process.env.DROPBOX_APP_SECRET);
+  const res = await fetch('https://api.dropboxapi.com/oauth2/token', { method: 'POST', body });
   const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+async function accessToken() {
+  if (cached.token && Date.now() < cached.expires - 60_000) return cached.token;
+  let { res, data } = await refresh(!!process.env.DROPBOX_APP_SECRET);
+  // A PKCE token must be refreshed without the secret: retry once without it.
+  if (!res.ok && process.env.DROPBOX_APP_SECRET && /invalid_client/.test(JSON.stringify(data))) ({ res, data } = await refresh(false));
   if (!res.ok || !data.access_token) throw new Error(`Dropbox token error: ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
   cached = { token: data.access_token, expires: Date.now() + (data.expires_in || 3600) * 1000 };
   return cached.token;

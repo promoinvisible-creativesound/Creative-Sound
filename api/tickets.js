@@ -6,6 +6,7 @@ const { handleCheckout: handleBeatsCheckout, handleSaved: handleBeatsSaved } = r
 const { handleRole } = require('./_lib/account');
 const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catalogue');
 const profile = require('./_lib/profile');
+const payouts = require('./_lib/payouts');
 const {
   handleFile: handleProducerFile,
   handleChunk: handleProducerChunk,
@@ -48,6 +49,9 @@ module.exports = async (req, res) => {
     'profile-avatar': profile.handleAvatar,
     'profile-photo': profile.handlePhoto,
     'profile-public': profile.handlePublic,
+    // Producer payouts (_lib/payouts.js)
+    'producer-payouts': payouts.handlePayouts,
+    'payouts-run': payouts.handleRun,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

@@ -15,6 +15,7 @@ const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { previewAllowed } = require('./account');
 const { getBeat, liveBeats, producerFiles } = require('./catalogue');
+const { recordEarnings } = require('./payouts');
 const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
@@ -278,6 +279,8 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     `;
     delivered.push({ beat, tier, licenseId, files: await filesFor(beat, tier, email) });
   }
+  // Producer tracks: 80% goes to the producer (_lib/payouts.js).
+  await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
 
   const missing = delivered.flatMap((d) => d.files.filter((f) => !f.url).map((f) => `${d.beat.id}:${f.type}`));
   if (missing.length) {

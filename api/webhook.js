@@ -1,4 +1,5 @@
 const Stripe = require('stripe');
+const { handleRefund } = require('./_lib/payouts');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
@@ -117,6 +118,21 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+
+  // Refunds cancel producer earnings that weren't paid out yet.
+  if (event.type === 'charge.refunded') {
+    try {
+      await handleRefund(event.data.object, async (text) => {
+        await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Refund after a producer payout', html: `<p>${text}</p>` });
+      });
+    } catch (err) {
+      console.error('Refund handling failed, asking Stripe to retry:', err);
+      res.status(500).json({ error: 'Temporary error, please retry.' });
+      return;
+    }
+    res.status(200).json({ received: true });
     return;
   }
 

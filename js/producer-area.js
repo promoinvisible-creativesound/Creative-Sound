@@ -121,4 +121,92 @@
       $('#pa-error').textContent = err.message;
       $('#pa-error').hidden = false;
     });
+
+  /* --------------------------------- Payouts -------------------------------- */
+  // 80% of each sale; Stripe (bank account) or PayPal, paid every Monday.
+  const po = $('#payouts');
+  const euro = (c) => `€${((c || 0) / 100).toFixed(2)}`;
+  const poSay = (t, bad) => { const el = $('#po-status'); el.textContent = t || ''; el.classList.toggle('is-bad', !!bad); };
+  const COUNTRY = { AT: 'Austria', BE: 'Belgium', BG: 'Bulgaria', HR: 'Croatia', CY: 'Cyprus', CZ: 'Czechia', DK: 'Denmark', EE: 'Estonia', FI: 'Finland', FR: 'France', DE: 'Germany', GR: 'Greece', HU: 'Hungary', IE: 'Ireland', IT: 'Italy', LV: 'Latvia', LT: 'Lithuania', LU: 'Luxembourg', MT: 'Malta', NL: 'Netherlands', PL: 'Poland', PT: 'Portugal', RO: 'Romania', SK: 'Slovakia', SI: 'Slovenia', ES: 'Spain', SE: 'Sweden', NO: 'Norway', IS: 'Iceland', LI: 'Liechtenstein', GB: 'United Kingdom', CH: 'Switzerland' };
+  const PO_ST = { pending: ['On hold', 'is-pending'], available: ['Available', 'is-ok'], paid: ['Paid', 'is-ok'], refunded: ['Refunded', 'is-bad'], processing: ['Sending', 'is-pending'] };
+
+  function paintPayouts(d) {
+    $('#po-available').textContent = euro(d.totals.available);
+    $('#po-pending').textContent = euro(d.totals.pending);
+    $('#po-paid').textContent = euro(d.totals.paid);
+    $('#po-note').textContent = `Each sale is on hold for ${d.holdDays} days (refund window), then paid out on the next Monday once your balance reaches ${euro(d.minPayout)}.`;
+    po.querySelectorAll('.po-method').forEach((m) => m.classList.toggle('is-on', m.dataset.method === d.method));
+    // Stripe
+    const sb = $('#po-stripe-badge');
+    const body = $('#po-stripe-body');
+    sb.hidden = !d.stripe.connected;
+    sb.textContent = d.stripe.ready ? (d.method === 'stripe' ? 'In use' : 'Connected') : 'Setup not finished';
+    sb.classList.toggle('is-warn', d.stripe.connected && !d.stripe.ready);
+    if (!d.stripe.available) {
+      body.innerHTML = '<small class="po-muted">Coming soon. Use PayPal for now.</small>';
+    } else if (!d.stripe.connected) {
+      body.innerHTML = `<select id="po-country" aria-label="Country of your bank account">${d.stripe.countries.map((c) => `<option value="${c}" ${c === 'IT' ? 'selected' : ''}>${COUNTRY[c] || c}</option>`).join('')}</select>
+        <button type="button" class="btn btn-primary" data-po="stripe">Connect with Stripe</button>`;
+    } else if (!d.stripe.ready) {
+      body.innerHTML = '<button type="button" class="btn btn-primary" data-po="stripe">Finish Stripe setup</button>';
+    } else {
+      body.innerHTML = `${d.method !== 'stripe' ? '<button type="button" class="btn btn-primary" data-po="use-stripe">Use bank account</button>' : ''}<button type="button" class="btn btn-ghost" data-po="stripe-dashboard">Open Stripe dashboard</button>`;
+    }
+    // PayPal
+    const pb = $('#po-paypal-badge');
+    pb.hidden = !d.paypal.email;
+    pb.textContent = d.method === 'paypal' ? 'In use' : 'Saved';
+    const input = $('#po-paypal-email');
+    if (document.activeElement !== input) input.value = d.paypal.email;
+    // Sales
+    $('#po-list').innerHTML = d.earnings.length ? d.earnings.map((r) => {
+      const st = PO_ST[r.status] || PO_ST.pending;
+      return `<div class="po-row">
+        <div class="po-row-main"><b>${esc(r.title)}</b><small>${esc((r.tier || '').toUpperCase())} · ${date(r.date)} · sold for ${euro(r.gross)}</small></div>
+        <div class="po-row-side"><b>${euro(r.share)}</b><span class="hm-status pa-status ${st[1]}">${st[0]}</span></div>
+      </div>`;
+    }).join('') : '<p class="po-none">No sales yet. When someone buys one of your tracks it shows here with your 80%.</p>';
+  }
+
+  async function payouts(body) {
+    const res = await fetch('/api/producer/payouts', body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(d.error || 'Could not load payouts.'), { status: res.status });
+    return d;
+  }
+
+  if (po) {
+    payouts().then(paintPayouts).catch((err) => { if (err.status === 403 || err.status === 401) po.hidden = true; else poSay(err.message, true); });
+    if (/[?&]stripe=done/.test(location.search)) poSay('Stripe setup saved. It can take a minute for Stripe to confirm your account.');
+    po.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-po]');
+      if (!btn) return;
+      btn.disabled = true;
+      poSay('');
+      try {
+        const kind = btn.dataset.po;
+        const d = await payouts(kind === 'stripe' ? { method: 'stripe', country: ($('#po-country') || {}).value } : { method: kind });
+        if (d.url) { window.location.href = d.url; return; }
+        paintPayouts(d);
+        poSay('Saved. Payouts now go to your bank account.');
+      } catch (err) {
+        poSay(err.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    $('#po-paypal-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      try {
+        paintPayouts(await payouts({ method: 'paypal', email: $('#po-paypal-email').value }));
+        poSay('Saved. Payouts now go to your PayPal.');
+      } catch (err) {
+        poSay(err.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
 })();

@@ -379,3 +379,57 @@
 .rv-verify-ask{ height:24px; display:inline-flex; align-items:center; padding:0 10px; border-radius:999px; background:rgba(232,134,44,0.16); color:var(--amber-text); font-size:12.5px; font-weight:700; }
 .pa-store-link, .rv-result a{ font-size:12.5px; font-weight:700; color:var(--amber-text); text-decoration:none; }
 .pa-store-link:hover, .rv-result a:hover{ text-decoration:underline; }
+
+/* ------------------------------ Producer payouts ----------------------------
+   profile-producer.html #payouts: 80/20 split, balances, Stripe or PayPal,
+   sales list. Grouped Apple-style blocks, site amber. */
+.po-card{ display:flex; flex-direction:column; }
+.po-head h2{ margin:0; font-family:var(--font-sans); font-size:22px; font-weight:700; letter-spacing:-0.01em; color:#f5f5f7; }
+.po-split{ margin:6px 0 0; font-size:14.5px; line-height:1.5; color:#a1a1a6; max-width:620px; }
+.po-split b{ color:#f5b06a; font-weight:600; }
+.po-stats{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin-top:18px; }
+.po-stat{ display:flex; flex-direction:column; gap:4px; padding:14px 16px; border-radius:14px; background:#141413; }
+.po-stat span{ font-size:12.5px; color:#86868b; }
+.po-stat b{ font-family:var(--font-sans); font-size:22px; font-weight:700; letter-spacing:-0.01em; color:#f5f5f7; font-variant-numeric:tabular-nums; }
+.po-stat:first-child b{ color:#f5b06a; }
+.po-label{ margin-left:2px !important; }
+.po-methods{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.po-method{ display:flex; flex-direction:column; gap:14px; padding:16px; border-radius:16px; background:#141413; border:1px solid transparent; transition:border-color 150ms ease; }
+.po-method.is-on{ border-color:rgba(232,134,44,0.7); background:linear-gradient(180deg, rgba(232,134,44,0.08), #141413 70%); }
+.po-method-top{ display:flex; align-items:flex-start; gap:12px; }
+.po-method-top > div{ flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.po-method-top b{ font-size:15px; font-weight:600; color:#f5f5f7; }
+.po-method-top small{ font-size:12.5px; line-height:1.4; color:#86868b; }
+.po-tile{ width:34px !important; height:34px !important; flex:0 0 34px !important; border-radius:9px !important; }
+.po-tile .hm-ic{ width:19px; height:19px; }
+.po-badge{ flex-shrink:0; height:22px; display:inline-flex; align-items:center; padding:0 8px; border-radius:11px; background:rgba(232,134,44,0.16); color:#f5b06a; font-size:11.5px; font-weight:600; }
+.po-badge.is-warn{ background:rgba(255,255,255,0.08); color:#d2d2d7; }
+.po-method-body{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:auto; }
+.po-method-body select, .po-paypal input{
+  flex:1; min-width:0; height:34px; padding:0 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:#0a0a09;
+  color:#f5f5f7; font-family:var(--font-sans); font-size:14px; outline:none;
+}
+.po-method-body select:focus, .po-paypal input:focus{ border-color:var(--accent); }
+.po-muted{ font-size:13px; color:#86868b; }
+.po-status{ min-height:18px; margin:10px 2px 0; font-size:13px; color:#7fe0a4; }
+.po-status.is-bad{ color:#ff9c86; }
+.po-list{ border-radius:14px; background:#141413; overflow:hidden; }
+.po-row{ position:relative; display:flex; align-items:center; gap:12px; padding:12px 16px; }
+.po-row + .po-row::before{ content:''; position:absolute; top:0; left:16px; right:0; height:1px; background:rgba(255,255,255,0.07); }
+.po-row-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.po-row-main b{ font-size:14.5px; font-weight:600; color:#f5f5f7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.po-row-main small{ font-size:12.5px; color:#86868b; }
+.po-row-side{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.po-row-side b{ font-size:15px; font-weight:700; color:#f5f5f7; font-variant-numeric:tabular-nums; }
+.po-none{ margin:0; padding:22px 16px; text-align:center; font-size:13.5px; color:#86868b; }
+.po-note{ margin:10px 2px 0; font-size:12.5px; line-height:1.5; color:#6e6e73; }
+@media (max-width:640px){
+  .po-stats{ gap:8px; }
+  .po-stat{ padding:12px; }
+  .po-stat b{ font-size:17px; }
+  .po-methods{ grid-template-columns:1fr; }
+}
+
+.up-price .up-earn{ position:absolute; right:0; top:calc(100% + 3px); font-size:11.5px; font-weight:600; color:#f5b06a; white-space:nowrap; }
+.up-tier.is-on{ padding-bottom:24px; }
+.up-share{ color:#f5b06a; font-weight:600; }

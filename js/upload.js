@@ -288,6 +288,7 @@
             <span class="sr-only">${esc(tier.name)} price in euros</span>
             <span class="up-price-cur" aria-hidden="true">€</span>
             <input type="number" name="price-${t}" inputmode="decimal" min="5" max="10000" step="0.01" placeholder="${PRICE_HINTS[t]}" disabled>
+            <small class="up-earn" data-earn="${t}"></small>
           </label>
         </div>`;
     }).join('');
@@ -341,6 +342,12 @@
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
     $('#up-pv-producer').textContent = val('producerName') || 'Your producer name';
     $('#up-pv-chips').innerHTML = [bpm ? `${bpm} BPM` : '', val('key'), val('genre')].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('');
+    // The producer keeps 80% of every sale (see the Payouts section).
+    licenses && licenses.order.forEach((t) => {
+      const el = $(`[data-earn="${t}"]`);
+      const p = prices[t];
+      if (el) el.textContent = p >= 5 ? `You earn €${(Math.floor(p * 80) / 100).toFixed(2)}` : '';
+    });
     $('#up-pv-price').textContent = valid.length ? `€${Math.min(...valid).toFixed(2)}` : '—';
 
     $('.up-submit').disabled = !Object.values(checks).every(Boolean) || busy.size > 0;

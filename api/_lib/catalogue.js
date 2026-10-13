@@ -46,6 +46,8 @@ function toBeat(row) {
     released: new Date(row.reviewed_at || row.submitted_at || Date.now()).toISOString().slice(0, 10),
     prices: row.prices || {},
     tint: TINTS[row.id % TINTS.length],
+    // Colour from the cover (borders, glows); the tint is the fallback.
+    accent: /^#[0-9a-f]{6}$/i.test(row.accent || '') ? row.accent : null,
     cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork` : null,
     preview: `/api/beats/media?id=${id}&kind=preview`,
     // Server only (stripped before anything is sent to the browser)

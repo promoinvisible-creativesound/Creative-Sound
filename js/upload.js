@@ -247,6 +247,55 @@
     });
   }
 
+  // Accent colour from the cover: the most common vivid colour (dark,
+  // near-white and grey pixels skipped), nudged to read well on black.
+  // Read from the local file, so no download is needed.
+  let accent = null;
+  async function coverAccent(file) {
+    const bmp = await createImageBitmap(file);
+    const S = 48;
+    const c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(bmp, 0, 0, S, S);
+    const d = g.getImageData(0, 0, S, S).data;
+    const buckets = new Map();
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i]; const gr = d[i + 1]; const b = d[i + 2];
+      const max = Math.max(r, gr, b); const min = Math.min(r, gr, b);
+      const l = (max + min) / 510;
+      const s = max === min ? 0 : (max - min) / (255 - Math.abs(max + min - 255));
+      if (l < 0.12 || l > 0.92 || s < 0.25) continue;
+      const key = ((r >> 5) << 6) | ((gr >> 5) << 3) | (b >> 5);
+      const k = buckets.get(key) || { w: 0, r: 0, g: 0, b: 0 };
+      const w = 0.5 + s;
+      k.w += w; k.r += r * w; k.g += gr * w; k.b += b * w;
+      buckets.set(key, k);
+    }
+    let best = null;
+    buckets.forEach((k) => { if (!best || k.w > best.w) best = k; });
+    if (!best) return null;
+    // To HSL, keep the hue, make it vivid and mid-light for a dark UI.
+    let r = best.r / best.w / 255; let gg = best.g / best.w / 255; let b = best.b / best.w / 255;
+    const max = Math.max(r, gg, b); const min = Math.min(r, gg, b);
+    let h = 0;
+    if (max !== min) {
+      const dd = max - min;
+      h = max === r ? ((gg - b) / dd) % 6 : max === gg ? (b - r) / dd + 2 : (r - gg) / dd + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    const sat = 0.68; const lig = 0.58;
+    const C = (1 - Math.abs(2 * lig - 1)) * sat; const X = C * (1 - Math.abs(((h / 60) % 2) - 1)); const m = lig - C / 2;
+    [r, gg, b] = h < 60 ? [C, X, 0] : h < 120 ? [X, C, 0] : h < 180 ? [0, C, X] : h < 240 ? [0, X, C] : h < 300 ? [X, 0, C] : [C, 0, X];
+    const hex = [r, gg, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+    return `#${hex}`;
+  }
+  const paintAccent = () => {
+    const card = $('.up-preview');
+    if (card) card.style.setProperty('--acc', accent || 'transparent');
+    if (card) card.classList.toggle('has-accent', !!accent);
+  };
+
   // One shared player for the Listen buttons.
   const player = new Audio();
   let playingRow = null;
@@ -434,7 +483,7 @@
     busy.add(kind);
     delete done[kind];
     paintBusy(row, file.name);
-    if (kind === 'artwork') showArt(file);
+    if (kind === 'artwork') { showArt(file); coverAccent(file).then((hex) => { accent = hex; paintAccent(); }).catch(() => {}); }
     refresh();
     try {
       const link = await requestLink(kind, file);
@@ -444,7 +493,7 @@
       paintDone(row, file);
     } catch (err) {
       paintIdle(row, err.message);
-      if (kind === 'artwork') showArt(null);
+      if (kind === 'artwork') { showArt(null); accent = null; paintAccent(); }
     } finally {
       busy.delete(kind);
       refresh();
@@ -574,6 +623,7 @@
           tags: val('tags'),
           typeBeat: val('typeBeat'),
           about: form.elements.about.value,
+          accent,
           contactInstagram: val('contactInstagram'),
           contactEmail: val('contactEmail'),
           prices: pricesInEuros(),

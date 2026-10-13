@@ -3,6 +3,8 @@
 // leaving the page.
 (() => {
   'use strict';
+  // Cover colour (accent) overrides the fixed tint on producer tracks.
+  const accentStyle = (b) => { if (!/^#[0-9a-f]{6}$/i.test(b.accent || '')) return ''; const n = parseInt(b.accent.slice(1), 16); const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; return '--fx:' + rgb.join(',') + ';--fx-hi:' + rgb.map((c) => Math.round(c + (255 - c) * 0.35)).join(',') + ';'; };
   // "/" used to be the Creative Dist page: old links like /#pricing (emails,
   // Stripe, bookmarks) go on to that section of /creative-dist-2.
   const CD_SECTIONS = ['hero', 'artists', 'pricing', 'demo', 'stories', 'chain', 'saturation', 'noise', 'bode', 'flux', 'eq', 'output', 'get-it'];
@@ -24,7 +26,7 @@
   let playing = null;
 
   const card = (b, i) => `
-    <a class="ho-track t-${TINTS.includes(b.tint) ? b.tint : 'amber'}" href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" style="--i:${i}">
+    <a class="ho-track t-${TINTS.includes(b.tint) ? b.tint : 'amber'}" href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" style="--i:${i};${accentStyle(b)}">
       <span class="ho-track-art">
         ${b.cover ? `<img class="ho-cover-img" src="${esc(b.cover)}" alt="" loading="lazy">` : '<span class="ho-cover"></span>'}
         <button type="button" class="ho-play" data-src="${esc(b.preview)}" aria-label="Play ${esc(b.title)}">

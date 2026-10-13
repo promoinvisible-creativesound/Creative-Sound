@@ -31,7 +31,8 @@
     const tint = TINTS.includes(b.tint) ? b.tint : 'amber';
     const tiers = tiersOf(b);
     const facts = [['BPM', b.bpm], ['Key', b.key], ['Genre', b.genre], ['Mood', b.mood], ['Released', fmtDate(b.released)]];
-    return `<main class="beat-page bt-tint-${tint}" data-beat-id="${esc(b.id)}">
+    const acc = /^#[0-9a-f]{6}$/i.test(b.accent || '') ? (() => { const n = parseInt(b.accent.slice(1), 16); const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; const mix = (t) => rgb.map((c) => Math.round(c + (255 - c) * t)).join(','); return ` style="--fx:${rgb.join(',')};--fx-hi:${mix(0.35)};--fx-soft:${mix(0.7)};"`; })() : '';
+    return `<main class="beat-page bt-tint-${tint}"${acc} data-beat-id="${esc(b.id)}">
     <div class="bp-wrap">
       <nav class="bp-crumbs" aria-label="Breadcrumb"><a href="beats.html">Tracks</a><span aria-hidden="true">/</span><span>${esc(b.title)}</span></nav>
 

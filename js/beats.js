@@ -45,7 +45,30 @@
 
   /* ------------------------------ Shared markup ---------------------------- */
   const TINTS = ['amber', 'blue', 'red', 'violet', 'green'];
-  const tintClass = (b) => `bt-tint-${TINTS.includes(b.tint) ? b.tint : 'amber'}`;
+  // Tracks with a cover colour get their own class (bt-acc-<n>) whose
+  // --fx variables override the fixed tint; see paintAccents().
+  const accentIds = new Map();
+  const tintClass = (b) => `bt-tint-${TINTS.includes(b.tint) ? b.tint : 'amber'}${accentIds.has(b.id) ? ` bt-acc-${accentIds.get(b.id)}` : ''}`;
+  const accentVars = (hex) => {
+    const n = parseInt(hex.slice(1), 16);
+    const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    const mix = (t) => rgb.map((c) => Math.round(c + (255 - c) * t)).join(',');
+    return `--fx:${rgb.join(',')};--fx-hi:${mix(0.35)};--fx-soft:${mix(0.7)};`;
+  };
+  const paintAccents = (list) => {
+    let css = '';
+    list.forEach((b) => {
+      if (!b.accent || !/^#[0-9a-f]{6}$/i.test(b.accent)) return;
+      const n = accentIds.size + 1;
+      accentIds.set(b.id, n);
+      css += `.bt-acc-${n}{${accentVars(b.accent)}}`;
+    });
+    if (!css) return;
+    const style = document.createElement('style');
+    style.id = 'bt-accents';
+    style.textContent = css;
+    document.head.appendChild(style);
+  };
   // Catalogue beats have static pages; approved producer uploads use track.html.
   const beatUrl = (b) => (b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`);
   const art = (b) => `
@@ -1349,6 +1372,7 @@
     PRODUCERS = catalogue.producers || {};
     BEATS = (catalogue.beats || []).filter((b) => b.status !== 'hidden' && tiersOf(b).length);
     byId = new Map(BEATS.map((b) => [b.id, b]));
+    paintAccents(BEATS);
     canBuy = catalogue.salesOpen !== false;
     document.documentElement.classList.toggle('bt-sales-closed', !canBuy);
     if (!canBuy && window.csMe) {

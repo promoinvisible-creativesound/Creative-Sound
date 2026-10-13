@@ -72,6 +72,8 @@ function ensureTables() {
         )
       `;
       await sql`CREATE INDEX IF NOT EXISTS beat_submissions_user_idx ON beat_submissions (user_id)`;
+      // Accent colour picked from the cover in the producer's browser.
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS accent TEXT`;
     })().catch((err) => { ready = null; throw err; });
   }
   return ready;
@@ -290,6 +292,7 @@ async function handleSubmit(req, res) {
         musical_key = ${data.key}, genre = ${data.genre}, mood = ${data.mood},
         tags = ${JSON.stringify(data.tags)}::jsonb, type_beat = ${JSON.stringify(data.typeBeat)}::jsonb,
         about = ${data.about || null}, prices = ${JSON.stringify(data.prices)}::jsonb,
+        accent = ${/^#[0-9a-f]{6}$/i.test(String(body.accent || '')) ? String(body.accent).toLowerCase() : null},
         files = ${JSON.stringify(files)}::jsonb, submitted_at = now(), updated_at = now()
       WHERE id = ${sub.id}
     `;

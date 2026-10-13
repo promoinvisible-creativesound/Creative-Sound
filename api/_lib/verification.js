@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { Resend } = require('resend');
 const { sql } = require('./db');
+const tpl = require('./emailTemplate');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const CODE_TTL_MS = 15 * 60 * 1000; // 15 minutes
@@ -22,14 +23,17 @@ async function sendVerificationCode(userId, email) {
     from: process.env.FROM_EMAIL,
     to: email,
     subject: `${code} — confirm your Creative Sound account`,
-    html: `
-      <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
-        <h1 style="color:#FFB347;font-size:20px;">Confirm your account</h1>
-        <p>Enter this code to finish creating your Creative Sound account:</p>
-        <p style="margin:24px 0;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:8px;color:#e8862c;">${code}</p>
-        <p style="color:#8a877e;font-size:13px;">This code expires in 15 minutes. If you didn't create this account, you can ignore this email.</p>
-      </div>
-    `,
+    html: tpl.renderEmail({
+      siteUrl: process.env.SITE_URL || 'https://creativesound.io',
+      preheader: `Your code is ${code}`,
+      kicker: 'Confirm your email',
+      title: 'Your confirmation code',
+      content: [
+        tpl.paragraph('Enter this code to finish creating your Creative Sound account:'),
+        `<div style="margin:22px 0 4px;padding:18px;border-radius:16px;background:#0f0e0d;border:1px solid #2a2826;text-align:center;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:36px;font-weight:700;letter-spacing:10px;color:#f5b06a;">${code}</div>`,
+        tpl.paragraph('<span style="color:#8e8e93;font-size:13.5px;">This code expires in 15 minutes. If you didn\'t create this account, you can ignore this email.</span>'),
+      ].join(''),
+    }),
   });
   if (error) {
     console.error('resend send error:', error);

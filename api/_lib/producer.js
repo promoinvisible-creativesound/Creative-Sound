@@ -14,6 +14,7 @@ const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { roleFor, previewAllowed, isAdmin } = require('./account');
 const dropbox = require('./dropbox');
+const tpl = require('./emailTemplate');
 const inspect = require('./inspect');
 const { trackId } = require('./catalogue');
 const LICENSES = require('../../data/beat-licenses.json');
@@ -301,21 +302,56 @@ async function handleSubmit(req, res) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const prices = Object.entries(data.prices).map(([t, c]) => `${LICENSES.tiers[t].name} €${(c / 100).toFixed(2)}`).join(' · ');
+      const site = process.env.SITE_URL || 'https://creativesound.io';
+      const facts = [
+        ['Producer', `${data.producerName}`],
+        ['Tempo · key', `${data.bpm} BPM · ${data.key}`],
+        ['Genre · mood', `${data.genre} · ${data.mood}`],
+        ['Licenses', prices],
+      ];
       const { error: mailError } = await resend.emails.send({
         from: process.env.FROM_EMAIL,
         to: 'hello@creativesound.io',
         replyTo: session.email,
-        subject: `New beat to review: ${data.title} by ${data.producerName}`,
-        html: `
-          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:32px;">
-            <h1 style="color:#FFB347;font-size:18px;">New beat submitted for review</h1>
-            <p><strong>${esc(data.title)}</strong> by ${esc(data.producerName)} (${esc(session.email)})</p>
-            <p>${data.bpm} BPM · ${esc(data.key)} · ${esc(data.genre)} · ${esc(data.mood)}</p>
-            <p>${esc(prices)}</p>
-            <p>Files: ${Object.keys(files).map(esc).join(', ')}, in Dropbox under /submissions/${sub.id}/</p>
-            <p style="color:#8a877e;font-size:13px;">Submission #${sub.id}</p>
-          </div>`,
+        subject: `New track to review: ${data.title} by ${data.producerName}`,
+        html: tpl.renderEmail({
+          siteUrl: site,
+          preheader: `${data.producerName} sent ${data.title} for review.`,
+          kicker: 'New submission',
+          title: data.title,
+          content: [
+            tpl.paragraph(`${tpl.esc(data.producerName)} (${tpl.esc(session.email)}) sent a track for review.`),
+            tpl.details([...facts, ['Files', Object.keys(files).join(', ')], ['Submission', `#${sub.id}`]]),
+            `<div style="margin-top:22px;">${tpl.button(`${site}/admin-review.html`, 'Open Track review')}</div>`,
+          ].join(''),
+        }),
       });
+      // Receipt for the producer
+      try {
+        const { error: receiptError } = await resend.emails.send({
+          from: process.env.FROM_EMAIL,
+          to: session.email,
+          replyTo: 'hello@creativesound.io',
+          subject: `We received ${data.title}`,
+          html: tpl.renderEmail({
+            siteUrl: site,
+            preheader: `${data.title} is in review. We'll email you the result.`,
+            kicker: 'In review',
+            title: `We received ${data.title}`,
+            content: [
+              tpl.paragraph('Thanks for your upload. We check the files, the details and the rights, usually within 48 hours, and email you the result.'),
+              tpl.details(facts),
+              tpl.steps([
+                'We review the files and details.',
+                'Approved tracks go live in the store with the Creative Sound voice tag on the preview.',
+                'You keep 80% of every sale, paid every Monday.',
+              ]),
+              `<div style="margin-top:22px;">${tpl.button(`${site}/profile-producer.html`, 'Open your producer area')}</div>`,
+            ].join(''),
+          }),
+        });
+        if (receiptError) console.error('producer receipt email error:', receiptError);
+      } catch (err) { console.error('producer receipt email error:', err); }
       if (mailError) console.error('producer submit email error:', mailError);
     } catch (err) {
       console.error('producer submit email error:', err);
@@ -434,22 +470,27 @@ async function handleAdminReview(req, res) {
 
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const site = process.env.SITE_URL || 'https://creativesound.io';
       const ok = decision === 'approved';
+      const trackUrl = `${site}/track.html?id=${encodeURIComponent(trackId(sub))}`;
       const { error: mailError } = await resend.emails.send({
         from: process.env.FROM_EMAIL,
         to: sub.email,
         replyTo: 'hello@creativesound.io',
-        subject: ok ? `Approved: ${sub.title}` : `Changes needed: ${sub.title}`,
-        html: `
-          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:32px;">
-            <h1 style="color:#FFB347;font-size:20px;">${ok ? 'Your track is approved' : 'Your track needs a few changes'}</h1>
-            <p><strong>${esc(sub.title)}</strong> ${ok ? 'passed review and will go on sale in the Creative Sound store.' : "didn't pass review yet."}</p>
-            ${note ? `<p style="white-space:pre-wrap;background:#141210;padding:14px;border-radius:8px;">${esc(note)}</p>` : ''}
-            <p><a href="${site}/profile-producer.html" style="color:#FFB347;">Open your producer area</a></p>
-            <p style="margin-top:28px;color:#8a877e;font-size:13px;">Creative Sound — sound tools by Invisible</p>
-          </div>`,
+        subject: ok ? `Approved: ${sub.title} is live` : `Changes needed: ${sub.title}`,
+        html: tpl.renderEmail({
+          siteUrl: site,
+          preheader: ok ? `${sub.title} passed review and is now on sale.` : `${sub.title} needs a few changes before it goes live.`,
+          kicker: ok ? 'Approved' : 'Needs changes',
+          title: ok ? `${sub.title} is live` : `${sub.title} needs a few changes`,
+          content: [
+            tpl.paragraph(ok
+              ? 'Your track passed review and is now on sale in the Creative Sound store, with the voice tag on the preview. You keep 80% of every sale.'
+              : "Your track didn't pass review yet. Here is what to fix, then upload it again from your producer area."),
+            note ? tpl.note(note, { tone: ok ? 'ok' : 'bad' }) : '',
+            `<div style="margin-top:22px;">${ok ? tpl.button(trackUrl, 'See it in the store') : ''}${tpl.button(`${site}/profile-producer.html`, 'Open your producer area', { primary: !ok })}</div>`,
+          ].join(''),
+        }),
       });
       if (mailError) console.error('review email error:', mailError);
     } catch (err) {
@@ -531,20 +572,23 @@ async function handleVerifyRequest(req, res) {
     const [{ n }] = await sql`SELECT count(*)::int AS n FROM beat_submissions WHERE user_id = ${session.uid} AND status <> 'draft'`;
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const esc = (x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const site = process.env.SITE_URL || 'https://creativesound.io';
+      const name = (user && user.producer_name) || 'No producer name yet';
       const { error: mailError } = await resend.emails.send({
         from: process.env.FROM_EMAIL,
         to: 'hello@creativesound.io',
         replyTo: session.email,
         subject: `Verification request: ${(user && user.producer_name) || session.email}`,
-        html: `
-          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:32px;">
-            <h1 style="color:#FFB347;font-size:18px;">A producer asked to be verified</h1>
-            <p><strong>${esc((user && user.producer_name) || 'No producer name yet')}</strong> (${esc(session.email)})</p>
-            <p>${n} track${n === 1 ? '' : 's'} submitted so far.</p>
-            <p><a href="${site}/admin-review.html#producers" style="color:#FFB347;">Open the producers list</a></p>
-          </div>`,
+        html: tpl.renderEmail({
+          siteUrl: site,
+          preheader: `${name} asked for the verified badge.`,
+          kicker: 'Verification request',
+          title: `${name} wants the verified badge`,
+          content: [
+            tpl.details([['Producer', name], ['Email', session.email], ['Tracks submitted', String(n)]]),
+            `<div style="margin-top:22px;">${tpl.button(`${site}/admin-review.html#producers`, 'Open the producers list')}</div>`,
+          ].join(''),
+        }),
       });
       if (mailError) console.error('verify request email error:', mailError);
     } catch (err) {

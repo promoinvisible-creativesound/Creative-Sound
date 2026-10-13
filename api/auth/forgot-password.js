@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { Resend } = require('resend');
 const { sql } = require('../_lib/db');
+const tpl = require('../_lib/emailTemplate');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -39,16 +40,17 @@ module.exports = async (req, res) => {
         from: process.env.FROM_EMAIL,
         to: user.email,
         subject: 'Reset your Creative Sound password',
-        html: `
-          <div style="background:#080807;color:#f5f3ee;font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:40px;">
-            <h1 style="color:#FFB347;font-size:20px;">Reset your password</h1>
-            <p>Someone (hopefully you) asked to reset the password on this account.</p>
-            <p style="margin-top:24px;">
-              <a href="${resetUrl}" style="display:inline-block;background:#e8862c;color:#0a0a09;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Choose a new password</a>
-            </p>
-            <p style="margin-top:24px;color:#8a877e;font-size:13px;">This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
-          </div>
-        `,
+        html: tpl.renderEmail({
+          siteUrl,
+          preheader: 'Choose a new password for your Creative Sound account.',
+          kicker: 'Security',
+          title: 'Reset your password',
+          content: [
+            tpl.paragraph('Someone (hopefully you) asked to reset the password on this account.'),
+            `<div style="margin-top:22px;">${tpl.button(resetUrl, 'Choose a new password')}</div>`,
+            tpl.paragraph('<span style="color:#8e8e93;font-size:13.5px;">This link expires in 1 hour. If you didn\'t request this, you can ignore this email.</span>'),
+          ].join(''),
+        }),
       });
       // Resend returns { data, error } rather than throwing on API-level
       // failures (e.g. an unverified sending domain), so this has to be

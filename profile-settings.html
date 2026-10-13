@@ -28,6 +28,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=128">
 <link rel="stylesheet" href="css/header-menu.css?v=9">
+<link rel="stylesheet" href="css/profile.css?v=5">
 <link rel="stylesheet" href="css/welcome.css?v=3">
 </head>
 <body>
@@ -95,62 +96,59 @@
   </div>
 </header>
 
-<main>
-  <div class="page-hero" style="padding-bottom:0;">
-    <a href="profile.html" class="account-back reveal-up">← Back to account</a>
-    <p class="kicker reveal-up">ACCOUNT</p>
-    <h1 class="reveal-up" style="font-family:var(--font-display); font-size:clamp(28px,5vw,38px);">Settings</h1>
-  </div>
+<main class="pf-page pe-page st-page">
+  <a href="profile.html" class="pe-back">‹ Account</a>
+  <h1 class="st-title">Settings</h1>
 
-  <div id="settings-root" class="account-detail">
-    <section class="account-section glass-panel reveal-up">
-      <h2 class="account-section-title">Your name</h2>
-      <form id="profile-form" novalidate>
-        <p id="profile-error" class="auth-error" role="alert"></p>
-        <p id="profile-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
-        <div class="auth-field">
-          <label for="profile-first-name">First name</label>
-          <input type="text" id="profile-first-name" name="firstName" autocomplete="given-name">
-        </div>
-        <div class="auth-field">
-          <label for="profile-last-name">Last name</label>
-          <input type="text" id="profile-last-name" name="lastName" autocomplete="family-name">
-        </div>
-        <button type="submit" class="btn btn-ghost">Save name</button>
+  <div id="settings-root">
+    <form id="profile-form" novalidate>
+      <p class="pe-group-label">Name</p>
+      <div class="pe-group">
+        <label class="pe-row"><span>First name</span><input type="text" id="profile-first-name" name="firstName" autocomplete="given-name" placeholder="First name"></label>
+        <label class="pe-row"><span>Last name</span><input type="text" id="profile-last-name" name="lastName" autocomplete="family-name" placeholder="Last name"></label>
+      </div>
+      <p id="profile-error" class="auth-error st-msg" role="alert"></p>
+      <p id="profile-success" class="auth-error st-msg st-msg-ok" role="status"></p>
+      <div class="st-actions"><button type="submit" class="btn btn-ghost">Save name</button></div>
+    </form>
+
+    <section class="pv-only">
+      <p class="pe-group-label">Account type</p>
+      <form id="role-settings" class="st-roles" novalidate>
+        <label class="st-role"><input type="radio" name="role" value="producer">
+          <span class="st-role-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 11v2"/></svg>
+            <b>Producer</b><small>Upload and sell tracks</small>
+          </span>
+        </label>
+        <label class="st-role"><input type="radio" name="role" value="artist">
+          <span class="st-role-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+            <b>Artist</b><small>Find tracks to record on</small>
+          </span>
+        </label>
+        <label class="st-role"><input type="radio" name="role" value="listener">
+          <span class="st-role-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="14" width="4" height="6" rx="1.6"/><rect x="16.5" y="14" width="4" height="6" rx="1.6"/></svg>
+            <b>Just exploring</b><small>Browse and listen</small>
+          </span>
+        </label>
       </form>
+      <p id="role-settings-status" class="pe-note st-role-status" role="status" aria-live="polite">You can switch any time.</p>
     </section>
 
-    <section class="account-section glass-panel reveal-up pv-only">
-      <h2 class="account-section-title">Account type</h2>
-      <p class="role-seg-lede">Producers can upload tracks for review. You can switch any time.</p>
-      <form id="role-settings" class="role-seg" novalidate>
-        <label class="role-seg-opt"><input type="radio" name="role" value="producer"><span>Producer</span></label>
-        <label class="role-seg-opt"><input type="radio" name="role" value="artist"><span>Artist</span></label>
-        <label class="role-seg-opt"><input type="radio" name="role" value="listener"><span>Just exploring</span></label>
-      </form>
-      <p id="role-settings-status" class="role-seg-status" role="status" aria-live="polite"></p>
-    </section>
+    <form id="password-form" novalidate>
+      <p class="pe-group-label">Password</p>
+      <div class="pe-group">
+        <label class="pe-row st-pass"><span>Current</span><input type="password" id="password-current" name="currentPassword" autocomplete="current-password" placeholder="Required" required></label>
+        <label class="pe-row st-pass"><span>New</span><input type="password" id="password-new" name="newPassword" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></label>
+      </div>
+      <p id="password-error" class="auth-error st-msg" role="alert"></p>
+      <p id="password-success" class="auth-error st-msg st-msg-ok" role="status"></p>
+      <div class="st-actions"><button type="submit" class="btn btn-ghost">Change password</button></div>
+    </form>
 
-    <section class="account-section glass-panel reveal-up">
-      <h2 class="account-section-title">Change password</h2>
-      <form id="password-form" novalidate>
-        <p id="password-error" class="auth-error" role="alert"></p>
-        <p id="password-success" class="auth-error" role="status" style="background:rgba(232,134,44,0.12); border-color:var(--accent-dim); color:var(--amber-text);"></p>
-        <div class="auth-field">
-          <label for="password-current">Current password</label>
-          <input type="password" id="password-current" name="currentPassword" autocomplete="current-password" required>
-        </div>
-        <div class="auth-field">
-          <label for="password-new">New password</label>
-          <input type="password" id="password-new" name="newPassword" autocomplete="new-password" minlength="8" required>
-        </div>
-        <button type="submit" class="btn btn-ghost">Change password</button>
-      </form>
-    </section>
-
-    <section class="account-section glass-panel reveal-up">
-      <button id="logout-btn" class="btn btn-ghost profile-logout">Sign out</button>
-    </section>
+    <div class="pe-group st-signout"><button type="button" id="logout-btn" class="st-logout">Sign out</button></div>
   </div>
 </main>
 
@@ -208,7 +206,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=46"></script>
 <script src="js/header-menu.js?v=8"></script>
-<script src="js/auth.js?v=43"></script>
+<script src="js/auth.js?v=44"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

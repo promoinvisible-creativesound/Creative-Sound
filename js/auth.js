@@ -51,7 +51,7 @@
 
   /* --------------------------- Show / hide password -------------------------- */
   // Every password field in an account form gets an eye button.
-  document.querySelectorAll('.auth-field input[type="password"]').forEach((input) => {
+  document.querySelectorAll('.auth-field input[type="password"], .st-pass input[type="password"]').forEach((input) => {
     const wrap = document.createElement('div');
     wrap.className = 'auth-pass';
     input.parentNode.insertBefore(wrap, input);

@@ -51,36 +51,101 @@
   fill('genre', GENRES, 'Choose genre');
   fill('mood', MOODS, 'Choose mood');
 
-  // Tags: standard list (data/tags.json) as chips, at least 2 of them, plus
-  // up to 2 of the producer's own. The hidden 'tags' input holds the result.
+  // Tags: type to get suggestions from the standard list (data/tags.json).
+  // At least TAG_RULES.min suggested tags are required to submit; up to
+  // TAG_RULES.maxCustom of the producer's own (Enter or comma). The hidden
+  // 'tags' input holds the result for the submit.
   let TAG_RULES = { min: 2, maxTotal: 8, maxCustom: 2 };
-  const picked = new Set();
-  const ownTags = () => [...new Set(String(form.elements.tagsOwn.value || '').split(',').map((t) => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean))].slice(0, TAG_RULES.maxCustom);
+  let STANDARD = [];
+  const picked = new Set(); // suggested (standard) tags
+  const own = new Set();    // producer's own tags
+  const tagInput = $('#up-taginput');
+  const suggestEl = $('#up-tagsuggest');
+  let options = [];
+  let active = -1;
+  const normTag = (t) => String(t || '').trim().toLowerCase().replace(/^#/, '').replace(/\s+/g, ' ').slice(0, 24);
+  const total = () => picked.size + own.size;
   const syncTags = () => {
-    const all = [...picked, ...ownTags().filter((t) => !picked.has(t))].slice(0, TAG_RULES.maxTotal);
-    form.elements.tags.value = all.join(', ');
+    form.elements.tags.value = [...picked, ...own].join(', ');
+    $('#up-tagchips').innerHTML = [...picked].map((t) => `<span class="up-tagchip"><b>${esc(t)}</b><button type="button" data-untag="${esc(t)}" aria-label="Remove ${esc(t)}">×</button></span>`).join('')
+      + [...own].map((t) => `<span class="up-tagchip is-own"><b>${esc(t)}</b><button type="button" data-untag="${esc(t)}" aria-label="Remove ${esc(t)}">×</button></span>`).join('');
     const n = picked.size;
     const label = $('#up-tags-count');
-    label.textContent = n < TAG_RULES.min ? `Pick at least ${TAG_RULES.min} · ${n} selected` : `${n} selected`;
+    label.textContent = n >= TAG_RULES.min ? `${n} suggested · ${own.size} own` : `Pick at least ${TAG_RULES.min} suggested tags · ${n}/${TAG_RULES.min}`;
     label.classList.toggle('is-ok', n >= TAG_RULES.min);
-    $$('#up-tags .up-tag').forEach((b) => { b.disabled = !picked.has(b.dataset.tag) && all.length >= TAG_RULES.maxTotal; });
+    tagInput.placeholder = total() >= TAG_RULES.maxTotal ? 'Tag limit reached' : (total() ? 'Add another tag' : 'Type a tag, e.g. trap, dark, 808');
+    tagInput.disabled = total() >= TAG_RULES.maxTotal;
+  };
+  const closeSuggest = () => { suggestEl.hidden = true; tagInput.setAttribute('aria-expanded', 'false'); active = -1; };
+  const paintSuggest = () => {
+    const q = normTag(tagInput.value);
+    const free = STANDARD.filter((t) => !picked.has(t));
+    options = (q ? [...free.filter((t) => t.startsWith(q)), ...free.filter((t) => !t.startsWith(q) && t.includes(q))] : free).slice(0, 8);
+    const canOwn = q && !STANDARD.includes(q) && !own.has(q) && own.size < TAG_RULES.maxCustom;
+    if (!options.length && !canOwn) { closeSuggest(); return; }
+    active = options.length ? 0 : -1;
+    suggestEl.innerHTML = options.map((t, k) => `<li role="option" id="up-sg-${k}" data-tag="${esc(t)}" class="${k === active ? 'is-active' : ''}" aria-selected="${k === active}">${esc(t)}<small>Suggested</small></li>`).join('')
+      + (canOwn ? `<li role="option" class="is-own" data-own="${esc(q)}">Add “${esc(q)}” as your own tag<small>${TAG_RULES.maxCustom - own.size} left</small></li>` : '');
+    suggestEl.hidden = false;
+    tagInput.setAttribute('aria-expanded', 'true');
+  };
+  const addTag = (t, isOwn) => {
+    t = normTag(t);
+    if (!t || total() >= TAG_RULES.maxTotal) return;
+    if (STANDARD.includes(t)) picked.add(t);
+    else if (isOwn && own.size < TAG_RULES.maxCustom) own.add(t);
+    else return;
+    tagInput.value = '';
+    syncTags();
+    refresh();
+    closeSuggest();
+    tagInput.focus();
   };
   fetch('data/tags.json').then((r) => r.json()).then((cfg) => {
     TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
-    $('#up-tags').innerHTML = cfg.groups.map((g) => `<div class="up-tag-group"><small>${esc(g.name)}</small><div>${g.tags.map((t) => `<button type="button" class="up-tag" data-tag="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div></div>`).join('');
+    STANDARD = cfg.groups.flatMap((g) => g.tags);
     syncTags();
   }).catch(() => {});
-  $('#up-tags').addEventListener('click', (e) => {
-    const b = e.target.closest('.up-tag');
-    if (!b) return;
-    const t = b.dataset.tag;
-    if (picked.has(t)) picked.delete(t); else picked.add(t);
-    b.classList.toggle('is-on', picked.has(t));
-    b.setAttribute('aria-pressed', String(picked.has(t)));
-    syncTags();
-    refresh();
+  tagInput.addEventListener('input', paintSuggest);
+  tagInput.addEventListener('focus', paintSuggest);
+  tagInput.addEventListener('blur', () => setTimeout(closeSuggest, 120));
+  tagInput.addEventListener('keydown', (ev) => {
+    const items = $$('#up-tagsuggest li');
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      if (suggestEl.hidden) { paintSuggest(); return; }
+      ev.preventDefault();
+      active = Math.max(0, Math.min(items.length - 1, active + (ev.key === 'ArrowDown' ? 1 : -1)));
+      items.forEach((li, k) => { li.classList.toggle('is-active', k === active); li.setAttribute('aria-selected', String(k === active)); });
+      return;
+    }
+    if (ev.key === 'Enter' || ev.key === ',' || ev.key === 'Tab') {
+      const q = normTag(tagInput.value);
+      if (!q && ev.key === 'Tab') return;
+      if (!q) { ev.preventDefault(); return; }
+      ev.preventDefault();
+      const li = items[active];
+      if (li && li.dataset.tag) addTag(li.dataset.tag);
+      else if (STANDARD.includes(q)) addTag(q);
+      else addTag(q, true);
+      return;
+    }
+    if (ev.key === 'Backspace' && !tagInput.value) {
+      const last = [...own].pop() || [...picked].pop();
+      if (last) { own.delete(last); picked.delete(last); syncTags(); refresh(); }
+    }
+    if (ev.key === 'Escape') closeSuggest();
   });
-  form.elements.tagsOwn.addEventListener('input', syncTags);
+  suggestEl.addEventListener('mousedown', (ev) => {
+    const li = ev.target.closest('li');
+    if (!li) return;
+    ev.preventDefault();
+    if (li.dataset.tag) addTag(li.dataset.tag); else if (li.dataset.own) addTag(li.dataset.own, true);
+  });
+  $('#up-tagbox').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-untag]');
+    if (b) { picked.delete(b.dataset.untag); own.delete(b.dataset.untag); syncTags(); refresh(); return; }
+    tagInput.focus();
+  });
 
   /* -------------------------------- Files --------------------------------- */
   const ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>';
@@ -128,12 +193,44 @@
     row.classList.remove('is-done', 'is-error');
   }
   function paintDone(row, file) {
+    // Audio rows get a Listen button that plays the producer's own file
+    // (local copy), to check it's the right one before submitting.
+    const audio = ['preview', 'mp3', 'wav'].includes(row.dataset.kind) && file instanceof Blob;
+    if (audio) {
+      if (row._url) URL.revokeObjectURL(row._url);
+      row._url = URL.createObjectURL(file);
+    }
     $('.up-file-ctrl', row).innerHTML = `
       <span class="up-file-done">${ICON_OK}<span><b>${esc(file.name)}</b><small>${fmtSize(file.size)}</small></span></span>
+      ${audio ? `<button type="button" class="up-listen" data-listen aria-pressed="false"><svg class="up-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="up-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg><span>Listen</span></button>` : ''}
       <button type="button" class="up-btn up-btn-ghost" data-pick>Replace</button>`;
     row.classList.remove('is-busy', 'is-error');
     row.classList.add('is-done');
   }
+
+  // One shared player for the Listen buttons.
+  const player = new Audio();
+  let playingRow = null;
+  const clock = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
+  const paintListen = () => {
+    $$('.up-file').forEach((r) => {
+      const b = $('[data-listen]', r);
+      if (!b) return;
+      const on = r === playingRow && !player.paused;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', String(on));
+      $('span', b).textContent = r === playingRow && player.currentTime > 0 ? `${clock(player.currentTime)} / ${clock(player.duration)}` : 'Listen';
+    });
+  };
+  ['play', 'pause', 'ended', 'timeupdate'].forEach((ev) => player.addEventListener(ev, paintListen));
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-listen]');
+    if (!b) return;
+    const row = b.closest('.up-file');
+    if (playingRow === row && !player.paused) { player.pause(); return; }
+    if (playingRow !== row) { player.src = row._url; playingRow = row; }
+    player.play().catch(() => {});
+  });
   function setProgress(row, p) {
     const bar = $('.up-progress', row);
     if (!bar) return;

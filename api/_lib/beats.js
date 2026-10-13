@@ -368,6 +368,7 @@ async function beatsForAccount(email) {
       tier: r.tier,
       tier_name: LICENSES.tiers[r.tier].name,
       license_id: r.license_id,
+      cover: beat.cover || null,
       created_at: r.created_at,
       files: (await filesFor(beat, r.tier, email)).filter((f) => f.url),
     });

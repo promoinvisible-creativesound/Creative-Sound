@@ -378,6 +378,14 @@ async function handleCheck(req, res) {
   if (out.dropbox.configured) {
     try {
       Object.assign(out.dropbox, await dropbox.check());
+      // Real read test: a download link for the newest uploaded preview.
+      try {
+        const [row] = await sql`SELECT files FROM beat_submissions WHERE files ? 'preview' ORDER BY id DESC LIMIT 1`;
+        const path = row && row.files && row.files.preview && row.files.preview.path;
+        if (path) {
+          try { await dropbox.readLink(path); out.dropbox.canRead = true; } catch (err) { out.dropbox.canRead = false; out.dropbox.readError = String(err.message).slice(0, 220); }
+        }
+      } catch (err) { /* no uploads table yet */ }
     } catch (err) {
       out.dropbox.ok = false;
       out.dropbox.error = err.message.slice(0, 200);

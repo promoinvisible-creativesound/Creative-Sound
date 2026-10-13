@@ -2363,7 +2363,7 @@ body.search-open{ overflow:hidden; }
   transition:border-color 0.2s var(--ease);
 }
 .pk-soon-field input[type="email"]:focus{ border-color:var(--accent); outline:none; }
-.pk-soon-field .btn{ height:44px; flex-shrink:0; }
+.pk-soon-field .btn{ height:40px; flex-shrink:0; }
 .pk-soon-note{ flex-basis:100%; font-size:12.5px; color:var(--text-muted); }
 .pk-soon-note.is-ok{ color:var(--amber-text); }
 .pk-soon-note.is-error{ color:#ff7a6b; }
@@ -2520,6 +2520,15 @@ body.search-open{ overflow:hidden; }
 .btn-buy{ font-size:12.5px; padding:8px 16px; }
 .btn-buy-large{ padding:13px 22px; font-size:14px; }
 .btn{ line-height:1.2; }
+/* Compact pills, Apple-like: 34px tall, 13px medium label, no light sweep. */
+.btn{ min-height:34px; padding:8px 17px; font-size:13px; font-weight:500; line-height:16px; letter-spacing:-0.005em; gap:6px; }
+.btn-primary{ font-weight:600; }
+.btn::before{ display:none; }
+.btn-primary:hover{ transform:none; filter:brightness(1.07); }
+.btn-buy{ min-height:30px; padding:6px 14px; font-size:12.5px; font-weight:500; }
+.btn-buy-large{ min-height:42px; padding:12px 22px; font-size:14px; font-weight:600; }
+.auth-card-v2 .auth-submit{ height:44px; font-size:15px; font-weight:600; border-radius:999px; }
+.auth-alt-btn{ height:42px; font-size:14px; font-weight:500; border-radius:999px; }
 
 /* ============================ Private preview =============================
    Links and blocks for the new features only show once the account is

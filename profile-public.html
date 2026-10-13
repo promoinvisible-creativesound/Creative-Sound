@@ -25,9 +25,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
-<link rel="stylesheet" href="css/style.css?v=127">
-<link rel="stylesheet" href="css/header-menu.css?v=8">
-<link rel="stylesheet" href="css/profile.css?v=1">
+<link rel="stylesheet" href="css/style.css?v=128">
+<link rel="stylesheet" href="css/header-menu.css?v=9">
+<link rel="stylesheet" href="css/profile.css?v=2">
 </head>
 <body>
 <div id="grain"></div>
@@ -94,57 +94,45 @@
   </div>
 </header>
 
-<main class="pf-page">
-  <header class="pe-head">
-    <div>
-      <a href="profile.html" class="up-back account-back">← Your account</a>
-      <h1>Your public profile</h1>
+<main class="pf-page pe-page">
+  <a href="profile.html" class="pe-back">‹ Account</a>
+
+  <form id="pe-form" novalidate>
+    <div class="pe-top">
+      <button type="button" class="pe-avatar-btn" id="pe-photo-btn" aria-label="Change profile photo">
+        <span class="pf-avatar" id="pe-avatar"></span>
+        <span class="pe-avatar-edit" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.4-2h5l1.4 2h1.6A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+        </span>
+      </button>
+      <input type="file" id="pe-photo-input" accept=".jpg,.jpeg,.png,.webp" hidden>
+      <h1 id="pe-title">Public profile</h1>
       <p id="pe-url">creativesound.io/artist.html?u=</p>
-    </div>
-    <a href="#" class="btn btn-ghost" id="pe-view" hidden>View public page</a>
-  </header>
-
-  <form id="pe-form" class="pe-card" novalidate>
-    <div class="pe-photo">
-      <div class="pf-avatar" id="pe-avatar"></div>
-      <div class="pe-photo-actions">
-        <button type="button" class="btn btn-ghost" id="pe-photo-btn">Change photo</button>
-        <small>Square JPG, PNG or WebP, under 5 MB. Save your username first.</small>
-        <input type="file" id="pe-photo-input" accept=".jpg,.jpeg,.png,.webp" hidden>
-      </div>
+      <a href="#" class="pe-view" id="pe-view" hidden>View public page ›</a>
     </div>
 
-    <div class="pe-grid">
-      <div class="pe-field">
-        <label for="pe-name">Name</label>
-        <input id="pe-name" name="displayName" maxlength="50" autocomplete="nickname" placeholder="How people know you">
-      </div>
-      <div class="pe-field">
-        <label for="pe-handle">Username</label>
-        <div class="pe-prefix"><span>@</span><input id="pe-handle" name="handle" maxlength="30" autocapitalize="off" spellcheck="false" placeholder="yourname"></div>
-      </div>
-      <div class="pe-field pe-field-wide">
-        <label for="pe-bio">Bio</label>
-        <textarea id="pe-bio" name="bio" maxlength="400" placeholder="A few lines about you and your sound."></textarea>
-        <small id="pe-bio-count">0/400</small>
-      </div>
-      <div class="pe-field">
-        <label for="pe-ig">Instagram</label>
-        <input id="pe-ig" name="instagram" maxlength="200" autocapitalize="off" spellcheck="false" placeholder="@username or profile link">
-      </div>
-      <div class="pe-field">
-        <label for="pe-tt">TikTok</label>
-        <input id="pe-tt" name="tiktok" maxlength="200" autocapitalize="off" spellcheck="false" placeholder="@username or profile link">
-      </div>
-      <div class="pe-field pe-field-wide">
-        <span id="pe-genres-label">Genres</span>
-        <div class="pe-chips" id="pe-genres"></div>
-        <small>Up to 6.</small>
-      </div>
+    <p class="pe-group-label">Profile</p>
+    <div class="pe-group">
+      <label class="pe-row"><span>Name</span><input id="pe-name" name="displayName" maxlength="50" autocomplete="nickname" placeholder="How people know you"></label>
+      <label class="pe-row"><span>Username</span><span class="pe-at"><i>@</i><input id="pe-handle" name="handle" maxlength="30" autocapitalize="off" spellcheck="false" placeholder="yourname"></span></label>
+      <label class="pe-row pe-row-bio"><span>Bio</span><textarea id="pe-bio" name="bio" maxlength="400" rows="3" placeholder="A few lines about you and your sound."></textarea></label>
     </div>
+    <p class="pe-note pe-count"><span id="pe-bio-count">0/400</span></p>
+
+    <p class="pe-group-label">Links</p>
+    <div class="pe-group">
+      <label class="pe-row"><span>Instagram</span><input id="pe-ig" name="instagram" maxlength="200" autocapitalize="off" spellcheck="false" placeholder="@username"></label>
+      <label class="pe-row"><span>TikTok</span><input id="pe-tt" name="tiktok" maxlength="200" autocapitalize="off" spellcheck="false" placeholder="@username"></label>
+    </div>
+
+    <p class="pe-group-label" id="pe-genres-label">Genres</p>
+    <div class="pe-group pe-group-pad">
+      <div class="pe-chips" id="pe-genres"></div>
+    </div>
+    <p class="pe-note">Up to 6. Tap your photo to change it: JPG, PNG or WebP under 5 MB.</p>
 
     <div class="pe-actions">
-      <button type="submit" class="btn btn-primary" id="pe-save">Save profile</button>
+      <button type="submit" class="btn btn-primary" id="pe-save">Save</button>
       <span class="pe-status" id="pe-status" role="status" aria-live="polite"></span>
     </div>
   </form>
@@ -204,7 +192,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=46"></script>
 <script src="js/header-menu.js?v=8"></script>
-<script src="js/profile-edit.js?v=1"></script>
+<script src="js/profile-edit.js?v=2"></script>
 <script src="js/auth.js?v=43"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -20,7 +20,8 @@
   const paintLink = () => {
     const h = form.handle.value.trim().toLowerCase().replace(/^@/, '');
     const a = $('#pe-view');
-    $('#pe-url').textContent = h ? `creativesound.io/artist.html?u=${h}` : 'Pick a username to get your page';
+    $('#pe-url').textContent = h ? `@${h}` : 'Pick a username to get your page';
+    $('#pe-title').textContent = form.displayName.value.trim() || 'Public profile';
     a.hidden = !(profile && profile.handle);
     if (profile && profile.handle) a.href = `artist.html?u=${encodeURIComponent(profile.handle)}`;
   };
@@ -98,6 +99,7 @@
     if (!/\.(jpe?g|png|webp)$/i.test(file.name)) { say('Use a JPG, PNG or WebP image.', 'bad'); return; }
     if (file.size > 5 * 1024 * 1024) { say('The photo must be under 5 MB.', 'bad'); return; }
     say('Uploading photo…');
+    $('#pe-photo-btn').classList.add('is-busy');
     try {
       const res = await fetch('/api/profile/avatar', {
         method: 'POST',
@@ -113,6 +115,8 @@
       say('Photo updated.', 'ok');
     } catch (err) {
       say(err.message, 'bad');
+    } finally {
+      $('#pe-photo-btn').classList.remove('is-busy');
     }
   });
 })();

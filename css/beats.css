@@ -269,7 +269,7 @@
 .bt-terms-body th{ font-family:var(--mono); font-size:11px; color:var(--text-muted); font-weight:400; }
 .bt-modal-foot{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; }
 .bt-modal-total{ font-family:var(--font-display); font-size:22px; }
-.bt-modal-foot .btn{ height:46px; padding:0 24px; }
+.bt-modal-foot .btn{ height:40px; padding:0 20px; }
 
 /* Phone: the picker becomes a bottom sheet */
 @media (max-width:560px){
@@ -632,8 +632,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-tags a{ font-family:var(--mono); font-size:12.5px; color:var(--text-secondary); border:1px solid var(--border); border-radius:16px; padding:5px 11px; }
 .bp-tags a:hover{ color:var(--amber-text); border-color:var(--accent-dim); }
 .bp-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; }
-.bp-actions .btn{ height:48px; display:inline-flex; align-items:center; gap:8px; padding:0 22px; }
-.bp-actions .btn svg{ width:18px; height:18px; }
+.bp-actions .btn{ height:40px; display:inline-flex; align-items:center; gap:8px; padding:0 22px; }
+.bp-actions .btn svg{ width:16px; height:16px; }
 
 .bp-section{ margin-top:clamp(36px, 5vw, 56px); }
 .bp-section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
@@ -646,7 +646,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-total span{ display:block; font-family:var(--mono); font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--text-muted); }
 .bp-total strong{ font-family:var(--font-display); font-size:30px; }
 .bp-license-buttons{ display:flex; gap:8px; }
-.bp-license-buttons .btn{ height:48px; padding:0 20px; }
+.bp-license-buttons .btn{ height:40px; padding:0 18px; }
 .bp-tiers{ display:flex; flex-direction:column; gap:8px; }
 .bp-tier{ position:relative; display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center; padding:15px 16px; border-radius:12px; border:1px solid var(--border-strong); cursor:pointer; transition:border-color 150ms ease, background-color 150ms ease, transform 160ms var(--ease-out); }
 .bp-tier:active{ transform:scale(0.99); }
@@ -924,7 +924,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Saved beats page (profile-saved.html) */
 .saved-wrap{ max-width:1180px; margin:0 auto; padding-top:40px; }
 .saved-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
-.saved-bar .btn{ height:44px; display:inline-flex; align-items:center; padding:0 18px; }
+.saved-bar .btn{ height:38px; display:inline-flex; align-items:center; padding:0 18px; }
 .saved-page .bt-empty .btn{ display:inline-flex; margin-top:16px; }
 
 /* Collection icons: crisp line icons on a small dark disc for contrast */
@@ -1020,7 +1020,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-feat-specs .bt-spec-genre{ display:inline-flex !important; }
 .bt-feat-about{ margin:14px 0 0; max-width:520px; font-size:15px; line-height:1.6; color:var(--text-secondary); }
 .bt-feat-actions{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:20px; }
-.bt-feat-actions .btn{ height:48px; display:inline-flex; align-items:center; padding:0 22px; }
+.bt-feat-actions .btn{ height:40px; display:inline-flex; align-items:center; padding:0 22px; }
 .bt-feat-buy{ background:rgb(var(--fx)) !important; border-color:rgb(var(--fx)) !important; color:#0a0a09 !important; }
 .bt-feat-save{ position:static; width:48px; height:48px; border-radius:12px; background:transparent; }
 

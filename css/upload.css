@@ -674,3 +674,10 @@
 .up-page .up-checklist li{ font-size:14.5px; }
 .up-page .up-steps a{ color:#d1d1d6; }
 .up-page .up-field input::placeholder, .up-page .up-field textarea::placeholder, #up-taginput::placeholder, .up-tags-own input::placeholder{ color:#8e8e93; }
+/* Secondary text a little dimmer than pass 2 (still clearly readable) */
+.up-page .up-sub, .up-page .up-card-head p{ color:#c2c2c7; }
+.up-page .up-group-title span, .up-page .up-file-text small, .up-page .up-file-done small,
+.up-page .up-taghint, .up-page .up-contact-head small, .up-page .up-tier-files, .up-page .up-tier-lock,
+.up-page .up-checklist li, .up-page .up-seek-time, .up-page .up-preview-producer{ color:#b0b0b5; }
+.up-page .up-field > span i{ color:#9a9a9f; }
+.up-page .up-steps a{ color:#c2c2c7; }

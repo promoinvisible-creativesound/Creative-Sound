@@ -779,7 +779,7 @@
         </button>
       </div>
       <div class="bt-feat-info">
-        <p class="bt-feat-kicker"><span class="bt-feat-rank-big">${rank}</span></p>
+        <p class="bt-feat-kicker"><span class="bt-feat-rank-big">#${rank}</span></p>
         <h3 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h3>
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>

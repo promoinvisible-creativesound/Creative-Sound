@@ -782,7 +782,7 @@
         // A pending checkout wins; otherwise the account page, which opens
         // on the producer area for producers.
         const next = getNextUrl();
-        window.location.href = next !== 'profile.html' ? next : (data.role === 'producer' ? 'profile.html#producer' : 'profile.html');
+        window.location.href = next !== 'profile.html' ? next : (data.role === 'producer' ? 'profile-producer.html' : 'profile.html');
       } catch (err) {
         showError(errorEl, err.message);
         submit.textContent = originalLabel;

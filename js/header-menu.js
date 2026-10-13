@@ -92,6 +92,13 @@
     const avatar = (size) => `<span class="hm-avatar ${size}" aria-hidden="true">${esc(initials)}</span>`;
     const producer = me.role === 'producer';
     const m = makeMenu({ id: 'account', label: 'Account menu', cls: 'hm-account', buttonHtml: avatar('') });
+    // Profile, orders and downloads come first; for the admin they sit
+    // under Track review and the producer area.
+    const mine = `<div class="hm-group">
+        ${item('profile-public.html', 'profile', 'Public profile')}
+        ${item('profile-orders.html', 'box', 'Orders')}
+        ${item('profile-license.html', 'key', 'Licenses &amp; downloads')}
+      </div>`;
     m.panel.innerHTML = `
       <div class="hm-who">
         ${avatar('is-lg')}
@@ -101,15 +108,14 @@
       ${me.isAdmin ? `<div class="hm-group">
         ${item('admin-review.html', 'seal', 'Track review', '<span class="hm-new">Admin</span>')}
       </div>` : ''}
+      ${me.isAdmin ? '' : mine}
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
         ${item('upload-beat.html', 'upload', 'Upload a track', '<span class="hm-new">New</span>')}
       </div>` : ''}
+      ${me.isAdmin ? mine : ''}
       <div class="hm-group">
-        ${item('profile-public.html', 'profile', 'Public profile')}
         ${item('profile-saved.html', 'heart', 'Saved tracks')}
-        ${item('profile-license.html', 'key', 'Licenses &amp; downloads')}
-        ${item('profile-orders.html', 'box', 'Orders')}
       </div>
       <div class="hm-group">
         ${item('profile-settings.html', 'gear', 'Settings')}

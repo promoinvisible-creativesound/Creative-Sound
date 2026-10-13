@@ -342,4 +342,35 @@ async function handleRun(req, res) {
   }
 }
 
-module.exports = { SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };
+// Admin health check: are PayPal, Stripe Connect and the cron set up?
+// Sends no money (PayPal: only asks for an access token).
+//   GET /api/payouts/check
+async function handleCheck(req, res) {
+  const session = getSession(req);
+  if (!session || !isAdmin(session)) { res.status(401).json({ error: 'Sign in with the admin account.' }); return; }
+  const out = { cronSecret: !!process.env.CRON_SECRET, paypal: {}, stripe: {} };
+  out.paypal.configured = paypalOn();
+  out.paypal.mode = process.env.PAYPAL_ENV === 'sandbox' ? 'sandbox' : 'live';
+  if (out.paypal.configured) {
+    try {
+      await paypalToken();
+      out.paypal.ok = true;
+    } catch (err) {
+      out.paypal.ok = false;
+      out.paypal.error = err.message;
+    }
+  }
+  out.stripe.configured = !!process.env.STRIPE_SECRET_KEY;
+  if (out.stripe.configured) {
+    try {
+      await stripe().accounts.list({ limit: 1 });
+      out.stripe.connect = true;
+    } catch (err) {
+      out.stripe.connect = false;
+      out.stripe.error = err.message;
+    }
+  }
+  res.status(200).json(out);
+}
+
+module.exports = { handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };

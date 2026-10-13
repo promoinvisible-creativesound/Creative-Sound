@@ -52,6 +52,7 @@ module.exports = async (req, res) => {
     // Producer payouts (_lib/payouts.js)
     'producer-payouts': payouts.handlePayouts,
     'payouts-run': payouts.handleRun,
+    'payouts-check': payouts.handleCheck,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

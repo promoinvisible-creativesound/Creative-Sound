@@ -40,8 +40,9 @@
       form.instagram.value = profile.instagram ? `@${profile.instagram}` : '';
       form.tiktok.value = profile.tiktok ? `@${profile.tiktok}` : '';
       $('#pe-genres-label').textContent = profile.role === 'producer' ? 'Genres you produce' : 'Genres you like';
+      paintCount();
       $('#pe-genres').innerHTML = data.genres.map((g) => `
-        <label class="pe-chip"><input type="checkbox" name="genres" value="${esc(g)}" ${profile.genres.includes(g) ? 'checked' : ''}><span>${esc(g)}</span></label>`).join('');
+        <label class="pe-chip"><input type="checkbox" name="genres" value="${esc(g)}" ${profile.genres.includes(g) ? 'checked' : ''}><span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>${esc(g)}</span></label>`).join('');
       paintAvatar();
       paintLink();
       $('#pe-bio-count').textContent = `${form.bio.value.length}/400`;
@@ -52,11 +53,13 @@
     if (e.target.name === 'handle' || e.target.name === 'displayName') { paintLink(); paintAvatar(); }
     if (e.target.name === 'bio') $('#pe-bio-count').textContent = `${form.bio.value.length}/400`;
   });
+  const paintCount = () => { $('#pe-genres-count').textContent = `${form.querySelectorAll('input[name="genres"]:checked').length} of 6`; };
   // Up to 6 genres
   form.addEventListener('change', (e) => {
     if (e.target.name !== 'genres') return;
     const on = [...form.querySelectorAll('input[name="genres"]:checked')];
     if (on.length > 6) { e.target.checked = false; say('Pick up to 6 genres.', 'bad'); }
+    paintCount();
   });
 
   form.addEventListener('submit', async (e) => {

@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=128">
 <link rel="stylesheet" href="css/header-menu.css?v=9">
-<link rel="stylesheet" href="css/profile.css?v=3">
+<link rel="stylesheet" href="css/profile.css?v=4">
 </head>
 <body>
 <div id="grain"></div>
@@ -125,11 +125,12 @@
       <label class="pe-row"><span>TikTok</span><input id="pe-tt" name="tiktok" maxlength="200" autocapitalize="off" spellcheck="false" placeholder="@username"></label>
     </div>
 
-    <p class="pe-group-label" id="pe-genres-label">Genres</p>
-    <div class="pe-group pe-group-pad">
+    <p class="pe-group-label">Genres</p>
+    <div class="pe-group pe-genres-group">
+      <div class="pe-genres-head"><span id="pe-genres-label">Genres you like</span><b id="pe-genres-count">0 of 6</b></div>
       <div class="pe-chips" id="pe-genres"></div>
     </div>
-    <p class="pe-note">Up to 6. Tap your photo to change it: JPG, PNG or WebP under 5 MB.</p>
+    <p class="pe-note">Pick up to 6. Tap your photo to change it: JPG, PNG or WebP under 5 MB.</p>
 
     <div class="pe-actions">
       <button type="submit" class="btn btn-primary" id="pe-save">Save</button>
@@ -192,7 +193,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="js/main.js?v=46"></script>
 <script src="js/header-menu.js?v=8"></script>
-<script src="js/profile-edit.js?v=2"></script>
+<script src="js/profile-edit.js?v=3"></script>
 <script src="js/auth.js?v=43"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -110,13 +110,24 @@
 .pe-note{ margin:8px 16px 0; font-size:13px; color:#6e6e73; }
 .pe-count{ text-align:right; }
 
-.pe-chips{ display:flex; flex-wrap:wrap; gap:8px; }
-.pe-chip{ position:relative; }
+.pe-genres-group{ padding:4px 14px 14px; }
+.pe-genres-head{ display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:0 2px; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.pe-genres-head span{ font-size:15px; color:#f5f5f7; }
+.pe-genres-head b{ font-size:13px; font-weight:500; color:#86868b; font-variant-numeric:tabular-nums; }
+.pe-chips{ display:grid; grid-template-columns:repeat(auto-fill, minmax(112px, 1fr)); gap:8px; padding-top:8px; }
+.pe-chip{ position:relative; display:block; }
 .pe-chip input{ position:absolute; opacity:0; pointer-events:none; }
-.pe-chip span{ height:30px; display:inline-flex; align-items:center; padding:0 12px; border-radius:999px; background:rgba(255,255,255,0.07); font-size:13px; font-weight:500; color:#d2d2d7; cursor:pointer; transition:background-color 150ms ease, color 150ms ease; }
-.pe-chip input:checked + span{ background:var(--accent); color:#0a0a09; }
+.pe-chip span{
+  height:36px; display:flex; align-items:center; justify-content:center; gap:5px; padding:0 10px; border-radius:10px;
+  border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); font-size:13.5px; font-weight:500; color:#d2d2d7;
+  white-space:nowrap; cursor:pointer; transition:background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.pe-chip svg{ width:0; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:width 150ms ease; }
+.pe-chip input:checked + span{ background:rgba(232,134,44,0.14); border-color:rgba(232,134,44,0.65); color:#f5b06a; }
+.pe-chip input:checked + span svg{ width:14px; }
 .pe-chip input:focus-visible + span{ outline:2px solid var(--accent); outline-offset:2px; }
-@media (hover:hover) and (pointer:fine){ .pe-chip input:not(:checked) + span:hover{ background:rgba(255,255,255,0.12); } }
+@media (hover:hover) and (pointer:fine){ .pe-chip input:not(:checked) + span:hover{ border-color:rgba(255,255,255,0.22); background:rgba(255,255,255,0.06); } }
+@media (max-width:640px){ .pe-chips{ grid-template-columns:repeat(3, minmax(0, 1fr)); } .pe-chip span{ font-size:13px; padding:0 6px; } }
 
 .pe-actions{ display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:32px; }
 .pe-actions .btn{ min-width:96px; min-height:30px; padding:6px 16px; font-size:13px; }

@@ -183,7 +183,25 @@
       return;
     }
     cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = true; });
+    const label = btn.textContent;
     try {
+      // Approve: first put the "Creative Sound" voice tag on the public
+      // preview (mixed here, uploaded straight to Dropbox).
+      if (btn.dataset.decision === 'approve') {
+        if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
+        const prep = await fetch('/api/review/tag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(cardEl.dataset.id) }),
+        });
+        const urls = await prep.json().catch(() => ({}));
+        if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
+        const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; });
+        btn.textContent = 'Uploading tagged preview…';
+        const up = await fetch(urls.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
+        if (!up.ok) throw new Error('Could not upload the tagged preview. Try again.');
+        btn.textContent = 'Approving…';
+      }
       const res = await fetch('/api/review/decide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,6 +216,7 @@
     } catch (e2) {
       err.textContent = e2.message;
       err.hidden = false;
+      btn.textContent = label;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
     }
   });

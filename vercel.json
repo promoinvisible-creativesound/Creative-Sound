@@ -132,6 +132,10 @@
     {
       "source": "/api/payouts/check",
       "destination": "/api/tickets?action=payouts-check"
+    },
+    {
+      "source": "/api/review/tag",
+      "destination": "/api/tickets?action=review-tag"
     }
   ],
   "headers": [

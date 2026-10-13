@@ -394,6 +394,18 @@ async function handleAdminReview(req, res) {
     const note = String(body.note || '').trim().slice(0, 1000);
     if (!decision) { res.status(400).json({ error: 'Choose approve or reject.' }); return; }
     if (decision === 'rejected' && !note) { res.status(400).json({ error: 'Tell the producer what to fix.' }); return; }
+    // Approving needs the voice-tagged preview (made in the admin's browser,
+    // see handleAdminTag): only that version is ever public.
+    if (decision === 'approved') {
+      const [cur] = await sql`SELECT files FROM beat_submissions WHERE id = ${id}`;
+      if (!cur) { res.status(404).json({ error: 'Submission not found.' }); return; }
+      const tagPath = `/submissions/${id}/preview-tagged.mp3`;
+      let size = 0;
+      try { size = await dropbox.fileSize(tagPath); } catch (err) { size = 0; }
+      if (!size) { res.status(400).json({ error: 'The voice-tagged preview is missing. Try Approve again.' }); return; }
+      const files = { ...(cur.files || {}), tagged: { path: tagPath, name: 'preview-tagged.mp3', size } };
+      await sql`UPDATE beat_submissions SET files = ${JSON.stringify(files)}::jsonb WHERE id = ${id}`;
+    }
     const [sub] = await sql`
       UPDATE beat_submissions SET status = ${decision}, review_note = ${note || null}, reviewed_at = now(), updated_at = now()
       WHERE id = ${id} AND status <> 'draft' RETURNING *
@@ -559,7 +571,30 @@ async function handleAdminProducers(req, res) {
   }
 }
 
+// Voice tag: the admin page downloads the producer preview, mixes the
+// "Creative Sound" tag in and uploads the result here, before approving.
+//   POST /api/review/tag { id } -> { sourceUrl, uploadUrl }
+async function handleAdminTag(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session || !isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const id = Number((req.body || {}).id);
+    const [sub] = await sql`SELECT files FROM beat_submissions WHERE id = ${id}`;
+    const preview = sub && sub.files && sub.files.preview;
+    if (!preview) { res.status(404).json({ error: 'This track has no preview.' }); return; }
+    res.status(200).json({
+      sourceUrl: await dropbox.readLink(preview.path),
+      uploadUrl: await dropbox.uploadLink(`/submissions/${id}/preview-tagged.mp3`),
+    });
+  } catch (err) {
+    console.error('review tag error:', err);
+    res.status(500).json({ error: 'Could not prepare the voice tag.' });
+  }
+}
+
 module.exports = {
   FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
-  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers,
+  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers, handleAdminTag,
 };

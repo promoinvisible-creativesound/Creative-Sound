@@ -107,7 +107,10 @@ async function handleMedia(req, res) {
   if (!['artwork', 'preview'].includes(kind)) { res.status(400).json({ error: 'Unknown media.' }); return; }
   try {
     const beat = await getBeat(id);
-    const f = beat && beat._files && beat._files[kind];
+    // The public preview is the voice-tagged one; the producer's original
+    // preview is only used for tracks approved before tagging existed.
+    const files = (beat && beat._files) || {};
+    const f = kind === 'preview' ? (files.tagged || files.preview) : files[kind];
     if (!f || !dropbox.configured()) { res.status(404).json({ error: 'Not found.' }); return; }
     const link = await dropbox.readLink(f.path);
     // Dropbox links last 4 hours; caches keep the redirect well inside that.

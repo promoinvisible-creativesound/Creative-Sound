@@ -206,6 +206,17 @@
       <button type="button" class="up-btn up-btn-ghost" data-pick>Replace</button>`;
     row.classList.remove('is-busy', 'is-error');
     row.classList.add('is-done');
+    // Position bar under the row (shown while this file is the one playing).
+    const old = $('.up-seek', row);
+    if (old) old.remove();
+    if (audio) {
+      row.insertAdjacentHTML('beforeend', `
+        <div class="up-seek" hidden>
+          <span class="up-seek-time">0:00</span>
+          <input type="range" min="0" max="1000" step="1" value="0" aria-label="Position in ${esc(file.name)}">
+          <span class="up-seek-time up-seek-total">0:00</span>
+        </div>`);
+    }
   }
 
   // One shared player for the Listen buttons.
@@ -220,9 +231,28 @@
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', String(on));
       $('span', b).textContent = r === playingRow && player.currentTime > 0 ? `${clock(player.currentTime)} / ${clock(player.duration)}` : 'Listen';
+      const seek = $('.up-seek', r);
+      if (!seek) return;
+      seek.hidden = r !== playingRow;
+      if (r !== playingRow) return;
+      const range = $('input', seek);
+      if (!seeking && Number.isFinite(player.duration) && player.duration > 0) range.value = String(Math.round((player.currentTime / player.duration) * 1000));
+      range.style.setProperty('--p', `${Number(range.value) / 10}%`);
+      $('.up-seek-time', seek).textContent = clock(player.currentTime);
+      $('.up-seek-total', seek).textContent = clock(player.duration);
     });
   };
-  ['play', 'pause', 'ended', 'timeupdate'].forEach((ev) => player.addEventListener(ev, paintListen));
+  // Drag or click the bar to jump to a position.
+  let seeking = false;
+  document.addEventListener('input', (e) => {
+    const range = e.target.closest('.up-seek input');
+    if (!range || range.closest('.up-file') !== playingRow) return;
+    seeking = true;
+    range.style.setProperty('--p', `${Number(range.value) / 10}%`);
+    if (Number.isFinite(player.duration)) player.currentTime = (Number(range.value) / 1000) * player.duration;
+  });
+  document.addEventListener('change', (e) => { if (e.target.closest('.up-seek input')) { seeking = false; paintListen(); } });
+  ['play', 'pause', 'ended', 'timeupdate', 'loadedmetadata'].forEach((ev) => player.addEventListener(ev, paintListen));
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-listen]');
     if (!b) return;

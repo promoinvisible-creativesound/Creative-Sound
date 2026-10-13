@@ -598,3 +598,37 @@
 .up-seek input:active::-webkit-slider-thumb{ transform:scale(1.25); }
 .up-seek input:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
 @media (max-width:640px){ .up-page .up-file .up-seek{ padding-left:0; } }
+
+/* Submit confirmation: ring draws, check draws, text rises (one-time moment) */
+.up-sent{ position:fixed; inset:0; z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(5,5,4,0.6); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); animation:upSentFade 220ms ease-out both; }
+.up-sent.is-leaving{ animation:upSentOut 240ms ease-in forwards; }
+.up-sent-card{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; max-width:380px; padding:32px 28px 28px; border-radius:24px; background:rgba(22,21,20,0.92); border:1px solid rgba(255,255,255,0.08); box-shadow:0 40px 100px -24px rgba(0,0,0,0.95); animation:upSentCard 420ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.up-sent-mark{ width:96px; height:96px; margin-bottom:10px; overflow:visible; }
+.up-sent-ring{ fill:rgba(232,134,44,0.12); stroke:var(--accent); stroke-width:4; stroke-linecap:round; stroke-dasharray:252; stroke-dashoffset:252; transform:rotate(-90deg); transform-origin:48px 48px; animation:upSentDraw 560ms cubic-bezier(0.65, 0, 0.35, 1) 120ms forwards; filter:drop-shadow(0 0 14px rgba(232,134,44,0.45)); }
+.up-sent-check{ fill:none; stroke:#f5b06a; stroke-width:6; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:60; stroke-dashoffset:60; animation:upSentDraw 360ms cubic-bezier(0.23, 1, 0.32, 1) 600ms forwards; }
+.up-sent-card b{ font-family:var(--font-sans); font-size:20px; font-weight:600; letter-spacing:-0.01em; color:#f5f5f7; opacity:0; animation:upSentRise 380ms cubic-bezier(0.23, 1, 0.32, 1) 780ms forwards; }
+.up-sent-card small{ font-size:14px; line-height:1.5; color:#a1a1a6; opacity:0; animation:upSentRise 380ms cubic-bezier(0.23, 1, 0.32, 1) 860ms forwards; }
+@keyframes upSentFade{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes upSentOut{ to{ opacity:0; } }
+@keyframes upSentCard{ from{ opacity:0; transform:translateY(10px) scale(0.96); } to{ opacity:1; transform:none; } }
+@keyframes upSentDraw{ to{ stroke-dashoffset:0; } }
+@keyframes upSentRise{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){
+  .up-sent, .up-sent-card, .up-sent.is-leaving{ animation:none; }
+  .up-sent-ring, .up-sent-check{ animation:none; stroke-dashoffset:0; }
+  .up-sent-card b, .up-sent-card small{ animation:none; opacity:1; }
+}
+/* Alignment pass for uploaded rows: controls on one line, centred; the
+   position bar lines up with the text column (not under the icon). */
+.up-page .up-file.is-done .up-file-ctrl{ flex-wrap:nowrap; gap:10px; }
+.up-page .up-file-done{ gap:8px; }
+.up-page .up-file-done span{ gap:1px; }
+.up-page .up-file-done b, .up-page .up-file-done small{ line-height:1.3; }
+.up-page .up-file .up-listen, .up-page .up-file .up-btn{ flex-shrink:0; }
+.up-page .up-file .up-seek{ grid-column:2 / -1; padding:2px 0 0; gap:10px; }
+.up-page .up-seek-time{ min-width:30px; font-size:11.5px; }
+.up-page .up-seek-time:first-child{ text-align:left; }
+@media (max-width:640px){
+  .up-page .up-file.is-done .up-file-ctrl{ flex-wrap:wrap; justify-content:flex-start; }
+  .up-page .up-file .up-seek{ grid-column:1 / -1; }
+}

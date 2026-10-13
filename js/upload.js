@@ -219,6 +219,34 @@
     }
   }
 
+  // Confirmation after a successful submit: a check mark draws itself in a
+  // circle with "Everything was sent successfully" below, then fades away.
+  function celebrate(title) {
+    player.pause();
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const el = document.createElement('div');
+    el.className = 'up-sent';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'assertive');
+    el.innerHTML = `
+      <div class="up-sent-card">
+        <svg class="up-sent-mark" viewBox="0 0 96 96" aria-hidden="true">
+          <circle class="up-sent-ring" cx="48" cy="48" r="40"/>
+          <path class="up-sent-check" d="M30 49.5l12 12L67 35"/>
+        </svg>
+        <b>Everything was sent successfully</b>
+        <small>${esc(title || 'Your track')} is now in review. We'll email you the result.</small>
+      </div>`;
+    document.body.appendChild(el);
+    return new Promise((resolve) => {
+      const hold = reduce ? 1600 : 2300;
+      setTimeout(() => {
+        el.classList.add('is-leaving');
+        setTimeout(() => { el.remove(); resolve(); }, reduce ? 0 : 260);
+      }, hold);
+    });
+  }
+
   // One shared player for the Listen buttons.
   const player = new Audio();
   let playingRow = null;
@@ -555,6 +583,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || (res.status === 504 ? 'The server took too long to check your files. Please try again.' : `Something went wrong (error ${res.status}). Please try again.`));
       $('#up-done-title').textContent = val('title');
+      await celebrate(val('title'));
       form.hidden = true;
       $('#up-done').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -1799,3 +1799,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-feat-disc{ animation:none; }
   .bt-feat-vinyl{ transition:none; }
 }
+
+/* Card cover opens the track page */
+.bt-card .bt-cover-wrap{ cursor:pointer; }
+.bt-card .bt-cover-wrap .bt-play, .bt-card .bt-cover-wrap .bt-save{ cursor:pointer; }

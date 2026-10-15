@@ -232,6 +232,11 @@
       const beat = byId.get(card.dataset.id);
       if (e.target.closest('.bt-play')) togglePlay(beat.id);
       else if (e.target.closest('[data-buy]')) openLicense(beat, e.target.closest('[data-buy]'));
+      // The cover opens the track page, like the title.
+      else if (e.target.closest('.bt-cover-wrap') && !e.target.closest('button, a')) {
+        if (e.metaKey || e.ctrlKey) window.open(beatUrl(beat), '_blank');
+        else location.href = beatUrl(beat);
+      }
     });
   };
 

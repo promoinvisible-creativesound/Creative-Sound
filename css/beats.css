@@ -1988,3 +1988,16 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-feat-spot:hover .bt-feat-play{ transform:scale(1.08); }
 }
 @media (prefers-reduced-motion: reduce){ .bt-card .bt-play, .bt-feat-spot .bt-feat-play{ transition:opacity 200ms ease !important; } }
+
+/* Card play: a bit bigger, larger glyph, optically centred, smooth
+   play/pause cross-fade like the track page */
+.bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play{ width:50px; height:50px; left:12px; bottom:12px; }
+.bt-grid[data-view="grid"] .bt-play svg, .bp-row .bt-play svg{ position:absolute; left:50%; top:50%; width:22px; height:22px; margin:-11px 0 0 -11px !important; transition:opacity 240ms ease, transform 380ms cubic-bezier(0.22, 1, 0.36, 1); }
+.bt-grid[data-view="grid"] .bt-play .bt-ic-play, .bt-grid[data-view="grid"] .bt-play .bt-ic-pause, .bp-row .bt-play .bt-ic-play, .bp-row .bt-play .bt-ic-pause{ display:block !important; }
+.bt-grid[data-view="grid"] .bt-play .bt-ic-pause, .bp-row .bt-play .bt-ic-pause{ opacity:0; transform:scale(0.6) rotate(-90deg); }
+.bt-grid[data-view="grid"] .bt-card.is-playing .bt-play .bt-ic-play, .bp-row .bt-card.is-playing .bt-play .bt-ic-play{ opacity:0; transform:scale(0.6) rotate(90deg); }
+.bt-grid[data-view="grid"] .bt-card.is-playing .bt-play .bt-ic-pause, .bp-row .bt-card.is-playing .bt-play .bt-ic-pause{ opacity:1; transform:none; }
+@media (max-width:560px){
+  .bt-grid[data-view="grid"] .bt-play{ width:44px; height:44px; left:10px; bottom:10px; }
+  .bt-grid[data-view="grid"] .bt-play svg{ width:19px; height:19px; margin:-9.5px 0 0 -9.5px !important; }
+}

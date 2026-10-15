@@ -27,15 +27,28 @@
   /* ------------------------- Track page: message box ------------------------ */
   // The track page is rendered by beats.js after the catalogue loads, so wait
   // for the box to appear.
+  // "Message" in the Contact card opens a one-line composer inside the card.
   const bindBox = (box) => {
+    const toggle = $('.bp-msg-toggle', box);
+    const panel = $('.bp-msg-panel', box);
     const form = $('.bp-message-form', box);
     const ta = $('textarea', form);
-    const status = $('.bp-message-status', form);
+    const status = $('.bp-message-status', box);
     const btn = $('button[type="submit"]', form);
+    const hint = status.textContent;
+    const setOpen = (open) => {
+      box.classList.toggle('is-messaging', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.inert = !open;
+      if (open && !form.hidden) setTimeout(() => ta.focus({ preventScroll: true }), 120);
+    };
+    toggle.addEventListener('click', () => setOpen(!box.classList.contains('is-messaging')));
     me.then((user) => {
       if (user && user.email) return;
-      form.innerHTML = '<div class="bp-message-guest"><span>Sign in to message the producer. It\'s free.</span><a class="btn btn-primary" href="login.html">Sign in</a><a class="btn btn-ghost" href="signup.html">Create account</a></div>';
+      form.hidden = true;
+      status.innerHTML = '<a href="login.html">Sign in</a> or <a href="signup.html">create a free account</a> to message the producer.';
     });
+    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`; });
     enterSends(ta, form);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -44,7 +57,7 @@
       btn.disabled = true; status.className = 'bp-message-status'; status.textContent = 'Sending…';
       try {
         const out = await send({ beatId: box.dataset.messageBeat, body });
-        ta.value = '';
+        ta.value = ''; ta.style.height = 'auto';
         status.classList.add('is-ok');
         status.innerHTML = `Sent. <a href="messages.html?with=${out.with}">Open the conversation ›</a>`;
       } catch (err) {
@@ -52,6 +65,7 @@
         status.textContent = err.message;
       } finally { btn.disabled = false; }
     });
+    ta.addEventListener('focus', () => { if (status.classList.contains('is-bad')) { status.className = 'bp-message-status'; status.textContent = hint; } });
   };
   if ($('[data-track-page]') || $('.beat-page')) {
     let tries = 0;

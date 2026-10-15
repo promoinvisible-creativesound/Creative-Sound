@@ -1058,6 +1058,8 @@
     $('#bt-player-bar').setAttribute('aria-valuenow', String(Math.round(p * 100)));
     $('#bt-time').textContent = fmtTime(audio.currentTime);
     $('#bt-dur').textContent = fmtTime(audio.duration);
+    // Track page: the ring round the cover play button fills with the preview.
+    if (beatRoot) { const ring = $('.bp-cover-play', beatRoot); if (ring) ring.style.setProperty('--p', beatRoot.dataset.beatId === currentId ? p.toFixed(4) : 0); }
   };
   const drawViz = () => {
     raf = 0;

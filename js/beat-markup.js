@@ -39,7 +39,7 @@
       <section class="bp-hero" aria-label="${esc(b.title)}">
         <div class="bp-cover">
           ${art(b)}
-          <button type="button" class="bp-cover-play" data-play-beat aria-label="Play preview">
+          <button type="button" class="bp-cover-play" data-play-beat aria-label="Play preview"><svg class="bp-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" pathLength="100"/></svg>
             <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
             <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
           </button>
@@ -63,12 +63,24 @@
         </div>
       </section>
 
-      ${b.contact ? `<section class="bp-contact" aria-label="Contact the producer">
-        <div><b>Contact ${esc(b.producer)}</b><small>For exclusives, custom beats or collabs, reach out directly.</small></div>
-        <div class="bp-contact-links">
-          ${b.contact.instagram ? `<a class="btn btn-ghost" href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Instagram</a>` : ''}
-          ${b.contact.email ? `<a class="btn btn-ghost" href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>Email</a>` : ''}
+      ${b.contact || b.source === 'producer' ? `<section class="bp-contact"${b.source === 'producer' ? ` id="bp-message" data-message-beat="${esc(b.id)}"` : ''} aria-label="Contact the producer">
+        <div class="bp-contact-row">
+          <div class="bp-contact-text"><b>Contact ${esc(b.producer)}</b><small>Exclusives, custom beats or a collab.</small></div>
+          <div class="bp-contact-links">
+            ${b.source === 'producer' ? '<button type="button" class="btn btn-primary bp-msg-toggle" aria-expanded="false" aria-controls="bp-msg-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/></svg>Message</button>' : ''}
+            ${b.contact && b.contact.instagram ? `<a class="btn btn-ghost bp-contact-ic" href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}
+            ${b.contact && b.contact.email ? `<a class="btn btn-ghost bp-contact-ic" href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}
+          </div>
         </div>
+        ${b.source === 'producer' ? `<div class="bp-msg-panel" id="bp-msg-panel" inert>
+          <div class="bp-msg-inner">
+            <form class="bp-message-form" method="post" novalidate>
+              <textarea name="body" rows="1" maxlength="2000" placeholder="Write to ${esc(b.producer)}…" aria-label="Your message"></textarea>
+              <button type="submit" class="bp-msg-send" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+            </form>
+            <small class="bp-message-status" aria-live="polite">Private. Your email is never shown, replies land in Messages.</small>
+          </div>
+        </div>` : ''}
       </section>` : ''}
       <section class="bp-section" id="licensing" aria-labelledby="bp-licensing-title">
         <div class="bp-section-head"><h2 id="bp-licensing-title">Licensing</h2></div>
@@ -100,17 +112,6 @@
           </div>
         </div>
       </section>
-
-      ${b.source === 'producer' ? `<section class="bp-message" id="bp-message" data-message-beat="${esc(b.id)}" aria-labelledby="bp-message-title">
-        <div class="bp-message-head">
-          <span class="bp-message-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/></svg></span>
-          <div><b id="bp-message-title">Message ${esc(b.producer)}</b><small>Exclusives, custom work or a collab: write privately, the reply lands in your Messages.</small></div>
-        </div>
-        <form class="bp-message-form" method="post" novalidate>
-          <textarea name="body" rows="3" maxlength="2000" placeholder="Hi ${esc(b.producer)}, I'd like to…" aria-label="Your message"></textarea>
-          <div class="bp-message-foot"><small class="bp-message-status" aria-live="polite"></small><button type="submit" class="btn btn-primary">Send message</button></div>
-        </form>
-      </section>` : ''}
 
       ${b.about ? `<section class="bp-section" aria-labelledby="bp-about-title">
         <div class="bp-section-head"><h2 id="bp-about-title">About this track</h2></div>

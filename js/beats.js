@@ -772,6 +772,8 @@
   const spotHtml = (b, rank) => `
     <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.cover, location.href).href)}')"` : ''}>
       <span class="bt-feat-ambient" aria-hidden="true"></span>
+      <div class="bt-feat-art">
+      <span class="bt-feat-vinyl" aria-hidden="true"><span class="bt-feat-disc"><span class="bt-feat-label"></span></span></span>
       <div class="bt-feat-cover">
         ${art(b)}
         <button type="button" class="bt-feat-play" data-feat-play aria-label="Play ${esc(b.title)}">
@@ -779,8 +781,9 @@
           <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
         </button>
       </div>
+      </div>
       <div class="bt-feat-info">
-        <p class="bt-feat-kicker"><span class="bt-feat-rank-big">#${rank}</span></p>
+        <p class="bt-feat-kicker"><span class="bt-feat-rank-big">#${rank}</span><span class="bt-feat-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></p>
         <h3 class="bt-feat-title"><a href="${beatUrl(b)}">${esc(b.title)}</a></h3>
         <p class="bt-feat-producer">${producerLine(b)}</p>
         <div class="bt-specs bt-feat-specs"><span class="bt-spec"><b>${b.bpm}</b><small>BPM</small></span><span class="bt-spec">${esc(b.key)}</span><span class="bt-spec bt-spec-genre">${esc(b.genre)}</span><span class="bt-spec">${esc(b.mood)}</span></div>

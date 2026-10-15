@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=135">
 <link rel="stylesheet" href="css/header-menu.css?v=17">
-<link rel="stylesheet" href="css/upload.css?v=34">
+<link rel="stylesheet" href="css/upload.css?v=35">
 </head>
 <body>
 <div id="grain"></div>
@@ -141,6 +141,10 @@
           <span class="up-step">1</span>
           <div><h2 id="up-s1">Files</h2><p>Click a row or drop a file on it. Large files upload in parts, keep this tab open.</p></div>
         </div>
+        <div class="up-mix-note">
+          <span class="up-mix-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+          <div><b>Mixed and mastered only</b><small>Every file must be the final, release-ready version: balanced mix, mastered loudness, no clipping. Tracks that are not mixed and mastered are not approved.</small></div>
+        </div>
 
         <h3 class="up-group-title">For the store <span>What people see and hear before buying.</span></h3>
         <div class="up-files">
@@ -220,12 +224,17 @@
       <section class="up-card" aria-labelledby="up-s4">
         <div class="up-card-head">
           <span class="up-step">4</span>
-          <div><h2 id="up-s4">Rights</h2><p>We can only sell tracks you fully own.</p></div>
+          <div><h2 id="up-s4">Rights and quality</h2><p>We can only sell finished tracks you fully own.</p></div>
         </div>
         <label class="up-check">
           <input type="checkbox" name="agree">
           <span class="up-check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span>
           <span>I made this track and own all rights to it. Every sample is cleared or royalty-free, and I allow Creative Sound to sell licenses for it on my behalf, keeping 20% of each sale and paying me 80%.</span>
+        </label>
+        <label class="up-check">
+          <input type="checkbox" name="mastered">
+          <span class="up-check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span>
+          <span>This track is fully mixed and mastered, ready for release.</span>
         </label>
       </section>
     </div>
@@ -247,6 +256,7 @@
         <li data-check="details">Title, BPM, key, genre, mood, tags</li>
         <li data-check="license">At least one license</li>
         <li data-check="agree">Rights confirmed</li>
+        <li data-check="mastered">Mixed and mastered</li>
       </ul>
       <p class="up-error" id="up-error" role="alert" hidden></p>
       <button type="submit" class="btn btn-primary up-submit" disabled>Submit for review</button>
@@ -323,7 +333,7 @@
 <script src="js/auth.js?v=46"></script>
 <script src="js/voice-tag.js?v=4"></script>
 <script src="js/cover-crop.js?v=1"></script>
-<script src="js/upload.js?v=16"></script>
+<script src="js/upload.js?v=17"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

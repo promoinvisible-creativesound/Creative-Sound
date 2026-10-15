@@ -268,6 +268,7 @@ function validateDetails(body, files) {
   if (!genre) return { error: 'Choose a genre.' };
   if (!mood) return { error: 'Choose a mood.' };
   if (body.agree !== true) return { error: 'Please confirm you own the rights to this beat.' };
+  if (body.mastered !== true) return { error: 'Please confirm the track is mixed and mastered.' };
 
   for (const [kind, spec] of Object.entries(FILE_KINDS)) {
     if (spec.required && !files[kind]) return { error: kind === 'artwork' ? 'Upload the cover art.' : 'Upload the preview MP3.' };

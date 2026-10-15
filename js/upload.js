@@ -604,10 +604,11 @@
       details: !!(val('producerName') && val('title') && Number.isInteger(bpm) && bpm >= 40 && bpm <= 250 && val('key') && val('genre') && val('mood') && picked.size >= TAG_RULES.min),
       license: valid.length > 0 && Object.keys(prices).length === valid.length,
       agree: form.elements.agree.checked,
+      mastered: form.elements.mastered.checked,
     };
     $$('#up-checklist li').forEach((li) => li.classList.toggle('is-ok', !!checks[li.dataset.check]));
     // Steps bar: done when every check of that step passes.
-    const steps = { files: checks.artwork && checks.preview, details: checks.details, license: checks.license, agree: checks.agree };
+    const steps = { files: checks.artwork && checks.preview, details: checks.details, license: checks.license, agree: checks.agree && checks.mastered };
     $$('#up-steps li').forEach((li) => li.classList.toggle('is-ok', !!steps[li.dataset.step]));
 
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
@@ -655,6 +656,7 @@
           contactEmail: val('contactEmail'),
           prices: pricesInEuros(),
           agree: form.elements.agree.checked,
+          mastered: form.elements.mastered.checked,
         }),
       });
       const data = await res.json().catch(() => ({}));

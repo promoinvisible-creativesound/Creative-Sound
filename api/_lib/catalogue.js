@@ -48,14 +48,18 @@ function toBeat(row) {
     tint: TINTS[row.id % TINTS.length],
     // Colour from the cover (borders, glows); the tint is the fallback.
     accent: /^#[0-9a-f]{6}$/i.test(row.accent || '') ? row.accent : null,
-    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork` : null,
-    preview: `/api/beats/media?id=${id}&kind=preview`,
+    // v changes whenever the files change (approved edits), so browsers and
+    // the CDN fetch the new cover/preview instead of a cached redirect.
+    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&v=${fileVersion(row)}` : null,
+    preview: `/api/beats/media?id=${id}&kind=preview&v=${fileVersion(row)}`,
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
     _submissionId: row.id,
     _userId: row.user_id,
   };
 }
+// Short version tag for media URLs: last approved change, or first approval.
+const fileVersion = (row) => new Date(row.changes_at || row.reviewed_at || row.submitted_at || 0).getTime().toString(36);
 // Strip server-only fields (anything starting with _) before sending.
 const publicBeat = (b) => Object.fromEntries(Object.entries(b).filter(([k]) => !k.startsWith('_')));
 

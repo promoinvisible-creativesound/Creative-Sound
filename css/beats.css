@@ -1950,3 +1950,10 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-cover-play .bt-ic-play{ transform:none; }
 .beat-page.is-playing .bp-cover-play .bt-ic-play{ transform:scale(0.6) rotate(90deg); }
 @media (max-width:640px){ .bp-cover-play svg:not(.bp-ring){ width:24px; height:24px; margin:-12px 0 0 -12px; } }
+
+/* Track page: producer's Instagram / Email as small icons next to the name */
+.bp-producer-links{ display:inline-flex; align-items:center; gap:6px; margin-left:6px; padding-left:12px; border-left:1px solid rgba(255,255,255,0.12); }
+.bp-producer-links a{ width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); color:#d1d1d6; transition:background-color 150ms ease, color 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.bp-producer-links svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.bp-producer-links a:active{ transform:scale(0.92); }
+@media (hover:hover) and (pointer:fine){ .bp-producer-links a:hover{ background:rgba(255,255,255,0.12); color:#fff; } }

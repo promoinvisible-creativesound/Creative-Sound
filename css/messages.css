@@ -63,3 +63,10 @@
   .ms-msg{ max-width:86%; }
 }
 @media (prefers-reduced-motion: reduce){ .ms-msg:last-child{ animation:none; } }
+
+/* Phones: an open chat takes the whole screen, compose box always in view */
+@media (max-width:760px){
+  .ms-page.has-chat{ padding-top:92px; padding-bottom:10px; }
+  .ms-page.has-chat .ms-head{ display:none; }
+  .ms-page.has-chat .ms-wrap{ margin-top:0; height:calc(100dvh - 104px); min-height:380px; }
+}

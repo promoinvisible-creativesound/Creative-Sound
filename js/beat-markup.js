@@ -34,7 +34,6 @@
     const acc = /^#[0-9a-f]{6}$/i.test(b.accent || '') ? (() => { const n = parseInt(b.accent.slice(1), 16); const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; const mix = (t) => rgb.map((c) => Math.round(c + (255 - c) * t)).join(','); return ` style="--fx:${rgb.join(',')};--fx-hi:${mix(0.35)};--fx-soft:${mix(0.7)};"`; })() : '';
     return `<main class="beat-page bt-tint-${tint}"${acc} data-beat-id="${esc(b.id)}">
     <div class="bp-wrap">
-      <nav class="bp-crumbs" aria-label="Breadcrumb"><a href="beats.html">Tracks</a><span aria-hidden="true">/</span><span>${esc(b.title)}</span></nav>
 
       <section class="bp-hero" aria-label="${esc(b.title)}">
         <div class="bp-cover">
@@ -45,7 +44,6 @@
           </button>
         </div>
         <div class="bp-info">
-          <p class="bp-kicker">${esc(b.genre)} · ${esc(b.mood)}${b.typeBeat && b.typeBeat.length ? ` · ${esc(b.typeBeat.join(', '))} type beat` : ''}</p>
           <h1 class="bp-title">${esc(b.title)}</h1>
           <p class="bp-producer">${b.producerHandle ? `<a href="artist.html?u=${encodeURIComponent(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${verified ? VERIFIED : ''}${b.contact ? `<span class="bp-producer-links">${b.contact.instagram ? `<a href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(b.producer)} on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}${b.contact.email ? `<a href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email ${esc(b.producer)}" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}</span>` : ''}</p>
           <ul class="bp-facts">${facts.map(([k, v]) => `<li><span>${k}</span><b>${esc(v)}</b></li>`).join('')}</ul>

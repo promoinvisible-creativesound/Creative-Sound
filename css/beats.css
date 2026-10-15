@@ -1957,3 +1957,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bp-producer-links svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .bp-producer-links a:active{ transform:scale(0.92); }
 @media (hover:hover) and (pointer:fine){ .bp-producer-links a:hover{ background:rgba(255,255,255,0.12); color:#fff; } }
+
+/* Track page: no breadcrumb / kicker, hero sits a bit higher */
+.beat-page{ padding-top:calc(116px + var(--announce-h, 0px)); }
+@media (max-width:640px){ .beat-page{ padding-top:96px; } }

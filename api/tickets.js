@@ -7,6 +7,7 @@ const { handleRole } = require('./_lib/account');
 const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catalogue');
 const profile = require('./_lib/profile');
 const payouts = require('./_lib/payouts');
+const { handleMessages } = require('./_lib/messages');
 const {
   handleFile: handleProducerFile,
   handleChunk: handleProducerChunk,
@@ -55,6 +56,8 @@ module.exports = async (req, res) => {
     'producer-payouts': payouts.handlePayouts,
     'payouts-run': payouts.handleRun,
     'payouts-check': payouts.handleCheck,
+    // Private messages between members (_lib/messages.js)
+    messages: handleMessages,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

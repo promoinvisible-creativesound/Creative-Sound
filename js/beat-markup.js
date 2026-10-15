@@ -101,6 +101,17 @@
         </div>
       </section>
 
+      ${b.source === 'producer' ? `<section class="bp-message" id="bp-message" data-message-beat="${esc(b.id)}" aria-labelledby="bp-message-title">
+        <div class="bp-message-head">
+          <span class="bp-message-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/></svg></span>
+          <div><b id="bp-message-title">Message ${esc(b.producer)}</b><small>Exclusives, custom work or a collab: write privately, the reply lands in your Messages.</small></div>
+        </div>
+        <form class="bp-message-form" method="post" novalidate>
+          <textarea name="body" rows="3" maxlength="2000" placeholder="Hi ${esc(b.producer)}, I'd like to…" aria-label="Your message"></textarea>
+          <div class="bp-message-foot"><small class="bp-message-status" aria-live="polite"></small><button type="submit" class="btn btn-primary">Send message</button></div>
+        </form>
+      </section>` : ''}
+
       ${b.about ? `<section class="bp-section" aria-labelledby="bp-about-title">
         <div class="bp-section-head"><h2 id="bp-about-title">About this track</h2></div>
         <div class="bp-about"><p>${esc(b.about)}</p></div>

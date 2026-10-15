@@ -38,6 +38,10 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/messages",
+      "destination": "/api/tickets?action=messages"
+    },
+    {
       "source": "/api/notify",
       "destination": "/api/tickets?action=notify"
     },

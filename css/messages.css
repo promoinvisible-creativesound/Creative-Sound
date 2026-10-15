@@ -1,0 +1,65 @@
+/* Messages page: conversations list + open chat (one column on phones). */
+.ms-page{ padding:120px 20px 90px; }
+.ms-head{ max-width:1100px; margin:0 auto; }
+.ms-wrap{ max-width:1100px; margin:26px auto 0; display:grid; grid-template-columns:320px 1fr; height:min(680px, calc(100dvh - 220px)); min-height:460px; border:1px solid rgba(255,255,255,0.08); border-radius:22px; background:#121211; overflow:hidden; }
+
+.ms-list{ display:flex; flex-direction:column; gap:2px; padding:10px; overflow-y:auto; border-right:1px solid rgba(255,255,255,0.07); }
+.ms-thread{ display:flex; align-items:center; gap:11px; padding:10px; border-radius:14px; text-decoration:none; color:inherit; transition:background-color 150ms ease; }
+@media (hover:hover) and (pointer:fine){ .ms-thread:hover{ background:rgba(255,255,255,0.04); } }
+.ms-thread.is-active{ background:rgba(255,255,255,0.08); }
+.ms-thread-text{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+.ms-thread-text b{ font-size:14.5px; font-weight:600; color:#f5f5f7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ms-thread-text small{ font-size:13px; color:#a1a1a6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ms-thread.is-unread .ms-thread-text small{ color:#f5f5f7; font-weight:500; }
+.ms-thread-meta{ display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
+.ms-thread-meta time{ font-size:12px; color:#86868b; }
+.ms-badge{ min-width:20px; height:20px; padding:0 6px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; background:#e8862c; color:#0a0a09; font-size:11.5px; font-weight:700; }
+
+.ms-avatar{ width:42px; height:42px; flex:0 0 42px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#2c2c2e center/cover no-repeat; color:#f5f5f7; font-size:16px; font-weight:600; }
+.ms-avatar.is-sm{ width:36px; height:36px; flex-basis:36px; font-size:14px; }
+
+.ms-empty-list{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:18px 12px; font-size:13.5px; color:#a1a1a6; }
+.ms-empty-list b{ font-size:15px; color:#f5f5f7; }
+.ms-empty-list .btn{ margin-top:6px; }
+
+.ms-chat{ display:flex; flex-direction:column; min-width:0; min-height:0; }
+.ms-placeholder{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:20px; text-align:center; color:#a1a1a6; font-size:14px; }
+.ms-placeholder b{ font-size:17px; color:#f5f5f7; }
+.ms-chat-head{ display:flex; align-items:center; gap:11px; padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.ms-chat-head > div{ display:flex; flex-direction:column; min-width:0; }
+.ms-chat-head b{ font-size:15.5px; font-weight:600; color:#f5f5f7; }
+.ms-chat-head a{ font-size:13px; color:#a1a1a6; text-decoration:none; }
+@media (hover:hover) and (pointer:fine){ .ms-chat-head a:hover{ color:#f0a35b; } }
+.ms-back{ display:none; width:34px; height:34px; border:0; border-radius:50%; background:rgba(255,255,255,0.08); color:#f5f5f7; font-size:22px; line-height:1; cursor:pointer; }
+
+.ms-msgs{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:18px; }
+.ms-msg{ max-width:min(76%, 520px); display:flex; flex-direction:column; gap:3px; align-self:flex-start; }
+.ms-msg p{ margin:0; padding:10px 14px; border-radius:18px 18px 18px 6px; background:#2c2c2e; color:#f5f5f7; font-size:15px; line-height:1.45; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ms-msg time{ font-size:11.5px; color:#86868b; padding:0 6px; }
+.ms-msg.is-mine{ align-self:flex-end; align-items:flex-end; }
+.ms-msg.is-mine p{ border-radius:18px 18px 6px 18px; background:#e8862c; color:#0a0a09; }
+/* a new bubble rises in */
+.ms-msg:last-child{ animation:msIn 260ms cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes msIn{ from{ opacity:0; transform:translateY(8px) scale(0.98); } }
+
+.ms-compose{ display:flex; align-items:flex-end; gap:10px; padding:12px 14px; border-top:1px solid rgba(255,255,255,0.07); }
+.ms-compose textarea{ flex:1; min-height:42px; max-height:140px; resize:none; padding:10px 14px; border-radius:21px; border:1px solid rgba(255,255,255,0.12); background:#0d0d0c; color:#f5f5f7; font:inherit; font-size:15px; line-height:1.4; }
+.ms-compose textarea:focus{ outline:none; border-color:rgba(232,134,44,0.7); }
+.ms-send{ width:42px; height:42px; flex:0 0 42px; border:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#e8862c; color:#0a0a09; cursor:pointer; transition:transform 160ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease; }
+.ms-send svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.ms-send:active{ transform:scale(0.92); }
+.ms-send:disabled{ opacity:0.5; }
+.ms-error{ display:block; padding:0 18px 10px; font-size:13px; color:#ff8f7e; }
+.ms-error:empty{ display:none; }
+
+@media (max-width:760px){
+  .ms-page{ padding:104px 10px 40px; }
+  .ms-wrap{ grid-template-columns:1fr; height:calc(100dvh - 200px); min-height:420px; }
+  .ms-list{ border-right:0; }
+  .ms-chat{ display:none; }
+  .ms-page.has-chat .ms-list{ display:none; }
+  .ms-page.has-chat .ms-chat{ display:flex; }
+  .ms-back{ display:inline-flex; align-items:center; justify-content:center; }
+  .ms-msg{ max-width:86%; }
+}
+@media (prefers-reduced-motion: reduce){ .ms-msg:last-child{ animation:none; } }

@@ -2719,3 +2719,9 @@ html:not(.is-preview) .pv-only{ display:none !important; }
 /* Footer: copyright line easier to read */
 .footer-copy{ font-size:13px; font-weight:400; color:#a1a1a6; }
 .footer-brand-sub{ font-size:14px; font-weight:400; line-height:1.5; color:#b4b4b9; }
+/* Footer: links and bottom line easier to read */
+.footer-col a{ font-size:14px; font-weight:400; color:#d1d1d6; }
+.footer-col a:hover{ color:#f5b06a; }
+.footer-email{ font-size:13px; font-weight:400; color:#d1d1d6; }
+.footer-bottom .footer-credit{ font-size:13px; color:#a1a1a6; }
+.footer-bottom .footer-credit a{ color:#d1d1d6; }

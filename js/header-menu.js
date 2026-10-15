@@ -31,8 +31,9 @@
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.3"/><circle cx="12" cy="16.9" r=".6" fill="currentColor"/>',
     power: '<path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/>',
     music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+    chat: '<path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/>',
   };
-  const TONE = { studio: 'amber', upload: 'amber', seal: 'amber', profile: 'blue', user: 'blue', heart: 'pink', key: 'yellow', box: 'green', receipt: 'green', gear: 'gray', help: 'purple', headset: 'purple', mail: 'teal', play: 'red', music: 'red', login: 'blue', plus: 'green', logout: 'gray', power: 'gray' };
+  const TONE = { chat: 'teal', studio: 'amber', upload: 'amber', seal: 'amber', profile: 'blue', user: 'blue', heart: 'pink', key: 'yellow', box: 'green', receipt: 'green', gear: 'gray', help: 'purple', headset: 'purple', mail: 'teal', play: 'red', music: 'red', login: 'blue', plus: 'green', logout: 'gray', power: 'gray' };
   const tile = (name) => `<span class="hm-tile is-${TONE[name] || 'gray'}"><svg class="hm-ic" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg></span>`;
   const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg>`;
   const ROLE = { producer: 'Producer', artist: 'Artist', listener: 'Member' };
@@ -116,6 +117,7 @@
       ${me.isAdmin ? mine : ''}
       <div class="hm-group">
         ${item('profile-saved.html', 'heart', 'Saved tracks')}
+        ${item('messages.html', 'chat', 'Messages')}
       </div>
       <div class="hm-group">
         ${item('profile-settings.html', 'gear', 'Settings')}
@@ -218,6 +220,45 @@
   }
   const STATUS_OK = ['pending', 'approved', 'rejected'];
 
+  /* -------------------------------- Messages -------------------------------- */
+  // Private messages: a badge with the unread count (checked every minute
+  // while the tab is visible) and the latest conversations in the dropdown.
+  function messagesMenu() {
+    const ago = (d) => {
+      const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
+      if (s < 60) return 'now';
+      if (s < 3600) return `${Math.floor(s / 60)}m`;
+      if (s < 86400) return `${Math.floor(s / 3600)}h`;
+      return `${Math.floor(s / 86400)}d`;
+    };
+    const m = makeMenu({
+      id: 'messages', label: 'Messages', cls: 'hm-messages', buttonHtml: `${icon('chat', 'hm-btn-ic')}<span class="hm-count" hidden></span>`,
+      onOpen: async (panel) => {
+        panel.innerHTML = '<div class="hm-head"><b>Messages</b></div><div class="hm-msg-loading">Loading…</div>';
+        const d = await fetch('/api/messages').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        const threads = (d && d.threads) || [];
+        panel.innerHTML = `
+          <div class="hm-head"><b>Messages</b>${d && d.unread ? `<span>${d.unread} new</span>` : ''}</div>
+          ${threads.length ? `<div class="hm-updates-list">${threads.slice(0, 5).map((t) => `
+            <a href="messages.html?with=${t.user.id}" class="hm-update hm-msg${t.unread ? ' is-unread' : ''}" role="menuitem">
+              <span class="hm-msg-av" aria-hidden="true"${t.user.photo ? ` style="background-image:url('${esc(t.user.photo)}')"` : ''}>${t.user.photo ? '' : esc(t.user.name.slice(0, 1).toUpperCase())}</span>
+              <span class="hm-update-text"><b>${esc(t.user.name)}</b><small>${t.last.mine ? 'You: ' : ''}${esc(t.last.body)}</small></span>
+              <time>${ago(t.last.at)}</time>
+            </a>`).join('')}</div>
+            <a href="messages.html" class="hm-foot" role="menuitem">Open messages</a>`
+          : empty('chat', 'No messages yet', 'Message a producer from any track page. Replies show up here.')}`;
+      },
+    });
+    const badge = m.btn.querySelector('.hm-count');
+    const paint = (n) => { badge.hidden = !n; badge.textContent = n > 9 ? '9+' : String(n); m.btn.setAttribute('aria-label', n ? `Messages, ${n} unread` : 'Messages'); };
+    const check = () => { if (document.hidden) return; fetch('/api/messages?op=unread').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) paint(d.unread); }).catch(() => {}); };
+    check();
+    setInterval(check, 60000);
+    document.addEventListener('visibilitychange', check);
+    document.addEventListener('cs:messages-read', () => setTimeout(check, 300));
+    return m;
+  }
+
   /* ---------------------------------- Cart ---------------------------------- */
   function cartMenu() {
     const m = makeMenu({
@@ -300,7 +341,7 @@
     cluster.className = 'hm-cluster';
     if (data && data.email) {
       document.documentElement.classList.add('is-signed-in');
-      cluster.append(savedMenu(data).wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
+      cluster.append(savedMenu(data).wrap, messagesMenu().wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
     } else {
       // Signed out: support and account menus in the same style, the cart
       // only when it has something in it.

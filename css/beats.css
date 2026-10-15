@@ -1803,3 +1803,24 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Card cover opens the track page */
 .bt-card .bt-cover-wrap{ cursor:pointer; }
 .bt-card .bt-cover-wrap .bt-play, .bt-card .bt-cover-wrap .bt-save{ cursor:pointer; }
+
+/* Track page: message the producer (private, replies in Messages) */
+.bp-message{ margin-top:18px; padding:18px; border-radius:20px; border:1px solid rgba(255,255,255,0.07); background:#121211; }
+.bp-message-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.bp-message-head > div{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.bp-message-head b{ font-size:15.5px; font-weight:600; color:#f5f5f7; }
+.bp-message-head small{ font-size:13.5px; color:#a1a1a6; }
+.bp-message-ic{ width:36px; height:36px; flex:0 0 36px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:rgba(var(--fx, 232,134,44), 0.16); }
+.bp-message-ic svg{ width:18px; height:18px; fill:none; stroke:rgb(var(--fx-hi, 245,176,106)); stroke-width:1.8; stroke-linejoin:round; }
+.bp-message-form textarea{ width:100%; min-height:84px; resize:vertical; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); background:#0d0d0c; color:#f5f5f7; font:inherit; font-size:15px; line-height:1.5; transition:border-color 150ms ease; }
+.bp-message-form textarea::placeholder{ color:#6e6e73; }
+.bp-message-form textarea:focus{ outline:none; border-color:rgba(var(--fx, 232,134,44), 0.7); }
+.bp-message-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; }
+.bp-message-status{ font-size:13.5px; color:#a1a1a6; }
+.bp-message-status.is-ok{ color:#6fd49a; }
+.bp-message-status.is-ok a{ color:#f0a35b; }
+.bp-message-status.is-bad{ color:#ff8f7e; }
+.bp-message-foot .btn{ flex-shrink:0; }
+.bp-message-guest{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:4px 0; }
+.bp-message-guest span{ flex:1 1 220px; font-size:14px; color:#d1d1d6; }
+@media (max-width:560px){ .bp-message{ padding:16px 14px; } .bp-message-foot{ flex-direction:column-reverse; align-items:stretch; } .bp-message-foot .btn{ width:100%; justify-content:center; } }

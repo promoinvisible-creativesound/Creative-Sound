@@ -2715,3 +2715,6 @@ html:not(.is-preview) .pv-only{ display:none !important; }
 .pk-more svg{ display:none; }
 .pk-more::after{ content:'›'; display:inline-block; margin-left:4px; font-size:18px; line-height:1; transform:translateY(-1px); transition:transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
 @media (hover:hover) and (pointer:fine){ .pk-more:hover{ text-decoration:underline; text-underline-offset:4px; } .pk-more:hover::after{ transform:translate(3px, -1px); } }
+
+/* Footer: copyright line easier to read */
+.footer-copy{ font-size:13px; font-weight:400; color:#a1a1a6; }

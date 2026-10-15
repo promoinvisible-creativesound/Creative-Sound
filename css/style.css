@@ -2718,3 +2718,4 @@ html:not(.is-preview) .pv-only{ display:none !important; }
 
 /* Footer: copyright line easier to read */
 .footer-copy{ font-size:13px; font-weight:400; color:#a1a1a6; }
+.footer-brand-sub{ font-size:14px; font-weight:400; line-height:1.5; color:#b4b4b9; }

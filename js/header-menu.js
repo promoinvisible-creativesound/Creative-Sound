@@ -1,5 +1,5 @@
 // Header account cluster, shown once we know the visitor is signed in:
-// avatar (account menu), heart (saved beats), bell (updates) and bag (cart),
+// avatar (account menu, saved tracks inside), chat (messages), bell (updates) and bag (cart),
 // each with a small dropdown. Signed out, the header keeps its plain
 // search / support / account icons; the bag still appears if the cart has
 // beats in it. Uses the /api/auth/me request main.js already made.
@@ -131,28 +131,6 @@
       window.location.href = '/';
     });
     return m;
-  }
-
-  /* ---------------------------------- Saved --------------------------------- */
-  function savedMenu(me) {
-    const ids = () => [...new Set([...(me.savedBeats || []), ...store.get('bt-saved', [])])];
-    return makeMenu({
-      id: 'saved', label: 'Saved tracks', cls: 'hm-saved', buttonHtml: icon('heart', 'hm-btn-ic'),
-      onOpen: async (panel) => {
-        const { byId } = await loadCatalogue();
-        const list = ids().map((id) => byId.get(id)).filter(Boolean);
-        panel.innerHTML = `
-          <div class="hm-head"><b>Saved tracks</b>${list.length ? `<span>${list.length}</span>` : ''}</div>
-          ${list.length ? `<div class="hm-beats">${list.slice(0, 4).map((b) => `
-            <a href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" class="hm-beat bt-tint-${esc(b.tint || 'amber')}" role="menuitem">
-              <span class="hm-beat-art" aria-hidden="true"${b.cover ? ` style="background:url('${esc(b.cover)}') center/cover"` : ''}></span>
-              <span class="hm-beat-text"><b>${esc(b.title)}</b><small>${esc(b.producer)} · ${b.bpm} BPM${b.key ? ` · ${esc(b.key)}` : ''}</small></span>
-              ${Object.values(b.prices || {}).filter((p) => p > 0).length ? `<span class="hm-beat-price">€${(Math.min(...Object.values(b.prices).filter((p) => p > 0)) / 100).toFixed(0)}</span>` : ''}
-            </a>`).join('')}</div>
-            <a href="profile-saved.html" class="hm-foot hm-foot-link" role="menuitem">View all saved ›</a>`
-          : empty('heart', 'Nothing saved yet', 'Tap the heart on any track to keep it here.', '<a href="beats.html" class="hm-cta" role="menuitem">Browse tracks</a>')}`;
-      },
-    });
   }
 
   /* --------------------------------- Updates -------------------------------- */
@@ -341,7 +319,7 @@
     cluster.className = 'hm-cluster';
     if (data && data.email) {
       document.documentElement.classList.add('is-signed-in');
-      cluster.append(savedMenu(data).wrap, messagesMenu().wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
+      cluster.append(messagesMenu().wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
     } else {
       // Signed out: support and account menus in the same style, the cart
       // only when it has something in it.

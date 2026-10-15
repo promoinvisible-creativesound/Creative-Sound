@@ -20,7 +20,6 @@ const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
-const LICENSOR = 'Emanuele Paparella p/k/a Invisible, trading as Creative Sound (P.IVA 17024071007)';
 
 const isProduction = () => process.env.VERCEL_ENV === 'production';
 // Track sales are paused until the first real track is up: set
@@ -228,8 +227,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   write(`License ID ${licenseId} · ${date}`, { size: 9, color: muted, gap: 14 });
 
   const rows = [
-    ['Licensor', LICENSOR],
-    ['Producer', `${beat.producer} (credit: "${beat.producer}")`],
+    ['Producer', beat.producer],
     ['Licensee', `${buyerName ? `${buyerName}, ` : ''}${buyerEmail}`],
     ['Beat', `"${beat.title}" · ${beat.bpm} BPM · ${beat.key}`],
     ['License', `${t.name} (non-exclusive)${t.unlimited ? ' · Unlimited' : ''}`],
@@ -252,8 +250,8 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   space(8);
   write('TERMS', { f: bold, size: 9, color: accent, gap: 6 });
   [
-    '1. Grant. The Licensor grants the Licensee a non-exclusive, non-transferable license to use the Beat to create one new musical work (the "Song") and to exploit the Song within the usage rights above.',
-    '2. Ownership. The Producer and Licensor keep all ownership of the Beat and its copyright. The Licensee owns the lyrics and vocal recordings they add. Other licenses for the same Beat may be sold to other artists.',
+    '1. Grant. The Producer grants the Licensee a non-exclusive, non-transferable license to use the Beat to create one new musical work (the "Song") and to exploit the Song within the usage rights above.',
+    '2. Ownership. The Producer keeps all ownership of the Beat and its copyright. The Licensee owns the lyrics and vocal recordings they add. Other licenses for the same Beat may be sold to other artists.',
     '3. Credit. The Licensee must credit the Producer as "' + beat.producer + '" wherever credits are shown (streaming metadata, video descriptions, physical releases).',
     '4. Restrictions. The Licensee may not resell, give away or re-license the Beat or its files on their own, register the Beat alone with content-ID systems, or claim authorship of the instrumental.',
     '5. Publishing. Songwriting and publishing splits for the Song are to be agreed in writing between the Licensee and the Producer; failing an agreement, the Producer is entitled to 50% of the writer\'s share of the composition.',

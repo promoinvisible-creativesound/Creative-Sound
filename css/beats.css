@@ -1943,3 +1943,10 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bp-cover:hover .bp-cover-play{ background:linear-gradient(145deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.16)); }
   .bp-cover:hover .bp-cover-play::after{ opacity:1; transform:translateY(-1px) scaleX(1.05); }
 }
+
+/* Cover play: larger glyph, optically centred (the triangle's own shape
+   already leans right, so no extra nudge) */
+.bp-cover-play svg:not(.bp-ring){ width:28px; height:28px; margin:-14px 0 0 -14px; }
+.bp-cover-play .bt-ic-play{ transform:none; }
+.beat-page.is-playing .bp-cover-play .bt-ic-play{ transform:scale(0.6) rotate(90deg); }
+@media (max-width:640px){ .bp-cover-play svg:not(.bp-ring){ width:24px; height:24px; margin:-12px 0 0 -12px; } }

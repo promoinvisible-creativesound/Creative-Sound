@@ -2001,3 +2001,17 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-grid[data-view="grid"] .bt-play{ width:44px; height:44px; left:10px; bottom:10px; }
   .bt-grid[data-view="grid"] .bt-play svg{ width:19px; height:19px; margin:-9.5px 0 0 -9.5px !important; }
 }
+
+/* Card play: always visible, centred on the cover */
+.bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play{
+  left:50% !important; top:50% !important; bottom:auto !important; right:auto !important;
+  width:56px !important; height:56px !important; margin:-28px 0 0 -28px !important;
+  opacity:1 !important; transform:none;
+}
+@media (hover:hover) and (pointer:fine){
+  .bt-grid[data-view="grid"] .bt-card:hover .bt-play, .bp-row .bt-card:hover .bt-play{ transform:scale(1.08); }
+}
+.bt-grid[data-view="grid"] .bt-play:active, .bp-row .bt-play:active{ transform:scale(0.92); }
+@media (max-width:560px){
+  .bt-grid[data-view="grid"] .bt-play{ width:48px !important; height:48px !important; margin:-24px 0 0 -24px !important; }
+}

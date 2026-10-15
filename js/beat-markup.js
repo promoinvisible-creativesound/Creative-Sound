@@ -59,28 +59,19 @@
             <a href="#licensing" class="btn btn-ghost" onclick="document.getElementById('licensing').scrollIntoView({behavior:'smooth'});return false;">Licenses from ${euro(Math.min(...tiers.map((t) => b.prices[t])))}</a>
             <button type="button" class="btn btn-ghost bp-save" data-save="${esc(b.id)}" aria-pressed="false" aria-label="Save ${esc(b.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.8 1.8h1.2c.9-1.1 2.3-1.8 3.8-1.8C19 4.3 21 6.3 21 8.9c0 3.2-2.8 5.8-7.7 10.2z"/></svg><span class="bt-save-text">Save</span></button>
             <button type="button" class="btn btn-ghost" id="bp-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Share</span></button>
+            ${b.source === 'producer' ? `<a class="btn btn-ghost bp-msg-btn" href="messages.html?beat=${encodeURIComponent(b.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Message</span></a>` : ''}
           </div>
         </div>
       </section>
 
-      ${b.contact || b.source === 'producer' ? `<section class="bp-contact"${b.source === 'producer' ? ` id="bp-message" data-message-beat="${esc(b.id)}"` : ''} aria-label="Contact the producer">
+      ${b.contact ? `<section class="bp-contact" aria-label="Contact the producer">
         <div class="bp-contact-row">
           <div class="bp-contact-text"><b>Contact ${esc(b.producer)}</b><small>Exclusives, custom beats or a collab.</small></div>
           <div class="bp-contact-links">
-            ${b.source === 'producer' ? '<button type="button" class="btn btn-primary bp-msg-toggle" aria-expanded="false" aria-controls="bp-msg-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/></svg>Message</button>' : ''}
-            ${b.contact && b.contact.instagram ? `<a class="btn btn-ghost bp-contact-ic" href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}
-            ${b.contact && b.contact.email ? `<a class="btn btn-ghost bp-contact-ic" href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}
+            ${b.contact.instagram ? `<a class="btn btn-ghost bp-contact-ic" href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}
+            ${b.contact.email ? `<a class="btn btn-ghost bp-contact-ic" href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}
           </div>
         </div>
-        ${b.source === 'producer' ? `<div class="bp-msg-panel" id="bp-msg-panel" inert>
-          <div class="bp-msg-inner">
-            <form class="bp-message-form" method="post" novalidate>
-              <textarea name="body" rows="1" maxlength="2000" placeholder="Write to ${esc(b.producer)}…" aria-label="Your message"></textarea>
-              <button type="submit" class="bp-msg-send" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
-            </form>
-            <small class="bp-message-status" aria-live="polite">Private. Your email is never shown, replies land in Messages.</small>
-          </div>
-        </div>` : ''}
       </section>` : ''}
       <section class="bp-section" id="licensing" aria-labelledby="bp-licensing-title">
         <div class="bp-section-head"><h2 id="bp-licensing-title">Licensing</h2></div>

@@ -70,3 +70,9 @@
   .ms-page.has-chat .ms-head{ display:none; }
   .ms-page.has-chat .ms-wrap{ margin-top:0; height:calc(100dvh - 104px); min-height:380px; }
 }
+
+/* New conversation: who you're writing to, centred */
+.ms-start{ margin:auto; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:320px; padding:20px; text-align:center; }
+.ms-start .ms-avatar{ width:64px; height:64px; flex-basis:64px; font-size:24px; margin-bottom:6px; }
+.ms-start b{ font-size:17px; font-weight:600; color:#f5f5f7; }
+.ms-start span{ font-size:14px; line-height:1.5; color:#bcbcc1; }

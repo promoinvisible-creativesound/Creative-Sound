@@ -114,6 +114,13 @@ async function handleMessages(req, res) {
     if (req.method === 'GET') {
       const q = req.query || {};
       if (q.op === 'unread') { res.status(200).json({ unread: await unreadCount(uid) }); return; }
+      // ?beat=<trackId>: the conversation with that track's producer.
+      if (q.beat && !q.with) {
+        const p = await producerOfBeat(q.beat);
+        if (!p) { res.status(404).json({ error: 'This track can not be messaged about.' }); return; }
+        if (p.userId === uid) { res.status(400).json({ error: "This is your own track, you can't message yourself." }); return; }
+        q.with = p.userId;
+      }
       if (q.with) {
         const other = await userById(Number(q.with));
         if (!other || other.id === uid) { res.status(404).json({ error: 'Conversation not found.' }); return; }

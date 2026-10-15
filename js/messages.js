@@ -1,5 +1,4 @@
-// Private messages: the "Message the producer" box on track pages and the
-// inbox page (messages.html: conversations on the left, the open chat on
+// Private messages: the inbox page (messages.html: conversations on the left, the open chat on
 // the right; one column on phones). Data: /api/messages (_lib/messages.js).
 (() => {
   'use strict';
@@ -24,63 +23,14 @@
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
   });
 
-  /* ------------------------- Track page: message box ------------------------ */
-  // The track page is rendered by beats.js after the catalogue loads, so wait
-  // for the box to appear.
-  // "Message" in the Contact card opens a one-line composer inside the card.
-  const bindBox = (box) => {
-    const toggle = $('.bp-msg-toggle', box);
-    const panel = $('.bp-msg-panel', box);
-    const form = $('.bp-message-form', box);
-    const ta = $('textarea', form);
-    const status = $('.bp-message-status', box);
-    const btn = $('button[type="submit"]', form);
-    const hint = status.textContent;
-    const setOpen = (open) => {
-      box.classList.toggle('is-messaging', open);
-      toggle.setAttribute('aria-expanded', String(open));
-      panel.inert = !open;
-      if (open && !form.hidden) setTimeout(() => ta.focus({ preventScroll: true }), 120);
-    };
-    toggle.addEventListener('click', () => setOpen(!box.classList.contains('is-messaging')));
-    me.then((user) => {
-      if (user && user.email) return;
-      form.hidden = true;
-      status.innerHTML = '<a href="login.html">Sign in</a> or <a href="signup.html">create a free account</a> to message the producer.';
-    });
-    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`; });
-    enterSends(ta, form);
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const body = ta.value.trim();
-      if (!body) { ta.focus(); return; }
-      btn.disabled = true; status.className = 'bp-message-status'; status.textContent = 'Sending…';
-      try {
-        const out = await send({ beatId: box.dataset.messageBeat, body });
-        ta.value = ''; ta.style.height = 'auto';
-        status.classList.add('is-ok');
-        status.innerHTML = `Sent. <a href="messages.html?with=${out.with}">Open the conversation ›</a>`;
-      } catch (err) {
-        status.classList.add('is-bad');
-        status.textContent = err.message;
-      } finally { btn.disabled = false; }
-    });
-    ta.addEventListener('focus', () => { if (status.classList.contains('is-bad')) { status.className = 'bp-message-status'; status.textContent = hint; } });
-  };
-  if ($('[data-track-page]') || $('.beat-page')) {
-    let tries = 0;
-    const wait = setInterval(() => {
-      const box = $('#bp-message');
-      if (box) { clearInterval(wait); bindBox(box); } else if (++tries > 60) clearInterval(wait);
-    }, 250);
-  }
-
   /* ------------------------------- Inbox page ------------------------------- */
   const page = $('[data-messages-page]');
   if (!page) return;
   const list = $('#ms-list');
   const chat = $('#ms-chat');
   let current = Number(new URLSearchParams(location.search).get('with')) || null;
+  // Track pages link here with ?beat=<trackId>: open the chat with its producer.
+  const beatParam = new URLSearchParams(location.search).get('beat');
   let threads = [];
 
   const paintList = () => {
@@ -90,7 +40,7 @@
         <span class="ms-thread-text"><b>${esc(t.user.name)}</b><small>${t.last.mine ? 'You: ' : ''}${esc(t.last.body)}</small></span>
         <span class="ms-thread-meta"><time>${ago(t.last.at)}</time>${t.unread ? `<span class="ms-badge">${t.unread}</span>` : ''}</span>
       </a>`).join('')
-      : '<div class="ms-empty-list"><b>No messages yet</b><span>Open a track and use "Message the producer" to start a conversation.</span><a class="btn btn-primary" href="beats.html">Browse tracks</a></div>';
+      : '<div class="ms-empty-list"><b>No messages yet</b><span>Open any track and tap Message to start a conversation with the producer.</span><a class="btn btn-primary" href="beats.html">Browse tracks</a></div>';
   };
   const loadThreads = () => fetch('/api/messages').then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((d) => { threads = d.threads; paintList(); });
 
@@ -102,17 +52,18 @@
     if (!id) { chat.innerHTML = '<div class="ms-placeholder"><b>Your messages</b><span>Pick a conversation on the left.</span></div>'; return; }
     if (push) history.pushState(null, '', `messages.html?with=${id}`);
     chat.innerHTML = '<div class="ms-placeholder"><span>Loading…</span></div>';
-    const r = await fetch(`/api/messages?with=${id}`);
+    const r = await fetch(`/api/messages?${id === 'beat' ? `beat=${encodeURIComponent(beatParam)}` : `with=${id}`}`);
     const d = await r.json().catch(() => ({}));
     if (!r.ok) { chat.innerHTML = `<div class="ms-placeholder"><span>${esc(d.error || 'Could not load this conversation.')}</span></div>`; return; }
     const u = d.user;
+    if (id === 'beat') { id = u.id; current = id; history.replaceState(null, '', `messages.html?with=${id}`); paintList(); }
     chat.innerHTML = `
       <header class="ms-chat-head">
         <button type="button" class="ms-back" aria-label="Back to conversations">‹</button>
         ${avatar(u, 'is-sm')}
         <div><b>${esc(u.name)}</b>${u.handle ? `<a href="artist.html?u=${encodeURIComponent(u.handle)}">@${esc(u.handle)}</a>` : ''}</div>
       </header>
-      <div class="ms-msgs" id="ms-msgs">${d.messages.map(bubble).join('')}</div>
+      <div class="ms-msgs" id="ms-msgs">${d.messages.length ? d.messages.map(bubble).join('') : `<div class="ms-start">${avatar(u)}<b>${esc(u.name)}</b><span>Ask about exclusives, custom beats or a collab. Your email is never shown.</span></div>`}</div>
       <form class="ms-compose">
         <textarea name="body" rows="1" maxlength="2000" placeholder="Write a message…" aria-label="Write a message"></textarea>
         <button type="submit" class="ms-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
@@ -134,6 +85,8 @@
       $('.ms-error', chat).textContent = '';
       try {
         const out = await send({ to: id, body });
+        const start = $('.ms-start', msgs);
+        if (start) start.remove();
         msgs.insertAdjacentHTML('beforeend', bubble(out.message));
         msgs.scrollTop = msgs.scrollHeight;
         ta.value = ''; ta.style.height = 'auto';
@@ -155,6 +108,6 @@
   me.then((user) => {
     if (!user || !user.email) { location.href = 'login.html'; return; }
     loadThreads().catch(() => { list.innerHTML = '<div class="ms-empty-list"><span>Could not load your messages.</span></div>'; });
-    openChat(current);
+    openChat(!current && beatParam ? 'beat' : current);
   });
 })();

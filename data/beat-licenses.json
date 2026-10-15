@@ -7,7 +7,7 @@
       "short": "MP3",
       "files": ["mp3"],
       "unlimited": false,
-      "highlights": ["Untagged MP3", "Limited commercial use", "Credit: prod. by"],
+      "highlights": ["Untagged MP3", "Limited commercial use", "Credit the producer"],
       "terms": {
         "streams": "Up to 100,000 audio streams",
         "sales": "Up to 2,500 sales / downloads",
@@ -21,7 +21,7 @@
       "short": "WAV",
       "files": ["wav", "mp3"],
       "unlimited": true,
-      "highlights": ["Untagged WAV + MP3", "Unlimited use", "Credit: prod. by"],
+      "highlights": ["Untagged WAV + MP3", "Unlimited use", "Credit the producer"],
       "terms": {
         "streams": "Unlimited",
         "sales": "Unlimited",

@@ -57,7 +57,7 @@
         ${b.cover ? `<img class="lp-art" src="${esc(b.cover)}" alt="" loading="lazy">` : '<span class="lp-art lp-art-empty"></span>'}
         <div class="lp-main">
           <b>${esc(b.title)}</b>
-          <small>${esc(b.tier_name)} · prod. ${esc(b.producer)} · ${day(b.created_at)}</small>
+          <small>${esc(b.tier_name)} · ${esc(b.producer)} · ${day(b.created_at)}</small>
           <small class="lp-id">License ${esc(b.license_id)} · <a class="lp-link lp-view" href="/api/beats/license?id=${encodeURIComponent(b.license_id)}&view=1" target="_blank" rel="noopener">View terms</a></small>
         </div>
         <div class="lp-actions">

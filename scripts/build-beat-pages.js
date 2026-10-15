@@ -38,13 +38,13 @@ function pageFor(b) {
   const url = `${SITE}/beats/${b.id}.html`;
   const tiers = tiersOf(b);
   const prices = tiers.map((t) => b.prices[t]);
-  const title = `${b.title} (prod. ${b.producer}) | ${b.genre} track | Creative Sound`;
+  const title = `${b.title} by ${b.producer} | ${b.genre} track | Creative Sound`;
   const desc = `${b.title}: ${b.genre.toLowerCase()} track by ${b.producer}, ${b.bpm} BPM in ${b.key}. Preview it and license it from ${euro(Math.min(...prices))}: MP3, WAV, stems or FL Studio project.`;
   const image = b.cover ? `${SITE}/${b.cover}` : `${SITE}/assets/img/gui-full.png`;
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${b.title} (prod. ${b.producer})`,
+    name: `${b.title} by ${b.producer}`,
     description: desc,
     image,
     url,
@@ -97,7 +97,7 @@ for (const f of fs.readdirSync(OUT)) if (f.endsWith('.html') && !wanted.has(f)) 
   html = html.slice(0, a)
     + `<main class="beat-page" data-track-page>${EOL}  <div class="bp-wrap"><p class="bp-loading">Loading track…</p></div>${EOL}</main>`
     + html.slice(z);
-  html = html.replace(/(<script src="js\/beats\.js[^"]*"><\/script>)/,`<script src="js/beat-markup.js?v=10"></script>${EOL}$1`);
+  html = html.replace(/(<script src="js\/beats\.js[^"]*"><\/script>)/,`<script src="js/beat-markup.js?v=11"></script>${EOL}$1`);
   fs.writeFileSync(path.join(ROOT, 'track.html'), html);
 }
 

@@ -30,7 +30,7 @@
     }));
     (data.beats || []).forEach((b) => out.push({
       kind: 'tracks', label: 'Track', name: b.title, date: b.created_at,
-      cents: b.price_cents, cur: b.currency, art: b.cover, ref: `${b.tier_name} · prod. ${b.producer}`,
+      cents: b.price_cents, cur: b.currency, art: b.cover, ref: `${b.tier_name} · ${b.producer}`,
     }));
     return out.sort((a, b) => new Date(b.date) - new Date(a.date));
   }

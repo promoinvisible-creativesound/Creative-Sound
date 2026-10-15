@@ -1185,7 +1185,7 @@
     const rows = [['Files', (t) => t.files.map((f) => LIC.fileLabels[f]).join(' + ')], ['Streams', (t) => t.terms.streams], ['Sales', (t) => t.terms.sales], ['Music videos', (t) => t.terms.videos], ['Live', (t) => t.terms.performances], ['Radio', (t) => t.terms.radio]];
     return `<table><thead><tr><th></th>${tiers.map((id) => `<th>${esc(LIC.tiers[id].short)}</th>`).join('')}</tr></thead><tbody>${
       rows.map(([label, fn]) => `<tr><th>${label}</th>${tiers.map((id) => `<td>${esc(fn(LIC.tiers[id]))}</td>`).join('')}</tr>`).join('')
-    }</tbody></table><p>Every license is non-exclusive and requires the credit "prod. by ${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
+    }</tbody></table><p>Every license is non-exclusive and requires the credit "${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
   };
   const selectTier = (id) => {
     modalTier = id;
@@ -1407,7 +1407,7 @@
         trackPage.insertAdjacentHTML('afterend', window.CSBeatMarkup.beatMainHtml(beat, { LIC, producers: PRODUCERS }));
         trackPage.remove();
         beatRoot = document.querySelector('[data-beat-id]');
-        document.title = `${beat.title} (prod. ${beat.producer}) | ${beat.genre} track | Creative Sound`;
+        document.title = `${beat.title} by ${beat.producer} | ${beat.genre} track | Creative Sound`;
       }
     }
     if (beatRoot) setupBeatPage();

@@ -92,7 +92,7 @@ async function handleCheckout(req, res) {
           unit_amount: price,
           product_data: {
             name: `${beat.title} — ${LICENSES.tiers[tier].name}`,
-            description: `prod. ${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
+            description: `${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
             metadata: { beat_id: beat.id, tier },
           },
         },
@@ -229,7 +229,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
 
   const rows = [
     ['Licensor', LICENSOR],
-    ['Producer', `${beat.producer} (credit: "prod. by ${beat.producer}")`],
+    ['Producer', `${beat.producer} (credit: "${beat.producer}")`],
     ['Licensee', `${buyerName ? `${buyerName}, ` : ''}${buyerEmail}`],
     ['Beat', `"${beat.title}" · ${beat.bpm} BPM · ${beat.key}`],
     ['License', `${t.name} (non-exclusive)${t.unlimited ? ' · Unlimited' : ''}`],
@@ -254,7 +254,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   [
     '1. Grant. The Licensor grants the Licensee a non-exclusive, non-transferable license to use the Beat to create one new musical work (the "Song") and to exploit the Song within the usage rights above.',
     '2. Ownership. The Producer and Licensor keep all ownership of the Beat and its copyright. The Licensee owns the lyrics and vocal recordings they add. Other licenses for the same Beat may be sold to other artists.',
-    '3. Credit. The Licensee must credit the Producer as "prod. by ' + beat.producer + '" wherever credits are shown (streaming metadata, video descriptions, physical releases).',
+    '3. Credit. The Licensee must credit the Producer as "' + beat.producer + '" wherever credits are shown (streaming metadata, video descriptions, physical releases).',
     '4. Restrictions. The Licensee may not resell, give away or re-license the Beat or its files on their own, register the Beat alone with content-ID systems, or claim authorship of the instrumental.',
     '5. Publishing. Songwriting and publishing splits for the Song are to be agreed in writing between the Licensee and the Producer; failing an agreement, the Producer is entitled to 50% of the writer\'s share of the composition.',
     '6. Term. This license is perpetual for the Song created under it, within the usage rights above.',

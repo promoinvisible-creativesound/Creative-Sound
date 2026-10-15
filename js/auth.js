@@ -358,7 +358,7 @@
     list.innerHTML = beats.map((b) => `
       <div class="profile-license">
         <div class="profile-pack-name">${escapeHtml(b.title)} <span style="color:var(--text-muted); font-weight:400;">· ${escapeHtml(b.tier_name)}</span></div>
-        <div class="profile-license-date">prod. ${escapeHtml(b.producer)} · License ${escapeHtml(b.license_id)} · ${new Date(b.created_at).toLocaleDateString()}</div>
+        <div class="profile-license-date">${escapeHtml(b.producer)} · License ${escapeHtml(b.license_id)} · ${new Date(b.created_at).toLocaleDateString()}</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
           ${b.files.length
             ? b.files.map((f) => `<a href="${escapeHtml(f.url)}" class="btn ${f.type === 'wav' ? 'btn-primary' : 'btn-ghost'}">${escapeHtml(f.label)}</a>`).join('')

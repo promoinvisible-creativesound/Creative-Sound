@@ -188,6 +188,39 @@ const licenseIdFor = (sessionId, index) => `CS-B-${String(sessionId).slice(-10).
 // One PDF per beat: who licenses what to whom, which files, the usage terms
 // of the tier and the standard clauses. The clause text is a starting draft
 // and should be reviewed before real sales.
+// License terms, one set per license type (MP3 Lease, WAV, Trackout,
+// Project). Common clauses plus what each type adds: the files delivered,
+// what may be done with stems / the project, and the caps of the lease.
+function termsFor(tier, t, producer) {
+  const unlimited = !!t.unlimited;
+  const files = t.files.map((x) => LICENSES.fileLabels[x]).join(', ');
+  const out = [
+    `Grant. ${producer} (the "Producer") grants the Licensee a non-exclusive, non-transferable, worldwide license to use the instrumental (the "Beat") to create one new musical work (the "Song") and to exploit the Song within the usage rights above.`,
+    `Files. The Licensee receives: ${files}. The files may only be used to record, mix, master and release the Song.`,
+  ];
+  if (tier === 'trackout') out.push('Stems. The track stems may be used to mix and arrange the Beat for the Song (levels, effects, muting or rearranging parts). The stems may not be shared, sold or used in any other work.');
+  if (tier === 'project') out.push('Project file. The project file and its stems may be used to edit and rearrange the Beat for the Song. The project file, its samples, presets and stems remain the Producer’s work and may not be shared, sold, used to build other beats, or used in any other work.');
+  if (unlimited) {
+    out.push('Usage. There is no cap on streams, sales, downloads, music videos, live performances or radio play of the Song.');
+  } else {
+    out.push(`Usage limits. The Song may reach up to ${t.terms.streams.replace(/^Up to /i, '').toLowerCase()} and up to ${t.terms.sales.replace(/^Up to /i, '').toLowerCase()}, with ${t.terms.videos.toLowerCase()}, non-profit live performances only and no radio broadcasting. Once a limit is reached, the Licensee must upgrade to an Unlimited license for the same Beat before further use.`);
+  }
+  out.push(
+    'Ownership. The Producer keeps all rights and the copyright in the Beat. The Licensee owns the lyrics, melodies and vocal recordings they add, and the master recording of the Song, subject to this license.',
+    `Credit. The Licensee must credit the Producer as "${producer}" wherever credits are shown, including streaming metadata, video descriptions and physical releases.`,
+    'Publishing. The composition of the Song is shared: the Producer holds 50% of the writer’s share and 50% of the publishing share, unless the parties agree otherwise in writing. Each party may register its share with its collecting society (for example SIAE).',
+    'Content ID. The Licensee may not register the Beat, or the Song as a whole, with content-identification systems (YouTube Content ID and similar). The Producer will clear claims on the Licensee’s releases on request.',
+    'Sync. Music videos are covered as listed above. Use of the Song in films, TV, adverts, video games or other synchronisation needs a separate agreement with the Producer.',
+    'Non-exclusive. The Producer may license the Beat to others. If exclusive rights are later sold, this license stays valid for the Song under the same terms.',
+    'Restrictions. The Licensee may not resell, give away, re-license or distribute the Beat or its files on their own, use them in another song, sample the Beat into new instrumentals, use it to train AI models, or claim authorship of the instrumental.',
+    'Warranty. The Producer confirms the Beat is original and that any samples used are cleared or royalty-free. The Licensee is responsible for the lyrics and any other material they add.',
+    'Breach. If the Licensee breaks these terms and does not fix it within 30 days of notice, this license ends and the Song may no longer be exploited.',
+    'Term. This license is perpetual for the Song created under it, within the usage rights above. It is personal to the Licensee and cannot be transferred.',
+    'Law. This agreement is governed by Italian law. It is the full agreement between the parties for this license.',
+  );
+  return out;
+}
+
 async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, price, currency }) {
   const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
   const t = LICENSES.tiers[tier];
@@ -249,15 +282,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   ].forEach((l) => write(`•  ${l}`, { gap: 5 }));
   space(8);
   write('TERMS', { f: bold, size: 9, color: accent, gap: 6 });
-  [
-    '1. Grant. The Producer grants the Licensee a non-exclusive, non-transferable license to use the Beat to create one new musical work (the "Song") and to exploit the Song within the usage rights above.',
-    '2. Ownership. The Producer keeps all ownership of the Beat and its copyright. The Licensee owns the lyrics and vocal recordings they add. Other licenses for the same Beat may be sold to other artists.',
-    '3. Credit. The Licensee must credit the Producer as "' + beat.producer + '" wherever credits are shown (streaming metadata, video descriptions, physical releases).',
-    '4. Restrictions. The Licensee may not resell, give away or re-license the Beat or its files on their own, register the Beat alone with content-ID systems, or claim authorship of the instrumental.',
-    '5. Publishing. Songwriting and publishing splits for the Song are to be agreed in writing between the Licensee and the Producer; failing an agreement, the Producer is entitled to 50% of the writer\'s share of the composition.',
-    '6. Term. This license is perpetual for the Song created under it, within the usage rights above.',
-    '7. Law. This agreement is governed by Italian law.',
-  ].forEach((p) => write(p, { gap: 6 }));
+  termsFor(tier, t, beat.producer).forEach((p, i) => write(`${i + 1}. ${p}`, { gap: 6 }));
   space(10);
   write('This document was issued automatically at purchase and is valid without signature.', { size: 8.5, color: muted });
   return Buffer.from(await doc.save());

@@ -1548,11 +1548,11 @@
             <div class="bt-fx-row"><span class="bt-fx-label">Loop from here</span><span class="bt-fx-val"><small>${b.bpm} BPM · 1 bar = ${bar.toFixed(2)}s</small></span></div>
             <div class="bt-loop-bars" role="radiogroup" aria-label="Loop length" style="--i:${Math.max(0, LOOP_BARS.indexOf(loop.bars))}"${LOOP_BARS.includes(loop.bars) ? ' data-set' : ''}><span class="bt-loop-thumb" aria-hidden="true"></span>${LOOP_BARS.map((n) => `<button type="button" role="radio" aria-checked="${loop.bars === n}" data-loop-bars="${n}">${n} ${n === 1 ? 'bar' : 'bars'}</button>`).join('')}</div>
             <div class="bt-loop-ab">
-              <button type="button" data-loop-set="a"><small>Start</small><b id="bt-loop-a">${fmtTime(loop.a)}</b></button>
+              <button type="button" data-loop-set="a"><small>Start</small><b id="bt-loop-a">${fmtFine(loop.a)}</b></button>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              <button type="button" data-loop-set="b"><small>End</small><b id="bt-loop-b">${fmtTime(loop.b)}</b></button>
+              <button type="button" data-loop-set="b"><small>End</small><b id="bt-loop-b">${fmtFine(loop.b)}</b></button>
             </div>
-            <p class="bt-pop-note">Tip: drag on the waveform to loop any part. Start and End take the current position.</p>
+            <p class="bt-pop-note">Tip: drag on the waveform to loop any part. Click Start or End to take the current position, or hold and move the mouse up or down to fine-tune.</p>
           </div>`;
       },
       lyrics: () => {
@@ -1632,6 +1632,30 @@
       drawWave();
     };
     const LOOP_BARS = [1, 2, 4, 8, 16];
+    const fmtFine = (t) => { const m = Math.floor(t / 60); const s = t - m * 60; return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`; };
+    // Start / End: hold and move up (later) or down (earlier), 0.1 s per 4 px.
+    let ab = null;
+    let abDragged = false;
+    pop.addEventListener('pointerdown', (e) => {
+      const btn = e.target.closest('[data-loop-set]');
+      if (!btn || e.button !== 0) return;
+      ab = { which: btn.dataset.loopSet, y: e.clientY, a: loop.a, b: loop.b, moved: false, btn };
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    pop.addEventListener('pointermove', (e) => {
+      if (!ab || e.buttons !== 1) return;
+      const dy = ab.y - e.clientY;
+      if (!ab.moved && Math.abs(dy) < 3) return;
+      ab.moved = true;
+      ab.btn.classList.add('is-dragging');
+      const delta = Math.round(dy / 4) / 10;
+      const dur = audio.duration || ab.b + 60;
+      if (ab.which === 'a') setSection(Math.min(ab.b - 0.25, Math.max(0, ab.a + delta)), ab.b);
+      else setSection(ab.a, Math.max(ab.a + 0.25, Math.min(dur, ab.b + delta)));
+    });
+    const abEnd = () => { if (!ab) return; if (ab.moved) { abDragged = true; ab.btn.classList.remove('is-dragging'); if (ab.which === 'a') audio.currentTime = loop.a; } ab = null; };
+    pop.addEventListener('pointerup', abEnd);
+    pop.addEventListener('pointercancel', abEnd);
     const refreshLoop = () => {
       const sec = $('.bt-loop-sec', pop);
       if (openTool !== 'loop') return;
@@ -1640,8 +1664,8 @@
       const i = LOOP_BARS.indexOf(loop.bars);
       if (i >= 0) { bars.style.setProperty('--i', i); bars.setAttribute('data-set', ''); } else bars.removeAttribute('data-set');
       $$('[data-loop-bars]', bars).forEach((el) => el.setAttribute('aria-checked', String(Number(el.dataset.loopBars) === loop.bars)));
-      $('#bt-loop-a', sec).textContent = fmtTime(loop.a);
-      $('#bt-loop-b', sec).textContent = fmtTime(loop.b);
+      $('#bt-loop-a', sec).textContent = fmtFine(loop.a);
+      $('#bt-loop-b', sec).textContent = fmtFine(loop.b);
     };
     const setSection = (a, b, bars = 0) => {
       if (!(b - a >= 0.25)) return;
@@ -1718,6 +1742,7 @@
         return;
       }
       const ls = e.target.closest('[data-loop-set]');
+      if (ls && abDragged) { abDragged = false; return; }
       if (ls) {
         const t = audio.currentTime;
         if (ls.dataset.loopSet === 'a') setSection(t, loop.b > t + 0.25 ? loop.b : Math.min(audio.duration || t + 4, t + 4));

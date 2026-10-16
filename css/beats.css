@@ -2313,3 +2313,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 }
 .bt-loop-bars[data-set] .bt-loop-thumb{ opacity:1; }
 @media (prefers-reduced-motion: reduce){ .bt-loop-thumb{ transition:opacity 150ms ease; } }
+/* Start / End: hold and drag up or down to fine-tune */
+.bt-loop-ab button{ cursor:ns-resize; touch-action:none; user-select:none; transition:background-color 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 200ms ease; }
+.bt-loop-ab button.is-dragging{ background:rgba(var(--fx, 232,134,44), 0.22); box-shadow:0 0 0 3px rgba(var(--fx, 232,134,44), 0.25); transform:scale(1.03); }
+.bt-loop-ab button b{ font-variant-numeric:tabular-nums; }

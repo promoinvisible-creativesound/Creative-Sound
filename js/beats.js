@@ -1532,7 +1532,7 @@
             <div class="bt-fx-row"><span class="bt-fx-label">Key</span><span class="bt-fx-val"><b id="bt-fx-key"></b><small id="bt-fx-key-was"></small></span></div>
             <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 25 }, (_, i) => `<i data-k="${i - 12}" role="button" tabindex="-1" title="${i - 12 > 0 ? '+' : ''}${i - 12} st"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
           </div>
-          <p class="bt-pop-note">Only changes what you hear. The files you buy stay in ${esc(b ? b.key : 'the original key')} at ${b ? b.bpm : ''} BPM.</p>`;
+          <p class="bt-pop-note" hidden></p>`;
         paintEdit();
         paintMeter();
       },
@@ -1552,7 +1552,6 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               <button type="button" data-loop-set="b"><small>End</small><b id="bt-loop-b">${fmtFine(loop.b)}</b></button>
             </div>
-            <p class="bt-pop-note">Tip: drag on the waveform to loop any part. Click Start or End to take the current position, or hold and move the mouse up or down to fine-tune.</p>
           </div>`;
       },
       lyrics: () => {
@@ -1758,7 +1757,7 @@
         const next = tick ? Number(tick.dataset.k) : Math.max(-12, Math.min(12, fx.semi + Number(s.dataset.semi)));
         if (next === fx.semi) return;
         const ok = await setKeyShift(next);
-        if (!ok) { $('.bt-pop-note', pop).textContent = 'Key change is not available in this browser.'; return; }
+        if (!ok) { const n = $('.bt-pop-note', pop); n.hidden = false; n.textContent = 'Key change is not available in this browser.'; return; }
         lastSemi = fx.semi; fx.semi = next; paintEdit(); paintMeter();
         $('.bt-fx-meter', pop).classList.remove('is-bump'); void $('.bt-fx-meter', pop).offsetWidth; $('.bt-fx-meter', pop).classList.add('is-bump');
         return;

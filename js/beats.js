@@ -1208,7 +1208,7 @@
     peaksCache.set(beat.id, out);
     return out;
   };
-  const wv = { canvas: null, ctx: null, tip: null, peaks: null, id: null, born: 0, hover: -1 };
+  const wv = { canvas: null, ctx: null, tip: null, peaks: null, id: null, born: 0, hover: -1, edge: null, edgeDrag: null };
   const setupWave = () => {
     const wrap = $('.bt-player-barwrap', player);
     if (!wrap || wv.canvas) return;
@@ -1222,7 +1222,7 @@
     wv.ctx = wv.canvas.getContext('2d');
     const bar = $('#bt-player-bar');
     bar.addEventListener('pointermove', (e) => {
-      if (!wv.peaks) return;
+      if (!wv.peaks || wv.edgeDrag) return;
       const r = bar.getBoundingClientRect();
       wv.hover = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       wv.tip.hidden = !audio.duration;
@@ -1251,6 +1251,7 @@
   };
   // Loop: off, the whole track, or a section [a, b] in seconds.
   const loop = { mode: 'off', a: 0, b: 0, bars: 0 };
+  const fmtTenths = (t) => { const m = Math.floor(t / 60); const sec = t - m * 60; return `${m}:${sec < 10 ? '0' : ''}${sec.toFixed(1)}`; };
   const drawWave = () => {
     const c = wv.canvas;
     if (!c) return;
@@ -1283,6 +1284,19 @@
       g.fillStyle = `rgb(${rgb})`;
       g.fillRect(xa - 1, 0, 2, h);
       g.fillRect(xb - 1, 0, 2, h);
+      [['a', xa], ['b', xb]].forEach(([edge, x]) => {
+        const on = wv.edge === edge || wv.edgeDrag === edge;
+        const gw = on ? 10 : 8;
+        const gh = on ? Math.min(h, 26) : Math.min(h - 6, 18);
+        g.save();
+        g.shadowColor = `rgba(${rgb}, 0.9)`;
+        g.shadowBlur = on ? 12 : 6;
+        g.fillStyle = '#fff';
+        if (g.roundRect) { g.beginPath(); g.roundRect(x - gw / 2, (h - gh) / 2, gw, gh, gw / 2); g.fill(); } else g.fillRect(x - gw / 2, (h - gh) / 2, gw, gh);
+        g.restore();
+        g.fillStyle = `rgb(${rgb})`;
+        g.fillRect(x - 1, (h - gh) / 2 + 4, 2, gh - 8);
+      });
     }
     for (let i = 0; i < n; i++) {
       const x = i * gap + (gap - bw) / 2;
@@ -1830,13 +1844,52 @@
     // pointer); a plain click seeks.
     const frac = (e) => { const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
     let drag = null;
+    // Loop edges: grab the start (preferred when the two are close) or the end.
+    const nearEdge = (e) => {
+      if (loop.mode !== 'section' || !audio.duration || !wv.peaks) return null;
+      const r = bar.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const da = Math.abs(x - (loop.a / audio.duration) * r.width);
+      const db = Math.abs(x - (loop.b / audio.duration) * r.width);
+      if (da <= 12 && da <= db + 6) return 'a';
+      if (db <= 12) return 'b';
+      return null;
+    };
+    const showEdgeTip = (edge) => {
+      const t = edge === 'a' ? loop.a : loop.b;
+      wv.tip.hidden = false;
+      wv.tip.textContent = `${edge === 'a' ? 'Start' : 'End'} ${fmtTenths(t)}`;
+      wv.tip.style.left = `${(t / audio.duration) * 100}%`;
+    };
+    bar.addEventListener('pointermove', (e) => {
+      if (e.buttons || wv.edgeDrag) return;
+      const edge = nearEdge(e);
+      if (edge !== wv.edge) { wv.edge = edge; bar.style.cursor = edge ? 'ew-resize' : ''; drawWave(); }
+      if (edge) showEdgeTip(edge);
+    });
     bar.addEventListener('pointerdown', (e) => {
+      const edge = nearEdge(e);
+      if (edge) {
+        try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+        wv.edgeDrag = edge;
+        drag = { edge };
+        showEdgeTip(edge);
+        drawWave();
+        return;
+      }
       try { bar.setPointerCapture(e.pointerId); } catch (err) {}
       if (wv.peaks && audio.duration) { drag = { x: e.clientX, f: frac(e), moved: false }; return; }
       seek(e);
     });
     bar.addEventListener('pointermove', (e) => {
       if (e.buttons !== 1) return;
+      if (drag && drag.edge) {
+        const t = frac(e) * audio.duration;
+        if (drag.edge === 'a') window.__csLoop.setSection(Math.max(0, Math.min(loop.b - 0.25, t)), loop.b);
+        else window.__csLoop.setSection(loop.a, Math.min(audio.duration, Math.max(loop.a + 0.25, t)));
+        showEdgeTip(drag.edge);
+        return;
+      }
       if (!drag) { seek(e); return; }
       if (!drag.moved && Math.abs(e.clientX - drag.x) < 6) return;
       drag.moved = true;
@@ -1845,8 +1898,13 @@
       const b = Math.max(drag.f, f2) * audio.duration;
       if (window.__csLoop && b - a >= 0.25) window.__csLoop.setSection(a, b);
     });
-    bar.addEventListener('pointerup', (e) => { if (drag && !drag.moved) seek(e); drag = null; });
-    bar.addEventListener('pointercancel', () => { drag = null; });
+    const endEdge = () => {
+      if (drag && drag.edge === 'a') audio.currentTime = loop.a;
+      wv.edgeDrag = null; wv.tip.hidden = true; drawWave();
+    };
+    bar.addEventListener('pointerup', (e) => { if (drag && drag.edge) endEdge(); else if (drag && !drag.moved) seek(e); drag = null; });
+    bar.addEventListener('pointercancel', () => { if (drag && drag.edge) endEdge(); drag = null; });
+    bar.addEventListener('pointerleave', () => { if (!wv.edgeDrag && wv.edge) { wv.edge = null; bar.style.cursor = ''; drawWave(); } });
     bar.addEventListener('keydown', (e) => {
       if (!audio.duration) return;
       if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); e.preventDefault(); }

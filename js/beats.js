@@ -196,6 +196,7 @@
         </button>
         <span class="bt-glare" aria-hidden="true"></span>
         <span class="bt-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+        ${b.freeDownload ? '<span class="bt-free-badge">Free download</span>' : ''}
         ${saveButton(b)}
       </div>
       <div class="bt-body">
@@ -761,9 +762,9 @@
     paintTier();
 
     const more = BEATS.filter((b) => b.producer === beat.producer && b.id !== beat.id).slice(0, 8);
-    const related = BEATS.filter((b) => b.id !== beat.id && !more.includes(b))
-      .map((b) => ({ b, score: (b.genre === beat.genre ? 3 : 0) + (b.mood === beat.mood ? 2 : 0) + (b.tags || []).filter((t) => (beat.tags || []).includes(t)).length - Math.abs(b.bpm - beat.bpm) / 40 }))
-      .sort((x, y) => y.score - x.score).slice(0, 8).map((x) => x.b);
+    const related = similarTo(beat, 8, new Set(more.map((b) => b.id)));
+    const free = $('#bp-free', beatRoot);
+    if (free) free.addEventListener('click', () => freeDownload(beat, free));
     [['#bp-more', more], ['#bp-related', related]].forEach(([sel, list]) => {
       const box = $(sel);
       if (!box) return;
@@ -991,6 +992,7 @@
     $('#bt-player-buy').innerHTML = `<span>Buy</span><strong>${euro(minPrice(beat))}</strong>`;
     $('#bt-player-buy').setAttribute('aria-label', `Buy ${beat.title}, from ${euro(minPrice(beat))}`);
     if (window.__csTools) window.__csTools.onTrack(beat);
+    showWave(beat);
   };
 
   const syncCards = () => {
@@ -1075,6 +1077,168 @@
   };
 
   const rgbOf = (el) => (getComputedStyle(el).getPropertyValue('--fx') || '232,134,44').trim();
+  /* ----------------------------- Similar tracks ----------------------------- */
+  // Same genre and mood weigh most, then key, shared tags and a close tempo.
+  const keyRoot = (k) => String(k || '').trim().split(/\s+/)[0];
+  const simScore = (a, b) => (a.genre && a.genre === b.genre ? 3 : 0) + (a.mood && a.mood === b.mood ? 2 : 0)
+    + (a.key && a.key === b.key ? 2 : keyRoot(a.key) && keyRoot(a.key) === keyRoot(b.key) ? 1 : 0)
+    + (a.tags || []).filter((t) => (b.tags || []).includes(t)).length
+    + Math.max(0, 2 - Math.abs((a.bpm || 0) - (b.bpm || 0)) / 8);
+  const similarTo = (beat, n = 8, skip = new Set()) => BEATS.filter((b) => b.id !== beat.id && !skip.has(b.id))
+    .map((b) => ({ b, s: simScore(beat, b) })).sort((x, y) => y.s - x.s).slice(0, n).map((x) => x.b);
+  const heard = new Set();
+  const playSimilar = () => {
+    const cur = byId.get(currentId);
+    if (!cur) { step(1); return; }
+    heard.add(cur.id);
+    let next = similarTo(cur, 1, heard)[0];
+    if (!next) { heard.clear(); heard.add(cur.id); next = similarTo(cur, 1, heard)[0]; }
+    if (next) play(next.id); else { audio.currentTime = 0; syncCards(); }
+  };
+
+  /* ----------------------------- Free download ----------------------------- */
+  // Producers can allow a free download of the tagged MP3 (upload page). It
+  // needs an account: the file comes from /api/beats/free, saved as a file.
+  const freeDownload = async (beat, btn) => {
+    const label = btn && (btn.querySelector('span') || btn);
+    const say = (t) => { if (label) label.textContent = t; };
+    const me = await Promise.resolve(window.csMe).catch(() => null);
+    if (!me || !me.email) { location.href = `login.html`; return; }
+    if (btn) btn.disabled = true;
+    say('Preparing…');
+    try {
+      const r = await fetch(`/api/beats/free?id=${encodeURIComponent(beat.id)}`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not download.');
+      const blob = await fetch(d.url).then((x) => { if (!x.ok) throw new Error('Could not download.'); return x.blob(); });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = d.name || `${beat.title}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      say('Downloaded');
+      track('Free download', { beat: beat.id });
+    } catch (err) {
+      say(err.message || 'Could not download.');
+    } finally {
+      if (btn) setTimeout(() => { btn.disabled = false; say(btn.classList.contains('bp-free') ? 'Free download' : 'Free download (tagged MP3)'); }, 2500);
+    }
+  };
+
+  /* -------------------------------- Waveform -------------------------------- */
+  // The seek bar becomes the track's waveform: mirrored rounded bars, the
+  // played part in the track colour, a lighter wash up to the pointer with
+  // the time above it, and the bars round the playhead lifting on each kick.
+  // Peaks come with the catalogue; the first browser to play a track without
+  // them computes them from the preview and stores them for everyone.
+  const peaksCache = new Map();
+  const loadPeaks = async (beat) => {
+    if (peaksCache.has(beat.id)) return peaksCache.get(beat.id);
+    if (Array.isArray(beat.peaks) && beat.peaks.length) { peaksCache.set(beat.id, beat.peaks); return beat.peaks; }
+    const job = (async () => {
+      const buf = await fetch(beat.preview).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()));
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      const decoded = await new Promise((res, rej) => { const p = new OAC(1, 44100, 44100).decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
+      const data = decoded.getChannelData(0);
+      const N = 200;
+      const size = Math.floor(data.length / N);
+      const raw = [];
+      for (let i = 0; i < N; i++) {
+        let sum = 0;
+        for (let j = i * size; j < (i + 1) * size; j += 16) sum += data[j] * data[j];
+        raw.push(Math.sqrt(sum / (size / 16)));
+      }
+      const max = Math.max(...raw) || 1;
+      const peaks = raw.map((v) => Math.round(Math.pow(v / max, 0.75) * 100));
+      if (beat.source === 'producer') {
+        fetch('/api/beats/peaks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: beat.id, peaks }) }).catch(() => {});
+      }
+      beat.peaks = peaks;
+      return peaks;
+    })().catch(() => null);
+    peaksCache.set(beat.id, job);
+    const out = await job;
+    peaksCache.set(beat.id, out);
+    return out;
+  };
+  const wv = { canvas: null, ctx: null, tip: null, peaks: null, id: null, born: 0, hover: -1 };
+  const setupWave = () => {
+    const wrap = $('.bt-player-barwrap', player);
+    if (!wrap || wv.canvas) return;
+    wv.canvas = document.createElement('canvas');
+    wv.canvas.className = 'bt-wave';
+    wv.canvas.setAttribute('aria-hidden', 'true');
+    wv.tip = document.createElement('span');
+    wv.tip.className = 'bt-wave-tip';
+    wv.tip.hidden = true;
+    wrap.append(wv.canvas, wv.tip);
+    wv.ctx = wv.canvas.getContext('2d');
+    const bar = $('#bt-player-bar');
+    bar.addEventListener('pointermove', (e) => {
+      if (!wv.peaks) return;
+      const r = bar.getBoundingClientRect();
+      wv.hover = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      wv.tip.hidden = !audio.duration;
+      wv.tip.textContent = fmtTime(wv.hover * (audio.duration || 0));
+      wv.tip.style.left = `${wv.hover * 100}%`;
+      drawWave();
+    });
+    bar.addEventListener('pointerleave', () => { wv.hover = -1; wv.tip.hidden = true; drawWave(); });
+    window.addEventListener('resize', () => drawWave());
+  };
+  const showWave = async (beat) => {
+    if (!wv.canvas || wv.id === beat.id) return;
+    wv.id = beat.id;
+    wv.peaks = null;
+    player.classList.remove('has-wave');
+    drawWave();
+    const peaks = await loadPeaks(beat);
+    if (!peaks || wv.id !== beat.id) return;
+    wv.peaks = peaks;
+    wv.born = performance.now();
+    player.classList.add('has-wave');
+    const grow = () => { drawWave(); if (performance.now() - wv.born < 900) requestAnimationFrame(grow); };
+    requestAnimationFrame(grow);
+  };
+  const drawWave = () => {
+    const c = wv.canvas;
+    if (!c) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = c.clientWidth;
+    const h = c.clientHeight;
+    if (!w || !h) return;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    const g = wv.ctx;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    if (!wv.peaks) return;
+    const gap = 4;
+    const bw = 2.4;
+    const n = Math.max(20, Math.floor(w / gap));
+    const p = audio.duration ? audio.currentTime / audio.duration : 0;
+    const rgb = rgbOf(player);
+    const age = reduceMotion ? 1 : Math.min(1, (performance.now() - wv.born) / 700);
+    const hot = !audio.paused ? kick.v : 0;
+    const played = g.createLinearGradient(0, 0, w, 0);
+    played.addColorStop(0, `rgba(${rgb}, 0.75)`);
+    played.addColorStop(1, `rgb(${rgb})`);
+    for (let i = 0; i < n; i++) {
+      const x = i * gap + (gap - bw) / 2;
+      const t = i / (n - 1);
+      const src = wv.peaks[Math.min(wv.peaks.length - 1, Math.floor(t * wv.peaks.length))] / 100;
+      // grow in from the centre line, bars a little staggered
+      const k = reduceMotion ? 1 : Math.max(0, Math.min(1, age * 1.6 - t * 0.6));
+      const near = Math.abs(t - p) < 0.03 ? 1 + hot * 0.35 : 1;
+      const bh = Math.max(2, src * (h - 4) * (1 - Math.pow(1 - k, 3)) * near);
+      const y = (h - bh) / 2;
+      if (t <= p) g.fillStyle = played;
+      else if (wv.hover >= 0 && t <= wv.hover) g.fillStyle = `rgba(${rgb}, 0.38)`;
+      else g.fillStyle = 'rgba(255,255,255,0.2)';
+      if (g.roundRect) { g.beginPath(); g.roundRect(x, y, bw, bh, bw / 2); g.fill(); } else g.fillRect(x, y, bw, bh);
+    }
+  };
+
   const updateProgress = () => {
     const p = audio.duration ? audio.currentTime / audio.duration : 0;
     $('#bt-player-fill').style.transform = `scaleX(${p.toFixed(4)})`;
@@ -1084,6 +1248,7 @@
     $('#bt-dur').textContent = fmtTime(audio.duration);
     // Track page: the ring round the cover play button fills with the preview.
     if (beatRoot) { const ring = $('.bp-cover-play', beatRoot); if (ring) ring.style.setProperty('--p', beatRoot.dataset.beatId === currentId ? p.toFixed(4) : 0); }
+    if (wv.peaks) drawWave();
   };
   const drawViz = () => {
     raf = 0;
@@ -1169,7 +1334,9 @@
   audio.addEventListener('pause', () => { syncCards(); if (!raf) raf = requestAnimationFrame(drawViz); });
   audio.addEventListener('timeupdate', () => { if (!raf) updateProgress(); });
   audio.addEventListener('loadedmetadata', updateProgress);
-  audio.addEventListener('ended', () => step(1));
+  // At the end of a preview, keep the vibe: the most similar track not
+  // played yet in this visit (genre, mood, key, tags, tempo).
+  audio.addEventListener('ended', () => playSimilar());
 
   /* ------------------------------ Player tools ------------------------------ */
   // Edit (tempo and key of the preview, for trying a beat at your speed and
@@ -1300,10 +1467,35 @@
         try { text = localStorage.getItem(k) || ''; } catch (e) {}
         pop.innerHTML = `
           <div class="bt-pop-head"><b>Lyrics · ${esc(b.title)}</b><button type="button" class="bt-pop-reset" data-copy>Copy</button></div>
-          <textarea class="bt-lyrics" placeholder="Write your verse while the beat plays… Saved on this device." aria-label="Lyrics for ${esc(b.title)}">${esc(text)}</textarea>
-          <p class="bt-pop-note" id="bt-lyrics-note">Saved automatically.</p>`;
+          <textarea class="bt-lyrics" placeholder="Write your verse while the beat plays…" aria-label="Lyrics for ${esc(b.title)}">${esc(text)}</textarea>
+          <p class="bt-pop-note" id="bt-lyrics-note">Saved on this device. <a href="login.html">Sign in</a> to keep your lyrics on every device.</p>`;
         const ta = $('.bt-lyrics', pop);
-        ta.addEventListener('input', () => { try { localStorage.setItem(k, ta.value); } catch (e) {} });
+        const note = $('#bt-lyrics-note', pop);
+        // Signed in: lyrics live on the account (synced, debounced); this
+        // device keeps a copy too, so nothing is lost offline.
+        let online = false;
+        let timer = 0;
+        Promise.resolve(window.csMe).then((me) => {
+          if (!me || !me.email) return;
+          online = true;
+          note.textContent = 'Saved to your account.';
+          return fetch(`/api/beats/lyrics?id=${encodeURIComponent(b.id)}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
+            if (!d) return;
+            if (d.text && d.text !== ta.value && ta.isConnected && document.activeElement !== ta) ta.value = d.text;
+            else if (!d.text && ta.value) fetch('/api/beats/lyrics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, text: ta.value }) }).catch(() => {});
+          });
+        }).catch(() => {});
+        ta.addEventListener('input', () => {
+          try { localStorage.setItem(k, ta.value); } catch (e) {}
+          if (!online) return;
+          note.textContent = 'Saving…';
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            fetch('/api/beats/lyrics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, text: ta.value }) })
+              .then((r) => { note.textContent = r.ok ? 'Saved to your account.' : 'Saved on this device.'; })
+              .catch(() => { note.textContent = 'Saved on this device.'; });
+          }, 700);
+        });
         setTimeout(() => ta.focus(), 60);
       },
       vol: () => {
@@ -1317,6 +1509,8 @@
           <div class="bt-more" role="menu">
             <a role="menuitem" href="${beatUrl(b)}">Open track page</a>
             <button type="button" role="menuitem" data-more="share">Copy link</button>
+            <button type="button" role="menuitem" data-more="similar">Play something similar</button>
+            ${b.freeDownload ? '<button type="button" role="menuitem" data-more="free">Free download (tagged MP3)</button>' : ''}
             <button type="button" role="menuitem" data-more="save">${saved.has(b.id) ? 'Remove from saved' : 'Save track'}</button>
             ${b.source === 'producer' ? `<a role="menuitem" href="messages.html?beat=${encodeURIComponent(b.id)}">Message the producer</a>` : ''}
           </div>`;
@@ -1381,6 +1575,8 @@
           return;
         }
         if (m.dataset.more === 'save') { toggleSave(b.id); closePop(); }
+        if (m.dataset.more === 'similar') { closePop(); playSimilar(); }
+        if (m.dataset.more === 'free') { freeDownload(b, m); }
       }
     });
     tools.addEventListener('input', (e) => {
@@ -1412,6 +1608,7 @@
 
   const setupPlayer = () => {
     setupPlayerTools();
+    setupWave();
     $('#bt-play').addEventListener('click', () => { if (currentId) togglePlay(currentId); });
     $('#bt-prev').addEventListener('click', () => step(-1));
     $('#bt-next').addEventListener('click', () => step(1));

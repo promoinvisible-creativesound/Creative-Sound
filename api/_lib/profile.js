@@ -13,7 +13,7 @@ const { getSession } = require('./auth');
 const { roleFor } = require('./account');
 const dropbox = require('./dropbox');
 
-const GENRES = ['Trap', 'Drill', 'Hip Hop', 'R&B', 'Afrobeat', 'Boom Bap', 'Pop', 'Hyperpop', 'Reggaeton', 'Dancehall', 'Lo-fi', 'House', 'Rock', 'Other'];
+const GENRES = ['Trap', 'Hip Hop', 'Drill', 'UK Drill', 'R&B', 'Boom Bap', 'Pop', 'Afrobeat', 'Amapiano', 'Reggaeton', 'Latin', 'Dancehall', 'Lo-fi', 'Phonk', 'Rage', 'Plugg', 'Jersey Club', 'Hyperpop', 'Cloud Rap', 'Emo Rap', 'UK Garage', 'Grime', 'House', 'Deep House', 'Tech House', 'Afro House', 'Techno', 'Drum & Bass', 'Dubstep', 'Future Bass', 'EDM', 'Synthwave', 'Disco', 'Funk', 'Brazilian Funk', 'Soul', 'Neo Soul', 'Gospel', 'Jazz', 'Rock', 'Indie', 'Ambient', 'Cinematic', 'Reggae', 'Country', 'Other'];
 const RESERVED = new Set(['admin', 'creativesound', 'creative-sound', 'invisible', 'support', 'help', 'api', 'beats', 'tracks', 'home']);
 const MB = 1024 * 1024;
 

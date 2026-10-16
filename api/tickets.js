@@ -8,6 +8,7 @@ const { handleCatalogue, handleMedia, handleBoughtFile } = require('./_lib/catal
 const profile = require('./_lib/profile');
 const payouts = require('./_lib/payouts');
 const { handleMessages } = require('./_lib/messages');
+const extras = require('./_lib/extras');
 const {
   handleFile: handleProducerFile,
   handleChunk: handleProducerChunk,
@@ -58,6 +59,10 @@ module.exports = async (req, res) => {
     'payouts-check': payouts.handleCheck,
     // Private messages between members (_lib/messages.js)
     messages: handleMessages,
+    // Listening extras: free tagged download, waveform, lyrics (_lib/extras.js)
+    'beats-free': extras.handleFree,
+    'beats-peaks': extras.handlePeaks,
+    'beats-lyrics': extras.handleLyrics,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

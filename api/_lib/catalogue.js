@@ -48,6 +48,9 @@ function toBeat(row) {
     tint: TINTS[row.id % TINTS.length],
     // Colour from the cover (borders, glows); the tint is the fallback.
     accent: /^#[0-9a-f]{6}$/i.test(row.accent || '') ? row.accent : null,
+    // Free tagged download (producer opt-in) and the stored waveform.
+    freeDownload: !!row.free_download,
+    peaks: Array.isArray(row.peaks) ? row.peaks : null,
     // v changes whenever the files change (approved edits), so browsers and
     // the CDN fetch the new cover/preview instead of a cached redirect.
     cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&v=${fileVersion(row)}` : null,

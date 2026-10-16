@@ -31,7 +31,7 @@
   const FILE_NAMES = { mp3: 'untagged MP3', wav: 'WAV', stems: 'stems', project: 'project file' };
   const PRICE_HINTS = { mp3: '29.99', wav: '49.99', trackout: '99.99', project: '199.99' };
   const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const GENRES = ['Trap', 'Drill', 'Hip Hop', 'R&B', 'Afrobeat', 'Boom Bap', 'Pop', 'Hyperpop', 'Reggaeton', 'Dancehall', 'Lo-fi', 'House', 'Rock', 'Other'];
+  const GENRES = ['Trap', 'Hip Hop', 'Drill', 'UK Drill', 'R&B', 'Boom Bap', 'Pop', 'Afrobeat', 'Amapiano', 'Reggaeton', 'Latin', 'Dancehall', 'Lo-fi', 'Phonk', 'Rage', 'Plugg', 'Jersey Club', 'Hyperpop', 'Cloud Rap', 'Emo Rap', 'UK Garage', 'Grime', 'House', 'Deep House', 'Tech House', 'Afro House', 'Techno', 'Drum & Bass', 'Dubstep', 'Future Bass', 'EDM', 'Synthwave', 'Disco', 'Funk', 'Brazilian Funk', 'Soul', 'Neo Soul', 'Gospel', 'Jazz', 'Rock', 'Indie', 'Ambient', 'Cinematic', 'Reggae', 'Country', 'Other'];
   const MOODS = ['Dark', 'Chill', 'Aggressive', 'Sad', 'Happy', 'Energetic', 'Romantic', 'Dreamy', 'Epic', 'Bouncy'];
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -108,7 +108,7 @@
     closeSuggest();
     tagInput.focus();
   };
-  fetch('data/tags.json').then((r) => r.json()).then((cfg) => {
+  fetch('data/tags.json?v=2').then((r) => r.json()).then((cfg) => {
     TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
     STANDARD = cfg.groups.flatMap((g) => g.tags);
     tagsReady();
@@ -659,6 +659,7 @@
           prices: pricesInEuros(),
           agree: form.elements.agree.checked,
           mastered: form.elements.mastered.checked,
+          freeDownload: form.elements.freeDownload.checked,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -736,6 +737,7 @@
     };
     set('producerName', t.producerName); set('title', t.title); set('bpm', t.bpm); set('key', t.key); set('genre', t.genre); set('mood', t.mood);
     set('typeBeat', (t.typeBeat || []).join(', ')); set('about', t.about);
+    form.elements.freeDownload.checked = !!t.freeDownload;
     Object.entries(t.files || {}).forEach(([kind, f]) => {
       const row = $(`.up-file[data-kind="${kind}"]`);
       if (!row) return;

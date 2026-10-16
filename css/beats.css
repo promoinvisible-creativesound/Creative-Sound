@@ -2181,3 +2181,53 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-fx-meter i.is-on{ background:rgb(var(--fx, 232,134,44)); }
 .bt-lyrics:focus{ border-color:rgba(var(--fx, 232,134,44), 0.6); }
 @media (min-width:901px) and (max-width:1100px){ .bt-player-inner{ grid-template-columns:minmax(180px, 1fr) minmax(280px, 520px) auto !important; gap:18px !important; padding:10px 18px calc(10px + env(safe-area-inset-bottom)) !important; } }
+
+/* ================================ Waveform ==================================
+   The seek bar becomes the track's waveform (canvas, drawn by js/beats.js).
+   The bar stays on top, transparent, so seeking and the keyboard still work. */
+.bt-wave{ position:absolute; left:0; right:0; top:50%; width:100%; height:34px; transform:translateY(-50%); pointer-events:none; opacity:0; transition:opacity 300ms ease; }
+.bt-player.has-wave .bt-wave{ opacity:1; }
+.bt-player.has-wave .bt-player-barwrap{ height:38px; }
+.bt-player.has-wave .bt-player-track{ height:38px; }
+.bt-player.has-wave .bt-player-viz{ opacity:0; }
+.bt-player.has-wave .bt-player-bar{ height:38px; cursor:pointer; }
+.bt-player.has-wave .bt-player-bar::before, .bt-player.has-wave .bt-player-fill{ opacity:0; }
+.bt-player.has-wave .bt-player-knob{ width:2px; height:30px; margin:-15px 0 0 -1px; border-radius:1px; background:#fff; box-shadow:0 0 10px rgba(var(--fx), 0.9); transform:scaleY(0); }
+.bt-player.has-wave.is-playing .bt-player-knob, .bt-player.has-wave .bt-player-bar:hover .bt-player-knob{ transform:scaleY(1); }
+.bt-wave-tip{
+  position:absolute; bottom:calc(100% + 6px); transform:translateX(-50%); padding:3px 8px; border-radius:8px; pointer-events:none;
+  background:rgba(20,20,19,0.92); border:1px solid rgba(var(--fx), 0.35); color:#f5f5f7;
+  font-family:var(--font-sans); font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.bt-wave-tip[hidden]{ display:none; }
+@media (max-width:900px){ .bt-wave{ height:28px; } .bt-player.has-wave .bt-player-barwrap, .bt-player.has-wave .bt-player-bar, .bt-player.has-wave .bt-player-track{ height:32px; } .bt-player.has-wave .bt-player-knob{ height:24px; margin-top:-12px; } }
+
+/* Track page: free download (producer opt-in) under the action buttons */
+.bp-free{
+  display:inline-flex; align-items:center; gap:8px; margin-top:12px; height:36px; padding:0 14px 0 12px; border-radius:18px;
+  border:1px dashed rgba(var(--fx, 232,134,44), 0.5); background:rgba(var(--fx, 232,134,44), 0.08); color:#f5f5f7;
+  font-family:var(--font-sans); font-size:13.5px; font-weight:600; cursor:pointer;
+  transition:background-color 150ms ease, border-color 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.bp-free svg{ width:16px; height:16px; fill:none; stroke:rgb(var(--fx-hi, 245,176,106)); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.bp-free small{ font-size:12px; font-weight:500; color:#bcbcc1; }
+.bp-free:active{ transform:scale(0.97); }
+.bp-free:disabled{ opacity:0.7; cursor:default; }
+@media (hover:hover) and (pointer:fine){ .bp-free:hover{ background:rgba(var(--fx, 232,134,44), 0.16); border-style:solid; } }
+
+/* Store cards: "Free download" badge on the cover */
+.bt-free-badge{ position:absolute; top:12px; left:12px; z-index:3; height:24px; display:inline-flex; align-items:center; padding:0 10px; border-radius:12px; background:rgba(10,10,9,0.55); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:#fff; font-family:var(--font-sans); font-size:11.5px; font-weight:600; letter-spacing:0.01em; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18); pointer-events:none; }
+@media (max-width:560px){ .bt-free-badge{ top:8px; left:8px; height:22px; padding:0 8px; font-size:10.5px; } }
+
+/* Free download: small glass pill inside the cover, top-right */
+.bp-cover .bp-free{
+  position:absolute; top:12px; right:12px; left:auto; z-index:3; margin:0; height:30px; padding:0 12px 0 10px; gap:6px;
+  border:0; border-radius:15px; color:#fff; font-size:12px; font-weight:600;
+  background:linear-gradient(145deg, rgba(255,255,255,0.26), rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.12));
+  -webkit-backdrop-filter:blur(14px) saturate(220%) brightness(1.15); backdrop-filter:blur(14px) saturate(220%) brightness(1.15);
+  box-shadow:inset 0 1px 0.5px rgba(255,255,255,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.25), 0 8px 20px -8px rgba(0,0,0,0.6);
+}
+.bp-cover .bp-free svg{ width:14px; height:14px; stroke:#fff; }
+.bp-cover .bp-free span{ text-shadow:0 1px 2px rgba(0,0,0,0.3); }
+@media (hover:hover) and (pointer:fine){ .bp-cover .bp-free:hover{ background:linear-gradient(145deg, rgba(255,255,255,0.34), rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.18)); } }
+@media (max-width:640px){ .bp-cover .bp-free{ top:8px; right:8px; height:26px; padding:0 10px 0 8px; font-size:11px; } }

@@ -296,6 +296,9 @@ async function submitChanges(session, body, res) {
   await ensureTables();
   const live = await ownApproved(session, Number(body.editId));
   if (!live) { res.status(404).json({ error: 'Track not found.' }); return; }
+  // Free download is the producer's call, applied right away (no review).
+  await require('./extras').ensureColumns();
+  await sql`UPDATE beat_submissions SET free_download = ${body.freeDownload === true} WHERE id = ${live.id}`;
   const revFiles = live.rev_files || {};
   const merged = { ...(live.files || {}), ...revFiles };
   const { data, error } = validateDetails(body, merged);
@@ -443,6 +446,7 @@ async function handleSubmit(req, res) {
       console.error('producer submit email error:', err);
     }
 
+    try { await require('./extras').ensureColumns(); await sql`UPDATE beat_submissions SET free_download = ${body.freeDownload === true} WHERE id = ${sub.id}`; } catch (err) { console.error('free download flag error:', err); }
     res.status(200).json({ ok: true, id: sub.id, status: 'pending', autoPublish: autoPublishes(session) });
   } catch (err) {
     console.error('producer submit error:', err);
@@ -477,7 +481,7 @@ async function handleSubmissions(req, res) {
         storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null,
         changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
         // For the edit page
-        producerName: r.producer_name, tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '',
+        producerName: r.producer_name, tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '', freeDownload: !!r.free_download,
         files: Object.fromEntries(Object.entries({ ...(r.files || {}) }).filter(([k]) => k !== 'tagged').map(([k, f]) => [k, { name: f.name, size: f.size }])),
       })),
     });

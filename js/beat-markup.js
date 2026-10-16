@@ -37,6 +37,7 @@
 
       <section class="bp-hero" aria-label="${esc(b.title)}">
         <div class="bp-cover">
+          ${b.freeDownload ? `<button type="button" class="bp-free" id="bp-free" aria-label="Free download, tagged MP3" title="Free download (tagged MP3)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Free download</span></button>` : ''}
           ${art(b)}
           <button type="button" class="bp-cover-play" data-play-beat aria-label="Play preview"><svg class="bp-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" pathLength="100"/></svg>
             <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
@@ -101,6 +102,11 @@
       <section class="bp-section" aria-labelledby="bp-more-title">
         <div class="bp-section-head"><h2 id="bp-more-title">More from ${esc(b.producer)}</h2><a href="beats.html">See all tracks</a></div>
         <div class="bp-row" id="bp-more"></div>
+      </section>
+
+      <section class="bp-section" aria-labelledby="bp-related-title">
+        <div class="bp-section-head"><h2 id="bp-related-title">Similar tracks</h2><a href="beats.html">See all tracks</a></div>
+        <div class="bp-row" id="bp-related"></div>
       </section>
     </div>
   </main>`;

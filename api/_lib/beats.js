@@ -208,7 +208,11 @@ function termsFor(tier, t, producer) {
   out.push(
     'Ownership. The Producer keeps all rights and the copyright in the Beat. The Licensee owns the lyrics, melodies and vocal recordings they add, and the master recording of the Song, subject to this license.',
     `Credit. The Licensee must credit the Producer as "${producer}" wherever credits are shown, including streaming metadata, video descriptions and physical releases.`,
-    'Publishing. The composition of the Song is shared: the Producer holds 50% of the writer’s share and 50% of the publishing share, unless the parties agree otherwise in writing. Each party may register its share with its collecting society (for example SIAE).',
+    // Trackout and Project (the top licenses): no publishing split, the
+    // credit is the only obligation towards the Producer.
+    tier === 'trackout' || tier === 'project'
+      ? 'Publishing. No share of the writer’s or publishing royalties of the Song is owed to the Producer under this license. The only obligation towards the Producer is the credit above.'
+      : 'Publishing. The composition of the Song is shared: the Producer holds 50% of the writer’s share and 50% of the publishing share, unless the parties agree otherwise in writing. Each party may register its share with its collecting society (for example SIAE).',
     'Content ID. The Licensee may not register the Beat, or the Song as a whole, with content-identification systems (YouTube Content ID and similar). The Producer will clear claims on the Licensee’s releases on request.',
     'Sync. Music videos are covered as listed above. Use of the Song in films, TV, adverts, video games or other synchronisation needs a separate agreement with the Producer.',
     'Non-exclusive. The Producer may license the Beat to others. If exclusive rights are later sold, this license stays valid for the Song under the same terms.',

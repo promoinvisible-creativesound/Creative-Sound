@@ -38,6 +38,18 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/beats/lyrics",
+      "destination": "/api/tickets?action=beats-lyrics"
+    },
+    {
+      "source": "/api/beats/peaks",
+      "destination": "/api/tickets?action=beats-peaks"
+    },
+    {
+      "source": "/api/beats/free",
+      "destination": "/api/tickets?action=beats-free"
+    },
+    {
       "source": "/api/messages",
       "destination": "/api/tickets?action=messages"
     },

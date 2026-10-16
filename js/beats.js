@@ -695,6 +695,17 @@
   const setupBeatPage = () => {
     const beat = byId.get(beatRoot.dataset.beatId);
     if (!beat) return;
+    // Your own track: "Message" becomes a link to your inbox (artists'
+    // messages about it land there; you can't message yourself).
+    const msgBtn = $('.bp-msg-btn', beatRoot);
+    if (msgBtn && window.csMe && beat.producerHandle) {
+      Promise.resolve(window.csMe).then((me) => {
+        if (!me || !me.handle || me.handle.toLowerCase() !== beat.producerHandle.toLowerCase()) return;
+        msgBtn.href = 'messages.html';
+        msgBtn.title = 'Messages from artists about your tracks';
+        $('span', msgBtn).textContent = 'Inbox';
+      });
+    }
     let tier = tiersOf(beat).includes('wav') ? 'wav' : tiersOf(beat)[0];
     const inCart = cart.find((c) => c.id === beat.id);
     if (inCart && tiersOf(beat).includes(inCart.tier)) tier = inCart.tier;

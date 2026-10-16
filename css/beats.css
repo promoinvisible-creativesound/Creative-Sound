@@ -2018,3 +2018,15 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 
 /* Track page: Save / Saved keeps the same width, so the buttons next to it never shift */
 @media (min-width:561px){ .bp-actions .bp-save .bt-save-text{ display:inline-block; min-width:3.1em; text-align:left; } }
+
+/* Track page actions: one row, slightly smaller; on narrower screens Save,
+   Share and Message become round icon buttons so nothing wraps. */
+@media (min-width:561px){
+  .bp-actions{ flex-wrap:nowrap; gap:8px; }
+  .bp-actions .btn{ height:40px; padding:0 16px; font-size:13.5px; flex-shrink:0; }
+  .bp-actions .btn svg{ width:15px; height:15px; }
+}
+@media (min-width:561px) and (max-width:1180px){
+  .bp-actions .bp-save, .bp-actions #bp-share, .bp-actions .bp-msg-btn{ width:40px; padding:0; justify-content:center; }
+  .bp-actions .bp-save .bt-save-text, .bp-actions #bp-share span, .bp-actions .bp-msg-btn span{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; min-width:0; }
+}

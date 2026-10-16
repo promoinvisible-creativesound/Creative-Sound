@@ -756,3 +756,47 @@
 .up-mix-note b{ display:block; font-size:14px; font-weight:600; color:#f5f5f7; }
 .up-mix-note small{ display:block; margin-top:2px; font-size:13px; line-height:1.5; color:#c2c2c7; }
 .up-card .up-check + .up-check{ margin-top:14px; }
+
+/* Upload: Key / Genre / Mood dropdowns, same as the store filters
+   (js/select-dd.js). The native select stays in the form, hidden. */
+.sd-native{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; border:0 !important; opacity:0; pointer-events:none; clip:rect(0 0 0 0); }
+.sd{ position:relative; }
+.sd-btn{
+  width:100%; height:44px; display:flex; align-items:center; gap:8px; padding:0 12px 0 14px; border-radius:12px;
+  border:1px solid rgba(255,255,255,0.1); background:#0a0a09; color:#f5f5f7; cursor:pointer;
+  font-family:var(--font-sans); font-size:15px; font-weight:500; text-align:left;
+  transition:border-color 150ms ease, box-shadow 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sd-btn:active{ transform:scale(0.98); }
+.sd-value{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sd.is-empty .sd-value{ color:#9d9da3; font-weight:400; }
+.sd-chev{ width:16px; height:16px; flex-shrink:0; fill:none; stroke:#9d9da3; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+.sd.is-open .sd-chev{ transform:rotate(180deg); stroke:#f5b06a; }
+.sd.is-open .sd-btn, .sd-btn:focus-visible{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(232,134,44,0.15); outline:none; }
+@media (hover:hover) and (pointer:fine){ .sd-btn:hover{ border-color:rgba(232,134,44,0.5); } }
+
+.sd-panel{
+  position:absolute; top:calc(100% + 8px); left:0; z-index:60; min-width:max(100%, 200px); max-height:300px; overflow-y:auto;
+  padding:6px; border-radius:14px; background:rgba(16,15,13,0.96); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.14); box-shadow:0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(232,134,44,0.06);
+  transform-origin:top left; outline:none; scrollbar-width:thin;
+  opacity:0; transform:scale(0.96) translateY(-4px); visibility:hidden; pointer-events:none;
+  transition:opacity 150ms ease, transform 180ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 180ms;
+}
+.sd-panel::before{ content:''; position:absolute; left:14px; right:14px; top:0; height:1px; background:linear-gradient(90deg, transparent, var(--accent), transparent); transform:scaleX(0); transition:transform 300ms cubic-bezier(0.23, 1, 0.32, 1); }
+.sd.is-open .sd-panel{ opacity:1; transform:none; visibility:visible; pointer-events:auto; transition:opacity 150ms ease, transform 200ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s; }
+.sd.is-open .sd-panel::before{ transform:scaleX(1); }
+.sd-glide{ position:absolute; left:6px; right:6px; top:0; height:40px; border-radius:9px; background:rgba(232,134,44,0.14); opacity:0; pointer-events:none; transition:transform 150ms cubic-bezier(0.23, 1, 0.32, 1), height 150ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease; }
+.sd-opt{
+  position:relative; display:flex; align-items:center; gap:10px; min-height:40px; padding:0 12px; border-radius:9px;
+  cursor:pointer; font-size:14.5px; color:#f5f5f7;
+  opacity:0; transform:translateY(4px); transition:color 120ms ease, opacity 150ms ease, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sd.is-open .sd-opt{ opacity:1; transform:none; transition-delay:calc(var(--k, 0) * 14ms); }
+.sd-check{ width:16px; height:16px; flex-shrink:0; }
+.sd-check path{ fill:none; stroke:var(--accent); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:16; stroke-dashoffset:16; transition:stroke-dashoffset 250ms cubic-bezier(0.23, 1, 0.32, 1); }
+.sd-opt[aria-selected="true"]{ font-weight:600; color:#f5b06a; }
+.sd-opt[aria-selected="true"] .sd-check path{ stroke-dashoffset:0; }
+.sd.is-open .sd-opt[aria-selected="true"] .sd-check path{ transition-delay:120ms; }
+@media (max-width:560px){ .sd-panel{ max-height:55dvh; } .sd-btn{ font-size:16px; } }
+@media (prefers-reduced-motion: reduce){ .sd-panel, .sd-opt, .sd-check path, .sd-chev{ transition:none; } }

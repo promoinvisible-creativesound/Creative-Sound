@@ -53,6 +53,8 @@
   fill('key', NOTES.flatMap((n) => [`${n} min`, `${n} maj`]), 'Choose key');
   fill('genre', GENRES, 'Choose genre');
   fill('mood', MOODS, 'Choose mood');
+  // Same dropdowns as the store filters (js/select-dd.js).
+  if (window.CSSelect) ['key', 'genre', 'mood'].forEach((n) => window.CSSelect.enhance(form.elements[n]));
 
   // Tags: type to get suggestions from the standard list (data/tags.json).
   // At least TAG_RULES.min suggested tags are required to submit; up to
@@ -726,7 +728,12 @@
     $('.up-sub').textContent = 'Change details, prices or files. Your changes go to review; the store keeps the current version until they are approved.';
     $('.up-submit').textContent = 'Send changes for review';
     if (t.changesStatus === 'pending') { $('#up-error').textContent = 'Changes for this track are already in review. Sending again replaces them.'; $('#up-error').hidden = false; }
-    const set = (n, v) => { if (form.elements[n] != null && v != null) form.elements[n].value = v; };
+    const set = (n, v) => {
+      const el = form.elements[n];
+      if (el == null || v == null) return;
+      el.value = v;
+      if (el.tagName === 'SELECT') el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
     set('producerName', t.producerName); set('title', t.title); set('bpm', t.bpm); set('key', t.key); set('genre', t.genre); set('mood', t.mood);
     set('typeBeat', (t.typeBeat || []).join(', ')); set('about', t.about);
     Object.entries(t.files || {}).forEach(([kind, f]) => {

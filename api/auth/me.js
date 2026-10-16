@@ -70,6 +70,7 @@ module.exports = async (req, res) => {
       firstName: (user && user.first_name) || '',
       lastName: (user && user.last_name) || '',
       photo,
+      handle: (user && user.handle) || null,
       licenses,
       orders: licenses,
       packs,

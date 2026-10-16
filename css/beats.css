@@ -2041,3 +2041,39 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Fact labels (BPM, Key, …) in the site's sans instead of the mono font */
 .bp-facts span{ font-family:var(--font-sans); font-size:11.5px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#9d9da3; }
 @media (max-width:560px){ .bp-facts span{ font-size:9.5px; letter-spacing:0.05em; } }
+
+/* ===================== Top tracks: refined edges + chart ====================
+   Outer card: hairline border with a soft light catch at the top. Spotlight:
+   clean border in the track colour (the running light ring is gone). Right
+   panel: a small chart with a header, rows highlighted in the track colour. */
+.bt-top-frame{
+  border:1px solid transparent !important;
+  background:linear-gradient(#121211, #121211) padding-box, linear-gradient(170deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 38%, rgba(255,255,255,0.03) 70%, rgba(255,255,255,0.08)) border-box !important;
+  box-shadow:0 30px 80px -40px rgba(0,0,0,0.9) !important;
+}
+.bt-feat-spot::before{ display:none !important; animation:none !important; }
+.bt-top-body .bt-feat-spot{
+  border:0 !important;
+  box-shadow:inset 0 0 0 1px rgba(var(--fx, 232,134,44), 0.28), inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 60px -30px rgba(var(--fx, 232,134,44), 0.45) !important;
+}
+
+.bt-top-body .bt-feat-list{
+  display:flex; flex-direction:column; gap:4px !important; padding:10px; border-radius:20px;
+  border:1px solid transparent;
+  background:linear-gradient(#171716, #141413) padding-box, linear-gradient(170deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06)) border-box;
+}
+.bt-feat-list-head{ display:flex; align-items:baseline; justify-content:space-between; padding:6px 8px 8px; }
+.bt-feat-list-head span{ font-family:var(--font-sans); font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9d9da3; }
+.bt-feat-list-head a{ font-size:13px; font-weight:500; color:#f0a35b; text-decoration:none; }
+@media (hover:hover) and (pointer:fine){ .bt-feat-list-head a:hover{ text-decoration:underline; text-underline-offset:3px; } }
+.bt-top-body .bt-feat-pick{ flex:0 0 auto; padding:8px 10px 8px 8px !important; border-radius:14px !important; border:1px solid transparent !important; gap:12px; transition:background-color 200ms ease, border-color 200ms ease; }
+.bt-top-body .bt-feat-pick.is-active{ background:rgba(var(--fx, 232,134,44), 0.12) !important; border-color:rgba(var(--fx, 232,134,44), 0.35) !important; }
+.bt-top-body .bt-feat-pick.is-active::after, .bt-top-body .bt-feat-pick::before{ display:none !important; }
+.bt-top-body .bt-feat-pick .bt-feat-rank{ width:20px; font-family:var(--font-sans) !important; font-size:14px !important; font-weight:700 !important; color:#8a8a90 !important; }
+.bt-top-body .bt-feat-pick.is-active .bt-feat-rank{ color:rgb(var(--fx-hi, 245,176,106)) !important; }
+.bt-top-body .bt-feat-thumb{ width:48px; border-radius:10px !important; box-shadow:0 0 0 1px rgba(255,255,255,0.08); }
+.bt-top-body .bt-feat-pick-text b{ font-size:14.5px; }
+.bt-top-body .bt-feat-pick-text small{ font-size:12.5px; color:#bcbcc1; }
+@media (hover:hover) and (pointer:fine){ .bt-top-body .bt-feat-pick:not(.is-active):hover{ background:rgba(255,255,255,0.05) !important; } }
+@media (max-width:1000px){ .bt-top-body .bt-feat-list{ flex-direction:row; flex-wrap:nowrap; overflow-x:auto; } .bt-feat-list-head{ display:none; } .bt-top-body .bt-feat-pick{ flex:0 0 220px; } }
+@media (max-width:640px){ .bt-top-body .bt-feat-list{ display:none; } }

@@ -835,7 +835,8 @@
               <button type="button" class="bt-feat-nav next" data-feat-step="1" aria-label="Next track">${ARROW('M9 5l7 7-7 7')}</button>
               <div class="bt-feat-dots" aria-hidden="true">${list.map(() => '<span></span>').join('')}</div>
             </div>
-            <div class="bt-feat-list" role="group" aria-label="Top tracks this week">${list.map((x, i) => `
+            <div class="bt-feat-list" role="group" aria-label="Top tracks this week">
+              <div class="bt-feat-list-head"><span>Chart</span><a href="#bt-grid">See all ›</a></div>${list.map((x, i) => `
               <button type="button" class="bt-feat-pick ${tintClass(x)}" data-feat-index="${i}" aria-label="Show ${esc(x.title)}">
                 <span class="bt-feat-rank">${i + 1}</span>
                 <span class="bt-feat-thumb">${art(x)}</span>

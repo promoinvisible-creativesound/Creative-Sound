@@ -990,6 +990,7 @@
     $('#bt-player-producer').innerHTML = producerLine(beat);
     $('#bt-player-buy').innerHTML = `<span>Buy</span><strong>${euro(minPrice(beat))}</strong>`;
     $('#bt-player-buy').setAttribute('aria-label', `Buy ${beat.title}, from ${euro(minPrice(beat))}`);
+    if (window.__csTools) window.__csTools.onTrack(beat);
   };
 
   const syncCards = () => {
@@ -1018,20 +1019,31 @@
     $('#bt-play').setAttribute('aria-label', audio.paused ? 'Play' : 'Pause');
   };
 
-  const ensureAnalyser = async () => {
-    if (reduceMotion || noViz || analyser || !(window.AudioContext || window.webkitAudioContext)) return;
+  // Audio graph: element -> [key shifter] -> [analyser] -> speakers. Built
+  // on first play (needs the CORS preview; without it the element plays
+  // directly and the visualizer and key change are off).
+  let srcNode = null;
+  let shifter = null;
+  const graphOut = () => analyser || (actx && actx.destination);
+  const ensureGraph = () => {
+    if (srcNode) return true;
+    if (noViz || !(window.AudioContext || window.webkitAudioContext)) return false;
     try {
       actx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = actx.createMediaElementSource(audio);
-      analyser = actx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.6;
-      src.connect(analyser);
-      analyser.connect(actx.destination);
-      freq = new Uint8Array(analyser.frequencyBinCount);
-      wave = new Uint8Array(analyser.fftSize);
-    } catch (e) { analyser = null; }
+      srcNode = actx.createMediaElementSource(audio);
+      if (!reduceMotion) {
+        analyser = actx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.6;
+        analyser.connect(actx.destination);
+        freq = new Uint8Array(analyser.frequencyBinCount);
+        wave = new Uint8Array(analyser.fftSize);
+      }
+      srcNode.connect(graphOut());
+      return true;
+    } catch (e) { analyser = null; srcNode = null; return false; }
   };
+  const ensureAnalyser = async () => { if (!reduceMotion) ensureGraph(); };
 
   const play = async (id) => {
     const beat = byId.get(id);
@@ -1048,7 +1060,7 @@
   };
   audio.addEventListener('error', () => {
     const beat = byId.get(currentId);
-    if (!beat || beat.source !== 'producer' || !audio.crossOrigin || analyser) return;
+    if (!beat || beat.source !== 'producer' || !audio.crossOrigin || srcNode) return;
     noViz = true;
     audio.removeAttribute('crossorigin');
     audio.src = beat.preview;
@@ -1159,7 +1171,247 @@
   audio.addEventListener('loadedmetadata', updateProgress);
   audio.addEventListener('ended', () => step(1));
 
+  /* ------------------------------ Player tools ------------------------------ */
+  // Edit (tempo and key of the preview, for trying a beat at your speed and
+  // in your range), Loop, Lyrics (a notepad per track, kept on this device),
+  // Volume and More. Tempo uses the element's playbackRate with pitch kept;
+  // key runs through a small pitch shifter in an AudioWorklet, so both can
+  // change independently. Both reset when another track starts.
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const FLAT = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
+  const transposeKey = (key, semi) => {
+    const m = /^([A-G](?:#|b)?)\s*(.*)$/.exec(String(key || '').trim());
+    if (!m) return key;
+    const root = FLAT[m[1]] || m[1];
+    const i = NOTE_NAMES.indexOf(root);
+    if (i < 0) return key;
+    return `${NOTE_NAMES[(i + semi + 120) % 12]}${m[2] ? ` ${m[2]}` : ''}`;
+  };
+  // Pitch shifter: two read heads sweep a short delay line half a window
+  // apart, cross-faded with a Hann window (the classic "delay-line" shifter).
+  const SHIFTER = `class CsShift extends AudioWorkletProcessor {
+    constructor() { super(); this.ratio = 1; this.size = 1 << 16; this.buf = [new Float32Array(this.size), new Float32Array(this.size)]; this.w = 0; this.phase = 0; this.win = Math.round(sampleRate * 0.08);
+      this.port.onmessage = (e) => { this.ratio = e.data; }; }
+    read(b, pos) { const s = this.size; const i = Math.floor(pos); const f = pos - i; const a = b[(i % s + s) % s]; const c = b[((i + 1) % s + s) % s]; return a + (c - a) * f; }
+    process(inputs, outputs) {
+      const inp = inputs[0]; const out = outputs[0]; if (!out.length) return true;
+      const n = out[0].length; const W = this.win; const step = (1 - this.ratio) / W;
+      for (let k = 0; k < n; k++) {
+        for (let ch = 0; ch < out.length; ch++) { const src = inp[ch] || inp[0]; this.buf[ch % 2][(this.w + k) % this.size] = src ? src[k] : 0; }
+        let p1 = this.phase; let p2 = (p1 + 0.5) % 1;
+        const g1 = Math.sin(Math.PI * p1) ** 2; const g2 = Math.sin(Math.PI * p2) ** 2;
+        const pos = this.w + k;
+        for (let ch = 0; ch < out.length; ch++) {
+          const b = this.buf[ch % 2];
+          out[ch][k] = this.ratio === 1 ? b[pos % this.size] : this.read(b, pos - (p1 * W + 2)) * g1 + this.read(b, pos - (p2 * W + 2)) * g2;
+        }
+        this.phase = ((this.phase + step) % 1 + 1) % 1;
+      }
+      this.w = (this.w + n) % this.size;
+      return true;
+    }
+  }
+  registerProcessor('cs-shift', CsShift);`;
+  let shifterReady = null;
+  const setKeyShift = async (semi) => {
+    if (!semi && !shifter) return true;
+    if (!ensureGraph() || !actx.audioWorklet) return false;
+    try {
+      if (!shifterReady) shifterReady = actx.audioWorklet.addModule(URL.createObjectURL(new Blob([SHIFTER], { type: 'application/javascript' })));
+      await shifterReady;
+      if (!shifter) {
+        shifter = new AudioWorkletNode(actx, 'cs-shift', { outputChannelCount: [2] });
+        srcNode.disconnect();
+        srcNode.connect(shifter);
+        shifter.connect(graphOut());
+      }
+      shifter.port.postMessage(2 ** (semi / 12));
+      return true;
+    } catch (e) { return false; }
+  };
+
+  const fx = { tempo: 1, semi: 0 };
+  const setupPlayerTools = () => {
+    const right = $('.bt-player-right', player);
+    if (!right || $('.bt-tools', player)) return;
+    const ICON = {
+      edit: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+      loop: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+      lyrics: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+      vol: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+      mute: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/>',
+      more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    };
+    const ic = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+    const tools = document.createElement('div');
+    tools.className = 'bt-tools';
+    tools.innerHTML = `
+      <button type="button" class="bt-tool" data-tool="edit" aria-haspopup="dialog" aria-expanded="false">${ic('edit')}<span>Edit</span></button>
+      <button type="button" class="bt-tool" data-tool="loop" aria-pressed="false">${ic('loop')}<span>Loop</span></button>
+      <button type="button" class="bt-tool" data-tool="lyrics" aria-haspopup="dialog" aria-expanded="false">${ic('lyrics')}<span>Lyrics</span></button>
+      <button type="button" class="bt-tool bt-tool-ic" data-tool="vol" aria-haspopup="dialog" aria-expanded="false" aria-label="Volume">${ic('vol')}</button>
+      <button type="button" class="bt-tool bt-tool-ic" data-tool="more" aria-haspopup="menu" aria-expanded="false" aria-label="More">${ic('more')}</button>
+      <div class="bt-pop" role="dialog" hidden></div>`;
+    right.prepend(tools);
+    const pop = $('.bt-pop', tools);
+    let openTool = null;
+    const closePop = () => {
+      if (!openTool) return;
+      $(`[data-tool="${openTool}"]`, tools).setAttribute('aria-expanded', 'false');
+      openTool = null;
+      pop.classList.remove('is-open');
+      setTimeout(() => { if (!openTool) pop.hidden = true; }, 180);
+    };
+    const beat = () => byId.get(currentId);
+    const paintEdit = () => {
+      const b = beat();
+      if (!b) return;
+      const bpm = Math.round(b.bpm * fx.tempo);
+      $('#bt-fx-bpm', pop).textContent = `${bpm} BPM`;
+      $('#bt-fx-bpm-was', pop).textContent = fx.tempo === 1 ? 'Original' : `was ${b.bpm}`;
+      $('#bt-fx-key', pop).textContent = transposeKey(b.key, fx.semi);
+      $('#bt-fx-key-was', pop).textContent = fx.semi ? `${fx.semi > 0 ? '+' : ''}${fx.semi} st · was ${b.key}` : 'Original';
+      $('#bt-fx-tempo', pop).value = String(Math.round(fx.tempo * 100));
+      $('#bt-fx-tempo', pop).style.setProperty('--p', `${((fx.tempo - 0.75) / 0.5) * 100}%`);
+      $('.bt-tool[data-tool="edit"]', tools).classList.toggle('is-on', fx.tempo !== 1 || fx.semi !== 0);
+    };
+    const applyTempo = () => { audio.preservesPitch = true; audio.mozPreservesPitch = true; audio.webkitPreservesPitch = true; audio.playbackRate = fx.tempo; };
+    const panels = {
+      edit: () => {
+        const b = beat();
+        pop.innerHTML = `
+          <div class="bt-pop-head"><b>Edit preview</b><button type="button" class="bt-pop-reset" data-fx-reset>Reset</button></div>
+          <div class="bt-fx">
+            <div class="bt-fx-row"><span class="bt-fx-label">Tempo</span><span class="bt-fx-val"><b id="bt-fx-bpm"></b><small id="bt-fx-bpm-was"></small></span></div>
+            <input type="range" id="bt-fx-tempo" class="bt-fx-range" min="75" max="125" step="1" aria-label="Tempo">
+          </div>
+          <div class="bt-fx">
+            <div class="bt-fx-row"><span class="bt-fx-label">Key</span><span class="bt-fx-val"><b id="bt-fx-key"></b><small id="bt-fx-key-was"></small></span></div>
+            <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 13 }, (_, i) => `<i data-k="${i - 6}"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
+          </div>
+          <p class="bt-pop-note">Only changes what you hear. The files you buy stay in ${esc(b ? b.key : 'the original key')} at ${b ? b.bpm : ''} BPM.</p>`;
+        paintEdit();
+        paintMeter();
+      },
+      lyrics: () => {
+        const b = beat();
+        const k = `cs-lyrics-${b.id}`;
+        let text = '';
+        try { text = localStorage.getItem(k) || ''; } catch (e) {}
+        pop.innerHTML = `
+          <div class="bt-pop-head"><b>Lyrics · ${esc(b.title)}</b><button type="button" class="bt-pop-reset" data-copy>Copy</button></div>
+          <textarea class="bt-lyrics" placeholder="Write your verse while the beat plays… Saved on this device." aria-label="Lyrics for ${esc(b.title)}">${esc(text)}</textarea>
+          <p class="bt-pop-note" id="bt-lyrics-note">Saved automatically.</p>`;
+        const ta = $('.bt-lyrics', pop);
+        ta.addEventListener('input', () => { try { localStorage.setItem(k, ta.value); } catch (e) {} });
+        setTimeout(() => ta.focus(), 60);
+      },
+      vol: () => {
+        pop.innerHTML = `
+          <div class="bt-vol"><button type="button" class="bt-vol-mute" aria-label="Mute">${ic(audio.muted || audio.volume === 0 ? 'mute' : 'vol')}</button>
+          <input type="range" class="bt-fx-range" id="bt-vol" min="0" max="100" step="1" value="${Math.round(audio.volume * 100)}" aria-label="Volume" style="--p:${audio.muted ? 0 : Math.round(audio.volume * 100)}%"></div>`;
+      },
+      more: () => {
+        const b = beat();
+        pop.innerHTML = `
+          <div class="bt-more" role="menu">
+            <a role="menuitem" href="${beatUrl(b)}">Open track page</a>
+            <button type="button" role="menuitem" data-more="share">Copy link</button>
+            <button type="button" role="menuitem" data-more="save">${saved.has(b.id) ? 'Remove from saved' : 'Save track'}</button>
+            ${b.source === 'producer' ? `<a role="menuitem" href="messages.html?beat=${encodeURIComponent(b.id)}">Message the producer</a>` : ''}
+          </div>`;
+      },
+    };
+    const paintMeter = () => $$('.bt-fx-meter i', pop).forEach((el) => {
+      const k = Number(el.dataset.k);
+      el.classList.toggle('is-on', fx.semi !== 0 && ((fx.semi > 0 && k > 0 && k <= fx.semi) || (fx.semi < 0 && k < 0 && k >= fx.semi)));
+      el.classList.toggle('is-zero', k === 0);
+    });
+    const openPop = (tool) => {
+      if (openTool === tool) { closePop(); return; }
+      if (!currentId) return;
+      if (openTool) $(`[data-tool="${openTool}"]`, tools).setAttribute('aria-expanded', 'false');
+      openTool = tool;
+      pop.className = `bt-pop is-${tool}`;
+      panels[tool]();
+      pop.hidden = false;
+      $(`[data-tool="${tool}"]`, tools).setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(() => pop.classList.add('is-open'));
+    };
+
+    tools.addEventListener('click', async (e) => {
+      const t = e.target.closest('.bt-tool');
+      if (t) {
+        const tool = t.dataset.tool;
+        if (tool === 'loop') {
+          audio.loop = !audio.loop;
+          t.setAttribute('aria-pressed', String(audio.loop));
+          t.classList.toggle('is-on', audio.loop);
+          return;
+        }
+        openPop(tool);
+        return;
+      }
+      if (e.target.closest('[data-fx-reset]')) {
+        fx.tempo = 1; fx.semi = 0; applyTempo(); await setKeyShift(0); paintEdit(); paintMeter(); return;
+      }
+      const s = e.target.closest('[data-semi]');
+      if (s) {
+        const next = Math.max(-6, Math.min(6, fx.semi + Number(s.dataset.semi)));
+        if (next === fx.semi) return;
+        const ok = await setKeyShift(next);
+        if (!ok) { $('.bt-pop-note', pop).textContent = 'Key change is not available in this browser.'; return; }
+        fx.semi = next; paintEdit(); paintMeter(); return;
+      }
+      if (e.target.closest('[data-copy]')) {
+        const ta = $('.bt-lyrics', pop);
+        try { await navigator.clipboard.writeText(ta.value); $('#bt-lyrics-note', pop).textContent = 'Copied.'; } catch (err) { ta.select(); }
+        return;
+      }
+      if (e.target.closest('.bt-vol-mute')) {
+        audio.muted = !audio.muted;
+        panels.vol();
+        return;
+      }
+      const m = e.target.closest('[data-more]');
+      if (m) {
+        const b = beat();
+        if (m.dataset.more === 'share') {
+          try { await navigator.clipboard.writeText(new URL(beatUrl(b), location.href).href); m.textContent = 'Link copied'; } catch (err) {}
+          return;
+        }
+        if (m.dataset.more === 'save') { toggleSave(b.id); closePop(); }
+      }
+    });
+    tools.addEventListener('input', (e) => {
+      if (e.target.id === 'bt-fx-tempo') {
+        fx.tempo = Number(e.target.value) / 100;
+        applyTempo();
+        paintEdit();
+      } else if (e.target.id === 'bt-vol') {
+        audio.volume = Number(e.target.value) / 100;
+        audio.muted = audio.volume === 0;
+        e.target.style.setProperty('--p', `${e.target.value}%`);
+        $('.bt-vol-mute', pop).innerHTML = ic(audio.muted ? 'mute' : 'vol');
+      }
+    });
+    document.addEventListener('pointerdown', (e) => { if (openTool && !tools.contains(e.target)) closePop(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && openTool) closePop(); });
+
+    window.__csTools = {
+      // Another track: back to its original tempo and key.
+      onTrack: (b) => {
+        if (b.id === fx.id) return;
+        fx.id = b.id;
+        if (fx.tempo !== 1 || fx.semi !== 0) { fx.tempo = 1; fx.semi = 0; applyTempo(); setKeyShift(0); }
+        $('.bt-tool[data-tool="edit"]', tools).classList.remove('is-on');
+        if (openTool) panels[openTool]();
+      },
+    };
+  };
+
   const setupPlayer = () => {
+    setupPlayerTools();
     $('#bt-play').addEventListener('click', () => { if (currentId) togglePlay(currentId); });
     $('#bt-prev').addEventListener('click', () => step(-1));
     $('#bt-next').addEventListener('click', () => step(1));

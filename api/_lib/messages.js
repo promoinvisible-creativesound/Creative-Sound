@@ -147,10 +147,13 @@ async function handleMessages(req, res) {
     let toId = Number(req.body && req.body.to) || null;
     let beatId = null;
     let beatTitle = null;
-    if (!toId && req.body && req.body.beatId) {
+    // A message can be about a track: it goes to that track's producer, or
+    // (in an existing chat) attaches a track by either of the two people.
+    if (req.body && req.body.beatId) {
       const p = await producerOfBeat(req.body.beatId);
       if (!p) { res.status(404).json({ error: 'This track can not be messaged about.' }); return; }
-      toId = p.userId; beatId = String(req.body.beatId).slice(0, 120); beatTitle = p.title;
+      if (!toId) toId = p.userId;
+      if (p.userId === toId || p.userId === uid) { beatId = String(req.body.beatId).slice(0, 120); beatTitle = p.title; }
     }
     if (!toId) { res.status(400).json({ error: 'Who is this message for?' }); return; }
     if (toId === uid) { res.status(400).json({ error: beatId ? "This is your own track, you can't message yourself." : "You can't message yourself." }); return; }

@@ -1272,7 +1272,7 @@
       $('#bt-fx-key', pop).textContent = transposeKey(b.key, fx.semi);
       $('#bt-fx-key-was', pop).textContent = fx.semi ? `${fx.semi > 0 ? '+' : ''}${fx.semi} st · was ${b.key}` : 'Original';
       $('#bt-fx-tempo', pop).value = String(Math.round(fx.tempo * 100));
-      $('#bt-fx-tempo', pop).style.setProperty('--p', `${((fx.tempo - 0.75) / 0.5) * 100}%`);
+      $('#bt-fx-tempo', pop).style.setProperty('--p', `${(fx.tempo - 0.5) * 100}%`);
       $('.bt-tool[data-tool="edit"]', tools).classList.toggle('is-on', fx.tempo !== 1 || fx.semi !== 0);
     };
     const applyTempo = () => { audio.preservesPitch = true; audio.mozPreservesPitch = true; audio.webkitPreservesPitch = true; audio.playbackRate = fx.tempo; };
@@ -1283,11 +1283,11 @@
           <div class="bt-pop-head"><b>Edit preview</b><button type="button" class="bt-pop-reset" data-fx-reset>Reset</button></div>
           <div class="bt-fx">
             <div class="bt-fx-row"><span class="bt-fx-label">Tempo</span><span class="bt-fx-val"><b id="bt-fx-bpm"></b><small id="bt-fx-bpm-was"></small></span></div>
-            <input type="range" id="bt-fx-tempo" class="bt-fx-range" min="75" max="125" step="1" aria-label="Tempo">
+            <input type="range" id="bt-fx-tempo" class="bt-fx-range" min="50" max="150" step="1" aria-label="Tempo">
           </div>
           <div class="bt-fx">
             <div class="bt-fx-row"><span class="bt-fx-label">Key</span><span class="bt-fx-val"><b id="bt-fx-key"></b><small id="bt-fx-key-was"></small></span></div>
-            <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 13 }, (_, i) => `<i data-k="${i - 6}"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
+            <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 25 }, (_, i) => `<i data-k="${i - 12}"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
           </div>
           <p class="bt-pop-note">Only changes what you hear. The files you buy stay in ${esc(b ? b.key : 'the original key')} at ${b ? b.bpm : ''} BPM.</p>`;
         paintEdit();
@@ -1357,7 +1357,7 @@
       }
       const s = e.target.closest('[data-semi]');
       if (s) {
-        const next = Math.max(-6, Math.min(6, fx.semi + Number(s.dataset.semi)));
+        const next = Math.max(-12, Math.min(12, fx.semi + Number(s.dataset.semi)));
         if (next === fx.semi) return;
         const ok = await setKeyShift(next);
         if (!ok) { $('.bt-pop-note', pop).textContent = 'Key change is not available in this browser.'; return; }

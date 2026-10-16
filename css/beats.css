@@ -2163,3 +2163,21 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 }
 @media (prefers-reduced-motion: reduce){ .bt-pop, .bt-tool, .bt-fx-meter i{ transition:opacity 150ms ease; } .bt-pop{ transform:none; } }
 .bt-tool{ flex-shrink:0; } .bt-tool svg{ flex:0 0 18px; min-width:18px; } .bt-tools{ flex-shrink:0; }
+
+/* Player: full width, cleaner spacing; tools, sliders and panels take the
+   colour of the playing track (--fx, like the play and Buy buttons). */
+.bt-player-inner{ max-width:none !important; }
+@media (min-width:901px){ .bt-player-inner{ max-width:none !important; grid-template-columns:minmax(220px, 1fr) minmax(320px, 680px) minmax(220px, 1fr) !important; gap:28px !important; padding:10px 28px calc(10px + env(safe-area-inset-bottom)) !important; } }
+.bt-player-right{ justify-content:flex-end; gap:12px; min-width:0; }
+.bt-tool.is-on, .bt-tool[aria-expanded="true"]{ color:rgb(var(--fx-hi, 245,176,106)); background:rgba(var(--fx, 232,134,44), 0.16); }
+@media (hover:hover) and (pointer:fine){ .bt-tool.is-on:hover{ background:rgba(var(--fx, 232,134,44), 0.24); color:rgb(var(--fx-hi, 245,176,106)); } }
+.bt-pop{ border-color:rgba(var(--fx, 232,134,44), 0.22); box-shadow:0 30px 70px -20px rgba(0,0,0,0.85), 0 0 40px -18px rgba(var(--fx, 232,134,44), 0.5), inset 0 1px 0 rgba(255,255,255,0.06); }
+.bt-fx-range::-webkit-slider-runnable-track{ background:linear-gradient(90deg, rgb(var(--fx, 232,134,44)) var(--p), rgba(255,255,255,0.14) var(--p)); }
+.bt-fx-range::-moz-range-progress{ background:rgb(var(--fx, 232,134,44)); }
+.bt-fx-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--fx, 232,134,44), 0.35); }
+.bt-fx-meter{ gap:2px; }
+.bt-fx-meter i{ height:10px; }
+.bt-fx-meter i.is-zero{ height:16px; }
+.bt-fx-meter i.is-on{ background:rgb(var(--fx, 232,134,44)); }
+.bt-lyrics:focus{ border-color:rgba(var(--fx, 232,134,44), 0.6); }
+@media (min-width:901px) and (max-width:1100px){ .bt-player-inner{ grid-template-columns:minmax(180px, 1fr) minmax(280px, 520px) auto !important; gap:18px !important; padding:10px 18px calc(10px + env(safe-area-inset-bottom)) !important; } }

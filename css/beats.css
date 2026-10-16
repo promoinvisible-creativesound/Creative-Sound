@@ -2260,3 +2260,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-terms-actions .btn:disabled{ opacity:0.45; cursor:not-allowed; }
 @media (max-width:560px){ .bt-terms-actions{ flex-direction:column-reverse; } .bt-terms-actions .btn{ width:100%; justify-content:center; } }
 @media (prefers-reduced-motion: reduce){ .bt-terms[open]{ animation:none; } }
+
+/* Dialogs centred on screen (the global reset removes the default auto margin) */
+.bt-terms, .ms-picker{ position:fixed; inset:0; margin:auto; height:fit-content; }

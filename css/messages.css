@@ -135,3 +135,5 @@
 .ms-pick-go{ width:18px; height:18px; flex-shrink:0; fill:none; stroke:#8a8a90; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .ms-pick-empty{ padding:24px 12px; text-align:center; font-size:14px; color:#bcbcc1; }
 @media (prefers-reduced-motion: reduce){ .ms-picker[open], .ms-chip{ animation:none; } }
+
+.ms-picker{ position:fixed; inset:0; margin:auto; height:fit-content; }

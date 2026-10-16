@@ -1649,9 +1649,56 @@
     // Start / End: hold and move up (later) or down (earlier), accelerating.
     let ab = null;
     let abDragged = false;
+    let abClickTimer = 0;
+    // Double click Start / End: type the time (1:23.4, 1:23 or 83.4).
+    const parseTime = (v) => {
+      const m = String(v).trim().replace(',', '.').match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/);
+      if (!m) return null;
+      return (m[1] ? Number(m[1]) * 60 : 0) + Number(m[2]);
+    };
+    pop.addEventListener('dblclick', (e) => {
+      const btn = e.target.closest('[data-loop-set]');
+      if (!btn || btn.classList.contains('is-typing')) return;
+      clearTimeout(abClickTimer);
+      const which = btn.dataset.loopSet;
+      const label = btn.querySelector('b');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.className = 'bt-loop-input';
+      input.value = label.textContent;
+      input.setAttribute('aria-label', which === 'a' ? 'Loop start time' : 'Loop end time');
+      btn.classList.add('is-typing');
+      label.replaceWith(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const finish = (apply) => {
+        if (done) return;
+        done = true;
+        const t = parseTime(input.value);
+        const dur = audio.duration || Infinity;
+        if (apply && t != null) {
+          if (which === 'a') setSection(Math.max(0, Math.min(t, loop.b - 0.25)), loop.b);
+          else setSection(loop.a, Math.min(dur, Math.max(t, loop.a + 0.25)));
+          if (which === 'a') audio.currentTime = loop.a;
+        }
+        btn.classList.remove('is-typing');
+        if (input.isConnected) input.replaceWith(label);
+        label.textContent = fmtFine(which === 'a' ? loop.a : loop.b);
+      };
+      input.addEventListener('keydown', (k) => {
+        k.stopPropagation();
+        if (k.key === 'Enter') { k.preventDefault(); finish(true); }
+        else if (k.key === 'Escape') { k.preventDefault(); finish(false); }
+      });
+      input.addEventListener('blur', () => finish(true));
+      input.addEventListener('pointerdown', (p) => p.stopPropagation());
+      input.addEventListener('click', (c) => c.stopPropagation());
+    });
     pop.addEventListener('pointerdown', (e) => {
       const btn = e.target.closest('[data-loop-set]');
-      if (!btn || e.button !== 0) return;
+      if (!btn || e.button !== 0 || btn.classList.contains('is-typing')) return;
       ab = { which: btn.dataset.loopSet, y: e.clientY, a: loop.a, b: loop.b, moved: false, btn };
       try { btn.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -1679,8 +1726,8 @@
       const i = LOOP_BARS.indexOf(loop.bars);
       if (i >= 0) { bars.style.setProperty('--i', i); bars.setAttribute('data-set', ''); } else bars.removeAttribute('data-set');
       $$('[data-loop-bars]', bars).forEach((el) => el.setAttribute('aria-checked', String(Number(el.dataset.loopBars) === loop.bars)));
-      $('#bt-loop-a', sec).textContent = fmtFine(loop.a);
-      $('#bt-loop-b', sec).textContent = fmtFine(loop.b);
+      const la = $('#bt-loop-a', sec); if (la) la.textContent = fmtFine(loop.a);
+      const lb2 = $('#bt-loop-b', sec); if (lb2) lb2.textContent = fmtFine(loop.b);
     };
     const setSection = (a, b, bars = 0) => {
       if (!(b - a >= 0.25)) return;
@@ -1759,9 +1806,15 @@
       const ls = e.target.closest('[data-loop-set]');
       if (ls && abDragged) { abDragged = false; return; }
       if (ls) {
-        const t = audio.currentTime;
-        if (ls.dataset.loopSet === 'a') setSection(t, loop.b > t + 0.25 ? loop.b : Math.min(audio.duration || t + 4, t + 4));
-        else setSection(loop.a < t - 0.25 ? loop.a : Math.max(0, t - 4), t);
+        if (ls.classList.contains('is-typing')) return;
+        // Single click = take the current position; waits a moment so a
+        // double click (type the time) can cancel it.
+        clearTimeout(abClickTimer);
+        abClickTimer = setTimeout(() => {
+          const t = audio.currentTime;
+          if (ls.dataset.loopSet === 'a') setSection(t, loop.b > t + 0.25 ? loop.b : Math.min(audio.duration || t + 4, t + 4));
+          else setSection(loop.a < t - 0.25 ? loop.a : Math.max(0, t - 4), t);
+        }, 260);
         return;
       }
       if (e.target.closest('[data-fx-reset]')) {

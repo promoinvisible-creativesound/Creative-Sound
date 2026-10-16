@@ -1250,7 +1250,7 @@
     requestAnimationFrame(grow);
   };
   // Loop: off, the whole track, or a section [a, b] in seconds.
-  const loop = { mode: 'off', a: 0, b: 0 };
+  const loop = { mode: 'off', a: 0, b: 0, bars: 0 };
   const drawWave = () => {
     const c = wv.canvas;
     if (!c) return;
@@ -1546,11 +1546,11 @@
           </div>
           <div class="bt-loop-sec"${loop.mode === 'section' ? '' : ' hidden'}>
             <div class="bt-fx-row"><span class="bt-fx-label">Loop from here</span><span class="bt-fx-val"><small>${b.bpm} BPM · 1 bar = ${bar.toFixed(2)}s</small></span></div>
-            <div class="bt-loop-bars">${[1, 2, 4, 8, 16].map((n) => `<button type="button" data-loop-bars="${n}">${n} ${n === 1 ? 'bar' : 'bars'}</button>`).join('')}</div>
+            <div class="bt-loop-bars" role="radiogroup" aria-label="Loop length" style="--i:${Math.max(0, LOOP_BARS.indexOf(loop.bars))}"${LOOP_BARS.includes(loop.bars) ? ' data-set' : ''}><span class="bt-loop-thumb" aria-hidden="true"></span>${LOOP_BARS.map((n) => `<button type="button" role="radio" aria-checked="${loop.bars === n}" data-loop-bars="${n}">${n} ${n === 1 ? 'bar' : 'bars'}</button>`).join('')}</div>
             <div class="bt-loop-ab">
-              <button type="button" data-loop-set="a"><small>Start</small><b>${fmtTime(loop.a)}</b></button>
+              <button type="button" data-loop-set="a"><small>Start</small><b id="bt-loop-a">${fmtTime(loop.a)}</b></button>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              <button type="button" data-loop-set="b"><small>End</small><b>${fmtTime(loop.b)}</b></button>
+              <button type="button" data-loop-set="b"><small>End</small><b id="bt-loop-b">${fmtTime(loop.b)}</b></button>
             </div>
             <p class="bt-pop-note">Tip: drag on the waveform to loop any part. Start and End take the current position.</p>
           </div>`;
@@ -1624,19 +1624,31 @@
         const b = beat();
         const bar = 240 / (b.bpm || 120);
         const a = Math.max(0, Math.floor(audio.currentTime / bar) * bar);
-        loop.a = a; loop.b = Math.min(audio.duration || a + bar * 4, a + bar * 4);
+        loop.a = a; loop.b = Math.min(audio.duration || a + bar * 4, a + bar * 4); loop.bars = 4;
       }
       paintLoopBtn();
       if (openTool === 'loop') panels.loop();
       startLoopTick();
       drawWave();
     };
-    const setSection = (a, b) => {
+    const LOOP_BARS = [1, 2, 4, 8, 16];
+    const refreshLoop = () => {
+      const sec = $('.bt-loop-sec', pop);
+      if (openTool !== 'loop') return;
+      if (!sec || sec.hidden || loop.mode !== 'section') { panels.loop(); return; }
+      const bars = $('.bt-loop-bars', sec);
+      const i = LOOP_BARS.indexOf(loop.bars);
+      if (i >= 0) { bars.style.setProperty('--i', i); bars.setAttribute('data-set', ''); } else bars.removeAttribute('data-set');
+      $$('[data-loop-bars]', bars).forEach((el) => el.setAttribute('aria-checked', String(Number(el.dataset.loopBars) === loop.bars)));
+      $('#bt-loop-a', sec).textContent = fmtTime(loop.a);
+      $('#bt-loop-b', sec).textContent = fmtTime(loop.b);
+    };
+    const setSection = (a, b, bars = 0) => {
       if (!(b - a >= 0.25)) return;
-      loop.a = a; loop.b = b; loop.mode = 'section'; audio.loop = false;
+      loop.a = a; loop.b = b; loop.bars = bars; loop.mode = 'section'; audio.loop = false;
       if (audio.currentTime < a || audio.currentTime > b) audio.currentTime = a;
       paintLoopBtn();
-      if (openTool === 'loop') panels.loop();
+      refreshLoop();
       startLoopTick();
       drawWave();
     };
@@ -1702,7 +1714,7 @@
         const bar = 240 / (b.bpm || 120);
         const dur = audio.duration || 0;
         const a = Math.max(0, Math.floor(audio.currentTime / bar) * bar);
-        setSection(a, Math.min(dur || a + bar * Number(lb.dataset.loopBars), a + bar * Number(lb.dataset.loopBars)));
+        setSection(a, Math.min(dur || a + bar * Number(lb.dataset.loopBars), a + bar * Number(lb.dataset.loopBars)), Number(lb.dataset.loopBars));
         return;
       }
       const ls = e.target.closest('[data-loop-set]');
@@ -1770,7 +1782,7 @@
         fx.id = b.id;
         if (fx.tempo !== 1 || fx.semi !== 0) { fx.tempo = 1; fx.semi = 0; applyTempo(); setKeyShift(0); }
         $('.bt-tool[data-tool="edit"]', tools).classList.remove('is-on');
-        if (loop.mode === 'section') { loop.mode = 'off'; loop.a = 0; loop.b = 0; paintLoopBtn(); }
+        if (loop.mode === 'section') { loop.mode = 'off'; loop.a = 0; loop.b = 0; loop.bars = 0; paintLoopBtn(); }
         if (openTool) panels[openTool]();
       },
     };

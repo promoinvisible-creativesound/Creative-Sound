@@ -2298,3 +2298,18 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-fx-meter{ cursor:ew-resize; touch-action:none; user-select:none; }
 @media (prefers-reduced-motion: reduce){ .bt-loop-sec{ animation:none; } }
 .bt-loop-bars{ flex-wrap:nowrap; gap:5px; } .bt-loop-bars button{ min-width:0; padding:0 4px; white-space:nowrap; font-size:12px; }
+
+/* Loop length: one segmented bar; the highlight slides to the chosen length */
+.bt-loop-bars{ position:relative; display:grid !important; grid-template-columns:repeat(5, 1fr); gap:0 !important; padding:3px; border-radius:12px; background:rgba(255,255,255,0.06); --i:0; }
+.bt-loop-bars button{ position:relative; z-index:1; height:32px; border:0; border-radius:9px; background:transparent !important; color:#bcbcc1; font:inherit; font-size:12.5px; font-weight:600; white-space:nowrap; cursor:pointer; transition:color 220ms ease; }
+.bt-loop-bars button[aria-checked="true"]{ color:#fff; }
+@media (hover:hover) and (pointer:fine){ .bt-loop-bars button:not([aria-checked="true"]):hover{ color:#f5f5f7; } }
+.bt-loop-bars button:active{ transform:none; }
+.bt-loop-thumb{
+  position:absolute; top:3px; bottom:3px; left:3px; width:calc((100% - 6px) / 5); border-radius:9px;
+  background:rgba(var(--fx, 232,134,44), 0.26); box-shadow:inset 0 0 0 1px rgba(var(--fx, 232,134,44), 0.5), 0 4px 14px -6px rgba(var(--fx, 232,134,44), 0.7);
+  transform:translateX(calc(var(--i) * 100%)); opacity:0;
+  transition:transform 380ms cubic-bezier(0.34, 1.3, 0.64, 1), opacity 200ms ease;
+}
+.bt-loop-bars[data-set] .bt-loop-thumb{ opacity:1; }
+@media (prefers-reduced-motion: reduce){ .bt-loop-thumb{ transition:opacity 150ms ease; } }

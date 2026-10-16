@@ -1646,7 +1646,7 @@
     };
     const LOOP_BARS = [1, 2, 4, 8, 16];
     const fmtFine = (t) => { const m = Math.floor(t / 60); const s = t - m * 60; return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`; };
-    // Start / End: hold and move up (later) or down (earlier), 0.1 s per 4 px.
+    // Start / End: hold and move up (later) or down (earlier), accelerating.
     let ab = null;
     let abDragged = false;
     pop.addEventListener('pointerdown', (e) => {
@@ -1661,7 +1661,9 @@
       if (!ab.moved && Math.abs(dy) < 3) return;
       ab.moved = true;
       ab.btn.classList.add('is-dragging');
-      const delta = Math.round(dy / 4) / 10;
+      // Accelerating: fine for small moves (~0.5 s per 10 px), fast for big ones.
+      const mag = Math.abs(dy) / 20 + (Math.abs(dy) / 60) ** 2;
+      const delta = Math.sign(dy) * Math.round(mag * 10) / 10;
       const dur = audio.duration || ab.b + 60;
       if (ab.which === 'a') setSection(Math.min(ab.b - 0.25, Math.max(0, ab.a + delta)), ab.b);
       else setSection(ab.a, Math.max(ab.a + 0.25, Math.min(dur, ab.b + delta)));

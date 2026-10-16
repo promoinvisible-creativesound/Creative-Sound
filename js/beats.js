@@ -1099,15 +1099,61 @@
   /* ----------------------------- Free download ----------------------------- */
   // Producers can allow a free download of the tagged MP3 (upload page). It
   // needs an account: the file comes from /api/beats/free, saved as a file.
+  // Before a free download: the demo terms, accepted with a checkbox. The
+  // file is for private testing only; any other use needs a license.
+  const FREE_TERMS_VERSION = 'demo-1';
+  let termsDialog = null;
+  const askFreeTerms = (beat) => new Promise((resolve) => {
+    if (!termsDialog) {
+      termsDialog = document.createElement('dialog');
+      termsDialog.className = 'bt-terms';
+      document.body.appendChild(termsDialog);
+    }
+    const d = termsDialog;
+    d.innerHTML = `
+      <form method="dialog" class="bt-terms-inner">
+        <div class="bt-terms-head">
+          <span class="bt-terms-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <div><b>Free download terms</b><small>${esc(beat.title)} by ${esc(beat.producer)} · tagged MP3</small></div>
+        </div>
+        <div class="bt-terms-body">
+          <p>This free version is for <b>private testing only</b>: to try ideas, write and record demos for yourself.</p>
+          <ul>
+            <li>You may <b>not</b> release, publish or distribute it, or any song made with it, in any form: streaming services, stores, YouTube, social media, radio, live shows, mixtapes, ads or any other use, paid or free.</li>
+            <li>You may <b>not</b> sell, share, upload or give the file to anyone, remove or cover the voice tag, edit it into another beat, or use it to train AI models.</li>
+            <li>${esc(beat.producer)} keeps all rights and the copyright. No license of any kind is granted by this download.</li>
+            <li>To use the beat in any way beyond private testing you must first buy a license on Creative Sound.</li>
+            <li>Any other use is copyright infringement: the track can be removed and the producer may take legal action. Your download is recorded with your account.</li>
+          </ul>
+        </div>
+        <label class="bt-terms-check"><input type="checkbox" name="ok"><span class="bt-terms-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span><span>I have read and accept these terms. I will use this file for private testing only.</span></label>
+        <div class="bt-terms-actions">
+          <button type="button" class="btn btn-ghost" data-terms="cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" data-terms="ok" disabled>Accept and download</button>
+        </div>
+      </form>`;
+    const ok = $('[data-terms="ok"]', d);
+    const box = $('input[name="ok"]', d);
+    box.addEventListener('change', () => { ok.disabled = !box.checked; });
+    let done = false;
+    const finish = (v) => { if (done) return; done = true; if (d.open) d.close(); resolve(v); };
+    ok.addEventListener('click', () => finish(box.checked));
+    $('[data-terms="cancel"]', d).addEventListener('click', () => finish(false));
+    d.addEventListener('close', () => finish(false), { once: true });
+    d.addEventListener('click', (e) => { if (e.target === d) finish(false); });
+    d.showModal();
+  });
+
   const freeDownload = async (beat, btn) => {
     const label = btn && (btn.querySelector('span') || btn);
     const say = (t) => { if (label) label.textContent = t; };
     const me = await Promise.resolve(window.csMe).catch(() => null);
     if (!me || !me.email) { location.href = `login.html`; return; }
+    if (!(await askFreeTerms(beat))) return;
     if (btn) btn.disabled = true;
     say('Preparing…');
     try {
-      const r = await fetch(`/api/beats/free?id=${encodeURIComponent(beat.id)}`);
+      const r = await fetch(`/api/beats/free?id=${encodeURIComponent(beat.id)}&accept=${FREE_TERMS_VERSION}`);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'Could not download.');
       const blob = await fetch(d.url).then((x) => { if (!x.ok) throw new Error('Could not download.'); return x.blob(); });

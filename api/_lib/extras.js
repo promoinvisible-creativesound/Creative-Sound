@@ -11,6 +11,9 @@ const { getSession } = require('./auth');
 
 const submissionIdOf = (id) => { const m = /^t(\d+)-/.exec(String(id || '')); return m ? Number(m[1]) : null; };
 
+// Version of the free download terms shown before the download (js/beats.js).
+const FREE_TERMS_VERSION = 'demo-1';
+
 let ready = null;
 function ensureColumns() {
   if (!ready) {
@@ -18,6 +21,7 @@ function ensureColumns() {
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS free_download BOOLEAN NOT NULL DEFAULT false`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS peaks JSONB`;
       await sql`CREATE TABLE IF NOT EXISTS beat_free_downloads (id SERIAL PRIMARY KEY, submission_id INTEGER NOT NULL, user_id INTEGER, email TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+      await sql`ALTER TABLE beat_free_downloads ADD COLUMN IF NOT EXISTS terms_version TEXT`;
       await sql`CREATE TABLE IF NOT EXISTS beat_lyrics (user_id INTEGER NOT NULL, beat_id TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, beat_id))`;
     })().catch((err) => { ready = null; throw err; });
   }
@@ -31,11 +35,13 @@ async function handleFree(req, res) {
   const id = String((req.query && req.query.id) || '');
   const sub = submissionIdOf(id);
   if (sub == null) { res.status(404).json({ error: 'Not found.' }); return; }
+  // The demo terms (test use only) must be accepted first; the version is logged.
+  if (String((req.query && req.query.accept) || '') !== FREE_TERMS_VERSION) { res.status(428).json({ error: 'Please accept the free download terms first.' }); return; }
   try {
     await ensureColumns();
     const [row] = await sql`SELECT id, title, producer_name, free_download FROM beat_submissions WHERE id = ${sub} AND status = 'approved'`;
     if (!row || !row.free_download) { res.status(403).json({ error: 'The producer has not enabled free downloads for this track.' }); return; }
-    await sql`INSERT INTO beat_free_downloads (submission_id, user_id, email) VALUES (${row.id}, ${session.uid}, ${session.email})`;
+    await sql`INSERT INTO beat_free_downloads (submission_id, user_id, email, terms_version) VALUES (${row.id}, ${session.uid}, ${session.email}, ${FREE_TERMS_VERSION})`;
     const clean = (s) => String(s || '').replace(/[^\w .()-]+/g, '').trim();
     res.status(200).json({
       url: `/api/beats/media?id=${encodeURIComponent(id)}&kind=preview&dl=${Date.now().toString(36)}`,

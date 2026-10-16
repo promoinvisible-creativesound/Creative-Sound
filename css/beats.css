@@ -2274,3 +2274,27 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-fx-meter.is-bump{ animation:btMeterBump 360ms cubic-bezier(0.34, 1.56, 0.64, 1); }
 @keyframes btMeterBump{ 40%{ transform:scaleY(1.12); } }
 @media (prefers-reduced-motion: reduce){ .bt-fx-meter i{ transition:background-color 150ms ease; transition-delay:0ms !important; } .bt-fx-meter.is-bump{ animation:none; } }
+
+/* Loop panel: Off / Whole track / Section, bar presets, start → end */
+.bt-pop.is-loop{ width:340px; }
+.bt-seg{ display:grid; grid-template-columns:repeat(3, 1fr); gap:3px; padding:3px; border-radius:12px; background:rgba(255,255,255,0.06); }
+.bt-seg button{ height:34px; border:0; border-radius:9px; background:transparent; color:#d1d1d6; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:background-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
+.bt-seg button.is-on{ background:rgba(var(--fx, 232,134,44), 0.22); color:#fff; box-shadow:inset 0 0 0 1px rgba(var(--fx, 232,134,44), 0.45); }
+@media (hover:hover) and (pointer:fine){ .bt-seg button:not(.is-on):hover{ background:rgba(255,255,255,0.07); color:#fff; } }
+.bt-loop-sec{ margin-top:10px; padding:12px; border-radius:14px; background:rgba(255,255,255,0.04); animation:btLoopIn 220ms cubic-bezier(0.23, 1, 0.32, 1); }
+.bt-loop-sec[hidden]{ display:none; }
+@keyframes btLoopIn{ from{ opacity:0; transform:translateY(4px); } }
+.bt-loop-bars{ display:flex; gap:6px; flex-wrap:wrap; }
+.bt-loop-bars button{ flex:1; min-width:52px; height:32px; border:0; border-radius:10px; background:rgba(255,255,255,0.08); color:#f5f5f7; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; transition:background-color 150ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.bt-loop-bars button:active{ transform:scale(0.94); }
+@media (hover:hover) and (pointer:fine){ .bt-loop-bars button:hover{ background:rgba(var(--fx, 232,134,44), 0.22); } }
+.bt-loop-ab{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; margin-top:10px; }
+.bt-loop-ab button{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:8px 12px; border:1px solid rgba(var(--fx, 232,134,44), 0.35); border-radius:12px; background:rgba(var(--fx, 232,134,44), 0.08); color:#f5f5f7; font:inherit; cursor:pointer; text-align:left; transition:background-color 150ms ease; }
+.bt-loop-ab button small{ font-size:11px; color:#bcbcc1; }
+.bt-loop-ab button b{ font-size:15px; font-variant-numeric:tabular-nums; }
+@media (hover:hover) and (pointer:fine){ .bt-loop-ab button:hover{ background:rgba(var(--fx, 232,134,44), 0.16); } }
+.bt-loop-ab svg{ width:16px; height:16px; fill:none; stroke:#9d9da3; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+/* Key meter: drag across the ticks */
+.bt-fx-meter{ cursor:ew-resize; touch-action:none; user-select:none; }
+@media (prefers-reduced-motion: reduce){ .bt-loop-sec{ animation:none; } }
+.bt-loop-bars{ flex-wrap:nowrap; gap:5px; } .bt-loop-bars button{ min-width:0; padding:0 4px; white-space:nowrap; font-size:12px; }

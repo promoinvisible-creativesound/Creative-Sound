@@ -1249,6 +1249,8 @@
     const grow = () => { drawWave(); if (performance.now() - wv.born < 900) requestAnimationFrame(grow); };
     requestAnimationFrame(grow);
   };
+  // Loop: off, the whole track, or a section [a, b] in seconds.
+  const loop = { mode: 'off', a: 0, b: 0 };
   const drawWave = () => {
     const c = wv.canvas;
     if (!c) return;
@@ -1271,6 +1273,17 @@
     const played = g.createLinearGradient(0, 0, w, 0);
     played.addColorStop(0, `rgba(${rgb}, 0.75)`);
     played.addColorStop(1, `rgb(${rgb})`);
+    const sec = loop.mode === 'section' && audio.duration && loop.b > loop.a;
+    const la = sec ? loop.a / audio.duration : -1;
+    const lb = sec ? loop.b / audio.duration : -1;
+    if (sec) {
+      const xa = la * w; const xb = lb * w;
+      g.fillStyle = `rgba(${rgb}, 0.14)`;
+      if (g.roundRect) { g.beginPath(); g.roundRect(xa, 0, Math.max(2, xb - xa), h, 6); g.fill(); } else g.fillRect(xa, 0, xb - xa, h);
+      g.fillStyle = `rgb(${rgb})`;
+      g.fillRect(xa - 1, 0, 2, h);
+      g.fillRect(xb - 1, 0, 2, h);
+    }
     for (let i = 0; i < n; i++) {
       const x = i * gap + (gap - bw) / 2;
       const t = i / (n - 1);
@@ -1282,7 +1295,7 @@
       const y = (h - bh) / 2;
       if (t <= p) g.fillStyle = played;
       else if (wv.hover >= 0 && t <= wv.hover) g.fillStyle = `rgba(${rgb}, 0.38)`;
-      else g.fillStyle = 'rgba(255,255,255,0.2)';
+      else g.fillStyle = sec && t >= la && t <= lb ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)';
       if (g.roundRect) { g.beginPath(); g.roundRect(x, y, bw, bh, bw / 2); g.fill(); } else g.fillRect(x, y, bw, bh);
     }
   };
@@ -1384,7 +1397,21 @@
   audio.addEventListener('loadedmetadata', updateProgress);
   // At the end of a preview, keep the vibe: the most similar track not
   // played yet in this visit (genre, mood, key, tags, tempo).
-  audio.addEventListener('ended', () => playSimilar());
+  audio.addEventListener('ended', () => {
+    if (loop.mode === 'section') { audio.currentTime = loop.a; audio.play().catch(() => {}); return; }
+    playSimilar();
+  });
+  // Section loop: jump back to A the moment B is reached (checked every frame,
+  // timeupdate alone is too coarse for a tight loop).
+  let loopRaf = 0;
+  const loopTick = () => {
+    loopRaf = 0;
+    if (loop.mode !== 'section' || audio.paused) return;
+    if (audio.currentTime >= loop.b - 0.02 || audio.currentTime < loop.a - 0.25) audio.currentTime = loop.a;
+    loopRaf = requestAnimationFrame(loopTick);
+  };
+  const startLoopTick = () => { if (!loopRaf && loop.mode === 'section' && !audio.paused) loopRaf = requestAnimationFrame(loopTick); };
+  audio.addEventListener('play', startLoopTick);
 
   /* ------------------------------ Player tools ------------------------------ */
   // Edit (tempo and key of the preview, for trying a beat at your speed and
@@ -1462,7 +1489,7 @@
     tools.className = 'bt-tools';
     tools.innerHTML = `
       <button type="button" class="bt-tool" data-tool="edit" aria-haspopup="dialog" aria-expanded="false">${ic('edit')}<span>Edit</span></button>
-      <button type="button" class="bt-tool" data-tool="loop" aria-pressed="false">${ic('loop')}<span>Loop</span></button>
+      <button type="button" class="bt-tool" data-tool="loop" aria-haspopup="dialog" aria-expanded="false">${ic('loop')}<span>Loop</span></button>
       <button type="button" class="bt-tool" data-tool="lyrics" aria-haspopup="dialog" aria-expanded="false">${ic('lyrics')}<span>Lyrics</span></button>
       <button type="button" class="bt-tool bt-tool-ic" data-tool="vol" aria-haspopup="dialog" aria-expanded="false" aria-label="Volume">${ic('vol')}</button>
       <button type="button" class="bt-tool bt-tool-ic" data-tool="more" aria-haspopup="menu" aria-expanded="false" aria-label="More">${ic('more')}</button>
@@ -1508,6 +1535,25 @@
           <p class="bt-pop-note">Only changes what you hear. The files you buy stay in ${esc(b ? b.key : 'the original key')} at ${b ? b.bpm : ''} BPM.</p>`;
         paintEdit();
         paintMeter();
+      },
+      loop: () => {
+        const b = beat();
+        const bar = 240 / (b.bpm || 120);
+        pop.innerHTML = `
+          <div class="bt-pop-head"><b>Loop</b>${loop.mode !== 'off' ? '<button type="button" class="bt-pop-reset" data-loop-mode="off">Turn off</button>' : ''}</div>
+          <div class="bt-seg" role="radiogroup" aria-label="Loop">
+            ${[['off', 'Off'], ['track', 'Whole track'], ['section', 'Section']].map(([m, l]) => `<button type="button" role="radio" aria-checked="${loop.mode === m}" data-loop-mode="${m}"${loop.mode === m ? ' class="is-on"' : ''}>${l}</button>`).join('')}
+          </div>
+          <div class="bt-loop-sec"${loop.mode === 'section' ? '' : ' hidden'}>
+            <div class="bt-fx-row"><span class="bt-fx-label">Loop from here</span><span class="bt-fx-val"><small>${b.bpm} BPM · 1 bar = ${bar.toFixed(2)}s</small></span></div>
+            <div class="bt-loop-bars">${[1, 2, 4, 8, 16].map((n) => `<button type="button" data-loop-bars="${n}">${n} ${n === 1 ? 'bar' : 'bars'}</button>`).join('')}</div>
+            <div class="bt-loop-ab">
+              <button type="button" data-loop-set="a"><small>Start</small><b>${fmtTime(loop.a)}</b></button>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <button type="button" data-loop-set="b"><small>End</small><b>${fmtTime(loop.b)}</b></button>
+            </div>
+            <p class="bt-pop-note">Tip: drag on the waveform to loop any part. Start and End take the current position.</p>
+          </div>`;
       },
       lyrics: () => {
         const b = beat();
@@ -1565,11 +1611,67 @@
           </div>`;
       },
     };
+    // Loop modes. Section keeps [a, b]; the tool button shows the state.
+    const paintLoopBtn = () => {
+      const lbtn = $('.bt-tool[data-tool="loop"]', tools);
+      lbtn.classList.toggle('is-on', loop.mode !== 'off');
+      $('span', lbtn).textContent = loop.mode === 'section' ? `${fmtTime(loop.a)}–${fmtTime(loop.b)}` : 'Loop';
+    };
+    const setLoopMode = (m) => {
+      loop.mode = m;
+      audio.loop = m === 'track';
+      if (m === 'section' && !(loop.b > loop.a)) {
+        const b = beat();
+        const bar = 240 / (b.bpm || 120);
+        const a = Math.max(0, Math.floor(audio.currentTime / bar) * bar);
+        loop.a = a; loop.b = Math.min(audio.duration || a + bar * 4, a + bar * 4);
+      }
+      paintLoopBtn();
+      if (openTool === 'loop') panels.loop();
+      startLoopTick();
+      drawWave();
+    };
+    const setSection = (a, b) => {
+      if (!(b - a >= 0.25)) return;
+      loop.a = a; loop.b = b; loop.mode = 'section'; audio.loop = false;
+      if (audio.currentTime < a || audio.currentTime > b) audio.currentTime = a;
+      paintLoopBtn();
+      if (openTool === 'loop') panels.loop();
+      startLoopTick();
+      drawWave();
+    };
+    window.__csLoop = { setSection, isSection: () => loop.mode === 'section' };
+    // Key meter: hold the mouse button and sweep across the ticks.
+    let meterDrag = false;
+    let meterBusy = false;
+    const pickTick = async (e) => {
+      const m = $('.bt-fx-meter', pop);
+      if (!m || meterBusy) return;
+      const r = m.getBoundingClientRect();
+      const k = Math.max(-12, Math.min(12, Math.round(((e.clientX - r.left) / r.width) * 24) - 12));
+      if (k === fx.semi) return;
+      meterBusy = true;
+      const ok = await setKeyShift(k);
+      meterBusy = false;
+      if (!ok) return;
+      lastSemi = fx.semi; fx.semi = k; paintEdit(); paintMeter();
+    };
+    pop.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.bt-fx-meter') || e.button !== 0) return;
+      meterDrag = true;
+      try { e.target.closest('.bt-fx-meter').setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+      pickTick(e);
+    });
+    pop.addEventListener('pointermove', (e) => { if (meterDrag && e.buttons === 1) pickTick(e); });
+    const endDrag = () => { if (meterDrag) { meterDrag = false; const m = $('.bt-fx-meter', pop); if (m) { m.classList.remove('is-bump'); void m.offsetWidth; m.classList.add('is-bump'); } } };
+    pop.addEventListener('pointerup', endDrag);
+    pop.addEventListener('pointercancel', endDrag);
     let lastSemi = 0;
     const paintMeter = () => $$('.bt-fx-meter i', pop).forEach((el) => {
       const k = Number(el.dataset.k);
       // stagger: ticks further from the previous value change a bit later
-      el.style.transitionDelay = `${Math.min(12, Math.abs(k - lastSemi)) * 22}ms`;
+      el.style.transitionDelay = meterDrag ? '0ms' : `${Math.min(12, Math.abs(k - lastSemi)) * 22}ms`;
       el.classList.toggle('is-on', fx.semi !== 0 && ((fx.semi > 0 && k > 0 && k <= fx.semi) || (fx.semi < 0 && k < 0 && k >= fx.semi)));
       el.classList.toggle('is-zero', k === 0);
     });
@@ -1589,13 +1691,25 @@
       const t = e.target.closest('.bt-tool');
       if (t) {
         const tool = t.dataset.tool;
-        if (tool === 'loop') {
-          audio.loop = !audio.loop;
-          t.setAttribute('aria-pressed', String(audio.loop));
-          t.classList.toggle('is-on', audio.loop);
-          return;
-        }
         openPop(tool);
+        return;
+      }
+      const lm = e.target.closest('[data-loop-mode]');
+      if (lm) { setLoopMode(lm.dataset.loopMode); return; }
+      const lb = e.target.closest('[data-loop-bars]');
+      if (lb) {
+        const b = beat();
+        const bar = 240 / (b.bpm || 120);
+        const dur = audio.duration || 0;
+        const a = Math.max(0, Math.floor(audio.currentTime / bar) * bar);
+        setSection(a, Math.min(dur || a + bar * Number(lb.dataset.loopBars), a + bar * Number(lb.dataset.loopBars)));
+        return;
+      }
+      const ls = e.target.closest('[data-loop-set]');
+      if (ls) {
+        const t = audio.currentTime;
+        if (ls.dataset.loopSet === 'a') setSection(t, loop.b > t + 0.25 ? loop.b : Math.min(audio.duration || t + 4, t + 4));
+        else setSection(loop.a < t - 0.25 ? loop.a : Math.max(0, t - 4), t);
         return;
       }
       if (e.target.closest('[data-fx-reset]')) {
@@ -1656,6 +1770,7 @@
         fx.id = b.id;
         if (fx.tempo !== 1 || fx.semi !== 0) { fx.tempo = 1; fx.semi = 0; applyTempo(); setKeyShift(0); }
         $('.bt-tool[data-tool="edit"]', tools).classList.remove('is-on');
+        if (loop.mode === 'section') { loop.mode = 'off'; loop.a = 0; loop.b = 0; paintLoopBtn(); }
         if (openTool) panels[openTool]();
       },
     };
@@ -1675,8 +1790,27 @@
       audio.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * audio.duration;
       updateProgress();
     };
-    bar.addEventListener('pointerdown', (e) => { bar.setPointerCapture(e.pointerId); seek(e); });
-    bar.addEventListener('pointermove', (e) => { if (e.buttons === 1) seek(e); });
+    // Drag on the waveform: picks a loop section (the selection follows the
+    // pointer); a plain click seeks.
+    const frac = (e) => { const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
+    let drag = null;
+    bar.addEventListener('pointerdown', (e) => {
+      try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+      if (wv.peaks && audio.duration) { drag = { x: e.clientX, f: frac(e), moved: false }; return; }
+      seek(e);
+    });
+    bar.addEventListener('pointermove', (e) => {
+      if (e.buttons !== 1) return;
+      if (!drag) { seek(e); return; }
+      if (!drag.moved && Math.abs(e.clientX - drag.x) < 6) return;
+      drag.moved = true;
+      const f2 = frac(e);
+      const a = Math.min(drag.f, f2) * audio.duration;
+      const b = Math.max(drag.f, f2) * audio.duration;
+      if (window.__csLoop && b - a >= 0.25) window.__csLoop.setSection(a, b);
+    });
+    bar.addEventListener('pointerup', (e) => { if (drag && !drag.moved) seek(e); drag = null; });
+    bar.addEventListener('pointercancel', () => { drag = null; });
     bar.addEventListener('keydown', (e) => {
       if (!audio.duration) return;
       if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); e.preventDefault(); }

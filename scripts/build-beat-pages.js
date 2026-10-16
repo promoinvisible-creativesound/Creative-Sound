@@ -97,7 +97,7 @@ for (const f of fs.readdirSync(OUT)) if (f.endsWith('.html') && !wanted.has(f)) 
   html = html.slice(0, a)
     + `<main class="beat-page" data-track-page>${EOL}  <div class="bp-wrap"><p class="bp-loading">Loading track…</p></div>${EOL}</main>`
     + html.slice(z);
-  html = html.replace(/(<script src="js\/beats\.js[^"]*"><\/script>)/,`<script src="js/beat-markup.js?v=11"></script>${EOL}$1`);
+  html = html.replace(/(<script src="js\/beats\.js[^"]*"><\/script>)/,`<script src="js/beat-markup.js?v=12"></script>${EOL}$1`);
   fs.writeFileSync(path.join(ROOT, 'track.html'), html);
 }
 

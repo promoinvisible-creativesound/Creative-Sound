@@ -1234,7 +1234,9 @@
     window.addEventListener('resize', () => drawWave());
   };
   const showWave = async (beat) => {
-    if (!wv.canvas || wv.id === beat.id) return;
+    if (!wv.canvas) return;
+    // Same track again (replay, player refresh): keep the waveform on.
+    if (wv.id === beat.id) { if (wv.peaks) { player.classList.add('has-wave'); drawWave(); } return; }
     wv.id = beat.id;
     wv.peaks = null;
     player.classList.remove('has-wave');
@@ -1484,8 +1486,9 @@
       $('#bt-fx-bpm-was', pop).textContent = fx.tempo === 1 ? 'Original' : `was ${b.bpm}`;
       $('#bt-fx-key', pop).textContent = transposeKey(b.key, fx.semi);
       $('#bt-fx-key-was', pop).textContent = fx.semi ? `${fx.semi > 0 ? '+' : ''}${fx.semi} st · was ${b.key}` : 'Original';
-      $('#bt-fx-tempo', pop).value = String(Math.round(fx.tempo * 100));
-      $('#bt-fx-tempo', pop).style.setProperty('--p', `${(fx.tempo - 0.5) * 100}%`);
+      const tr = $('#bt-fx-tempo', pop);
+      tr.value = String(bpm);
+      tr.style.setProperty('--p', `${((bpm - Number(tr.min)) / (Number(tr.max) - Number(tr.min))) * 100}%`);
       $('.bt-tool[data-tool="edit"]', tools).classList.toggle('is-on', fx.tempo !== 1 || fx.semi !== 0);
     };
     const applyTempo = () => { audio.preservesPitch = true; audio.mozPreservesPitch = true; audio.webkitPreservesPitch = true; audio.playbackRate = fx.tempo; };
@@ -1496,11 +1499,11 @@
           <div class="bt-pop-head"><b>Edit preview</b><button type="button" class="bt-pop-reset" data-fx-reset>Reset</button></div>
           <div class="bt-fx">
             <div class="bt-fx-row"><span class="bt-fx-label">Tempo</span><span class="bt-fx-val"><b id="bt-fx-bpm"></b><small id="bt-fx-bpm-was"></small></span></div>
-            <input type="range" id="bt-fx-tempo" class="bt-fx-range" min="50" max="150" step="1" aria-label="Tempo">
+            <input type="range" id="bt-fx-tempo" class="bt-fx-range" min="${Math.max(20, b.bpm - 100)}" max="${b.bpm + 100}" step="1" aria-label="Tempo in BPM">
           </div>
           <div class="bt-fx">
             <div class="bt-fx-row"><span class="bt-fx-label">Key</span><span class="bt-fx-val"><b id="bt-fx-key"></b><small id="bt-fx-key-was"></small></span></div>
-            <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 25 }, (_, i) => `<i data-k="${i - 12}"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
+            <div class="bt-fx-steps"><button type="button" data-semi="-1" aria-label="Key down a semitone">−</button><span class="bt-fx-meter">${Array.from({ length: 25 }, (_, i) => `<i data-k="${i - 12}" role="button" tabindex="-1" title="${i - 12 > 0 ? '+' : ''}${i - 12} st"></i>`).join('')}</span><button type="button" data-semi="1" aria-label="Key up a semitone">+</button></div>
           </div>
           <p class="bt-pop-note">Only changes what you hear. The files you buy stay in ${esc(b ? b.key : 'the original key')} at ${b ? b.bpm : ''} BPM.</p>`;
         paintEdit();
@@ -1562,8 +1565,11 @@
           </div>`;
       },
     };
+    let lastSemi = 0;
     const paintMeter = () => $$('.bt-fx-meter i', pop).forEach((el) => {
       const k = Number(el.dataset.k);
+      // stagger: ticks further from the previous value change a bit later
+      el.style.transitionDelay = `${Math.min(12, Math.abs(k - lastSemi)) * 22}ms`;
       el.classList.toggle('is-on', fx.semi !== 0 && ((fx.semi > 0 && k > 0 && k <= fx.semi) || (fx.semi < 0 && k < 0 && k >= fx.semi)));
       el.classList.toggle('is-zero', k === 0);
     });
@@ -1593,15 +1599,18 @@
         return;
       }
       if (e.target.closest('[data-fx-reset]')) {
-        fx.tempo = 1; fx.semi = 0; applyTempo(); await setKeyShift(0); paintEdit(); paintMeter(); return;
+        lastSemi = fx.semi; fx.tempo = 1; fx.semi = 0; applyTempo(); await setKeyShift(0); paintEdit(); paintMeter(); return;
       }
       const s = e.target.closest('[data-semi]');
-      if (s) {
-        const next = Math.max(-12, Math.min(12, fx.semi + Number(s.dataset.semi)));
+      const tick = e.target.closest('.bt-fx-meter i');
+      if (s || tick) {
+        const next = tick ? Number(tick.dataset.k) : Math.max(-12, Math.min(12, fx.semi + Number(s.dataset.semi)));
         if (next === fx.semi) return;
         const ok = await setKeyShift(next);
         if (!ok) { $('.bt-pop-note', pop).textContent = 'Key change is not available in this browser.'; return; }
-        fx.semi = next; paintEdit(); paintMeter(); return;
+        lastSemi = fx.semi; fx.semi = next; paintEdit(); paintMeter();
+        $('.bt-fx-meter', pop).classList.remove('is-bump'); void $('.bt-fx-meter', pop).offsetWidth; $('.bt-fx-meter', pop).classList.add('is-bump');
+        return;
       }
       if (e.target.closest('[data-copy]')) {
         const ta = $('.bt-lyrics', pop);
@@ -1627,7 +1636,7 @@
     });
     tools.addEventListener('input', (e) => {
       if (e.target.id === 'bt-fx-tempo') {
-        fx.tempo = Number(e.target.value) / 100;
+        fx.tempo = Number(e.target.value) / beat().bpm;
         applyTempo();
         paintEdit();
       } else if (e.target.id === 'bt-vol') {

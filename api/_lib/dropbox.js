@@ -144,8 +144,11 @@ async function check() {
   return { ok: !missing.length, scopes: have, missing };
 }
 
+// Small file in one request (thumbnails); overwrites.
+const uploadFile = (path, buf) => content('files/upload', { path, mode: 'overwrite', autorename: false, mute: true }, buf);
+
 module.exports = {
-  check,
+  check, uploadFile,
   MAX_UPLOAD_BYTES, configured, uploadLink, fileSize, readLink, readRange,
   sessionStart, sessionAppend, sessionFinish,
 };

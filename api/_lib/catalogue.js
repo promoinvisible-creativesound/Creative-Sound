@@ -53,7 +53,7 @@ function toBeat(row) {
     peaks: Array.isArray(row.peaks) ? row.peaks : null,
     // v changes whenever the files change (approved edits), so browsers and
     // the CDN fetch the new cover/preview instead of a cached redirect.
-    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&v=${fileVersion(row)}` : null,
+    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=sm&v=${fileVersion(row)}` : null,
     preview: `/api/beats/media?id=${id}&kind=preview&v=${fileVersion(row)}`,
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
@@ -123,7 +123,12 @@ async function handleMedia(req, res) {
     const files = (beat && beat._files) || {};
     const f = kind === 'preview' ? (files.tagged || files.preview) : files[kind];
     if (!f || !dropbox.configured()) { res.status(404).json({ error: 'Not found.' }); return; }
-    const link = await dropbox.readLink(f.path);
+    // ?s=sm: the small cover (made once, see _lib/thumb.js); full size otherwise.
+    let path = f.path;
+    if (kind === 'artwork' && req.query.s === 'sm') {
+      try { path = (await require('./thumb').ensureThumb(beat._submissionId, files)) || f.path; } catch (err) { console.error('cover thumb failed:', err.message); }
+    }
+    const link = await dropbox.readLink(path);
     // Dropbox links last 4 hours; caches keep the redirect well inside that.
     res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3000');
     res.statusCode = 302;

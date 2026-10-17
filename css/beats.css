@@ -2320,3 +2320,25 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Start / End: double click to type the time */
 .bt-loop-ab button.is-typing{ cursor:text; background:rgba(var(--fx, 232,134,44), 0.18); box-shadow:0 0 0 3px rgba(var(--fx, 232,134,44), 0.25); }
 .bt-loop-input{ width:100%; height:22px; padding:0; border:0; background:transparent; color:#fff; font:inherit; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; outline:none; caret-color:rgb(var(--fx-hi, 245,176,106)); }
+
+/* Closed dropdown panels never widen the page (they sit off to the right
+   of the last filter); the store clips any horizontal spill. */
+.beats-page, .beat-page{ overflow-x:clip; }
+
+/* Phones: store grid two cards per row, compact */
+@media (max-width:560px){
+  .beats-page .bt-grid[data-view="grid"], .bt-grid[data-view="grid"]{ grid-template-columns:repeat(2, minmax(0, 1fr)) !important; gap:10px !important; }
+  .bt-grid[data-view="grid"] .bt-card{ border-radius:16px; }
+  .bt-grid[data-view="grid"] .bt-cover-wrap{ border-radius:16px 16px 0 0; }
+  .bt-grid[data-view="grid"] .bt-card .bt-body{ padding:10px 10px 11px; gap:5px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-name{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bt-grid[data-view="grid"] .bt-card .bt-producer{ font-size:12.5px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-meta-line{ font-size:11.5px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-buy-price{ font-size:14.5px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-buy-icon{ width:30px; height:30px; }
+  .bt-grid[data-view="grid"] .bt-card .bt-buy-icon svg{ width:15px; height:15px; }
+  .bt-grid[data-view="grid"] .bt-play{ width:42px !important; height:42px !important; margin:-21px 0 0 -21px !important; }
+  .bt-grid[data-view="grid"] .bt-play svg{ width:17px !important; height:17px !important; margin:-8.5px 0 0 -8.5px !important; }
+  .bt-grid[data-view="grid"] .bt-save{ width:30px; height:30px; top:8px; right:8px; }
+  .bt-free-badge{ top:8px; left:8px; height:20px; padding:0 7px; font-size:10px; }
+}

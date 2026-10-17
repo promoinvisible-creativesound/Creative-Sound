@@ -2367,3 +2367,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bp-row{ grid-auto-columns:calc((100% - 12px) / 2.12) !important; gap:12px !important; }
 }
 @media (max-width:640px){ .bt-top-body .bt-feat-pick .bt-feat-rank{ display:none; } .bt-top-body .bt-feat-thumb{ width:34px !important; } .bt-top-body .bt-feat-pick{ padding:6px 8px 6px 6px !important; } }
+
+/* Phones: cover + vinyl group optically centred */
+@media (max-width:640px){ .bt-feat-art{ transform:translateX(-16%) !important; } }

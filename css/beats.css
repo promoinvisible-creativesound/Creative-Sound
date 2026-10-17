@@ -2342,3 +2342,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bt-grid[data-view="grid"] .bt-save{ width:30px; height:30px; top:8px; right:8px; }
   .bt-free-badge{ top:8px; left:8px; height:20px; padding:0 7px; font-size:10px; }
 }
+
+/* List view: the cover is too small for the "Free download" badge */
+.bt-grid[data-view="list"] .bt-free-badge{ display:none; }

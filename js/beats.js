@@ -1443,45 +1443,33 @@
     if (i < 0) return key;
     return `${NOTE_NAMES[(i + semi + 120) % 12]}${m[2] ? ` ${m[2]}` : ''}`;
   };
-  // Pitch shifter: two read heads sweep a short delay line half a window
-  // apart, cross-faded with a Hann window (the classic "delay-line" shifter).
-  const SHIFTER = `class CsShift extends AudioWorkletProcessor {
-    constructor() { super(); this.ratio = 1; this.size = 1 << 16; this.buf = [new Float32Array(this.size), new Float32Array(this.size)]; this.w = 0; this.phase = 0; this.win = Math.round(sampleRate * 0.08);
-      this.port.onmessage = (e) => { this.ratio = e.data; }; }
-    read(b, pos) { const s = this.size; const i = Math.floor(pos); const f = pos - i; const a = b[(i % s + s) % s]; const c = b[((i + 1) % s + s) % s]; return a + (c - a) * f; }
-    process(inputs, outputs) {
-      const inp = inputs[0]; const out = outputs[0]; if (!out.length) return true;
-      const n = out[0].length; const W = this.win; const step = (1 - this.ratio) / W;
-      for (let k = 0; k < n; k++) {
-        for (let ch = 0; ch < out.length; ch++) { const src = inp[ch] || inp[0]; this.buf[ch % 2][(this.w + k) % this.size] = src ? src[k] : 0; }
-        let p1 = this.phase; let p2 = (p1 + 0.5) % 1;
-        const g1 = Math.sin(Math.PI * p1) ** 2; const g2 = Math.sin(Math.PI * p2) ** 2;
-        const pos = this.w + k;
-        for (let ch = 0; ch < out.length; ch++) {
-          const b = this.buf[ch % 2];
-          out[ch][k] = this.ratio === 1 ? b[pos % this.size] : this.read(b, pos - (p1 * W + 2)) * g1 + this.read(b, pos - (p2 * W + 2)) * g2;
-        }
-        this.phase = ((this.phase + step) % 1 + 1) % 1;
-      }
-      this.w = (this.w + n) % this.size;
-      return true;
-    }
-  }
-  registerProcessor('cs-shift', CsShift);`;
-  let shifterReady = null;
+  // Key change: Signalsmith Stretch (MIT, js/vendor), a studio-grade pitch
+  // shifter in an AudioWorklet, loaded the first time the key is changed.
+  // At 0 semitones the audio bypasses it and plays untouched.
+  let stretchLib = null;
+  let shifterOn = false;
+  const loadStretch = () => stretchLib || (stretchLib = new Promise((resolve, reject) => {
+    if (window.SignalsmithStretch) { resolve(); return; }
+    const sc = document.createElement('script');
+    sc.src = 'js/vendor/signalsmith-stretch-1.3.2.js';
+    sc.onload = () => resolve();
+    sc.onerror = () => { stretchLib = null; reject(new Error('stretch')); };
+    document.head.appendChild(sc);
+  }));
   const setKeyShift = async (semi) => {
     if (!semi && !shifter) return true;
     if (!ensureGraph() || !actx.audioWorklet) return false;
     try {
-      if (!shifterReady) shifterReady = actx.audioWorklet.addModule(URL.createObjectURL(new Blob([SHIFTER], { type: 'application/javascript' })));
-      await shifterReady;
       if (!shifter) {
-        shifter = new AudioWorkletNode(actx, 'cs-shift', { outputChannelCount: [2] });
-        srcNode.disconnect();
-        srcNode.connect(shifter);
+        await loadStretch();
+        shifter = await window.SignalsmithStretch(actx, { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] });
         shifter.connect(graphOut());
+        shifter.start();
       }
-      shifter.port.postMessage(2 ** (semi / 12));
+      shifter.schedule({ semitones: semi, output: actx.currentTime });
+      // Route through the shifter only while the key is changed.
+      if (semi && !shifterOn) { srcNode.disconnect(); srcNode.connect(shifter); shifterOn = true; }
+      else if (!semi && shifterOn) { srcNode.disconnect(); srcNode.connect(graphOut()); shifterOn = false; }
       return true;
     } catch (e) { return false; }
   };

@@ -2345,3 +2345,25 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 
 /* List view: the cover is too small for the "Free download" badge */
 .bt-grid[data-view="list"] .bt-free-badge{ display:none; }
+
+/* Phones: at least two songs side by side.
+   Top tracks: a slightly smaller spotlight + the chart as a compact row of
+   two tracks (scrolls sideways). Track page rows: two whole cards. */
+@media (max-width:640px){
+  .bt-top-body .bt-feat-spot{ padding:16px 12px 18px !important; gap:12px !important; }
+  .bt-feat-art{ width:min(160px, 44vw) !important; }
+  .bt-feat-title{ font-size:28px !important; }
+  .bt-top-body .bt-feat-list{
+    display:flex !important; flex-direction:row; flex-wrap:nowrap; gap:6px !important; padding:6px !important; margin-top:10px;
+    overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; border-radius:16px;
+  }
+  .bt-top-body .bt-feat-list::-webkit-scrollbar{ display:none; }
+  .bt-feat-list-head{ display:none !important; }
+  .bt-top-body .bt-feat-pick{ flex:0 0 calc((100% - 6px) / 2) !important; min-width:0; padding:6px !important; gap:8px !important; scroll-snap-align:start; }
+  .bt-top-body .bt-feat-pick .bt-feat-rank{ width:14px; font-size:12px !important; }
+  .bt-top-body .bt-feat-thumb{ width:38px !important; border-radius:8px !important; }
+  .bt-top-body .bt-feat-pick-text b{ font-size:13px !important; }
+  .bt-top-body .bt-feat-pick-text small{ font-size:11px !important; }
+  .bp-row{ grid-auto-columns:calc((100% - 12px) / 2.12) !important; gap:12px !important; }
+}
+@media (max-width:640px){ .bt-top-body .bt-feat-pick .bt-feat-rank{ display:none; } .bt-top-body .bt-feat-thumb{ width:34px !important; } .bt-top-body .bt-feat-pick{ padding:6px 8px 6px 6px !important; } }

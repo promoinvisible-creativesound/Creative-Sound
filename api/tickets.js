@@ -45,6 +45,7 @@ module.exports = async (req, res) => {
   // Live catalogue, producer track media and bought files (_lib/catalogue.js).
   const catalogueRoutes = {
     'beats-catalogue': handleCatalogue,
+    'seo-page': require('./_lib/seo').handleSeo,
     'beats-media': handleMedia,
     'beats-file': handleBoughtFile,
     'beats-license': handleBeatsLicense,

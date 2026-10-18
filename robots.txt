@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://creativesound.io/sitemap.xml
+Sitemap: https://creativesound.io/sitemap-store.xml

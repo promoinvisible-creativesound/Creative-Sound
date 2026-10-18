@@ -38,6 +38,22 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/type-beats",
+      "destination": "/api/tickets?action=seo-page&kind=hub"
+    },
+    {
+      "source": "/type-beat/:slug",
+      "destination": "/api/tickets?action=seo-page&kind=type&slug=:slug"
+    },
+    {
+      "source": "/genre/:slug",
+      "destination": "/api/tickets?action=seo-page&kind=genre&slug=:slug"
+    },
+    {
+      "source": "/sitemap-store.xml",
+      "destination": "/api/tickets?action=seo-page&kind=sitemap"
+    },
+    {
       "source": "/api/profile/store",
       "destination": "/api/tickets?action=profile-store"
     },
@@ -224,7 +240,8 @@
   ],
   "functions": {
     "api/tickets.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "artist.html"
     }
   },
   "git": {

@@ -12,6 +12,8 @@
   let PRODUCERS = {};
   let EOL = '\n';
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Same as slug() in api/_lib/seo.js.
+  const slugOf = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   const euro = (c) => `€${(c / 100).toFixed(2)}`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const TINTS = ['amber', 'blue', 'red', 'violet', 'green'];
@@ -30,6 +32,9 @@
     const verified = typeof b.verified === 'boolean' ? b.verified : !!(PRODUCERS[b.producer] && PRODUCERS[b.producer].verified);
     const tint = TINTS.includes(b.tint) ? b.tint : 'amber';
     const tiers = tiersOf(b);
+    // Producer tracks link to their genre and type beat pages (/genre/…, /type-beat/…).
+    const seo = b.source === 'producer';
+    const types = seo ? (b.typeBeat || []).filter(Boolean) : [];
     const facts = [['BPM', b.bpm], ['Key', b.key], ['Genre', b.genre], ['Mood', b.mood], ['Released', fmtDate(b.released)]];
     const acc = /^#[0-9a-f]{6}$/i.test(b.accent || '') ? (() => { const n = parseInt(b.accent.slice(1), 16); const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; const mix = (t) => rgb.map((c) => Math.round(c + (255 - c) * t)).join(','); return ` style="--fx:${rgb.join(',')};--fx-hi:${mix(0.35)};--fx-soft:${mix(0.7)};"`; })() : '';
     return `<main class="beat-page bt-tint-${tint}"${acc} data-beat-id="${esc(b.id)}">
@@ -47,8 +52,8 @@
         <div class="bp-info">
           <h1 class="bp-title">${esc(b.title)}</h1>
           <p class="bp-producer">${b.producerHandle ? `<a href="/@${encodeURIComponent(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${verified ? VERIFIED : ''}${b.contact ? `<span class="bp-producer-links">${b.contact.instagram ? `<a href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(b.producer)} on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}${b.contact.email ? `<a href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email ${esc(b.producer)}" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}</span>` : ''}</p>
-          <ul class="bp-facts">${facts.map(([k, v]) => `<li><span>${k}</span><b>${esc(v)}</b></li>`).join('')}</ul>
-          ${b.tags && b.tags.length ? `<div class="bp-tags">${b.tags.map((t) => `<a href="beats.html">#${esc(t)}</a>`).join('')}</div>` : ''}
+          <ul class="bp-facts">${facts.map(([k, v]) => `<li><span>${k}</span><b>${k === 'Genre' && seo && v ? `<a href="/genre/${slugOf(v)}">${esc(v)}</a>` : esc(v)}</b></li>`).join('')}</ul>
+          ${types.length || (b.tags && b.tags.length) ? `<div class="bp-tags">${types.map((t) => `<a class="bp-type" href="/type-beat/${slugOf(t)}">${esc(t)} type beat</a>`).join('')}${(b.tags || []).map((t) => `<a href="beats.html">#${esc(t)}</a>`).join('')}</div>` : ''}
           <div class="bp-actions">
             <button type="button" class="btn btn-primary" data-play-beat aria-label="Play preview">
               <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>

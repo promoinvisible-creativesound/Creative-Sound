@@ -64,6 +64,8 @@ module.exports = async (req, res) => {
     'beats-free': extras.handleFree,
     'beats-peaks': extras.handlePeaks,
     'beats-lyrics': extras.handleLyrics,
+    'beats-event': extras.handleEvent,
+    'producer-stats': extras.handleStats,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

@@ -38,6 +38,14 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/producer/stats",
+      "destination": "/api/tickets?action=producer-stats"
+    },
+    {
+      "source": "/api/beats/event",
+      "destination": "/api/tickets?action=beats-event"
+    },
+    {
       "source": "/api/profile/producer-tag",
       "destination": "/api/tickets?action=profile-producer-tag"
     },

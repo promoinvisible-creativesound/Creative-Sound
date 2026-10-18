@@ -86,6 +86,41 @@
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
 
+  /* ------------------------------ Producer stats ---------------------------- */
+  // Views, plays, saves and cart adds on producer tracks, with where the
+  // visitor came from (first page of the visit), for the producer area.
+  const visitSource = (() => {
+    try {
+      const had = sessionStorage.getItem('cs-src');
+      if (had) return had;
+      const utm = new URLSearchParams(location.search).get('utm_source');
+      let src = 'direct';
+      if (utm) src = utm;
+      else if (document.referrer) {
+        const h = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (h !== location.hostname.replace(/^www\./, '')) {
+          const known = { 'youtube.com': 'youtube', 'youtu.be': 'youtube', 'instagram.com': 'instagram', 'tiktok.com': 'tiktok', 'google.': 'google', 'facebook.com': 'facebook', 't.co': 'x', 'x.com': 'x', 'twitter.com': 'x', 'reddit.com': 'reddit', 'bing.com': 'bing', 'duckduckgo.com': 'duckduckgo' };
+          const k = Object.keys(known).find((d) => h === d || h.endsWith('.' + d) || (d.endsWith('.') && h.includes(d)));
+          src = k ? known[k] : h;
+        } else src = '';
+      }
+      if (src) sessionStorage.setItem('cs-src', src);
+      return src || 'direct';
+    } catch (err) { return 'direct'; }
+  })();
+  const logged = new Set();
+  const logEvent = (beat, kind) => {
+    if (!beat || beat.source !== 'producer' || !/^t\d+-/.test(beat.id)) return;
+    const key = kind + beat.id;
+    if (logged.has(key)) return;
+    logged.add(key);
+    const body = JSON.stringify({ beatId: beat.id, kind, source: visitSource });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/beats/event', new Blob([body], { type: 'application/json' }))) return;
+    } catch (err) { /* fall through */ }
+    fetch('/api/beats/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  };
+
   /* ---------------------------------- Saved -------------------------------- */
   // An artist can save beats to come back to (kept in this browser). Saved
   // beats get their own "Saved" collection tile.
@@ -102,6 +137,7 @@
       fetch('/api/beats/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ beatId: id, saved: on }) }).catch(() => {});
     }
     track(on ? 'Beat save' : 'Beat unsave', { beat: id });
+    if (on) logEvent(b, 'save');
     $$(`[data-save="${CSS.escape(id)}"]`).forEach((btn) => {
       btn.classList.toggle('is-saved', on);
       btn.setAttribute('aria-pressed', String(on));
@@ -696,6 +732,7 @@
   const setupBeatPage = () => {
     const beat = byId.get(beatRoot.dataset.beatId);
     if (!beat) return;
+    logEvent(beat, 'view');
     // Your own track: "Message" becomes a link to your inbox (artists'
     // messages about it land there; you can't message yourself).
     const msgBtn = $('.bp-msg-btn', beatRoot);
@@ -1054,6 +1091,7 @@
       currentId = id;
       audio.src = beat.preview;
       track('Beat preview play', { beat: beat.id });
+      logEvent(beat, 'play');
     }
     showPlayer(beat);
     await ensureAnalyser();
@@ -2044,7 +2082,7 @@
   const addToCart = (id, tier) => {
     if (!canBuy) return;
     const i = cart.findIndex((c) => c.id === id);
-    if (i >= 0) cart[i].tier = tier; else cart.push({ id, tier });
+    if (i >= 0) cart[i].tier = tier; else { cart.push({ id, tier }); logEvent(byId.get(id), 'cart'); }
     saveCart();
   };
   const cartTotal = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);

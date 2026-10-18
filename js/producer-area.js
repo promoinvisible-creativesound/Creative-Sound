@@ -19,6 +19,52 @@
   };
 
   let all = [];
+  let stats = {};
+  const open = new Set();
+  const num = (n) => (n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n || 0));
+  const SRC = { direct: 'Direct', youtube: 'YouTube', instagram: 'Instagram', tiktok: 'TikTok', google: 'Google', facebook: 'Facebook', x: 'X', reddit: 'Reddit', bing: 'Bing', duckduckgo: 'DuckDuckGo' };
+  const STATS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>';
+
+  // Per-track stats: last 30 days in the tiles (all time underneath),
+  // a 30-day plays chart and where listeners came from.
+  function statsPanel(id) {
+    const t = stats[id] || { all: {}, d30: {}, daily: {}, sources: {}, sales: { n: 0, n30: 0, cents: 0 } };
+    const tile = (label, v30, vAll) => `<div class="pa-st-tile"><b>${num(v30)}</b><span>${label}</span><small>${num(vAll)} all time</small></div>`;
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 864e5);
+      days.push({ d, n: t.daily[d.toISOString().slice(0, 10)] || 0 });
+    }
+    const max = Math.max(1, ...days.map((x) => x.n));
+    const bars = days.map((x) => `<i style="--h:${Math.round((x.n / max) * 100)}%" title="${x.d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}: ${x.n} play${x.n === 1 ? '' : 's'}"></i>`).join('');
+    const src = Object.entries(t.sources).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const srcTotal = src.reduce((a, [, n]) => a + n, 0) || 1;
+    const plays = t.d30.play || 0;
+    const conv = plays ? `${(((t.d30.cart || 0) / plays) * 100).toFixed(1)}%` : '–';
+    return `
+      <div class="pa-st" id="pa-st-${id}">
+        <div class="pa-st-tiles">
+          ${tile('Page views', t.d30.view, t.all.view)}
+          ${tile('Plays', t.d30.play, t.all.play)}
+          ${tile('Saves', t.d30.save, t.all.save)}
+          ${tile('Added to cart', t.d30.cart, t.all.cart)}
+          ${tile('Sales', t.sales.n30, t.sales.n)}
+          <div class="pa-st-tile is-money"><b>€${(t.sales.cents / 100).toFixed(2)}</b><span>Revenue</span><small>all time, before fees</small></div>
+        </div>
+        <div class="pa-st-grid">
+          <div class="pa-st-box">
+            <div class="pa-st-head"><b>Plays, last 30 days</b><span>Play to cart ${conv}</span></div>
+            <div class="pa-st-chart" role="img" aria-label="${plays} plays in the last 30 days">${bars}</div>
+            <div class="pa-st-axis"><span>${days[0].d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span><span>Today</span></div>
+          </div>
+          <div class="pa-st-box">
+            <div class="pa-st-head"><b>Where listeners come from</b><span>90 days</span></div>
+            ${src.length ? `<ul class="pa-st-src">${src.map(([k, n]) => `<li><span>${esc(SRC[k] || k)}</span><i style="--w:${Math.max(3, Math.round((n / srcTotal) * 100))}%"></i><b>${Math.round((n / srcTotal) * 100)}%</b></li>`).join('')}</ul>` : '<p class="pa-st-none">No visits yet. Share your track link to see where listeners come from.</p>'}
+          </div>
+        </div>
+        <p class="pa-st-tip">Tip: add <code>?utm_source=youtube</code> (or instagram, tiktok…) to the links you share, so every visit is counted to the right place.</p>
+      </div>`;
+  }
   let filter = 'all';
   const list = $('#pa-list');
 
@@ -42,9 +88,10 @@
             <small>${s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`}</small>
             ${s.storeUrl ? `<a class="pa-store-link" href="${esc(s.storeUrl)}">View in store</a>` : ''}
             ${s.status === 'approved' ? `<a class="pa-edit-link" href="upload-beat.html?edit=${s.id}">Edit</a>` : ''}
+            ${s.status === 'approved' ? `<button type="button" class="pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
             ${s.changesStatus === 'pending' ? '<span class="pa-change is-pending">Changes in review</span>' : s.changesStatus === 'rejected' ? `<span class="pa-change is-bad" title="${esc(s.changesNote || '')}">Changes not approved</span>` : ''}
           </div>
-        </article>`;
+        </article>${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';
   }
 
@@ -53,6 +100,19 @@
       $(`#pa-n-${k}`).textContent = String(all.filter((s) => s.status === k).length);
     });
   }
+
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-stats]');
+    if (!btn) return;
+    const id = Number(btn.dataset.stats);
+    if (open.has(id)) open.delete(id); else open.add(id);
+    render();
+  });
+  const loadStats = () => fetch('/api/producer/stats').then((r) => (r.ok ? r.json() : null)).then((d) => {
+    if (!d || !d.tracks) return;
+    stats = d.tracks;
+    render();
+  }).catch(() => {});
 
   page.querySelector('.pa-filter').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filter]');
@@ -116,6 +176,7 @@
       paintVerify(data);
       counts();
       render();
+      if (all.some((x) => x.status === 'approved')) loadStats();
     })
     .catch((err) => {
       list.removeAttribute('aria-busy');

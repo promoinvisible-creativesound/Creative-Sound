@@ -97,4 +97,76 @@ async function handleLyrics(req, res) {
   }
 }
 
-module.exports = { handleFree, handlePeaks, handleLyrics, ensureColumns };
+/* --------------------------------- Stats ---------------------------------- */
+// Store events for producer tracks (page view, preview play, save, cart add)
+// with where the visitor came from; producers see them in their area.
+//   POST /api/beats/event { beatId, kind, source }   (sendBeacon, no auth)
+//   GET  /api/producer/stats                         (the producer's tracks)
+const KINDS = ['view', 'play', 'save', 'cart'];
+let eventsReady = null;
+function ensureEvents() {
+  if (!eventsReady) {
+    eventsReady = (async () => {
+      await sql`CREATE TABLE IF NOT EXISTS beat_events (id BIGSERIAL PRIMARY KEY, submission_id INTEGER NOT NULL, kind TEXT NOT NULL, source TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+      await sql`CREATE INDEX IF NOT EXISTS beat_events_sub_idx ON beat_events (submission_id, created_at)`;
+    })().catch((err) => { eventsReady = null; throw err; });
+  }
+  return eventsReady;
+}
+
+async function handleEvent(req, res) {
+  if (req.method !== 'POST') { res.status(405).end(); return; }
+  let body = req.body || {};
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (err) { body = {}; } }
+  const sub = submissionIdOf(body.beatId);
+  const kind = String(body.kind || '');
+  const source = String(body.source || 'direct').toLowerCase().replace(/[^a-z0-9.-]/g, '').slice(0, 30) || 'direct';
+  if (sub == null || !KINDS.includes(kind)) { res.status(400).end(); return; }
+  try {
+    await ensureEvents();
+    await sql`INSERT INTO beat_events (submission_id, kind, source) VALUES (${sub}, ${kind}, ${source})`;
+    res.status(204).end();
+  } catch (err) {
+    console.error('beat event error:', err);
+    res.status(500).end();
+  }
+}
+
+async function handleStats(req, res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  try {
+    await ensureEvents();
+    const subs = await sql`SELECT id FROM beat_submissions WHERE user_id = ${session.uid} AND status = 'approved'`;
+    const ids = subs.map((r) => r.id);
+    if (!ids.length) { res.status(200).json({ tracks: {} }); return; }
+    const [totals, recent, daily, sources] = await Promise.all([
+      sql`SELECT submission_id, kind, count(*)::int AS n FROM beat_events WHERE submission_id = ANY(${ids}::int[]) GROUP BY 1, 2`,
+      sql`SELECT submission_id, kind, count(*)::int AS n FROM beat_events WHERE submission_id = ANY(${ids}::int[]) AND created_at > now() - interval '30 days' GROUP BY 1, 2`,
+      sql`SELECT submission_id, to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day, count(*)::int AS n FROM beat_events WHERE submission_id = ANY(${ids}::int[]) AND kind = 'play' AND created_at > now() - interval '30 days' GROUP BY 1, 2`,
+      sql`SELECT submission_id, source, count(*)::int AS n FROM beat_events WHERE submission_id = ANY(${ids}::int[]) AND kind IN ('view', 'play') AND created_at > now() - interval '90 days' GROUP BY 1, 2`,
+    ]);
+    let sales = [];
+    try {
+      sales = await sql`
+        SELECT s.id AS submission_id, count(p.*)::int AS n, coalesce(sum(p.price_cents), 0)::int AS cents,
+               count(p.*) FILTER (WHERE p.created_at > now() - interval '30 days')::int AS n30
+        FROM beat_submissions s JOIN beat_purchases p ON p.beat_id LIKE ('t' || s.id || '-%')
+        WHERE s.id = ANY(${ids}::int[]) GROUP BY s.id`;
+    } catch (err) { if (!/does not exist/.test(String(err.message))) throw err; }
+    const tracks = {};
+    const t = (id) => (tracks[id] = tracks[id] || { all: {}, d30: {}, daily: {}, sources: {}, sales: { n: 0, n30: 0, cents: 0 } });
+    totals.forEach((r) => { t(r.submission_id).all[r.kind] = r.n; });
+    recent.forEach((r) => { t(r.submission_id).d30[r.kind] = r.n; });
+    daily.forEach((r) => { t(r.submission_id).daily[r.day] = r.n; });
+    sources.forEach((r) => { t(r.submission_id).sources[r.source || 'direct'] = r.n; });
+    sales.forEach((r) => { t(r.submission_id).sales = { n: r.n, n30: r.n30, cents: r.cents }; });
+    res.status(200).json({ tracks });
+  } catch (err) {
+    console.error('producer stats error:', err);
+    res.status(500).json({ error: 'Could not load your stats.' });
+  }
+}
+
+module.exports = { handleFree, handlePeaks, handleLyrics, ensureColumns, handleEvent, handleStats };

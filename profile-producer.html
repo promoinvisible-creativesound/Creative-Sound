@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=141">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=42">
+<link rel="stylesheet" href="css/upload.css?v=43">
 <link rel="stylesheet" href="css/profile.css?v=18">
 </head>
 <body>
@@ -191,6 +191,43 @@
       </div>
     </section>
 
+    <section class="up-card sf-set lc-set" id="licenses" aria-labelledby="lc-title" hidden>
+      <div class="sf-set-head">
+        <div>
+          <h2 id="lc-title">Your licenses</h2>
+          <p>Set the limits of each license and add terms of your own. The PDF every buyer gets is built from these. Changes apply to new sales only; past buyers keep the license they bought.</p>
+        </div>
+      </div>
+
+      <div class="lc-tabs" id="lc-tabs" role="tablist" aria-label="License"></div>
+      <div class="lc-fields" id="lc-fields"></div>
+
+      <p class="pe-group-label sf-pins-label"><span>Your own terms</span><b id="lc-clauses-n"></b></p>
+      <div class="lc-clauses" id="lc-clauses"></div>
+      <button type="button" class="btn btn-ghost lc-add" id="lc-add">Add a term</button>
+      <p class="lc-note">Your terms are added to every license and shown to artists before they buy. They can add obligations (a release link, a tag in the title) but cannot take away what the standard contract grants.</p>
+
+      <details class="lc-base">
+        <summary>Always included: the standard contract</summary>
+        <ul>
+          <li>Non-exclusive license for one new song, worldwide, not transferable</li>
+          <li>Credit as "<span id="lc-producer"></span>" wherever credits are shown</li>
+          <li>You keep the copyright of the beat; the artist owns their vocals and master</li>
+          <li>No Content ID registration of the beat; you clear claims on request</li>
+          <li>Films, TV, ads and games need a separate agreement with you</li>
+          <li>No resale or reuse of the files, no sampling into new beats, no AI training</li>
+          <li>30 days to fix a breach, perpetual for the song, Italian law</li>
+        </ul>
+      </details>
+
+      <div class="sf-set-foot">
+        <p class="sf-set-status" id="lc-status" role="status" aria-live="polite"></p>
+        <button type="button" class="sf-set-link-btn lc-reset" id="lc-reset">Reset to standard</button>
+        <button type="button" class="btn btn-ghost" id="lc-preview">Preview PDF</button>
+        <button type="button" class="btn btn-primary" id="lc-save">Save licenses</button>
+      </div>
+    </section>
+
     <section class="up-card po-card" id="payouts" aria-labelledby="po-title">
       <div class="po-head">
         <div>
@@ -311,6 +348,7 @@
 <script src="js/auth.js?v=47"></script>
 <script src="js/producer-area.js?v=7"></script>
 <script src="js/storefront-settings.js?v=1"></script>
+<script src="js/license-settings.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

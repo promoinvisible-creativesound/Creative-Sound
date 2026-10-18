@@ -38,6 +38,10 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/producer/license",
+      "destination": "/api/tickets?action=producer-license"
+    },
+    {
       "source": "/type-beats",
       "destination": "/api/tickets?action=seo-page&kind=hub"
     },

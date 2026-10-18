@@ -38,6 +38,7 @@ function ensureColumns() {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS store_accent TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS store_headline TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS store_pinned JSONB NOT NULL DEFAULT '[]'`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS license_terms JSONB`;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_handle_idx ON users (lower(handle)) WHERE handle IS NOT NULL`;
     })().catch((err) => { ready = null; throw err; });
   }
@@ -295,4 +296,56 @@ async function handleStore(req, res) {
   }
 }
 
-module.exports = { handleStore, handleProducerTag, GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };
+// Producer license terms (producer area, "Your licenses").
+//   GET    /api/producer/license                   -> { config, options, defaults, customized, producer }
+//   POST   /api/producer/license { config }        -> saves (applies to future sales only)
+//   POST   /api/producer/license { config, preview: tier } -> sample license PDF
+//   DELETE /api/producer/license                   -> back to the standard terms
+async function handleProducerLicense(req, res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  try {
+    await ensureColumns();
+    if ((await roleFor(session.uid)) !== 'producer') { res.status(403).json({ error: 'Licenses are for producers.' }); return; }
+    const lc = require('./license-config');
+    const [row] = await sql`SELECT license_terms, producer_name, display_name, handle FROM users WHERE id = ${session.uid}`;
+    const producer = (row && (row.producer_name || row.display_name || row.handle)) || 'Producer';
+    if (req.method === 'GET') {
+      res.status(200).json({
+        config: lc.normalize(row && row.license_terms), defaults: lc.DEFAULTS, options: lc.OPTIONS,
+        maxClauses: lc.MAX_CLAUSES, clauseMax: lc.CLAUSE_MAX, customized: !!(row && row.license_terms), producer,
+      });
+      return;
+    }
+    if (req.method === 'DELETE') {
+      await sql`UPDATE users SET license_terms = NULL WHERE id = ${session.uid}`;
+      res.status(200).json({ config: lc.normalize(null) });
+      return;
+    }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    const body = req.body || {};
+    const config = lc.normalize(body.config);
+    if (body.preview) {
+      const tier = String(body.preview);
+      if (!config.tiers[tier]) { res.status(400).json({ error: 'Unknown license.' }); return; }
+      const { licensePdf } = require('./beats');
+      const pdf = await licensePdf({
+        licenseId: 'PREVIEW', beat: { title: 'Your track', producer, bpm: 140, key: 'C min' }, tier,
+        buyerName: 'Artist name', buyerEmail: 'artist@example.com', date: new Date().toISOString().slice(0, 10),
+        price: 2999, currency: 'eur', snap: lc.snapshot(tier, config, producer),
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="License preview - ${tier}.pdf"`);
+      res.status(200).send(pdf);
+      return;
+    }
+    await sql`UPDATE users SET license_terms = ${JSON.stringify({ ...config, updatedAt: new Date().toISOString() })}::jsonb WHERE id = ${session.uid}`;
+    res.status(200).json({ config });
+  } catch (err) {
+    console.error('producer license error:', err);
+    res.status(500).json({ error: 'Could not save your licenses, please try again.' });
+  }
+}
+
+module.exports = { handleProducerLicense, handleStore, handleProducerTag, GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };

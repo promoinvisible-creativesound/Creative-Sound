@@ -85,6 +85,11 @@
   const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${beatVerified(b) ? VERIFIED : ''}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
+  // A tier as this track sells it: the producer's own limits (b.license, from
+  // api/_lib/license-config.js) over the standard ones.
+  const tierOf = (b, id) => ({ ...LIC.tiers[id], ...((b && b.license && b.license.tiers && b.license.tiers[id]) || {}) });
+  const pubLabel = (t) => (t.publishing == null ? '' : t.publishing ? `${t.publishing}% to the producer` : 'None, credit only');
+  const clausesOf = (b) => (b && b.license && b.license.clauses) || [];
 
   /* ------------------------------ Producer stats ---------------------------- */
   // Views, plays, saves and cart adds on producer tracks, with where the
@@ -718,6 +723,7 @@
     streams: '<path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
     videos: '<rect x="3" y="6" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 10l5-3v10l-5-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
     performances: '<path d="M4 20l6-6M14.5 4.5a4.95 4.95 0 1 1 5 5l-6 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>',
+    publishing: '<path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h7M9 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
     radio: '<rect x="3" y="9" width="18" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9l10-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="14.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   };
   const usageRows = (t) => [
@@ -727,6 +733,7 @@
     ['videos', `Music videos: ${t.terms.videos}`],
     ['performances', `Live: ${t.terms.performances}`],
     ['radio', `Radio: ${t.terms.radio}`],
+    ...(t.publishing == null ? [] : [['publishing', `Publishing: ${pubLabel(t)}`]]),
   ];
 
   const setupBeatPage = () => {
@@ -754,10 +761,16 @@
         el.classList.toggle('is-selected', on);
         $('input', el).checked = on;
       });
-      const t = LIC.tiers[tier];
+      const t = tierOf(beat, tier);
       $('#bp-total').textContent = euro(beat.prices[tier]);
       $('#bp-usage-title').innerHTML = `${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? ' <span class="bt-tier-pill">Unlimited</span>' : ''}`;
-      $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('');
+      $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('')
+        + (clausesOf(beat).length ? `<li class="bp-usage-clauses"><b>Producer's terms</b><ol>${clausesOf(beat).map((c) => `<li>${esc(c)}</li>`).join('')}</ol></li>` : '');
+      $('.bp-tier', beatRoot).forEach((el) => {
+        const x = tierOf(beat, el.dataset.tier);
+        const nm = $('.bp-tier-name', el);
+        if (nm) nm.innerHTML = `${esc(x.unlimited ? x.name.replace(/\s*unlimited$/i, '') : x.name)}${x.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}`;
+      });
       const c = cart.find((x) => x.id === beat.id);
       $('#bp-add').textContent = !canBuy ? SOON : c && c.tier === tier ? 'In cart' : (c ? 'Update cart' : 'Add to cart');
       $('#bp-add').disabled = !canBuy;
@@ -2008,9 +2021,11 @@
   const termsTable = (beat) => {
     const tiers = tiersOf(beat);
     const rows = [['Files', (t) => t.files.map((f) => LIC.fileLabels[f]).join(' + ')], ['Streams', (t) => t.terms.streams], ['Sales', (t) => t.terms.sales], ['Music videos', (t) => t.terms.videos], ['Live', (t) => t.terms.performances], ['Radio', (t) => t.terms.radio]];
+    if (beat.license) rows.push(['Publishing', (t) => pubLabel(t)]);
+    const clauses = clausesOf(beat);
     return `<table><thead><tr><th></th>${tiers.map((id) => `<th>${esc(LIC.tiers[id].short)}</th>`).join('')}</tr></thead><tbody>${
-      rows.map(([label, fn]) => `<tr><th>${label}</th>${tiers.map((id) => `<td>${esc(fn(LIC.tiers[id]))}</td>`).join('')}</tr>`).join('')
-    }</tbody></table><p>Every license is non-exclusive and requires the credit "${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
+      rows.map(([label, fn]) => `<tr><th>${label}</th>${tiers.map((id) => `<td>${esc(fn(tierOf(beat, id)))}</td>`).join('')}</tr>`).join('')
+    }</tbody></table>${clauses.length ? `<div class="bt-clauses"><b>Producer's terms</b><ol>${clauses.map((c) => `<li>${esc(c)}</li>`).join('')}</ol></div>` : ''}<p>Every license is non-exclusive and requires the credit "${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
   };
   const selectTier = (id) => {
     modalTier = id;
@@ -2028,7 +2043,7 @@
     $('#bt-license-title').innerHTML = `<a href="${beatUrl(beat)}">${esc(beat.title)}</a>`;
     $('#bt-license-sub').innerHTML = `${producerLine(beat)} · ${beat.bpm} BPM · ${esc(beat.key)}`;
     $('#bt-license-tiers').innerHTML = tiersOf(beat).map((id) => {
-      const t = LIC.tiers[id];
+      const t = tierOf(beat, id);
       return `
         <label class="bt-tier" data-tier="${id}">
           <input type="radio" name="bt-tier" value="${id}">

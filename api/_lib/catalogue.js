@@ -55,9 +55,12 @@ function toBeat(row) {
     // the CDN fetch the new cover/preview instead of a cached redirect.
     cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=sm&v=${fileVersion(row)}` : null,
     preview: `/api/beats/media?id=${id}&kind=preview&v=${fileVersion(row)}`,
+    // The producer's license terms (limits, publishing share, own clauses).
+    license: require('./license-config').storeView(row.producer_license),
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
     _submissionId: row.id,
+    _license: row.producer_license || null,
     _userId: row.user_id,
   };
 }
@@ -72,12 +75,12 @@ async function approvedRows(id) {
     await require('./profile').ensureColumns();
     if (id != null) {
       return await sql`
-        SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+        SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email, u.license_terms AS producer_license FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
         WHERE s.id = ${id} AND s.status = 'approved'
       `;
     }
     return await sql`
-      SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
+      SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email, u.license_terms AS producer_license FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
       WHERE s.status = 'approved' ORDER BY s.reviewed_at DESC LIMIT 1000
     `;
   } catch (err) {

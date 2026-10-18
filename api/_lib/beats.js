@@ -131,6 +131,8 @@ function ensureTables() {
       `;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_beat_purchases_session_beat ON beat_purchases (stripe_session_id, beat_id)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_beat_purchases_email ON beat_purchases (email)`;
+      // The license text as sold (see _lib/license-config.js).
+      await sql`ALTER TABLE beat_purchases ADD COLUMN IF NOT EXISTS license_snapshot JSONB`;
       await sql`
         CREATE TABLE IF NOT EXISTS beat_saves (
           email TEXT NOT NULL,
@@ -188,46 +190,13 @@ const licenseIdFor = (sessionId, index) => `CS-B-${String(sessionId).slice(-10).
 // One PDF per beat: who licenses what to whom, which files, the usage terms
 // of the tier and the standard clauses. The clause text is a starting draft
 // and should be reviewed before real sales.
-// License terms, one set per license type (MP3 Lease, WAV, Trackout,
-// Project). Common clauses plus what each type adds: the files delivered,
-// what may be done with stems / the project, and the caps of the lease.
-function termsFor(tier, t, producer) {
-  const unlimited = !!t.unlimited;
-  const files = t.files.map((x) => LICENSES.fileLabels[x]).join(', ');
-  const out = [
-    `Grant. ${producer} (the "Producer") grants the Licensee a non-exclusive, non-transferable, worldwide license to use the instrumental (the "Beat") to create one new musical work (the "Song") and to exploit the Song within the usage rights above.`,
-    `Files. The Licensee receives: ${files}. The files may only be used to record, mix, master and release the Song.`,
-  ];
-  if (tier === 'trackout') out.push('Stems. The track stems may be used to mix and arrange the Beat for the Song (levels, effects, muting or rearranging parts). The stems may not be shared, sold or used in any other work.');
-  if (tier === 'project') out.push('Project file. The project file and its stems may be used to edit and rearrange the Beat for the Song. The project file, its samples, presets and stems remain the Producer’s work and may not be shared, sold, used to build other beats, or used in any other work.');
-  if (unlimited) {
-    out.push('Usage. There is no cap on streams, sales, downloads, music videos, live performances or radio play of the Song.');
-  } else {
-    out.push(`Usage limits. The Song may reach up to ${t.terms.streams.replace(/^Up to /i, '').toLowerCase()} and up to ${t.terms.sales.replace(/^Up to /i, '').toLowerCase()}, with ${t.terms.videos.toLowerCase()}, non-profit live performances only and no radio broadcasting. Once a limit is reached, the Licensee must upgrade to an Unlimited license for the same Beat before further use.`);
-  }
-  out.push(
-    'Ownership. The Producer keeps all rights and the copyright in the Beat. The Licensee owns the lyrics, melodies and vocal recordings they add, and the master recording of the Song, subject to this license.',
-    `Credit. The Licensee must credit the Producer as "${producer}" wherever credits are shown, including streaming metadata, video descriptions and physical releases.`,
-    // Trackout and Project (the top licenses): no publishing split, the
-    // credit is the only obligation towards the Producer.
-    tier === 'trackout' || tier === 'project'
-      ? 'Publishing. No share of the writer’s or publishing royalties of the Song is owed to the Producer under this license. The only obligation towards the Producer is the credit above.'
-      : 'Publishing. The composition of the Song is shared: the Producer holds 50% of the writer’s share and 50% of the publishing share, unless the parties agree otherwise in writing. Each party may register its share with its collecting society (for example SIAE).',
-    'Content ID. The Licensee may not register the Beat, or the Song as a whole, with content-identification systems (YouTube Content ID and similar). The Producer will clear claims on the Licensee’s releases on request.',
-    'Sync. Music videos are covered as listed above. Use of the Song in films, TV, adverts, video games or other synchronisation needs a separate agreement with the Producer.',
-    'Non-exclusive. The Producer may license the Beat to others. If exclusive rights are later sold, this license stays valid for the Song under the same terms.',
-    'Restrictions. The Licensee may not resell, give away, re-license or distribute the Beat or its files on their own, use them in another song, sample the Beat into new instrumentals, use it to train AI models, or claim authorship of the instrumental.',
-    'Warranty. The Producer confirms the Beat is original and that any samples used are cleared or royalty-free. The Licensee is responsible for the lyrics and any other material they add.',
-    'Breach. If the Licensee breaks these terms and does not fix it within 30 days of notice, this license ends and the Song may no longer be exploited.',
-    'Term. This license is perpetual for the Song created under it, within the usage rights above. It is personal to the Licensee and cannot be transferred.',
-    'Law. This agreement is governed by Italian law. It is the full agreement between the parties for this license.',
-  );
-  return out;
-}
-
-async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, price, currency }) {
+// The clauses themselves (fixed base + the producer's choices) are built in
+// _lib/license-config.js.
+// snap: the license text frozen at the sale; older purchases (before
+// producers could set their own terms) were sold on the default terms.
+async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, price, currency, snap }) {
   const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
-  const t = LICENSES.tiers[tier];
+  const s = snap && snap.v ? snap : require('./license-config').snapshot(tier, null, beat.producer);
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -260,15 +229,15 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   const space = (h) => { y -= h; };
 
   write('CREATIVE SOUND', { f: bold, size: 9, color: accent, gap: 14 });
-  write(`${t.name} License Agreement`, { f: bold, size: 18, gap: 8 });
+  write(`${s.name} License Agreement`, { f: bold, size: 18, gap: 8 });
   write(`License ID ${licenseId} · ${date}`, { size: 9, color: muted, gap: 14 });
 
   const rows = [
     ['Producer', beat.producer],
     ['Licensee', `${buyerName ? `${buyerName}, ` : ''}${buyerEmail}`],
     ['Beat', `"${beat.title}" · ${beat.bpm} BPM · ${beat.key}`],
-    ['License', `${t.name} (non-exclusive)${t.unlimited ? ' · Unlimited' : ''}`],
-    ['Files', t.files.map((f) => LICENSES.fileLabels[f]).join(', ')],
+    ['License', `${s.name} (non-exclusive)`],
+    ['Files', s.files],
     ['Price paid', `${(price / 100).toFixed(2)} ${String(currency || 'eur').toUpperCase()}`],
   ];
   for (const [k, v] of rows) {
@@ -277,16 +246,15 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   }
   space(6);
   write('USAGE RIGHTS', { f: bold, size: 9, color: accent, gap: 6 });
-  [
-    `Audio streams: ${t.terms.streams}`,
-    `Sales and downloads: ${t.terms.sales}`,
-    `Music videos: ${t.terms.videos}`,
-    `Live performances: ${t.terms.performances}`,
-    `Radio broadcasting: ${t.terms.radio}`,
-  ].forEach((l) => write(`•  ${l}`, { gap: 5 }));
+  s.usage.forEach((l) => write(`•  ${l}`, { gap: 5 }));
   space(8);
   write('TERMS', { f: bold, size: 9, color: accent, gap: 6 });
-  termsFor(tier, t, beat.producer).forEach((p, i) => write(`${i + 1}. ${p}`, { gap: 6 }));
+  s.terms.forEach((p, i) => write(`${i + 1}. ${p}`, { gap: 6 }));
+  if (s.clauses && s.clauses.length) {
+    space(8);
+    write('ADDITIONAL TERMS FROM THE PRODUCER', { f: bold, size: 9, color: accent, gap: 6 });
+    s.clauses.forEach((c, i) => write(`${String.fromCharCode(65 + i)}. ${c}`, { gap: 6 }));
+  }
   space(10);
   write('This document was issued automatically at purchase and is valid without signature.', { size: 8.5, color: muted });
   return Buffer.from(await doc.save());
@@ -308,11 +276,13 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     const { beat, tier } = items[i];
     const licenseId = licenseIdFor(session.id, i);
     await sql`
-      INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id)
-      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id})
+      INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id, license_snapshot)
+      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.producer))}::jsonb)
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
-    delivered.push({ beat, tier, licenseId, files: await filesFor(beat, tier, email) });
+    // The snapshot actually stored (a retried webhook keeps the first one).
+    const [saved] = await sql`SELECT license_snapshot FROM beat_purchases WHERE stripe_session_id = ${session.id} AND beat_id = ${beat.id}`;
+    delivered.push({ beat, tier, licenseId, snap: saved && saved.license_snapshot, files: await filesFor(beat, tier, email) });
   }
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
   const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
@@ -338,7 +308,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   const attachments = [];
   for (const d of delivered) {
     try {
-      const pdf = await licensePdf({ licenseId: d.licenseId, beat: d.beat, tier: d.tier, buyerName, buyerEmail: email, date, price: priceOf(d.beat, d.tier), currency });
+      const pdf = await licensePdf({ licenseId: d.licenseId, beat: d.beat, tier: d.tier, buyerName, buyerEmail: email, date, price: priceOf(d.beat, d.tier), currency, snap: d.snap });
       attachments.push({ filename: `License-${d.beat.title.replace(/[^\w-]+/g, '-')}-${d.licenseId}.pdf`, content: pdf });
     } catch (err) {
       console.error('license pdf failed:', d.licenseId, err);
@@ -399,7 +369,7 @@ async function handleLicense(req, res) {
     if (!beat || !LICENSES.tiers[row.tier]) { res.status(404).json({ error: 'This track is no longer available.' }); return; }
     const pdf = await licensePdf({
       licenseId: row.license_id, beat, tier: row.tier, buyerName: row.buyer_name || '', buyerEmail: row.email,
-      date: new Date(row.created_at).toISOString().slice(0, 10), price: row.price_cents || priceOf(beat, row.tier), currency: row.currency || 'eur',
+      date: new Date(row.created_at).toISOString().slice(0, 10), price: row.price_cents || priceOf(beat, row.tier), currency: row.currency || 'eur', snap: row.license_snapshot,
     });
     const name = `${beat.title} - ${LICENSES.tiers[row.tier].name} - ${row.license_id}.pdf`.replace(/[^\w .()-]+/g, '');
     res.setHeader('Content-Type', 'application/pdf');

@@ -50,6 +50,14 @@
       "destination": "/api/tickets?action=seo-page&kind=genre&slug=:slug"
     },
     {
+      "source": "/mood/:slug",
+      "destination": "/api/tickets?action=seo-page&kind=mood&slug=:slug"
+    },
+    {
+      "source": "/tag/:slug",
+      "destination": "/api/tickets?action=seo-page&kind=tag&slug=:slug"
+    },
+    {
       "source": "/sitemap-store.xml",
       "destination": "/api/tickets?action=seo-page&kind=sitemap"
     },

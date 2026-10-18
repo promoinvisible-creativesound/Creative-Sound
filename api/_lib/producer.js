@@ -250,7 +250,7 @@ function validateDetails(body, files) {
   const mood = clean(body.mood, 40);
   const list = (v, n, len) => (Array.isArray(v) ? v : String(v || '').split(','))
     .map((t) => clean(t, len).replace(/^#/, '')).filter(Boolean).slice(0, n);
-  const tags = [...new Set(list(body.tags, 8, 24).map((t) => t.toLowerCase()))];
+  const tags = [...new Set(list(body.tags, require('../../data/tags.json').maxTotal || 12, 24).map((t) => t.toLowerCase()))];
   const typeBeat = list(body.typeBeat, 3, 40);
   const about = String(body.about || '').trim().slice(0, 600);
 

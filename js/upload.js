@@ -32,7 +32,7 @@
   const PRICE_HINTS = { mp3: '29.99', wav: '49.99', trackout: '99.99', project: '199.99' };
   const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const GENRES = ['Trap', 'Hip Hop', 'Drill', 'UK Drill', 'R&B', 'Boom Bap', 'Pop', 'Afrobeat', 'Amapiano', 'Reggaeton', 'Latin', 'Dancehall', 'Lo-fi', 'Phonk', 'Rage', 'Plugg', 'Jersey Club', 'Hyperpop', 'Cloud Rap', 'Emo Rap', 'UK Garage', 'Grime', 'House', 'Deep House', 'Tech House', 'Afro House', 'Techno', 'Drum & Bass', 'Dubstep', 'Future Bass', 'EDM', 'Synthwave', 'Disco', 'Funk', 'Brazilian Funk', 'Soul', 'Neo Soul', 'Gospel', 'Jazz', 'Rock', 'Indie', 'Ambient', 'Cinematic', 'Reggae', 'Country', 'Other'];
-  const MOODS = ['Dark', 'Chill', 'Aggressive', 'Sad', 'Happy', 'Energetic', 'Romantic', 'Dreamy', 'Epic', 'Bouncy'];
+  const MOODS = ['Aggressive', 'Angry', 'Anxious', 'Bouncy', 'Calm', 'Chill', 'Cold', 'Confident', 'Dark', 'Dramatic', 'Dreamy', 'Eerie', 'Emotional', 'Energetic', 'Epic', 'Euphoric', 'Groovy', 'Happy', 'Heartbroken', 'Hopeful', 'Hype', 'Hypnotic', 'Inspiring', 'Intense', 'Lonely', 'Melancholic', 'Motivational', 'Mysterious', 'Nostalgic', 'Party', 'Peaceful', 'Playful', 'Powerful', 'Relaxed', 'Romantic', 'Sad', 'Sexy', 'Smooth', 'Spiritual', 'Triumphant', 'Uplifting', 'Warm'];
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmtSize = (b) => (b >= MB ? `${(b / MB).toFixed(b >= 10 * MB ? 0 : 1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -64,6 +64,8 @@
   let tagsReady;
   const tagsLoaded = new Promise((r) => { tagsReady = r; });
   let STANDARD = [];
+  let GROUPS = [];
+  const groupOf = new Map();
   const picked = new Set(); // suggested (standard) tags
   const own = new Set();    // producer's own tags
   const tagInput = $('#up-taginput');
@@ -82,16 +84,27 @@
     label.classList.toggle('is-ok', n >= TAG_RULES.min);
     tagInput.placeholder = total() >= TAG_RULES.maxTotal ? 'Tag limit reached' : (total() ? 'Add another tag' : 'Type a tag, e.g. trap, dark, 808');
     tagInput.disabled = total() >= TAG_RULES.maxTotal;
+    paintBrowse();
+  };
+  // "Browse all tags": every standard tag by group, tap to add or remove.
+  const paintBrowse = () => {
+    const box = $('#up-tagbrowse-groups');
+    if (!box || !GROUPS.length) return;
+    const full = total() >= TAG_RULES.maxTotal;
+    box.innerHTML = GROUPS.map((g) => `<div class="up-tagbrowse-group"><b>${esc(g.name)}</b><div>${g.tags.map((t) => {
+      const on = picked.has(t);
+      return `<button type="button" class="up-tagpick${on ? ' is-on' : ''}" data-pick="${esc(t)}" aria-pressed="${on}"${!on && full ? ' disabled' : ''}>${esc(t)}</button>`;
+    }).join('')}</div></div>`).join('');
   };
   const closeSuggest = () => { suggestEl.hidden = true; tagInput.setAttribute('aria-expanded', 'false'); active = -1; };
   const paintSuggest = () => {
     const q = normTag(tagInput.value);
     const free = STANDARD.filter((t) => !picked.has(t));
-    options = (q ? [...free.filter((t) => t.startsWith(q)), ...free.filter((t) => !t.startsWith(q) && t.includes(q))] : free).slice(0, 8);
+    options = (q ? [...free.filter((t) => t.startsWith(q)), ...free.filter((t) => !t.startsWith(q) && t.includes(q))] : free).slice(0, 12);
     const canOwn = q && !STANDARD.includes(q) && !own.has(q) && own.size < TAG_RULES.maxCustom;
     if (!options.length && !canOwn) { closeSuggest(); return; }
     active = options.length ? 0 : -1;
-    suggestEl.innerHTML = options.map((t, k) => `<li role="option" id="up-sg-${k}" data-tag="${esc(t)}" class="${k === active ? 'is-active' : ''}" aria-selected="${k === active}">${esc(t)}<small>Suggested</small></li>`).join('')
+    suggestEl.innerHTML = options.map((t, k) => `<li role="option" id="up-sg-${k}" data-tag="${esc(t)}" class="${k === active ? 'is-active' : ''}" aria-selected="${k === active}">${esc(t)}<small>${esc(groupOf.get(t) || 'Suggested')}</small></li>`).join('')
       + (canOwn ? `<li role="option" class="is-own" data-own="${esc(q)}">Add “${esc(q)}” as your own tag<small>${TAG_RULES.maxCustom - own.size} left</small></li>` : '');
     suggestEl.hidden = false;
     tagInput.setAttribute('aria-expanded', 'true');
@@ -108,9 +121,12 @@
     closeSuggest();
     tagInput.focus();
   };
-  fetch('data/tags.json?v=2').then((r) => r.json()).then((cfg) => {
+  fetch('data/tags.json?v=3').then((r) => r.json()).then((cfg) => {
     TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
     STANDARD = cfg.groups.flatMap((g) => g.tags);
+    GROUPS = cfg.groups;
+    cfg.groups.forEach((g) => g.tags.forEach((t) => groupOf.set(t, g.name)));
+    $('#up-tagbrowse-n').textContent = String(STANDARD.length);
     tagsReady();
     syncTags();
   }).catch(() => {});
@@ -148,6 +164,12 @@
     if (!li) return;
     ev.preventDefault();
     if (li.dataset.tag) addTag(li.dataset.tag); else if (li.dataset.own) addTag(li.dataset.own, true);
+  });
+  $('#up-tagbrowse').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-pick]');
+    if (!b) return;
+    const t = b.dataset.pick;
+    if (picked.has(t)) { picked.delete(t); syncTags(); refresh(); } else addTag(t);
   });
   $('#up-tagbox').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-untag]');

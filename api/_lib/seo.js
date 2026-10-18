@@ -2,6 +2,8 @@
 // engines read the full list without running any script:
 //   /type-beat/<slug>   "Travis Scott Type Beats" (from each track's type beat field)
 //   /genre/<slug>       "Trap Beats" (from the track genre)
+//   /mood/<slug>        "Dark Beats" (from the track mood)
+//   /tag/<slug>         "808 Beats" (from the track tags; noindex under 2 tracks)
 //   /type-beats         hub: every type beat and genre with tracks
 //   /sitemap-store.xml  tracks, these pages and producer storefronts
 // The page shell (header, footer, styles) is artist.html, read at runtime so
@@ -46,6 +48,12 @@ function groups(list, pick) {
 }
 const typeGroups = (list) => groups(list, (b) => b.typeBeat || []);
 const genreGroups = (list) => groups(list, (b) => [b.genre]);
+const moodGroups = (list) => groups(list, (b) => [b.mood]);
+const tagGroups = (list) => groups(list, (b) => b.tags || []);
+// Tags are stored lowercase; show them the way people search them.
+const TAG_NAMES = { rnb: 'R&B', 'r&b pop': 'R&B Pop', 'lo-fi': 'Lo-Fi', 'lofi hip hop': 'Lofi Hip Hop', edm: 'EDM', 'k-pop': 'K-Pop', 'uk drill': 'UK Drill', 'uk garage': 'UK Garage', 'ny drill': 'NY Drill', tiktok: 'TikTok', youtube: 'YouTube', 'instagram reels': 'Instagram Reels', 'g-funk': 'G-Funk', 'hi-hats': 'Hi-Hats', 'rolling hi-hats': 'Rolling Hi-Hats', pluggnb: 'PluggnB' };
+const tagName = (t) => TAG_NAMES[t] || String(t).replace(/(^|[\s-])([a-z])/g, (m, a, c) => a + c.toUpperCase());
+const THIN = 2;
 
 /* --------------------------------- Markup --------------------------------- */
 const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
@@ -178,9 +186,37 @@ function renderGenre(g, all) {
   });
 }
 
+function renderFacet(kind, g, all) {
+  const name = kind === 'tag' ? tagName(g.name) : g.name;
+  const f = facts(g.tracks);
+  const title = `${name} Beats`;
+  const desc = `${plural(g.tracks.length, `${name.toLowerCase()} beat`)} from independent producers${f.bpm ? `, ${f.bpm}` : ''}. Preview and license instantly${f.from ? ` from ${f.from}` : ''}: MP3, WAV, stems or project files.`;
+  // A tag that is also a genre or mood (trap, dark…) points search engines to that page.
+  const main = kind === 'tag' ? (genreGroups(all).has(g.slug) ? 'genre' : moodGroups(all).has(g.slug) ? 'mood' : null) : null;
+  const canonical = `${SITE}/${main || kind}/${g.slug}`;
+  const crumbs = [['Tracks', '/beats.html'], [kind === 'tag' ? 'Tags' : 'Moods', '/type-beats'], [name, `/${kind}/${g.slug}`]];
+  const faq = [
+    [`Can I use these ${name.toLowerCase()} beats commercially?`, LICENSE_A],
+    ['Can I listen before buying?', PREVIEW_A],
+  ];
+  const source = kind === 'tag' ? tagGroups(all) : moodGroups(all);
+  const others = [...source.values()].filter((x) => x.slug !== g.slug && (kind !== 'tag' || x.tracks.length >= THIN)).sort((a, b) => b.tracks.length - a.tracks.length).slice(0, 30)
+    .map((x) => ({ ...x, name: kind === 'tag' ? tagName(x.name) : x.name }));
+  const intro = `${plural(g.tracks.length, 'track')} ${kind === 'tag' ? `tagged ${esc(name)}` : `with a ${esc(name.toLowerCase())} mood`}${f.producers > 1 ? ` from ${f.producers} producers` : ''}${f.bpm ? `, ${esc(f.bpm)}` : ''}. Press play to preview, then license the one you like${f.from ? ` from ${esc(f.from)}` : ''}.`;
+  let html = page({
+    title: `${title} for Sale`, desc, canonical, h1: title, kicker: kind === 'tag' ? 'Tag' : 'Mood', intro, crumbs,
+    body: listingBody(g, all, others, kind, kind === 'tag' ? 'More tags' : 'More moods', faq, 'Producer?'),
+    ld: ldFor({ name: title, canonical, desc, list: g.tracks, crumbs, faq }),
+  });
+  if (kind === 'tag' && g.tracks.length < THIN) html = html.replace('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="robots" content="noindex,follow">');
+  return html;
+}
+
 function renderHub(all) {
   const types = [...typeGroups(all).values()].sort((a, b) => b.tracks.length - a.tracks.length || a.name.localeCompare(b.name));
   const genres = [...genreGroups(all).values()].sort((a, b) => b.tracks.length - a.tracks.length);
+  const moods = [...moodGroups(all).values()].sort((a, b) => b.tracks.length - a.tracks.length);
+  const tagsList = [...tagGroups(all).values()].filter((x) => x.tracks.length >= THIN).sort((a, b) => b.tracks.length - a.tracks.length).slice(0, 80).map((x) => ({ ...x, name: tagName(x.name) }));
   const latest = all.slice().sort((a, b) => String(b.released).localeCompare(String(a.released))).slice(0, 12);
   const canonical = `${SITE}/type-beats`;
   const crumbs = [['Tracks', '/beats.html'], ['Type beats and genres', '/type-beats']];
@@ -190,6 +226,8 @@ function renderHub(all) {
     intro: `${plural(all.length, 'track')} from independent producers, grouped by style. Pick a sound, press play, license the one you like.`,
     body: `
     ${genres.length ? `<section class="pf-section" aria-labelledby="seo-genres-title"><h2 id="seo-genres-title">Genres</h2><div class="seo-chips">${chips(genres, 'genre')}</div></section>` : ''}
+    ${moods.length ? `<section class="pf-section" aria-labelledby="seo-moods-title"><h2 id="seo-moods-title">Moods</h2><div class="seo-chips">${chips(moods, 'mood')}</div></section>` : ''}
+    ${tagsList.length ? `<section class="pf-section" aria-labelledby="seo-tags-title"><h2 id="seo-tags-title">Tags</h2><div class="seo-chips">${chips(tagsList, 'tag')}</div></section>` : ''}
     ${types.length ? `<section class="pf-section" aria-labelledby="seo-types-title"><h2 id="seo-types-title">Type beats</h2><div class="seo-chips">${chips(types, 'type-beat')}</div></section>` : ''}
     <section class="pf-section" aria-labelledby="seo-latest-title"><h2 id="seo-latest-title">Latest tracks</h2><div class="sf-grid">${latest.map(card).join('')}</div></section>
     <p class="seo-sell">Producer? <a href="/signup.html?role=producer">Sell your tracks on Creative Sound</a></p>`,
@@ -207,6 +245,8 @@ function sitemap(all, handles) {
     [`${SITE}/type-beats`, '0.7'],
     ...[...genreGroups(all).values()].map((g) => [`${SITE}/genre/${g.slug}`, '0.7']),
     ...[...typeGroups(all).values()].map((g) => [`${SITE}/type-beat/${g.slug}`, '0.7']),
+    ...[...moodGroups(all).values()].map((g) => [`${SITE}/mood/${g.slug}`, '0.6']),
+    ...[...tagGroups(all).values()].filter((g) => g.tracks.length >= THIN && !genreGroups(all).has(g.slug) && !moodGroups(all).has(g.slug)).map((g) => [`${SITE}/tag/${g.slug}`, '0.5']),
     ...handles.map((h) => [`${SITE}/@${encodeURIComponent(h)}`, '0.6']),
     ...all.map((b) => [`${SITE}${trackUrl(b)}`, '0.8', b.released]),
   ];
@@ -242,6 +282,8 @@ async function handleSeo(req, res) {
     if (kind === 'hub') html = renderHub(all);
     if (kind === 'type') { const g = typeGroups(all).get(s); if (g) html = renderType(g, all); }
     if (kind === 'genre') { const g = genreGroups(all).get(s); if (g) html = renderGenre(g, all); }
+    if (kind === 'mood') { const g = moodGroups(all).get(s); if (g) html = renderFacet('mood', g, all); }
+    if (kind === 'tag') { const g = tagGroups(all).get(s); if (g) html = renderFacet('tag', g, all); }
     if (!html) { notFound(res, all); return; }
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

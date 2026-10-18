@@ -229,7 +229,8 @@ async function handlePublic(req, res) {
     let tracks = [];
     if (row.role === 'producer') {
       const { liveBeats, publicBeat } = require('./catalogue');
-      tracks = (await liveBeats()).filter((b) => b.source === 'producer' && b._userId === row.id).map(publicBeat);
+      const h = String(row.handle || '').toLowerCase();
+      tracks = (await liveBeats()).filter((b) => b.source === 'producer' && (b._userId === row.id || (h && (b.coProducers || []).some((c) => c.handle === h)))).map(publicBeat);
     }
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
     res.status(200).json({ profile: { ...shape(row), uid: row.id }, tracks });

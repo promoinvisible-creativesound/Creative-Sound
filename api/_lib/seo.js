@@ -66,7 +66,7 @@ const card = (b, i) => `
         </div>
         <div class="sf-card-body">
           <a href="${trackUrl(b)}"><b>${esc(b.title)}</b></a>
-          <span>${b.producerHandle ? `<a href="/@${esc(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)} · ${esc(meta(b))}</span>
+          <span>${b.producerHandle ? `<a href="/@${esc(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${(b.coProducers || []).map((c) => ` &amp; ${c.handle ? `<a href="/@${esc(c.handle)}">${esc(c.name)}</a>` : esc(c.name)}`).join('')} · ${esc(meta(b))}</span>
           ${Number.isFinite(minPrice(b)) ? `<em>From ${euro(minPrice(b))}</em>` : ''}
         </div>
       </article>`;
@@ -123,7 +123,7 @@ function ldFor({ name, canonical, desc, list, crumbs, faq }) {
       '@context': 'https://schema.org', '@type': 'CollectionPage', name, url: canonical, description: desc,
       mainEntity: {
         '@type': 'ItemList', numberOfItems: list.length,
-        itemListElement: list.map((b, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}${trackUrl(b)}`, name: `${b.title} by ${b.producer}` })),
+        itemListElement: list.map((b, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}${trackUrl(b)}`, name: `${b.title} by ${b.credit || b.producer}` })),
       },
     },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[0], item: `${SITE}${c[1]}` })) },

@@ -196,7 +196,7 @@ const licenseIdFor = (sessionId, index) => `CS-B-${String(sessionId).slice(-10).
 // producers could set their own terms) were sold on the default terms.
 async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, price, currency, snap }) {
   const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
-  const s = snap && snap.v ? snap : require('./license-config').snapshot(tier, null, beat.producer);
+  const s = snap && snap.v ? snap : require('./license-config').snapshot(tier, null, beat.credit || beat.producer);
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -233,7 +233,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   write(`License ID ${licenseId} · ${date}`, { size: 9, color: muted, gap: 14 });
 
   const rows = [
-    ['Producer', beat.producer],
+    ['Producer', s.producer || beat.credit || beat.producer],
     ['Licensee', `${buyerName ? `${buyerName}, ` : ''}${buyerEmail}`],
     ['Beat', `"${beat.title}" · ${beat.bpm} BPM · ${beat.key}`],
     ['License', `${s.name} (non-exclusive)`],
@@ -277,7 +277,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     const licenseId = licenseIdFor(session.id, i);
     await sql`
       INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id, license_snapshot)
-      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.producer))}::jsonb)
+      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer))}::jsonb)
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
     // The snapshot actually stored (a retried webhook keeps the first one).

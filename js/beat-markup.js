@@ -51,7 +51,7 @@
         </div>
         <div class="bp-info">
           <h1 class="bp-title">${esc(b.title)}</h1>
-          <p class="bp-producer">${b.producerHandle ? `<a href="/@${encodeURIComponent(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${verified ? VERIFIED : ''}${b.contact ? `<span class="bp-producer-links">${b.contact.instagram ? `<a href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(b.producer)} on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}${b.contact.email ? `<a href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email ${esc(b.producer)}" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}</span>` : ''}</p>
+          <p class="bp-producer">${b.producerHandle ? `<a href="/@${encodeURIComponent(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${verified ? VERIFIED : ''}${(b.coProducers || []).map((c) => `<span class="bp-amp">&amp;</span>${c.handle ? `<a href="/@${encodeURIComponent(c.handle)}">${esc(c.name)}</a>` : esc(c.name)}`).join('')}${b.contact ? `<span class="bp-producer-links">${b.contact.instagram ? `<a href="https://instagram.com/${encodeURIComponent(b.contact.instagram)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(b.producer)} on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>` : ''}${b.contact.email ? `<a href="mailto:${esc(b.contact.email)}?subject=${encodeURIComponent(`About "${b.title}" on Creative Sound`)}" aria-label="Email ${esc(b.producer)}" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></a>` : ''}</span>` : ''}</p>
           <ul class="bp-facts">${facts.map(([k, v]) => `<li><span>${k}</span><b>${(k === 'Genre' || k === 'Mood') && seo && v ? `<a href="/${k.toLowerCase()}/${slugOf(v)}">${esc(v)}</a>` : esc(v)}</b></li>`).join('')}</ul>
           ${types.length || (b.tags && b.tags.length) ? `<div class="bp-tags">${types.map((t) => `<a class="bp-type" href="/type-beat/${slugOf(t)}">${esc(t)} type beat</a>`).join('')}${(b.tags || []).map((t) => `<a href="${seo ? `/tag/${slugOf(t)}` : 'beats.html'}">#${esc(t)}</a>`).join('')}</div>` : ''}
           <div class="bp-actions">
@@ -93,7 +93,7 @@
           </div>
           <div class="bp-usage-box" aria-live="polite">
             <h3 id="bp-usage-title"></h3>
-            <p>Non-exclusive. Credit "${esc(b.producer)}". Full terms in the license PDF you receive by email.</p>
+            <p>Non-exclusive. Credit "${esc(b.credit || b.producer)}". Full terms in the license PDF you receive by email.</p>
             <ul class="bp-usage" id="bp-usage"></ul>
           </div>
         </div>

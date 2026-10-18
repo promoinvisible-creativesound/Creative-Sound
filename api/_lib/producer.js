@@ -80,6 +80,8 @@ function ensureTables() {
       // stays as it is meanwhile.
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS rev_files JSONB NOT NULL DEFAULT '{}'`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes JSONB`;
+      // Co-producers credited on the track: [{ name, handle }] (handle = a Creative Sound account, optional).
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS co_producers JSONB NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_status TEXT`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_note TEXT`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_at TIMESTAMPTZ`;
@@ -252,6 +254,11 @@ function validateDetails(body, files) {
     .map((t) => clean(t, len).replace(/^#/, '')).filter(Boolean).slice(0, n);
   const tags = [...new Set(list(body.tags, require('../../data/tags.json').maxTotal || 12, 24).map((t) => t.toLowerCase()))];
   const typeBeat = list(body.typeBeat, 3, 40);
+  // Up to 2 co-producers: a name, and optionally their @username here.
+  const coProducers = (Array.isArray(body.coProducers) ? body.coProducers : []).map((c) => ({
+    name: clean(c && c.name, 60),
+    handle: clean(c && c.handle, 31).toLowerCase().replace(/^@/, '') || null,
+  })).filter((c) => c.name).slice(0, 2);
   const about = String(body.about || '').trim().slice(0, 600);
 
   // Tags: at least TAGS.min from the standard list (data/tags.json) so the
@@ -262,6 +269,8 @@ function validateDetails(body, files) {
   if (stdCount < TAGS.min) return { error: `Pick at least ${TAGS.min} tags from the list.` };
   if (tags.length - stdCount > TAGS.maxCustom) return { error: `Up to ${TAGS.maxCustom} tags of your own.` };
   if (!producerName) return { error: 'Add your producer name.' };
+  if (coProducers.some((c) => c.handle && !/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$/.test(c.handle))) return { error: 'Co-producer username: letters, numbers, dots, dashes or underscores.' };
+  if (coProducers.some((c) => c.name.toLowerCase() === producerName.toLowerCase())) return { error: 'The co-producer can\'t be you. Add the other producer\'s name.' };
   if (!title) return { error: 'Give the beat a title.' };
   if (!Number.isInteger(bpm) || bpm < 40 || bpm > 250) return { error: 'BPM must be a whole number between 40 and 250.' };
   if (!key) return { error: 'Choose the key.' };
@@ -286,7 +295,18 @@ function validateDetails(body, files) {
     prices[tier] = cents;
   }
   if (!Object.keys(prices).length) return { error: 'Set a price for at least one license.' };
-  return { data: { producerName, title, bpm, key, genre, mood, tags, typeBeat, about, prices } };
+  return { data: { producerName, coProducers, title, bpm, key, genre, mood, tags, typeBeat, about, prices } };
+}
+
+// Co-producer usernames must be real accounts (their storefront lists the track).
+async function coProducerError(list) {
+  const handles = (list || []).map((c) => c.handle).filter(Boolean);
+  if (!handles.length) return '';
+  await require('./profile').ensureColumns();
+  const rows = await sql`SELECT lower(handle) AS h FROM users WHERE lower(handle) = ANY(${handles})`;
+  const found = new Set(rows.map((r) => r.h));
+  const missing = handles.filter((h) => !found.has(h));
+  return missing.length ? `No Creative Sound account is called @${missing[0]}. Check the username or leave it empty.` : '';
 }
 
 // POST the details: the draft becomes "pending" and the owner gets an email.
@@ -303,6 +323,8 @@ async function submitChanges(session, body, res) {
   const merged = { ...(live.files || {}), ...revFiles };
   const { data, error } = validateDetails(body, merged);
   if (error) { res.status(400).json({ error }); return; }
+  const coError = await coProducerError(data.coProducers);
+  if (coError) { res.status(400).json({ error: coError }); return; }
   const sizes = await Promise.all(Object.entries(revFiles).map(async ([kind, f]) => [kind, await dropbox.fileSize(f.path)]));
   for (const [kind, size] of sizes) {
     if (size == null) { res.status(400).json({ error: `The new ${kind} file didn't finish uploading. Please upload it again.` }); return; }
@@ -375,10 +397,12 @@ async function handleSubmit(req, res) {
       const contactError = await require('./profile').saveContact(session.uid, body.contactInstagram, body.contactEmail);
       if (contactError) { res.status(400).json({ error: contactError }); return; }
     }
+    const coError = await coProducerError(data.coProducers);
+    if (coError) { res.status(400).json({ error: coError }); return; }
     await sql`UPDATE users SET producer_name = ${data.producerName} WHERE id = ${session.uid}`;
     await sql`
       UPDATE beat_submissions SET
-        status = 'pending', producer_name = ${data.producerName}, title = ${data.title}, bpm = ${data.bpm},
+        status = 'pending', producer_name = ${data.producerName}, co_producers = ${JSON.stringify(data.coProducers)}::jsonb, title = ${data.title}, bpm = ${data.bpm},
         musical_key = ${data.key}, genre = ${data.genre}, mood = ${data.mood},
         tags = ${JSON.stringify(data.tags)}::jsonb, type_beat = ${JSON.stringify(data.typeBeat)}::jsonb,
         about = ${data.about || null}, prices = ${JSON.stringify(data.prices)}::jsonb,
@@ -393,7 +417,7 @@ async function handleSubmit(req, res) {
       const prices = Object.entries(data.prices).map(([t, c]) => `${LICENSES.tiers[t].name} €${(c / 100).toFixed(2)}`).join(' · ');
       const site = process.env.SITE_URL || 'https://creativesound.io';
       const facts = [
-        ['Producer', `${data.producerName}`],
+        ['Producer', [data.producerName, ...data.coProducers.map((c) => c.name)].join(' & ')],
         ['Tempo · key', `${data.bpm} BPM · ${data.key}`],
         ['Genre · mood', `${data.genre} · ${data.mood}`],
         ['Licenses', prices],
@@ -464,7 +488,7 @@ async function handleSubmissions(req, res) {
     const [user] = await sql`SELECT producer_name, producer_verified, verify_requested_at FROM users WHERE id = ${session.uid}`;
     const rows = await sql`
       SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at, changes_status, changes_note, changes_at,
-        producer_name, tags, type_beat, about, files, rev_files
+        producer_name, co_producers, tags, type_beat, about, files, rev_files
       FROM beat_submissions
       WHERE user_id = ${session.uid} AND status <> 'draft'
       ORDER BY submitted_at DESC NULLS LAST, id DESC
@@ -481,7 +505,7 @@ async function handleSubmissions(req, res) {
         storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null,
         changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
         // For the edit page
-        producerName: r.producer_name, tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '', freeDownload: !!r.free_download,
+        producerName: r.producer_name, coProducers: r.co_producers || [], tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '', freeDownload: !!r.free_download,
         files: Object.fromEntries(Object.entries({ ...(r.files || {}) }).filter(([k]) => k !== 'tagged').map(([k, f]) => [k, { name: f.name, size: f.size }])),
       })),
     });
@@ -544,7 +568,7 @@ async function handleAdminList(req, res) {
         }
       }
       out.push({
-        id: r.id, status: r.status, email: r.email, producerName: r.producer_name, title: r.title, bpm: r.bpm,
+        id: r.id, status: r.status, email: r.email, producerName: [r.producer_name, ...(r.co_producers || []).map((c) => c.name)].join(' & '), title: r.title, bpm: r.bpm,
         key: r.musical_key, genre: r.genre, mood: r.mood, tags: r.tags, typeBeat: r.type_beat, about: r.about,
         prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         userId: r.user_id, producerVerified: !!r.producer_verified,
@@ -591,7 +615,7 @@ async function handleAdminReview(req, res) {
         if (cur.changes.files && cur.changes.files.artwork) accent = cur.changes.accent || null;
         await sql`
           UPDATE beat_submissions SET
-            producer_name = ${d.producerName}, title = ${d.title}, bpm = ${d.bpm}, musical_key = ${d.key}, genre = ${d.genre}, mood = ${d.mood},
+            producer_name = ${d.producerName}, co_producers = ${JSON.stringify(d.coProducers || [])}::jsonb, title = ${d.title}, bpm = ${d.bpm}, musical_key = ${d.key}, genre = ${d.genre}, mood = ${d.mood},
             tags = ${JSON.stringify(d.tags)}::jsonb, type_beat = ${JSON.stringify(d.typeBeat)}::jsonb, about = ${d.about || null},
             prices = ${JSON.stringify(d.prices)}::jsonb, files = ${JSON.stringify(files)}::jsonb, accent = ${accent},
             changes = NULL, changes_status = NULL, changes_note = ${cnote || null}, rev_files = '{}'::jsonb, updated_at = now()

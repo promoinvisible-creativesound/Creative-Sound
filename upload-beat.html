@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=141">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=43">
+<link rel="stylesheet" href="css/upload.css?v=44">
 </head>
 <body>
 <div id="grain"></div>
@@ -203,7 +203,7 @@
           <div><h2 id="up-s2">Details</h2><p>How the track shows up in the store and in search.</p></div>
         </div>
         <div class="up-grid">
-          <label class="up-field"><span>Producer name</span><input name="producerName" maxlength="60" autocomplete="nickname" required></label>
+          <div class="up-field up-producers"><label for="up-producer-name"><span>Producer name</span></label><input id="up-producer-name" name="producerName" maxlength="60" autocomplete="nickname" required><div class="up-co-list" id="up-co-list"></div><button type="button" class="up-co-add" id="up-co-add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add co-producer</button></div>
           <label class="up-field"><span>Track title</span><input name="title" maxlength="80" required></label>
           <label class="up-field up-field-s"><span>BPM</span><input name="bpm" type="number" inputmode="numeric" min="40" max="250" required></label>
           <label class="up-field up-field-s"><span>Key</span><select name="key" required></select></label>
@@ -352,7 +352,7 @@
 <script src="js/cover-crop.js?v=2"></script>
 <script src="js/select-dd.js?v=1"></script>
 <script src="js/producer-tag.js?v=1"></script>
-<script src="js/upload.js?v=22"></script>
+<script src="js/upload.js?v=23"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -34,6 +34,9 @@ function toBeat(row) {
     producer: row.producer_name,
     verified: !!row.producer_verified,
     producerHandle: row.producer_handle || null,
+    // Co-producers and the full credit line ("Invisible & Mike").
+    coProducers: Array.isArray(row.co_producers) ? row.co_producers : [],
+    credit: [row.producer_name, ...(Array.isArray(row.co_producers) ? row.co_producers : []).map((c) => c.name)].join(' & '),
     // Contact for private requests, only what the producer chose to share.
     contact: row.producer_instagram || row.producer_email ? { instagram: row.producer_instagram || null, email: row.producer_email || null } : null,
     bpm: row.bpm,

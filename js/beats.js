@@ -82,7 +82,7 @@
   // A producer upload carries its own badge (set by the owner on the review
   // page), so nobody gets it by picking a verified producer's name.
   const beatVerified = (b) => (typeof b.verified === 'boolean' ? b.verified : isVerified(b.producer));
-  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${beatVerified(b) ? VERIFIED : ''}</span>`;
+  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${beatVerified(b) ? VERIFIED : ''}${(b.coProducers || []).map((c) => ` <i class="bt-amp">&amp;</i> ${esc(c.name)}`).join('')}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
   // A tier as this track sells it: the producer's own limits (b.license, from
@@ -488,7 +488,7 @@
     if (skip !== 'added' && state.added && !addedWithin(b, state.added)) return false;
     for (const t of state.tags) if (!(b.tags || []).includes(t)) return false;
     if (state.q) {
-      const hay = [b.title, b.producer, b.genre, b.mood, b.key, ...(b.tags || []), ...(b.typeBeat || [])].join(' ').toLowerCase();
+      const hay = [b.title, b.producer, ...(b.coProducers || []).map((c) => c.name), b.genre, b.mood, b.key, ...(b.tags || []), ...(b.typeBeat || [])].join(' ').toLowerCase();
       if (!state.q.split(/\s+/).every((w) => hay.includes(w))) return false;
     }
     return true;
@@ -766,7 +766,7 @@
       $('#bp-usage-title').innerHTML = `${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? ' <span class="bt-tier-pill">Unlimited</span>' : ''}`;
       $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('')
         + (clausesOf(beat).length ? `<li class="bp-usage-clauses"><b>Producer's terms</b><ol>${clausesOf(beat).map((c) => `<li>${esc(c)}</li>`).join('')}</ol></li>` : '');
-      $('.bp-tier', beatRoot).forEach((el) => {
+      $$('.bp-tier', beatRoot).forEach((el) => {
         const x = tierOf(beat, el.dataset.tier);
         const nm = $('.bp-tier-name', el);
         if (nm) nm.innerHTML = `${esc(x.unlimited ? x.name.replace(/\s*unlimited$/i, '') : x.name)}${x.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}`;
@@ -2025,7 +2025,7 @@
     const clauses = clausesOf(beat);
     return `<table><thead><tr><th></th>${tiers.map((id) => `<th>${esc(LIC.tiers[id].short)}</th>`).join('')}</tr></thead><tbody>${
       rows.map(([label, fn]) => `<tr><th>${label}</th>${tiers.map((id) => `<td>${esc(fn(tierOf(beat, id)))}</td>`).join('')}</tr>`).join('')
-    }</tbody></table>${clauses.length ? `<div class="bt-clauses"><b>Producer's terms</b><ol>${clauses.map((c) => `<li>${esc(c)}</li>`).join('')}</ol></div>` : ''}<p>Every license is non-exclusive and requires the credit "${esc(beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
+    }</tbody></table>${clauses.length ? `<div class="bt-clauses"><b>Producer's terms</b><ol>${clauses.map((c) => `<li>${esc(c)}</li>`).join('')}</ol></div>` : ''}<p>Every license is non-exclusive and requires the credit "${esc(beat.credit || beat.producer)}". Full terms are in the license PDF you receive after purchase.</p>`;
   };
   const selectTier = (id) => {
     modalTier = id;

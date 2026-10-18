@@ -147,6 +147,7 @@ function snapshot(id, raw, producer) {
   const view = tierView(id, t);
   return {
     v: 1,
+    producer,
     name: view.name,
     unlimited: view.unlimited,
     files: LICENSES.tiers[id].files.map((x) => LICENSES.fileLabels[x]).join(', '),

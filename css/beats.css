@@ -2438,3 +2438,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-clauses ol, .bp-usage-clauses ol{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:5px; font-size:13px; line-height:1.5; color:var(--text-secondary); }
 .bp-usage li.bp-usage-clauses{ display:block; margin-top:6px; padding:12px 14px; border-radius:12px; border:1px solid rgba(232,134,44,0.25); background:rgba(232,134,44,0.06); }
 .bp-usage li.bp-usage-clauses li{ display:list-item; padding:0; border:0; font-size:13px; color:var(--text-secondary); }
+
+/* Co-producers in the credit line */
+.bt-amp{ font-style:normal; opacity:0.6; }
+.bp-amp{ margin:0 6px; opacity:0.55; }

@@ -46,6 +46,37 @@
   const busy = new Set();
   let licenses = null;
 
+  /* ----------------------------- Co-producers ----------------------------- */
+  // Up to 2 more producers credited on the track ("Invisible & Mike"), with
+  // their Creative Sound @username if they have one (the track then shows on
+  // their storefront too).
+  const MAX_CO = 2;
+  const coBox = $('#up-co-list');
+  const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, '') })).filter((c) => c.name);
+  const coSync = () => {
+    $('#up-co-add').hidden = $$('.up-co', coBox).length >= MAX_CO;
+    $$('.up-co', coBox).forEach((row, i) => { $('.up-co-n', row).textContent = `Co-producer${MAX_CO > 1 ? ` ${i + 1}` : ''}`; });
+  };
+  function addCo(c = {}) {
+    if ($$('.up-co', coBox).length >= MAX_CO) return null;
+    const row = document.createElement('div');
+    row.className = 'up-co';
+    row.innerHTML = `
+      <span class="up-co-n"></span>
+      <input data-co="name" maxlength="60" placeholder="Their producer name" aria-label="Co-producer name" value="${esc(c.name || '')}">
+      <span class="up-co-at"><i>@</i><input data-co="handle" maxlength="31" placeholder="username (optional)" aria-label="Co-producer username on Creative Sound" autocapitalize="off" spellcheck="false" value="${esc(c.handle || '')}"></span>
+      <button type="button" class="up-co-x" aria-label="Remove co-producer">×</button>`;
+    coBox.appendChild(row);
+    coSync();
+    return row;
+  }
+  $('#up-co-add').addEventListener('click', () => { const row = addCo(); if (row) $('[data-co="name"]', row).focus(); });
+  coBox.addEventListener('click', (e) => { const x = e.target.closest('.up-co-x'); if (x) { x.closest('.up-co').remove(); coSync(); refresh(); } });
+  coBox.addEventListener('input', (e) => {
+    if (e.target.dataset.co === 'handle' && e.target.value.startsWith('@')) e.target.value = e.target.value.replace(/^@+/, '');
+    refresh();
+  });
+
   /* ------------------------------- Selects -------------------------------- */
   const fill = (name, values, placeholder) => {
     form.elements[name].innerHTML = `<option value="">${placeholder}</option>${values.map((v) => `<option>${esc(v)}</option>`).join('')}`;
@@ -636,7 +667,7 @@
     $$('#up-steps li').forEach((li) => li.classList.toggle('is-ok', !!steps[li.dataset.step]));
 
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
-    $('#up-pv-producer').textContent = val('producerName') || 'Your producer name';
+    $('#up-pv-producer').textContent = [val('producerName') || 'Your producer name', ...coList().map((c) => c.name)].join(' & ');
     $('#up-pv-chips').innerHTML = [bpm ? `${bpm} BPM` : '', val('key'), val('genre')].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('');
     // The producer keeps 80% of every sale (see the Payouts section).
     licenses && licenses.order.forEach((t) => {
@@ -667,6 +698,7 @@
           submissionId,
           editId,
           producerName: val('producerName'),
+          coProducers: coList(),
           title: val('title'),
           bpm: Number(val('bpm')),
           key: val('key'),
@@ -757,6 +789,7 @@
       el.value = v;
       if (el.tagName === 'SELECT') el.dispatchEvent(new Event('change', { bubbles: true }));
     };
+    (t.coProducers || []).forEach((c) => addCo(c));
     set('producerName', t.producerName); set('title', t.title); set('bpm', t.bpm); set('key', t.key); set('genre', t.genre); set('mood', t.mood);
     set('typeBeat', (t.typeBeat || []).join(', ')); set('about', t.about);
     form.elements.freeDownload.checked = !!t.freeDownload;

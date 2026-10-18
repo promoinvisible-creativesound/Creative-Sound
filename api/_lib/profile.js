@@ -31,6 +31,7 @@ function ensureColumns() {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_email TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_name TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_verified BOOLEAN NOT NULL DEFAULT false`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS producer_tag_path TEXT`;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_handle_idx ON users (lower(handle)) WHERE handle IS NOT NULL`;
     })().catch((err) => { ready = null; throw err; });
   }
@@ -147,6 +148,45 @@ async function handleAvatar(req, res) {
   }
 }
 
+// Producer tag: the producer's own short audio tag ("Invisible on the
+// beat"), mixed into store previews between the Creative Sound tags.
+//   GET    /api/profile/producer-tag   -> { url, name } or { url: null }
+//   POST   /api/profile/producer-tag   -> { uploadUrl } for { name, size } (MP3/WAV, max 3 MB)
+//   DELETE /api/profile/producer-tag   -> removes it
+async function handleProducerTag(req, res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  try {
+    await ensureColumns();
+    if (req.method === 'GET') {
+      const [row] = await sql`SELECT producer_tag_path FROM users WHERE id = ${session.uid}`;
+      const path = row && row.producer_tag_path ? String(row.producer_tag_path).split('?v=')[0] : null;
+      res.status(200).json({ url: path && dropbox.configured() ? await dropbox.readLink(path) : null, name: path ? path.split('/').pop() : null });
+      return;
+    }
+    if (req.method === 'DELETE') {
+      await sql`UPDATE users SET producer_tag_path = NULL WHERE id = ${session.uid}`;
+      res.status(200).json({ ok: true });
+      return;
+    }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    if (!dropbox.configured()) { res.status(503).json({ error: "Uploads aren't switched on yet." }); return; }
+    const name = clean(req.body && req.body.name, 120).toLowerCase();
+    const size = Number(req.body && req.body.size);
+    const ext = (name.match(/\.(mp3|wav)$/) || [])[1];
+    if (!ext) { res.status(400).json({ error: 'Use an MP3 or WAV file.' }); return; }
+    if (!Number.isFinite(size) || size <= 0 || size > 3 * MB) { res.status(400).json({ error: 'The tag must be under 3 MB.' }); return; }
+    const path = `/producer-tags/${session.uid}.${ext}`;
+    const uploadUrl = await dropbox.uploadLink(path);
+    await sql`UPDATE users SET producer_tag_path = ${`${path}?v=${Date.now().toString(36)}`} WHERE id = ${session.uid}`;
+    res.status(200).json({ uploadUrl });
+  } catch (err) {
+    console.error('producer tag error:', err);
+    res.status(500).json({ error: 'Could not save your producer tag, please try again.' });
+  }
+}
+
 async function handlePhoto(req, res) {
   const u = clean(req.query && req.query.u, 30).toLowerCase();
   try {
@@ -183,4 +223,4 @@ async function handlePublic(req, res) {
   }
 }
 
-module.exports = { GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };
+module.exports = { handleProducerTag, GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };

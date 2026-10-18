@@ -833,12 +833,14 @@ async function handleAdminTag(req, res) {
     await ensureTables();
     const id = Number((req.body || {}).id);
     const forChanges = !!(req.body || {}).changes;
-    const [sub] = await sql`SELECT files, changes FROM beat_submissions WHERE id = ${id}`;
+    const [sub] = await sql`SELECT s.files, s.changes, u.producer_tag_path FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = ${id}`;
     const preview = forChanges ? (sub && sub.changes && sub.changes.files && sub.changes.files.preview) : (sub && sub.files && sub.files.preview);
     if (!preview) { res.status(404).json({ error: 'This track has no preview.' }); return; }
     res.status(200).json({
       sourceUrl: await dropbox.readLink(preview.path),
       uploadUrl: await dropbox.uploadLink(forChanges ? `/submissions/${id}/rev/preview-tagged.mp3` : `/submissions/${id}/preview-tagged.mp3`),
+      // The producer's own tag, mixed in between the Creative Sound tags.
+      producerTagUrl: sub.producer_tag_path ? await dropbox.readLink(String(sub.producer_tag_path).split('?v=')[0]).catch(() => null) : null,
     });
   } catch (err) {
     console.error('review tag error:', err);

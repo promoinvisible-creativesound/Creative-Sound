@@ -52,6 +52,7 @@ module.exports = async (req, res) => {
     'profile-me': profile.handleMe,
     'profile-avatar': profile.handleAvatar,
     'profile-photo': profile.handlePhoto,
+    'profile-producer-tag': profile.handleProducerTag,
     'profile-public': profile.handlePublic,
     // Producer payouts (_lib/payouts.js)
     'producer-payouts': payouts.handlePayouts,

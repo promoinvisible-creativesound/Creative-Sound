@@ -30,12 +30,20 @@
   };
   const nextFrame = () => new Promise((r) => setTimeout(r, 0));
 
-  async function tag(sourceUrl, onProgress = () => {}) {
+  // opts.producerTagUrl: the producer's own tag; it plays halfway between
+  // the Creative Sound tags (1s, 21s, … ours; 11s, 31s, … theirs).
+  async function tag(sourceUrl, onProgress = () => {}, opts = {}) {
     onProgress('Downloading the preview…');
-    const [srcRes, tagRes] = await Promise.all([fetch(sourceUrl), fetch(TAG_URL)]);
+    const [srcRes, tagRes, ptagRes] = await Promise.all([
+      fetch(sourceUrl), fetch(TAG_URL),
+      opts.producerTagUrl ? fetch(opts.producerTagUrl).catch(() => null) : Promise.resolve(null),
+    ]);
     if (!srcRes.ok) throw new Error('Could not download the preview from Dropbox.');
     if (!tagRes.ok) throw new Error('Voice tag file missing.');
-    const [music, voice] = await Promise.all([decode(await srcRes.arrayBuffer()), decode(await tagRes.arrayBuffer())]);
+    const [music, voice, ptag] = await Promise.all([
+      decode(await srcRes.arrayBuffer()), decode(await tagRes.arrayBuffer()),
+      ptagRes && ptagRes.ok ? ptagRes.arrayBuffer().then(decode).catch(() => null) : Promise.resolve(null),
+    ]);
 
     onProgress('Mixing the voice tag…');
     const length = Math.ceil(music.duration * RATE);
@@ -44,16 +52,20 @@
     m.buffer = music;
     const duck = off.createGain();
     m.connect(duck).connect(off.destination);
-    const times = [];
-    for (let t = FIRST; t + voice.duration < music.duration; t += EVERY) times.push(t);
+    const marks = [];
+    for (let t = FIRST; t + voice.duration < music.duration; t += EVERY) marks.push({ t, buf: voice });
+    if (ptag && ptag.duration <= 10) {
+      for (let t = FIRST + EVERY / 2; t + ptag.duration < music.duration; t += EVERY) marks.push({ t, buf: ptag });
+      marks.sort((a, b) => a.t - b.t);
+    }
     duck.gain.setValueAtTime(1, 0);
-    times.forEach((t) => {
+    marks.forEach(({ t, buf }) => {
       duck.gain.setValueAtTime(1, Math.max(0, t - 0.15));
       duck.gain.linearRampToValueAtTime(DUCK, t);
-      duck.gain.setValueAtTime(DUCK, t + voice.duration);
-      duck.gain.linearRampToValueAtTime(1, t + voice.duration + 0.25);
+      duck.gain.setValueAtTime(DUCK, t + buf.duration);
+      duck.gain.linearRampToValueAtTime(1, t + buf.duration + 0.25);
       const v = off.createBufferSource();
-      v.buffer = voice;
+      v.buffer = buf;
       const g = off.createGain();
       g.gain.value = TAG_GAIN;
       v.connect(g).connect(off.destination);

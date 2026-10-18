@@ -813,3 +813,20 @@
 .up-free-text b{ font-size:15px; font-weight:600; color:#f5f5f7; }
 .up-free-text small{ font-size:13.5px; line-height:1.5; color:#bcbcc1; }
 @media (prefers-reduced-motion: reduce){ .up-free-switch, .up-free-switch::after{ transition:none; } }
+
+/* Upload: the producer's own audio tag */
+.up-ptag{ display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; border:1px dashed rgba(255,255,255,0.14); background:rgba(255,255,255,0.02); }
+.up-ptag.has-tag{ border-style:solid; border-color:rgba(232,134,44,0.35); background:rgba(232,134,44,0.06); }
+.up-ptag.is-bad{ border-color:rgba(255,99,71,0.5); }
+.up-ptag .up-file-icon svg{ width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.up-ptag-text{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.up-ptag-text b{ font-size:14.5px; font-weight:600; color:#f5f5f7; }
+.up-ptag-text small{ font-size:13px; color:#bcbcc1; overflow:hidden; text-overflow:ellipsis; }
+.up-ptag.is-bad .up-ptag-text small{ color:#ff8f7e; }
+.up-ptag-ctrl{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.up-ptag-play{ width:34px; height:34px; border:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#e8862c; color:#0a0a09; cursor:pointer; }
+.up-ptag-play svg{ width:15px; height:15px; fill:currentColor; }
+.up-ptag-btn{ height:34px; padding:0 14px; border:0; border-radius:17px; background:rgba(255,255,255,0.1); color:#f5f5f7; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+.up-ptag-remove{ height:34px; padding:0 10px; border:0; background:none; color:#bcbcc1; font:inherit; font-size:13px; cursor:pointer; }
+@media (hover:hover) and (pointer:fine){ .up-ptag-btn:hover{ background:rgba(255,255,255,0.16); } .up-ptag-remove:hover{ color:#ff8f7e; } }
+@media (max-width:560px){ .up-ptag{ flex-wrap:wrap; } .up-ptag-ctrl{ width:100%; justify-content:flex-end; } }

@@ -237,7 +237,7 @@
       const prep = await fetch('/api/review/tag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, changes: !!editId }) });
       const urls = await prep.json().catch(() => ({}));
       if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
-      const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; });
+      const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; }, { producerTagUrl: urls.producerTagUrl });
       btn.textContent = 'Uploading tagged preview…';
       const up = await fetch(urls.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
       if (!up.ok) throw new Error('Could not upload the tagged preview. Your track is saved: approve it from Track review.');

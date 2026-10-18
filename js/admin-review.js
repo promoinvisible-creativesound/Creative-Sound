@@ -251,7 +251,7 @@
         });
         const urls = await prep.json().catch(() => ({}));
         if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
-        const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; });
+        const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; }, { producerTagUrl: urls.producerTagUrl });
         // Listen to the tagged preview before it goes public.
         btn.textContent = label;
         const ok = await confirmTagged(cardEl, mp3);

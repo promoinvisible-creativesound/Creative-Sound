@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=141">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=38">
+<link rel="stylesheet" href="css/upload.css?v=39">
 </head>
 <body>
 <div id="grain"></div>
@@ -160,6 +160,17 @@
           </div>
         </div>
 
+        <h3 class="up-group-title">Your producer tag <span>Optional. Your own tag plays in the store preview between the Creative Sound tags, on all your tracks.</span></h3>
+        <div class="up-ptag" id="up-ptag">
+          <span class="up-file-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+          <div class="up-ptag-text"><b id="up-ptag-title">No tag yet</b><small id="up-ptag-sub">MP3 or WAV, up to 8 seconds. Example: "Invisible on the beat".</small></div>
+          <div class="up-ptag-ctrl">
+            <button type="button" class="up-ptag-play" id="up-ptag-play" hidden aria-label="Listen to your tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></button>
+            <button type="button" class="up-ptag-btn" id="up-ptag-add">Add tag</button>
+            <button type="button" class="up-ptag-remove" id="up-ptag-remove" hidden>Remove</button>
+            <input type="file" id="up-ptag-file" accept=".mp3,.wav,audio/mpeg,audio/wav" hidden>
+          </div>
+        </div>
         <h3 class="up-group-title">For buyers <span>Clean files, no tags. Each one unlocks a license in step 3.</span></h3>
         <div class="up-files">
           <div class="up-file" data-kind="mp3">
@@ -336,10 +347,11 @@
 <script src="js/main.js?v=48"></script>
 <script src="js/header-menu.js?v=15"></script>
 <script src="js/auth.js?v=47"></script>
-<script src="js/voice-tag.js?v=4"></script>
+<script src="js/voice-tag.js?v=5"></script>
 <script src="js/cover-crop.js?v=2"></script>
 <script src="js/select-dd.js?v=1"></script>
-<script src="js/upload.js?v=20"></script>
+<script src="js/producer-tag.js?v=1"></script>
+<script src="js/upload.js?v=21"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

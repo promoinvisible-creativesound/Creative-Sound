@@ -474,3 +474,42 @@
   .sf-bar-buy{ display:none; }
 }
 @media (prefers-reduced-motion: reduce){ .sf-card, .sf-feat{ animation:none; } .sf-bar{ transition:opacity 200ms ease; transform:translate(-50%, 0); } }
+
+/* Storefront: smaller covers (pinned as compact rows, denser grid) */
+.sf-feats .sf-feat{ flex-direction:row; border-radius:16px; }
+.sf-feats .sf-feat-art{ width:120px; flex-shrink:0; align-self:stretch; aspect-ratio:auto; min-height:120px; }
+.sf-feats-1 .sf-feat-art{ width:160px; min-height:160px; }
+.sf-feat-body, .sf-feats-1 .sf-feat-body{ justify-content:center; padding:12px 14px; }
+.sf-feat-body b, .sf-feats-1 .sf-feat-body b{ font-size:16px; }
+.sf-feat-body > span:not(.sf-pin){ font-size:12.5px; }
+.sf-pin{ margin-bottom:2px; font-size:10.5px; }
+.sf-feat-buy{ height:30px; margin-top:8px; padding:0 12px; font-size:12.5px; }
+.sf-play-lg{ width:38px; height:38px; right:8px; bottom:8px; }
+.sf-play-lg svg{ width:16px; height:16px; }
+.sf-grid{ grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; }
+.sf-card{ border-radius:14px; }
+.sf-card-body{ padding:10px 12px 12px; }
+.sf-card-body b{ font-size:14px; }
+.sf-card-body span{ font-size:12px; }
+.sf-card-body em{ margin-top:4px; font-size:13.5px; }
+.sf-play{ width:38px; height:38px; right:8px; bottom:8px; }
+.sf-play svg{ width:16px; height:16px; }
+@media (max-width:860px){
+  .sf-feats, .sf-feats-2, .sf-feats-3{ grid-template-columns:minmax(0, 1fr); gap:10px; }
+  .sf-feats-3 .sf-feat:last-child{ display:flex; }
+}
+@media (max-width:640px){
+  .sf-feats .sf-feat-art, .sf-feats-1 .sf-feat-art{ width:96px; min-height:96px; }
+  .sf-feat-body, .sf-feats-1 .sf-feat-body{ padding:10px 12px; }
+  .sf-feat-body b, .sf-feats-1 .sf-feat-body b{ font-size:15px; }
+  .sf-play-lg{ width:32px; height:32px; right:6px; bottom:6px; }
+  .sf-play-lg svg{ width:14px; height:14px; }
+  .sf-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; }
+  .sf-card{ border-radius:12px; }
+  .sf-card-body{ padding:8px 9px 10px; gap:2px; }
+  .sf-card-body b{ font-size:12.5px; }
+  .sf-card-body span{ font-size:10.5px; }
+  .sf-card-body em{ margin-top:2px; font-size:12px; }
+  .sf-play{ width:32px; height:32px; right:6px; bottom:6px; }
+  .sf-play svg{ width:14px; height:14px; }
+}

@@ -38,6 +38,10 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/profile/store",
+      "destination": "/api/tickets?action=profile-store"
+    },
+    {
       "source": "/api/producer/stats",
       "destination": "/api/tickets?action=producer-stats"
     },
@@ -168,6 +172,10 @@
     {
       "source": "/api/beats/license",
       "destination": "/api/tickets?action=beats-license"
+    },
+    {
+      "source": "/@:handle",
+      "destination": "/artist.html"
     }
   ],
   "headers": [

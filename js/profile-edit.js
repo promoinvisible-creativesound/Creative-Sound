@@ -23,7 +23,7 @@
     $('#pe-url').textContent = h ? `@${h}` : 'Pick a username to get your page';
     $('#pe-title').textContent = form.displayName.value.trim() || 'Public profile';
     a.hidden = !(profile && profile.handle);
-    if (profile && profile.handle) a.href = `artist.html?u=${encodeURIComponent(profile.handle)}`;
+    if (profile && profile.handle) a.href = `/@${encodeURIComponent(profile.handle)}`;
   };
 
   fetch('/api/profile/me')

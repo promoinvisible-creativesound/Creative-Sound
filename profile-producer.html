@@ -29,8 +29,8 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=141">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=40">
-<link rel="stylesheet" href="css/profile.css?v=14">
+<link rel="stylesheet" href="css/upload.css?v=41">
+<link rel="stylesheet" href="css/profile.css?v=15">
 </head>
 <body>
 <div id="grain"></div>
@@ -147,6 +147,48 @@
         <a href="upload-beat.html" class="btn btn-primary">Upload a track</a>
       </div>
       <p class="up-error" id="pa-error" role="alert" hidden></p>
+    </section>
+
+    <section class="up-card sf-set" id="storefront" aria-labelledby="sf-set-title" hidden>
+      <div class="sf-set-head">
+        <div>
+          <h2 id="sf-set-title">Your storefront</h2>
+          <p>Your own page with all your tracks. Put the link in your Instagram bio and YouTube descriptions.</p>
+        </div>
+        <div class="sf-set-link">
+          <span id="sf-link"></span>
+          <button type="button" class="btn btn-ghost" id="sf-copy">Copy link</button>
+          <a class="btn btn-primary" id="sf-open" href="#" target="_blank" rel="noopener">Open</a>
+        </div>
+      </div>
+
+      <div class="sf-set-grid">
+        <div>
+          <p class="pe-group-label">Banner</p>
+          <div class="sf-banner-prev" id="sf-banner-prev"><span>No banner: your colour is used instead</span></div>
+          <div class="sf-set-row">
+            <button type="button" class="btn btn-ghost" id="sf-banner-add">Add banner</button>
+            <button type="button" class="sf-set-link-btn" id="sf-banner-remove" hidden>Remove</button>
+            <small>Wide image, at least 1200 px. Cropped to 3:1.</small>
+          </div>
+          <input type="file" id="sf-banner-file" accept="image/jpeg,image/png,image/webp" hidden>
+
+          <p class="pe-group-label">Colour</p>
+          <div class="sf-accents" id="sf-accents" role="group" aria-label="Storefront colour"></div>
+
+          <p class="pe-group-label"><label for="sf-headline">Headline</label></p>
+          <input class="sf-set-input" id="sf-headline" maxlength="90" placeholder="Dark trap and melodic R&amp;B, ready for your next single.">
+        </div>
+        <div>
+          <p class="pe-group-label sf-pins-label"><span>Pinned tracks</span><b id="sf-pins-count">0 / 3</b></p>
+          <div class="sf-pins" id="sf-pins"></div>
+        </div>
+      </div>
+
+      <div class="sf-set-foot">
+        <p class="sf-set-status" id="sf-status" role="status" aria-live="polite"></p>
+        <button type="button" class="btn btn-primary" id="sf-save">Save storefront</button>
+      </div>
     </section>
 
     <section class="up-card po-card" id="payouts" aria-labelledby="po-title">
@@ -267,6 +309,7 @@
 <script src="js/header-menu.js?v=15"></script>
 <script src="js/auth.js?v=47"></script>
 <script src="js/producer-area.js?v=7"></script>
+<script src="js/storefront-settings.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -98,7 +98,7 @@
       <header class="ms-chat-head">
         <button type="button" class="ms-back" aria-label="Back to conversations">‹</button>
         ${avatar(u, 'is-sm')}
-        <div><b>${esc(u.name)}</b>${u.handle ? `<a href="artist.html?u=${encodeURIComponent(u.handle)}">@${esc(u.handle)}</a>` : ''}</div>
+        <div><b>${esc(u.name)}</b>${u.handle ? `<a href="/@${encodeURIComponent(u.handle)}">@${esc(u.handle)}</a>` : ''}</div>
       </header>
       <div class="ms-msgs" id="ms-msgs">${d.messages.length ? bubbles(d.messages, cat) : `<div class="ms-start">${avatar(u)}<b>${esc(u.name)}</b><span>Ask about exclusives, custom beats or a collab. Your email is never shown.</span></div>`}</div>
       <div class="ms-attach" id="ms-attach"></div>

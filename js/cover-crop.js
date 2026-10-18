@@ -6,8 +6,8 @@
 (() => {
   'use strict';
   const MIN = 1000;
-  const MAX = 3000;
-  const MAX_BYTES = 10 * 1024 * 1024;
+  const MAX = 2000; // covers are stored at most 2000 x 2000
+  const MAX_BYTES = 2 * 1024 * 1024; // heavier ones are re-encoded (JPEG, quality 0.9)
 
   const loadImage = (file) => new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -141,7 +141,7 @@
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, -x / sc, -y / sc, side, side, 0, 0, out, out);
-        canvas.toBlob((blob) => cleanup(blob ? { blob, size: out } : null), 'image/jpeg', 0.92);
+        canvas.toBlob((blob) => cleanup(blob ? { blob, size: out } : null), 'image/jpeg', 0.9);
       };
       z = 1; zoom.value = '1';
       dialog.showModal();
@@ -159,6 +159,17 @@
       if (Math.min(w, h) < MIN) return { error: `The image is ${w} × ${h}. Covers need at least ${MIN} × ${MIN} px.` };
       // Already square and within limits: upload as it is.
       if (w === h && w <= MAX && file.size <= MAX_BYTES) return { file };
+      // Square but too big or too heavy: scale and re-encode quietly, no crop step.
+      if (w === h) {
+        const out = Math.min(MAX, w);
+        const canvas = document.createElement('canvas');
+        canvas.width = out; canvas.height = out;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, out, out);
+        const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.9));
+        if (blob) return { file: new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) };
+      }
       const res = await crop(img);
       if (!res) return null;
       const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';

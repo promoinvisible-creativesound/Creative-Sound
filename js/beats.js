@@ -1106,17 +1106,17 @@
   const askFreeTerms = (beat) => new Promise((resolve) => {
     if (!termsDialog) {
       termsDialog = document.createElement('dialog');
-      termsDialog.className = 'bt-terms';
+      termsDialog.className = 'bt-ft';
       document.body.appendChild(termsDialog);
     }
     const d = termsDialog;
     d.innerHTML = `
-      <form method="dialog" class="bt-terms-inner">
-        <div class="bt-terms-head">
-          <span class="bt-terms-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <form method="dialog" class="bt-ft-inner">
+        <div class="bt-ft-head">
+          <span class="bt-ft-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
           <div><b>Free download terms</b><small>${esc(beat.title)} by ${esc(beat.producer)} · tagged MP3</small></div>
         </div>
-        <div class="bt-terms-body">
+        <div class="bt-ft-body">
           <p>This free version is for <b>private testing only</b>: to try ideas, write and record demos for yourself.</p>
           <ul>
             <li>You may <b>not</b> release, publish or distribute it, or any song made with it, in any form: streaming services, stores, YouTube, social media, radio, live shows, mixtapes, ads or any other use, paid or free.</li>
@@ -1126,8 +1126,8 @@
             <li>Any other use is copyright infringement: the track can be removed and the producer may take legal action. Your download is recorded with your account.</li>
           </ul>
         </div>
-        <label class="bt-terms-check"><input type="checkbox" name="ok"><span class="bt-terms-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span><span>I have read and accept these terms. I will use this file for private testing only.</span></label>
-        <div class="bt-terms-actions">
+        <label class="bt-ft-check"><input type="checkbox" name="ok"><span class="bt-ft-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span><span>I have read and accept these terms. I will use this file for private testing only.</span></label>
+        <div class="bt-ft-actions">
           <button type="button" class="btn btn-ghost" data-terms="cancel">Cancel</button>
           <button type="button" class="btn btn-primary" data-terms="ok" disabled>Accept and download</button>
         </div>

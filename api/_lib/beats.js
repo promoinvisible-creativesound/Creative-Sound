@@ -22,10 +22,9 @@ const LICENSES = require('../../data/beat-licenses.json');
 const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
 
 const isProduction = () => process.env.VERCEL_ENV === 'production';
-// Track sales are paused until the first real track is up: set
-// BEAT_SALES_OPEN=1 on Vercel (and redeploy) to open them. The admin can
-// always buy, to test the whole flow.
-const salesOpen = () => process.env.BEAT_SALES_OPEN === '1';
+// Track sales are open. To pause them, set BEAT_SALES_OPEN=0 on Vercel and
+// redeploy; the admin can always buy, to test the whole flow.
+const salesOpen = () => process.env.BEAT_SALES_OPEN !== '0';
 
 function priceOf(beat, tier) {
   const p = beat && beat.prices && beat.prices[tier];

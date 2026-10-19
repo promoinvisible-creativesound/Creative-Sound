@@ -117,7 +117,7 @@ async function handleCatalogue(req, res) {
   const beats = (await liveBeats()).map(publicBeat);
   // Shared cache at the edge: an approval shows within about a minute.
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-  res.status(200).json({ currency: CATALOGUE.currency, producers: CATALOGUE.producers || {}, beats, salesOpen: process.env.BEAT_SALES_OPEN === '1' });
+  res.status(200).json({ currency: CATALOGUE.currency, producers: CATALOGUE.producers || {}, beats, salesOpen: process.env.BEAT_SALES_OPEN !== '0' });
 }
 
 // Cover and tagged preview of an approved producer track.

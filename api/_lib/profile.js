@@ -28,6 +28,8 @@ function ensureColumns() {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS instagram TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok TEXT`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube TEXT`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS spotify TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS genres JSONB NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_path TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_email TEXT`;
@@ -56,6 +58,25 @@ const social = (v, host) => {
 };
 
 // Public contact email (optional): '' when empty, null when invalid.
+// YouTube: @handle or a channel link -> "@handle" / "channel/UC…" / "c/name" / "user/name".
+const youtubeOf = (v) => {
+  let s = clean(v, 200);
+  if (!s) return '';
+  s = s.replace(/^https?:\/\//i, '').replace(/^(www\.|m\.)?youtube\.com\//i, '').split(/[?#]/)[0].replace(/\/+$/, '');
+  if (/^@[A-Za-z0-9._-]{3,30}$/.test(s)) return s;
+  if (/^[A-Za-z0-9._-]{3,30}$/.test(s)) return `@${s}`;
+  const m = /^(channel\/UC[A-Za-z0-9_-]{20,24}|c\/[A-Za-z0-9._-]{1,100}|user\/[A-Za-z0-9._-]{1,100}|@[A-Za-z0-9._-]{3,30})(\/.*)?$/.exec(s);
+  return m ? m[1] : null;
+};
+// Spotify: an artist or profile link -> "artist/<id>" / "user/<id>".
+const spotifyOf = (v) => {
+  let s = clean(v, 300);
+  if (!s) return '';
+  s = s.replace(/^https?:\/\//i, '').replace(/^open\.spotify\.com\//i, '').replace(/^intl-[a-z]{2}(-[a-z]{2})?\//i, '').split(/[?#]/)[0];
+  const m = /^(artist\/[A-Za-z0-9]{22}|user\/[A-Za-z0-9._-]{1,64})(\/.*)?$/.exec(s);
+  return m ? m[1] : null;
+};
+
 const contactEmailOf = (v) => {
   const s = clean(v, 120).toLowerCase();
   if (!s) return '';
@@ -82,6 +103,8 @@ const shape = (row, role) => ({
   bio: row.bio || '',
   instagram: row.instagram || '',
   tiktok: row.tiktok || '',
+  youtube: row.youtube ? `https://www.youtube.com/${row.youtube}` : '',
+  spotify: row.spotify ? `https://open.spotify.com/${row.spotify}` : '',
   contactEmail: row.contact_email || '',
   genres: row.genres || [],
   photo: photoUrl(row),
@@ -114,6 +137,8 @@ async function handleMe(req, res) {
     const bio = String(b.bio || '').trim().slice(0, 400);
     const instagram = social(b.instagram, 'instagram.com');
     const tiktok = social(b.tiktok, 'tiktok.com');
+    const youtube = youtubeOf(b.youtube);
+    const spotify = spotifyOf(b.spotify);
     const contactEmail = contactEmailOf(b.contactEmail);
     const genres = [...new Set((Array.isArray(b.genres) ? b.genres : []).filter((g) => GENRES.includes(g)))].slice(0, 6);
     if (!displayName) { res.status(400).json({ error: 'Add the name people will see.' }); return; }
@@ -121,12 +146,14 @@ async function handleMe(req, res) {
     if (RESERVED.has(handle)) { res.status(400).json({ error: 'That username is reserved. Pick another one.' }); return; }
     if (instagram === null) { res.status(400).json({ error: 'Instagram: use your @username or profile link.' }); return; }
     if (tiktok === null) { res.status(400).json({ error: 'TikTok: use your @username or profile link.' }); return; }
+    if (youtube === null) { res.status(400).json({ error: 'YouTube: use your @handle or channel link.' }); return; }
+    if (spotify === null) { res.status(400).json({ error: 'Spotify: paste your artist link (open.spotify.com/artist/…).' }); return; }
     if (contactEmail === null) { res.status(400).json({ error: 'Contact email: check the address.' }); return; }
     const [taken] = await sql`SELECT id FROM users WHERE lower(handle) = ${handle} AND id <> ${session.uid}`;
     if (taken) { res.status(409).json({ error: 'That username is taken. Pick another one.' }); return; }
     const [row] = await sql`
       UPDATE users SET display_name = ${displayName}, handle = ${handle}, bio = ${bio || null},
-        instagram = ${instagram || null}, tiktok = ${tiktok || null}, contact_email = ${contactEmail || null}, genres = ${JSON.stringify(genres)}::jsonb
+        instagram = ${instagram || null}, tiktok = ${tiktok || null}, youtube = ${youtube || null}, spotify = ${spotify || null}, contact_email = ${contactEmail || null}, genres = ${JSON.stringify(genres)}::jsonb
       WHERE id = ${session.uid} RETURNING *
     `;
     res.status(200).json({ profile: shape(row, role) });

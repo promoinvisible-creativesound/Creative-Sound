@@ -11,6 +11,8 @@
   const ICON_IG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>';
   const ICON_TT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 4v10.5a3.5 3.5 0 1 1-3-3.46"/><path d="M16 4a5 5 0 0 0 5 5"/></svg>';
   const ICON_MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>';
+  const ICON_YT = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor" stroke="none"/></svg>';
+  const ICON_SP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.2 9.4c3.4-1 7-.7 9.8.9M7.7 12.5c2.8-.8 5.7-.5 8 .8M8.3 15.4c2.2-.6 4.4-.4 6.2.6"/></svg>';
   const ROLE = { producer: 'Producer', artist: 'Artist', listener: 'Member' };
   const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
@@ -154,9 +156,11 @@
             ${store.headline ? `<p class="sf-headline">${esc(store.headline)}</p>` : ''}
             ${p.bio ? `<p class="pf-bio">${esc(p.bio)}</p>` : ''}
             <div class="pf-meta">
-              ${isProducer ? `<span class="sf-actions" data-actions><button type="button" class="sf-act" data-share>${ICON_SHARE}<span>Share</span></button></span>` : ''}
+              <span class="sf-actions" data-actions><button type="button" class="sf-act" data-share>${ICON_SHARE}<span>Share</span></button></span>
               ${p.instagram ? `<a class="pf-social" href="https://instagram.com/${encodeURIComponent(p.instagram)}" target="_blank" rel="noopener noreferrer">${ICON_IG}Instagram</a>` : ''}
               ${p.tiktok ? `<a class="pf-social" href="https://www.tiktok.com/@${encodeURIComponent(p.tiktok)}" target="_blank" rel="noopener noreferrer">${ICON_TT}TikTok</a>` : ''}
+              ${p.youtube ? `<a class="pf-social" href="${esc(p.youtube)}" target="_blank" rel="noopener noreferrer">${ICON_YT}YouTube</a>` : ''}
+              ${p.spotify ? `<a class="pf-social" href="${esc(p.spotify)}" target="_blank" rel="noopener noreferrer">${ICON_SP}Spotify</a>` : ''}
               ${p.contactEmail ? `<a class="pf-social" href="mailto:${encodeURIComponent(p.contactEmail).replace('%40', '@')}">${ICON_MAIL}Email</a>` : ''}
             </div>
             ${p.genres.length ? `<div class="pf-genres"><span class="pf-genres-label">${genresLabel}</span>${p.genres.map((g) => `<span>${esc(g)}</span>`).join('')}</div>` : ''}
@@ -226,7 +230,7 @@
         Promise.resolve(window.csMe).then((me) => {
           const own = me && me.handle && me.handle.toLowerCase() === p.handle.toLowerCase();
           actions.insertAdjacentHTML('afterbegin', own
-            ? `<a class="sf-act is-main" href="/profile-producer.html#storefront">${ICON_EDIT}<span>Edit storefront</span></a>`
+            ? (isProducer ? `<a class="sf-act is-main" href="/profile-producer.html#storefront">${ICON_EDIT}<span>Edit storefront</span></a>` : `<a class="sf-act is-main" href="/profile-public.html">${ICON_EDIT}<span>Edit profile</span></a>`)
             : `<a class="sf-act is-main" href="/messages.html?with=${encodeURIComponent(p.uid)}">${ICON_MSG}<span>Message</span></a>`);
         });
       }

@@ -84,7 +84,14 @@
   const beatVerified = (b) => (typeof b.verified === 'boolean' ? b.verified : isVerified(b.producer));
   // Every producer on the track links to their profile / storefront (/@handle).
   const who = (name, handle) => (handle ? `<a class="bt-producer-link" href="/@${encodeURIComponent(handle)}">${esc(name)}</a>` : esc(name));
-  const producerLine = (b) => `<span class="bt-producer">${who(b.producer, b.producerHandle)}${beatVerified(b) ? VERIFIED : ''}${(b.coProducers || []).map((c, i, all) => `${i === all.length - 1 ? '<i class="bt-amp">&amp;</i>' : '<i class="bt-amp is-comma">,</i>'}${who(c.name, c.handle)}`).join('')}</span>`;
+  // Cards, player and license window show the first two producers; the
+  // track page lists everyone (+N links there).
+  const producerLine = (b) => {
+    const co = b.coProducers || [];
+    const shown = co.slice(0, 1);
+    const more = co.length - shown.length;
+    return `<span class="bt-producer">${who(b.producer, b.producerHandle)}${beatVerified(b) ? VERIFIED : ''}${shown.map((c) => `<i class="bt-amp">&amp;</i>${who(c.name, c.handle)}`).join('')}${more > 0 ? `<a class="bt-more-producers" href="${beatUrl(b)}" title="${esc(co.slice(1).map((c) => c.name).join(', '))}">+${more}</a>` : ''}</span>`;
+  };
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
   // A tier as this track sells it: the producer's own limits (b.license, from

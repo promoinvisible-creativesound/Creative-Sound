@@ -2447,3 +2447,5 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-producer:has(.bt-amp){ flex-wrap:wrap; row-gap:1px; }
 @media (hover:hover) and (pointer:fine){ .bt-producer-link:hover{ color:var(--text); text-decoration:underline; text-underline-offset:2px; } }
 .bt-producer .bt-amp.is-comma{ margin-left:-4px; }
+.bt-more-producers{ height:18px; display:inline-flex; align-items:center; padding:0 6px; border-radius:999px; background:rgba(255,255,255,0.08); color:var(--text-secondary); font-size:11px; font-weight:700; text-decoration:none; }
+@media (hover:hover) and (pointer:fine){ .bt-more-producers:hover{ background:rgba(232,134,44,0.16); color:var(--amber-text); } }

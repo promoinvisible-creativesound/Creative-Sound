@@ -66,7 +66,7 @@ const card = (b, i) => `
         </div>
         <div class="sf-card-body">
           <a href="${trackUrl(b)}"><b>${esc(b.title)}</b></a>
-          <span>${b.producerHandle ? `<a href="/@${esc(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${(b.coProducers || []).map((c, i, all) => `${i === all.length - 1 ? ' &amp; ' : ', '}${c.handle ? `<a href="/@${esc(c.handle)}">${esc(c.name)}</a>` : esc(c.name)}`).join('')} · ${esc(meta(b))}</span>
+          <span>${b.producerHandle ? `<a href="/@${esc(b.producerHandle)}">${esc(b.producer)}</a>` : esc(b.producer)}${(b.coProducers || []).slice(0, 1).map((c) => ` &amp; ${c.handle ? `<a href="/@${esc(c.handle)}">${esc(c.name)}</a>` : esc(c.name)}`).join('')}${(b.coProducers || []).length > 1 ? ` <a href="${trackUrl(b)}">+${b.coProducers.length - 1}</a>` : ''} · ${esc(meta(b))}</span>
           ${Number.isFinite(minPrice(b)) ? `<em>From ${euro(minPrice(b))}</em>` : ''}
         </div>
       </article>`;

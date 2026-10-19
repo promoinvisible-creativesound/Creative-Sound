@@ -2186,6 +2186,11 @@
       setTimeout(done, 180);
     });
     $('#bt-checkout').addEventListener('click', checkout);
+    // Admin only: a real purchase at €0.50 per track to test the whole flow.
+    Promise.resolve(window.csMe).then((me) => {
+      if (!me || !me.isAdmin || $('#bt-test-buy')) return;
+      $('#bt-checkout').insertAdjacentHTML('afterend', '<label class="bt-test-buy"><input type="checkbox" id="bt-test-buy"><span><b>Test purchase</b> · €0.50 per track, admin only. Real payment, email, files and PDF; no producer payout.</span></label>');
+    });
     if (new URLSearchParams(location.search).get('cart') === '1' && cart.length) openCart();
   };
   async function checkout() {
@@ -2200,7 +2205,7 @@
       const res = await fetch('/api/beats/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({ items: cart, test: !!($('#bt-test-buy') && $('#bt-test-buy').checked) }),
       });
       if (res.status === 401) {
         location.href = `/signup.html?next=${encodeURIComponent('/beats.html?cart=1')}`;

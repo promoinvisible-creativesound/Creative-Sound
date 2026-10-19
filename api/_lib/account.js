@@ -9,7 +9,7 @@ const ROLES = ['producer', 'artist', 'listener'];
 // The new features (track store, account types, producer uploads) are open
 // to everyone. Setting PREVIEW_LOCK=1 on Vercel limits them again to the
 // accounts in ADMIN_EMAILS (private preview).
-const OWNER_ADMINS = ['promo.invisible@gmail.com'];
+const OWNER_ADMINS = ['promo.invisible@gmail.com', 'promo.aarmo@gmail.com'];
 function isAdmin(session) {
   if (!session || !session.email) return false;
   const list = [...OWNER_ADMINS, ...String(process.env.ADMIN_EMAILS || '').split(',')]

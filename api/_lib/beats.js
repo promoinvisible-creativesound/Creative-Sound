@@ -20,6 +20,9 @@ const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
 const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
+// Admin test purchases: the whole real flow (Stripe, email, files, PDF) at
+// Stripe's minimum charge, with no producer earnings recorded.
+const TEST_PRICE = 50;
 
 const isProduction = () => process.env.VERCEL_ENV === 'production';
 // Track sales are open. To pause them, set BEAT_SALES_OPEN=0 on Vercel and
@@ -75,6 +78,8 @@ async function handleCheckout(req, res) {
     res.status(400).json({ error });
     return;
   }
+  const test = isAdmin(session) && req.body && req.body.test === true;
+  if (test) items.forEach((it) => { it.price = TEST_PRICE; });
 
   const siteUrl = (process.env.SITE_URL || `https://${req.headers.host}`).replace(/\/$/, '');
   try {
@@ -89,7 +94,7 @@ async function handleCheckout(req, res) {
           currency: CATALOGUE.currency || 'eur',
           unit_amount: price,
           product_data: {
-            name: `${beat.title} — ${LICENSES.tiers[tier].name}`,
+            name: `${test ? '[TEST] ' : ''}${beat.title} — ${LICENSES.tiers[tier].name}`,
             description: `${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
             metadata: { beat_id: beat.id, tier },
           },
@@ -97,6 +102,7 @@ async function handleCheckout(req, res) {
       })),
       metadata: {
         kind: 'beats',
+        ...(test ? { test: '1' } : {}),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
       },
       success_url: `${siteUrl}/beats-success.html?session_id={CHECKOUT_SESSION_ID}`,
@@ -265,6 +271,8 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
 // so Stripe retries the webhook; the inserts are idempotent per session.
 async function handleBeatPurchase({ session, email, resend, renderEmail, button, paragraph, steps, accountLine }) {
   const items = await parseItems(session.metadata && session.metadata.items);
+  const test = !!(session.metadata && session.metadata.test === '1');
+  const paid = (beat, tier) => (test ? TEST_PRICE : priceOf(beat, tier));
   if (!items.length) throw new Error(`Beat checkout ${session.id} has no readable items.`);
   const buyerName = (session.customer_details && session.customer_details.name) || '';
   const currency = session.currency || CATALOGUE.currency || 'eur';
@@ -276,7 +284,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     const licenseId = licenseIdFor(session.id, i);
     await sql`
       INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id, license_snapshot)
-      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer, !!(beat._files && beat._files.stems)))}::jsonb)
+      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${paid(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer, !!(beat._files && beat._files.stems)))}::jsonb)
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
     // The snapshot actually stored (a retried webhook keeps the first one).
@@ -284,8 +292,11 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     delivered.push({ beat, tier, licenseId, snap: saved && saved.license_snapshot, files: await filesFor(beat, tier, email) });
   }
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
-  const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
-  await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });
+  // Test purchases (admin, minimum price): no producer earnings, no sale email.
+  if (!test) {
+    const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
+    await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });
+  }
 
   const missing = delivered.flatMap((d) => d.files.filter((f) => !f.url).map((f) => `${d.beat.id}:${f.type}`));
   if (missing.length) {
@@ -307,7 +318,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   const attachments = [];
   for (const d of delivered) {
     try {
-      const pdf = await licensePdf({ licenseId: d.licenseId, beat: d.beat, tier: d.tier, buyerName, buyerEmail: email, date, price: priceOf(d.beat, d.tier), currency, snap: d.snap });
+      const pdf = await licensePdf({ licenseId: d.licenseId, beat: d.beat, tier: d.tier, buyerName, buyerEmail: email, date, price: paid(d.beat, d.tier), currency, snap: d.snap });
       attachments.push({ filename: `License-${d.beat.title.replace(/[^\w-]+/g, '-')}-${d.licenseId}.pdf`, content: pdf });
     } catch (err) {
       console.error('license pdf failed:', d.licenseId, err);

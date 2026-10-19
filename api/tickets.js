@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
     'review-verify': handleReviewVerify,
     'review-producers': handleReviewProducers,
     'review-tag': handleReviewTag,
+    'review-file': require('./_lib/producer').handleAdminFile,
     'producer-verify-request': handleVerifyRequest,
   };
   if (req.query && producerRoutes[req.query.action]) {

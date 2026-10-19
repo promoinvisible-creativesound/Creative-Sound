@@ -38,6 +38,10 @@
       "destination": "/creative-dist-2.html"
     },
     {
+      "source": "/api/review/file",
+      "destination": "/api/tickets?action=review-file"
+    },
+    {
       "source": "/api/producer/license",
       "destination": "/api/tickets?action=producer-license"
     },

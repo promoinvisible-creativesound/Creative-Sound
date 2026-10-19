@@ -46,11 +46,13 @@
     const label = FILE_LABELS[kind];
     if (!f) return `<div class="rv-frow is-missing"><div class="rv-fhead"><b>${label}</b><span class="rv-fmeta">Not uploaded</span></div></div>`;
     const dl = link ? `<a href="${esc(link)}" class="rv-dl" target="_blank" rel="noopener" download>${ICON_DL}Download</a>` : '';
+    // rev: a file re-uploaded with pending changes (checked instead of the live one).
+    const rev = (s.newFiles || []).includes(kind) ? ' data-rev="1"' : '';
     let check = '';
     if (!link) check = '<p class="rv-fnote is-bad">Link unavailable. Check Dropbox.</p>';
-    else if (kind === 'artwork') check = `<div class="rv-art"><a href="${esc(link)}" target="_blank" rel="noopener"><img src="${esc(link)}" alt="Cover art" data-art-check></a><span class="rv-fnote" data-art-info>Checking size…</span></div>`;
-    else if (['preview', 'mp3', 'wav'].includes(kind)) check = `${playerHtml(link, label)}<p class="rv-fnote" data-inspect="${kind}">Reading format…</p>`;
-    else check = `<button type="button" class="rv-peek" data-peek="${kind}">Show what's inside</button><div class="rv-zip" hidden></div>`;
+    else if (kind === 'artwork') check = `<div class="rv-art"><a href="${esc(link)}" target="_blank" rel="noopener"><img src="${esc(link)}" alt="Cover art" loading="lazy" data-art-check></a><span class="rv-fnote" data-art-info>Checking size…</span></div>`;
+    else if (['preview', 'mp3', 'wav'].includes(kind)) check = `${playerHtml(link, label)}<p class="rv-fnote" data-inspect="${kind}"${rev}>Reading format…</p>`;
+    else check = `<button type="button" class="rv-peek" data-peek="${kind}"${rev}>Show what's inside</button><div class="rv-zip" hidden></div>`;
     return `
       <div class="rv-frow" data-kind="${kind}">
         <div class="rv-fhead">
@@ -110,11 +112,18 @@
           </div>
         </div>
         ${s.about ? `<p class="rv-about">${esc(s.about)}</p>` : ''}
+        ${reviewable ? `
         <div class="rv-files-wrap">
           <h3>Files <span>${Object.keys(s.files || {}).length} uploaded</span></h3>
           <div class="rv-files">${kinds.map((k) => fileRow(s, k)).join('')}</div>
-        </div>
+        </div>` : `
+        <details class="rv-files-wrap rv-files-more">
+          <summary><h3>Files <span>${Object.keys(s.files || {}).length} uploaded</span></h3></summary>
+          <div class="rv-files">${kinds.map((k) => fileRow(s, k)).join('')}</div>
+        </details>`}
         ${reviewable ? `
+          <div class="rv-auto" data-auto><span class="rv-auto-dot"></span><span>Running the automatic checks…</span></div>
+          <p class="rv-prep" data-prep hidden></p>
           <div class="rv-decide">
             <label class="up-field up-field-wide"><span>Note to the producer <i>Required to send back, optional to approve</i></span>
               <textarea rows="2" maxlength="1000" placeholder="E.g. the WAV still has the voice tag at 0:12."></textarea>
@@ -177,6 +186,7 @@
       list.innerHTML = data.submissions.length ? data.submissions.map(card).join('')
         : `<p class="pa-none">${status === 'pending' ? 'Nothing to review. All caught up.' : 'Nothing here yet.'}</p>`;
       runChecks();
+      autoPrepare();
     } catch (err) {
       list.innerHTML = '';
       $('#rv-error').textContent = err.message;
@@ -243,15 +253,9 @@
       // preview (mixed here, uploaded straight to Dropbox).
       const isChange = cardEl.dataset.change === '1';
       if (btn.dataset.decision === 'approve' && (!isChange || cardEl.dataset.newPreview === '1')) {
-        if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
-        const prep = await fetch('/api/review/tag', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: Number(cardEl.dataset.id), changes: isChange }),
-        });
-        const urls = await prep.json().catch(() => ({}));
-        if (!prep.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
-        const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => { btn.textContent = msg; }, { producerTagUrl: urls.producerTagUrl });
+        // Usually ready already (prepared in the background).
+        btn.textContent = 'Preparing store preview…';
+        const { mp3, urls } = await prepare(cardEl);
         // Listen to the tagged preview before it goes public.
         btn.textContent = label;
         const ok = await confirmTagged(cardEl, mp3);
@@ -260,8 +264,13 @@
           return;
         }
         btn.textContent = 'Uploading tagged preview…';
-        const up = await fetch(urls.uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
+        const upload = (url) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
+        let up = await upload(urls.uploadUrl);
+        // Upload links expire after a few hours: get a fresh one once.
+        if (!up.ok) up = await upload((await tagUrls(cardEl)).uploadUrl);
         if (!up.ok) throw new Error('Could not upload the tagged preview. Try again.');
+        prepared.delete(prepKey(cardEl));
+        prepState.delete(prepKey(cardEl));
         btn.textContent = 'Approving…';
       }
       const res = await fetch('/api/review/decide', {
@@ -340,39 +349,104 @@
   /* ------------------------------- File checks ------------------------------ */
   const fmtDur = (t) => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}`;
   const note = (el, text, bad) => { el.textContent = text; el.classList.toggle('is-bad', !!bad); el.classList.toggle('is-ok', !bad); };
-  const inspect = (id, kind) => fetch(`/api/review/inspect?id=${id}&kind=${kind}`).then(async (r) => {
+  const inspect = (id, kind, rev) => fetch(`/api/review/inspect?id=${id}&kind=${kind}${rev ? '&rev=1' : ''}`).then(async (r) => {
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.error || 'Could not read the file.');
     return data;
   });
 
-  function runChecks() {
-    // Cover: real pixel size, square and at least 1000 px.
-    list.querySelectorAll('img[data-art-check]').forEach((img) => {
-      const info = img.closest('.rv-art').querySelector('[data-art-info]');
-      const check = () => {
-        const w = img.naturalWidth;
-        const h = img.naturalHeight;
-        const issues = [w !== h ? 'not square' : '', Math.min(w, h) < 1000 ? 'smaller than 1000 px' : ''].filter(Boolean);
-        note(info, `${w} × ${h} px${issues.length ? `: ${issues.join(', ')}` : ', looks good'}`, issues.length > 0);
-      };
-      if (img.complete && img.naturalWidth) check(); else img.addEventListener('load', check, { once: true });
-      img.addEventListener('error', () => note(info, 'Could not open the image.', true), { once: true });
-    });
-    // WAV: bit depth, sample rate, channels, length.
-    // Audio: format against the store's file rules (problems come from the server).
-    list.querySelectorAll('[data-inspect]').forEach((el) => {
-      const id = el.closest('.rv-card').dataset.id;
-      inspect(id, el.dataset.inspect).then((d) => {
-        if (!d.ok) { note(el, d.error, true); return; }
-        const quality = d.kind === 'wav' ? (d.float ? '32-bit float' : `${d.bits}-bit`) : `${d.kbps} kbps${d.vbr ? ' VBR' : ''}`;
-        const issues = d.problems || [];
-        note(el, `${quality} · ${(d.sampleRate / 1000).toFixed(1)} kHz · ${d.channels === 1 ? 'mono' : d.channels === 2 ? 'stereo' : `${d.channels} channels`}${d.duration ? ` · ${fmtDur(d.duration)}` : ''}${issues.length ? ` · ${issues.join(', ')}` : ' · Meets the file rules'}`, issues.length > 0);
-      }).catch((err) => note(el, err.message, true));
+  // ZIP / RAR contents, read once per card and shared by the automatic
+  // check and the "Show what's inside" button. Resolves to the problems found.
+  const zipRead = new WeakMap();
+  function readZip(btn) {
+    if (zipRead.has(btn)) return zipRead.get(btn);
+    const box = btn.nextElementSibling;
+    const label = FILE_LABELS[btn.dataset.peek];
+    box.innerHTML = '<p class="rv-fnote">Reading the archive…</p>';
+    const job = inspect(btn.closest('.rv-card').dataset.id, btn.dataset.peek, btn.dataset.rev).then((d) => {
+      if (d.kind === 'other') { box.innerHTML = `<p class="rv-fnote">${esc(d.note || 'This file type can only be checked after downloading.')}</p>`; return []; }
+      if (!d.ok) { box.innerHTML = `<p class="rv-fnote is-bad">${esc(d.error)}</p>`; return [`${label}: ${d.error}`]; }
+      box.innerHTML = `
+        <p class="rv-fnote ${d.audio ? 'is-ok' : 'is-bad'}">${d.files} file${d.files === 1 ? '' : 's'}, ${d.audio} audio${d.audio ? '' : ': no audio files found'}${d.truncated ? ' (showing the first ones)' : ''}</p>
+        <ul class="rv-zip-list">${d.entries.map((x) => `<li><span>${esc(x.name.replace(/\\/g, '/'))}</span><small>${size(x.size)}</small></li>`).join('')}</ul>`;
+      btn.textContent = box.hidden ? `Show what's inside (${d.files} files)` : 'Hide contents';
+      return d.audio ? [] : [`${label}: the archive has no audio files`];
+    }).catch((err) => { box.innerHTML = `<p class="rv-fnote is-bad">${esc(err.message)}</p>`; return [`${label}: could not be read (${err.message})`]; });
+    zipRead.set(btn, job);
+    return job;
+  }
+
+  // Every check of a card (cover, audio formats, archives). On cards to
+  // review they run at once and end in a summary; history cards check their
+  // files only when opened.
+  function runChecks(root = list) {
+    root.querySelectorAll('.rv-card').forEach((cardEl) => {
+      if (cardEl.dataset.checked) return;
+      const reviewable = !!cardEl.querySelector('[data-auto]');
+      const more = cardEl.querySelector('.rv-files-more');
+      if (!reviewable && !(more && more.open)) return;
+      cardEl.dataset.checked = '1';
+      const id = cardEl.dataset.id;
+      const tasks = [];
+      // Cover: real pixel size, square and at least 1000 px.
+      cardEl.querySelectorAll('img[data-art-check]').forEach((img) => {
+        img.loading = 'eager';
+        tasks.push(new Promise((resolve) => {
+          const info = img.closest('.rv-art').querySelector('[data-art-info]');
+          const check = () => {
+            const w = img.naturalWidth;
+            const h = img.naturalHeight;
+            const issues = [w !== h ? 'not square' : '', Math.min(w, h) < 1000 ? 'smaller than 1000 px' : ''].filter(Boolean);
+            note(info, `${w} × ${h} px${issues.length ? `: ${issues.join(', ')}` : ', looks good'}`, issues.length > 0);
+            resolve(issues.length ? [`Cover: ${w} × ${h} px, ${issues.join(' and ')}`] : []);
+          };
+          if (img.complete && img.naturalWidth) check(); else img.addEventListener('load', check, { once: true });
+          img.addEventListener('error', () => { note(info, 'Could not open the image.', true); resolve(['Cover: the image could not be opened']); }, { once: true });
+        }));
+      });
+      // Audio: format against the store's file rules (problems come from the server).
+      cardEl.querySelectorAll('[data-inspect]').forEach((el) => {
+        const label = FILE_LABELS[el.dataset.inspect];
+        tasks.push(inspect(id, el.dataset.inspect, el.dataset.rev).then((d) => {
+          if (!d.ok) { note(el, d.error, true); return [`${label}: ${d.error}`]; }
+          const quality = d.kind === 'wav' ? (d.float ? '32-bit float' : `${d.bits}-bit`) : `${d.kbps} kbps${d.vbr ? ' VBR' : ''}`;
+          const issues = d.problems || [];
+          note(el, `${quality} · ${(d.sampleRate / 1000).toFixed(1)} kHz · ${d.channels === 1 ? 'mono' : d.channels === 2 ? 'stereo' : `${d.channels} channels`}${d.duration ? ` · ${fmtDur(d.duration)}` : ''}${issues.length ? ` · ${issues.join(', ')}` : ' · Meets the file rules'}`, issues.length > 0);
+          return issues.length ? [`${label}: ${issues.join(', ')}`] : [];
+        }).catch((err) => { note(el, err.message, true); return [`${label}: could not be read (${err.message})`]; }));
+      });
+      if (reviewable) {
+        cardEl.querySelectorAll('[data-peek]').forEach((btn) => tasks.push(readZip(btn)));
+        Promise.all(tasks).then((lists) => paintAuto(cardEl, lists.flat()));
+      }
     });
   }
 
-  // ZIP / RAR: list what's inside on demand.
+  // Summary of the automatic checks, with the problems ready to send back.
+  function paintAuto(cardEl, problems) {
+    const box = cardEl.querySelector('[data-auto]');
+    if (!box) return;
+    if (!problems.length) {
+      box.className = 'rv-auto is-ok';
+      box.innerHTML = '<span class="rv-auto-dot"></span><span><b>All automatic checks passed.</b> Cover, audio formats and archives meet the file rules. Give it a listen and approve.</span>';
+      return;
+    }
+    box.className = 'rv-auto is-bad';
+    box.dataset.note = `Please fix ${problems.length === 1 ? 'this' : 'these'} and send the track again:\n${problems.map((p) => `- ${p}`).join('\n')}`;
+    box.innerHTML = `<span class="rv-auto-dot"></span><div><b>${problems.length} problem${problems.length === 1 ? '' : 's'} found</b><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul><button type="button" class="rv-auto-note" data-use-note>Use as note to the producer</button></div>`;
+  }
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-use-note]');
+    if (!b) return;
+    const cardEl = b.closest('.rv-card');
+    const ta = $('textarea', cardEl);
+    ta.value = b.closest('[data-auto]').dataset.note;
+    ta.focus();
+  });
+  // History cards: check the files when they're opened.
+  list.addEventListener('toggle', (e) => { if (e.target.matches && e.target.matches('.rv-files-more') && e.target.open) runChecks(); }, true);
+
+  // ZIP / RAR: show or hide what's inside.
   list.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-peek]');
     if (!btn) return;
@@ -380,16 +454,58 @@
     if (!box.hidden) { box.hidden = true; btn.textContent = "Show what's inside"; return; }
     box.hidden = false;
     btn.textContent = 'Hide contents';
-    if (box.dataset.loaded) return;
-    box.innerHTML = '<p class="rv-fnote">Reading the archive…</p>';
-    inspect(btn.closest('.rv-card').dataset.id, btn.dataset.peek).then((d) => {
-      box.dataset.loaded = '1';
-      if (d.kind === 'other') { box.innerHTML = `<p class="rv-fnote">${esc(d.note || 'This file type can only be checked after downloading.')}</p>`; return; }
-      if (!d.ok) { box.innerHTML = `<p class="rv-fnote is-bad">${esc(d.error)}</p>`; return; }
-      box.innerHTML = `
-        <p class="rv-fnote ${d.audio ? 'is-ok' : 'is-bad'}">${d.files} file${d.files === 1 ? '' : 's'}, ${d.audio} audio${d.audio ? '' : ': no audio files found'}${d.truncated ? ' (showing the first ones)' : ''}</p>
-        <ul class="rv-zip-list">${d.entries.map((x) => `<li><span>${esc(x.name.replace(/\\/g, '/'))}</span><small>${size(x.size)}</small></li>`).join('')}</ul>`;
-    }).catch((err) => { box.innerHTML = `<p class="rv-fnote is-bad">${esc(err.message)}</p>`; });
+    readZip(btn);
+  });
+
+  /* ------------------------- Store preview, prepared ------------------------ */
+  // The voice-tagged preview is mixed in the background as soon as the queue
+  // loads (one track at a time), so Approve goes straight to the final check.
+  const prepared = new Map(); // "id:n" / "id:c" -> Promise<{ mp3, urls }>
+  const prepState = new Map(); // same key -> { text, cls }
+  let prepQueue = Promise.resolve();
+  const prepKey = (cardEl) => `${cardEl.dataset.id}:${cardEl.dataset.change === '1' ? 'c' : 'n'}`;
+  const needsTag = (cardEl) => !!cardEl.querySelector('[data-auto]') && (cardEl.dataset.change !== '1' || cardEl.dataset.newPreview === '1');
+  const paintPrep = (key) => {
+    const st = prepState.get(key);
+    const [id] = key.split(':');
+    const el = list.querySelector(`.rv-card[data-id="${id}"] [data-prep]`);
+    if (!el || !st) return;
+    el.hidden = false;
+    el.textContent = st.text;
+    el.className = `rv-prep ${st.cls || ''}`;
+  };
+  const setPrep = (key, text, cls) => { prepState.set(key, { text, cls }); paintPrep(key); };
+  const tagUrls = (cardEl) => fetch('/api/review/tag', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(cardEl.dataset.id), changes: cardEl.dataset.change === '1' }),
+  }).then(async (r) => {
+    const urls = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(urls.error || 'Could not prepare the voice tag.');
+    return urls;
+  });
+  function prepare(cardEl) {
+    const key = prepKey(cardEl);
+    if (!prepared.has(key)) {
+      setPrep(key, 'Store preview: waiting…');
+      const job = prepQueue.then(async () => {
+        if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
+        setPrep(key, 'Store preview: downloading…');
+        const urls = await tagUrls(cardEl);
+        const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => setPrep(key, `Store preview: ${msg.replace(/…$/, '')}…`), { producerTagUrl: urls.producerTagUrl });
+        setPrep(key, 'Store preview with the voice tag is ready.', 'is-ok');
+        return { mp3, urls };
+      });
+      prepQueue = job.catch(() => {});
+      prepared.set(key, job);
+      job.catch((err) => { prepared.delete(key); setPrep(key, `Store preview: ${err.message} It will be retried when you approve.`, 'is-bad'); });
+    }
+    return prepared.get(key);
+  }
+  const autoPrepare = () => list.querySelectorAll('.rv-card').forEach((cardEl) => {
+    const key = prepKey(cardEl);
+    if (prepState.has(key)) paintPrep(key);
+    if (needsTag(cardEl)) prepare(cardEl).catch(() => {});
   });
 
   /* ------------------------------ Preview player ---------------------------- */

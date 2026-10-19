@@ -985,3 +985,26 @@
 .up-co-x{ grid-row:2; grid-column:2; }
 .up-producers > label > span{ font-size:13px; font-weight:600; color:var(--text-secondary); }
 .up-producers{ gap:7px; }
+
+/* Review: automatic checks summary, prepared store preview, folded history files */
+.rv-auto{ display:flex; align-items:flex-start; gap:10px; margin-top:16px; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); font-size:13.5px; line-height:1.5; color:var(--text-secondary); }
+.rv-auto b{ color:#f5f5f7; }
+.rv-auto-dot{ width:9px; height:9px; flex-shrink:0; margin-top:6px; border-radius:50%; background:#ababb0; animation:rvPulse 1.2s ease-in-out infinite; }
+@keyframes rvPulse{ 50%{ opacity:0.35; } }
+.rv-auto.is-ok{ border-color:rgba(76,201,122,0.35); background:rgba(76,201,122,0.08); }
+.rv-auto.is-ok .rv-auto-dot{ background:#4cc97a; animation:none; }
+.rv-auto.is-bad{ border-color:rgba(255,99,71,0.35); background:rgba(255,99,71,0.07); }
+.rv-auto.is-bad .rv-auto-dot{ background:#ff7a5c; animation:none; }
+.rv-auto ul{ margin:6px 0 8px; padding-left:18px; color:#ffc2b3; }
+.rv-auto-note{ padding:0; border:0; background:none; color:#f0a35b; font-family:var(--font-sans); font-size:13px; font-weight:700; cursor:pointer; }
+@media (hover:hover) and (pointer:fine){ .rv-auto-note:hover{ text-decoration:underline; text-underline-offset:3px; } }
+.rv-prep{ margin:10px 2px 0; font-size:12.5px; color:var(--text-muted); }
+.rv-prep.is-ok{ color:#7fe0a4; }
+.rv-prep.is-bad{ color:#ff9c86; }
+.rv-files-more > summary{ list-style:none; cursor:pointer; }
+.rv-files-more > summary::-webkit-details-marker{ display:none; }
+.rv-files-more > summary h3{ margin:0; }
+.rv-files-more > summary h3::after{ content:"Show"; margin-left:auto; font-size:12.5px; font-weight:600; color:#f0a35b; }
+.rv-files-more[open] > summary h3::after{ content:"Hide"; }
+.rv-files-more[open] > summary{ margin-bottom:10px; }
+@media (prefers-reduced-motion: reduce){ .rv-auto-dot{ animation:none; } }

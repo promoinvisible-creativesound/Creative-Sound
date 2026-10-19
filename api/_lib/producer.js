@@ -551,24 +551,18 @@ async function handleAdminList(req, res) {
     const rows = status === 'pending'
       ? await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' OR (s.status = 'approved' AND s.changes_status = 'pending') ORDER BY COALESCE(s.changes_at, s.submitted_at) ASC LIMIT 100`
       : await sql`SELECT s.*, u.producer_verified, u.verify_requested_at FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = ${status} ORDER BY s.reviewed_at DESC NULLS LAST LIMIT 100`;
-    // Approved tracks still missing a cover colour get one (a few per call).
-    let fixes = 0;
-    for (const r of rows) {
-      if (r.status === 'approved' && !r.accent && r.files && r.files.artwork && fixes < 3) { fixes++; r.accent = await ensureAccent(r); }
-    }
+    // Approved tracks still missing a cover colour get one (a few per call, in parallel).
+    await Promise.all(rows.filter((r) => r.status === 'approved' && !r.accent && r.files && r.files.artwork).slice(0, 3)
+      .map(async (r) => { r.accent = await ensureAccent(r); }));
     const out = [];
     for (const r of rows) {
+      // Links are made only when the browser opens them (GET /api/review/file),
+      // so the list loads without one Dropbox call per file.
       const links = {};
-      if (dropbox.configured()) {
-        for (const [kind, f] of Object.entries(r.files || {})) {
-          try { links[kind] = await dropbox.readLink(f.path); } catch (err) { links[kind] = null; }
-        }
-        // New files of pending changes: rev:<kind>
-        if (r.changes_status === 'pending') {
-          for (const [kind, f] of Object.entries((r.changes && r.changes.files) || {})) {
-            try { links[`rev:${kind}`] = await dropbox.readLink(f.path); } catch (err) { links[`rev:${kind}`] = null; }
-          }
-        }
+      const fileUrl = (kind, rev) => `/api/review/file?id=${r.id}&kind=${kind}${rev ? '&rev=1' : ''}`;
+      for (const kind of Object.keys(r.files || {})) links[kind] = fileUrl(kind);
+      if (r.changes_status === 'pending') {
+        for (const kind of Object.keys((r.changes && r.changes.files) || {})) links[`rev:${kind}`] = fileUrl(kind, true);
       }
       out.push({
         id: r.id, status: r.status, email: r.email, producerName: joinNames([r.producer_name, ...(r.co_producers || []).map((c) => c.name)]), title: r.title, bpm: r.bpm,
@@ -726,8 +720,10 @@ async function handleAdminInspect(req, res) {
   if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
   try {
     await ensureTables();
-    const [sub] = await sql`SELECT files FROM beat_submissions WHERE id = ${Number(req.query.id)}`;
-    const f = sub && sub.files && sub.files[String(req.query.kind || '')];
+    const [sub] = await sql`SELECT files, changes FROM beat_submissions WHERE id = ${Number(req.query.id)}`;
+    const kind = String(req.query.kind || '');
+    // rev=1: the new file of pending changes to an approved track.
+    const f = req.query.rev === '1' ? sub && sub.changes && sub.changes.files && sub.changes.files[kind] : sub && sub.files && sub.files[kind];
     if (!f) { res.status(404).json({ error: 'File not found.' }); return; }
     const size = await dropbox.fileSize(f.path);
     if (size == null) { res.status(404).json({ error: 'The file is no longer in Dropbox.' }); return; }
@@ -746,6 +742,30 @@ async function handleAdminInspect(req, res) {
   } catch (err) {
     console.error('admin inspect error:', err);
     res.status(500).json({ error: 'Could not read the file.' });
+  }
+}
+
+// GET ?id=&kind=[&rev=1] -> 302 to a short-lived Dropbox link for one
+// uploaded file (cover, audio, archive). Admin only; made on demand.
+async function handleAdminFile(req, res) {
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  if (!isAdmin(session)) { res.status(403).json({ error: 'Not allowed.' }); return; }
+  try {
+    await ensureTables();
+    const [sub] = await sql`SELECT files, changes FROM beat_submissions WHERE id = ${Number(req.query.id)}`;
+    const kind = String(req.query.kind || '');
+    const f = req.query.rev === '1' ? sub && sub.changes && sub.changes.files && sub.changes.files[kind] : sub && sub.files && sub.files[kind];
+    if (!f) { res.status(404).json({ error: 'File not found.' }); return; }
+    const link = await dropbox.readLink(f.path);
+    // Dropbox links last 4 hours; the browser may reuse this redirect for 1.
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.statusCode = 302;
+    res.setHeader('Location', link);
+    res.end();
+  } catch (err) {
+    console.error('admin file error:', err);
+    res.status(502).json({ error: 'Could not open the file in Dropbox.' });
   }
 }
 
@@ -877,5 +897,5 @@ async function handleAdminTag(req, res) {
 
 module.exports = {
   FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
-  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers, handleAdminTag,
+  handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers, handleAdminTag, handleAdminFile,
 };

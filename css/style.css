@@ -2753,3 +2753,11 @@ html{ scrollbar-color:rgba(232,134,44,0.45) #0a0a09; }
 ::-webkit-scrollbar-corner{ background:transparent; }
 html::-webkit-scrollbar{ width:10px; }
 html::-webkit-scrollbar-track{ background:#0a0a09; }
+
+/* Footer social icons: aligned with the brand text, outlined, same size everywhere */
+.footer-col-brand .footer-social{ display:flex; gap:10px; width:auto; margin:12px 0 0 !important; order:0; }
+.footer-social-link, .footer-col .footer-social-link{ width:40px; min-width:40px; flex:0 0 40px; height:40px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#d2d2d7; transition:background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms cubic-bezier(0.23, 1, 0.32, 1); }
+.footer-social-link svg{ width:19px; height:19px; stroke-width:1.7; }
+.footer-social-link:active{ transform:scale(0.95); }
+@media (hover:hover) and (pointer:fine){ .footer-social-link:hover{ border-color:rgba(232,134,44,0.5); background:rgba(232,134,44,0.12); color:#f5b06a; } }
+@media (max-width:760px){ .footer-col-brand{ flex-direction:column; align-items:flex-start; gap:6px; } .footer-brand-sub{ max-width:none; } }

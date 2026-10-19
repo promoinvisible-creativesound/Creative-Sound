@@ -110,13 +110,12 @@
       ${me.isAdmin ? `<div class="hm-group">
         ${item('admin-review.html', 'seal', 'Track review', '<span class="hm-new">Admin</span>')}
       </div>` : ''}
-      ${me.isAdmin ? '' : mine}
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
         ${item('upload-beat.html', 'upload', 'Upload tracks')}
         ${item('profile-producer.html#licenses', 'license', 'License terms')}
       </div>` : ''}
-      ${me.isAdmin ? mine : ''}
+      ${mine}
       <div class="hm-group">
         ${item('profile-saved.html', 'heart', 'Saved tracks')}
         ${item('messages.html', 'chat', 'Messages')}

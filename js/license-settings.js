@@ -137,6 +137,8 @@
     paint();
     changed();
   });
+  // From the account menu while already on this page.
+  window.addEventListener('hashchange', () => { if (location.hash === '#licenses' && !box.hidden) box.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   load();

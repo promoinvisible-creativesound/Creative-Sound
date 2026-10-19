@@ -27,13 +27,14 @@
     receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
     studio: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
     upload: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+    license: '<path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19"/><path d="M9 12h7M9 16h5"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.3"/><circle cx="12" cy="16.9" r=".6" fill="currentColor"/>',
     power: '<path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/>',
     music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
     chat: '<path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z"/>',
   };
-  const TONE = { chat: 'teal', studio: 'amber', upload: 'amber', seal: 'amber', profile: 'blue', user: 'blue', heart: 'pink', key: 'yellow', box: 'green', receipt: 'green', gear: 'gray', help: 'purple', headset: 'purple', mail: 'teal', play: 'red', music: 'red', login: 'blue', plus: 'green', logout: 'gray', power: 'gray' };
+  const TONE = { chat: 'teal', studio: 'amber', upload: 'amber', license: 'amber', seal: 'amber', profile: 'blue', user: 'blue', heart: 'pink', key: 'yellow', box: 'green', receipt: 'green', gear: 'gray', help: 'purple', headset: 'purple', mail: 'teal', play: 'red', music: 'red', login: 'blue', plus: 'green', logout: 'gray', power: 'gray' };
   const tile = (name) => `<span class="hm-tile is-${TONE[name] || 'gray'}"><svg class="hm-ic" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg></span>`;
   const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[name]}</svg>`;
   const ROLE = { producer: 'Producer', artist: 'Artist', listener: 'Member' };
@@ -113,6 +114,7 @@
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}
         ${item('upload-beat.html', 'upload', 'Upload tracks')}
+        ${item('profile-producer.html#licenses', 'license', 'License terms')}
       </div>` : ''}
       ${me.isAdmin ? mine : ''}
       <div class="hm-group">

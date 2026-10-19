@@ -277,7 +277,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
     const licenseId = licenseIdFor(session.id, i);
     await sql`
       INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id, license_snapshot)
-      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer))}::jsonb)
+      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${priceOf(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer, !!(beat._files && beat._files.stems)))}::jsonb)
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
     // The snapshot actually stored (a retried webhook keeps the first one).

@@ -47,10 +47,10 @@
   let licenses = null;
 
   /* ----------------------------- Co-producers ----------------------------- */
-  // Up to 2 more producers credited on the track ("Invisible & Mike"), with
+  // Up to 5 more producers credited on the track ("Invisible & Mike"), with
   // their Creative Sound @username if they have one (the track then shows on
   // their storefront too).
-  const MAX_CO = 2;
+  const MAX_CO = 5;
   const coBox = $('#up-co-list');
   const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, '') })).filter((c) => c.name);
   const coSync = () => {
@@ -152,7 +152,7 @@
     closeSuggest();
     tagInput.focus();
   };
-  fetch('data/tags.json?v=3').then((r) => r.json()).then((cfg) => {
+  fetch('data/tags.json?v=4').then((r) => r.json()).then((cfg) => {
     TAG_RULES = { min: cfg.min, maxTotal: cfg.maxTotal, maxCustom: cfg.maxCustom };
     STANDARD = cfg.groups.flatMap((g) => g.tags);
     GROUPS = cfg.groups;
@@ -667,7 +667,8 @@
     $$('#up-steps li').forEach((li) => li.classList.toggle('is-ok', !!steps[li.dataset.step]));
 
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
-    $('#up-pv-producer').textContent = [val('producerName') || 'Your producer name', ...coList().map((c) => c.name)].join(' & ');
+    const names = [val('producerName') || 'Your producer name', ...coList().map((c) => c.name)];
+    $('#up-pv-producer').textContent = names.length <= 2 ? names.join(' & ') : `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
     $('#up-pv-chips').innerHTML = [bpm ? `${bpm} BPM` : '', val('key'), val('genre')].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('');
     // The producer keeps 80% of every sale (see the Payouts section).
     licenses && licenses.order.forEach((t) => {

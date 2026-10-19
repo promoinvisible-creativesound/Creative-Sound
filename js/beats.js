@@ -82,7 +82,9 @@
   // A producer upload carries its own badge (set by the owner on the review
   // page), so nobody gets it by picking a verified producer's name.
   const beatVerified = (b) => (typeof b.verified === 'boolean' ? b.verified : isVerified(b.producer));
-  const producerLine = (b) => `<span class="bt-producer">${esc(b.producer)}${beatVerified(b) ? VERIFIED : ''}${(b.coProducers || []).map((c) => ` <i class="bt-amp">&amp;</i> ${esc(c.name)}`).join('')}</span>`;
+  // Every producer on the track links to their profile / storefront (/@handle).
+  const who = (name, handle) => (handle ? `<a class="bt-producer-link" href="/@${encodeURIComponent(handle)}">${esc(name)}</a>` : esc(name));
+  const producerLine = (b) => `<span class="bt-producer">${who(b.producer, b.producerHandle)}${beatVerified(b) ? VERIFIED : ''}${(b.coProducers || []).map((c, i, all) => `${i === all.length - 1 ? '<i class="bt-amp">&amp;</i>' : '<i class="bt-amp is-comma">,</i>'}${who(c.name, c.handle)}`).join('')}</span>`;
   const tiersOf = (b) => LIC.order.filter((t) => b.prices && b.prices[t] > 0);
   const minPrice = (b) => Math.min(...tiersOf(b).map((t) => b.prices[t]));
   // A tier as this track sells it: the producer's own limits (b.license, from

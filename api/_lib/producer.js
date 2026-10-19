@@ -254,11 +254,11 @@ function validateDetails(body, files) {
     .map((t) => clean(t, len).replace(/^#/, '')).filter(Boolean).slice(0, n);
   const tags = [...new Set(list(body.tags, require('../../data/tags.json').maxTotal || 12, 24).map((t) => t.toLowerCase()))];
   const typeBeat = list(body.typeBeat, 3, 40);
-  // Up to 2 co-producers: a name, and optionally their @username here.
+  // Up to 5 co-producers: a name, and optionally their @username here.
   const coProducers = (Array.isArray(body.coProducers) ? body.coProducers : []).map((c) => ({
     name: clean(c && c.name, 60),
     handle: clean(c && c.handle, 31).toLowerCase().replace(/^@/, '') || null,
-  })).filter((c) => c.name).slice(0, 2);
+  })).filter((c) => c.name).slice(0, 5);
   const about = String(body.about || '').trim().slice(0, 600);
 
   // Tags: at least TAGS.min from the standard list (data/tags.json) so the
@@ -297,6 +297,9 @@ function validateDetails(body, files) {
   if (!Object.keys(prices).length) return { error: 'Set a price for at least one license.' };
   return { data: { producerName, coProducers, title, bpm, key, genre, mood, tags, typeBeat, about, prices } };
 }
+
+// "A & B", "A, B & C"
+const joinNames = (n) => (n.length <= 2 ? n.join(' & ') : `${n.slice(0, -1).join(', ')} & ${n[n.length - 1]}`);
 
 // Co-producer usernames must be real accounts (their storefront lists the track).
 async function coProducerError(list) {
@@ -417,7 +420,7 @@ async function handleSubmit(req, res) {
       const prices = Object.entries(data.prices).map(([t, c]) => `${LICENSES.tiers[t].name} €${(c / 100).toFixed(2)}`).join(' · ');
       const site = process.env.SITE_URL || 'https://creativesound.io';
       const facts = [
-        ['Producer', [data.producerName, ...data.coProducers.map((c) => c.name)].join(' & ')],
+        ['Producer', joinNames([data.producerName, ...data.coProducers.map((c) => c.name)])],
         ['Tempo · key', `${data.bpm} BPM · ${data.key}`],
         ['Genre · mood', `${data.genre} · ${data.mood}`],
         ['Licenses', prices],
@@ -568,7 +571,7 @@ async function handleAdminList(req, res) {
         }
       }
       out.push({
-        id: r.id, status: r.status, email: r.email, producerName: [r.producer_name, ...(r.co_producers || []).map((c) => c.name)].join(' & '), title: r.title, bpm: r.bpm,
+        id: r.id, status: r.status, email: r.email, producerName: joinNames([r.producer_name, ...(r.co_producers || []).map((c) => c.name)]), title: r.title, bpm: r.bpm,
         key: r.musical_key, genre: r.genre, mood: r.mood, tags: r.tags, typeBeat: r.type_beat, about: r.about,
         prices: r.prices, files: r.files, links, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         userId: r.user_id, producerVerified: !!r.producer_verified,

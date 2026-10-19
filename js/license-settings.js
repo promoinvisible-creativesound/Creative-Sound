@@ -32,12 +32,15 @@
   const paintTabs = () => {
     $('#lc-tabs').innerHTML = TIERS.map(([id, label]) => {
       const t = config.tiers[id];
-      return `<button type="button" role="tab" class="lc-tab${id === tier ? ' is-on' : ''}" data-tier="${id}" aria-selected="${id === tier}"><b>${label}</b><small>${unlimited(t) ? 'Unlimited' : 'Lease'}</small></button>`;
+      const kind = id === 'wav' && t.auto && !unlimited(t) ? 'Auto' : unlimited(t) ? 'Unlimited' : 'Lease';
+      return `<button type="button" role="tab" class="lc-tab${id === tier ? ' is-on' : ''}" data-tier="${id}" aria-selected="${id === tier}"><b>${label}</b><small>${kind}</small></button>`;
     }).join('');
   };
   const paintFields = () => {
     const t = config.tiers[tier];
-    $('#lc-fields').innerHTML = FIELDS.map(([key, label, show]) => `
+    const auto = tier === 'wav' ? `
+      <label class="lc-auto"><input type="checkbox" data-auto${t.auto ? ' checked' : ''}><span><b>Unlimited when the track has no stems</b><small>On tracks with stems, the WAV uses the limits below and Unlimited starts with the Trackout license. Turn off to always use the limits below.</small></span></label>` : '';
+    $('#lc-fields').innerHTML = auto + FIELDS.map(([key, label, show]) => `
       <label class="lc-row"><span>${label}</span>
         <select data-field="${key}">${data.options[key === 'live' ? 'live' : key].map((o) => `<option value="${val(o)}"${o === t[key] ? ' selected' : ''}>${esc(show(o))}</option>`).join('')}</select>
       </label>`).join('');
@@ -72,6 +75,7 @@
     if (rm) { config.clauses.splice(Number(rm.dataset.remove), 1); paintClauses(); changed(); }
   });
   box.addEventListener('change', (e) => {
+    if (e.target.matches('[data-auto]')) { config.tiers.wav.auto = e.target.checked; paintTabs(); changed(); return; }
     const sel = e.target.closest('[data-field]');
     if (!sel) return;
     config.tiers[tier][sel.dataset.field] = parse(sel.value);

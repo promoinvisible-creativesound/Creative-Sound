@@ -18,11 +18,13 @@ const OPTIONS = {
 const MAX_CLAUSES = 5;
 const CLAUSE_MAX = 400;
 
-// The terms the site used before producers could change them.
+// Standard terms. Unlimited starts with the stems (Trackout); the WAV is
+// Unlimited only on tracks without stems (wav.auto), otherwise it is a lease
+// with the limits below. A producer who edits the WAV keeps their own terms.
 const DEFAULTS = {
   tiers: {
     mp3: { streams: 100000, sales: 2500, videos: 1, live: 'nonprofit', radio: 0, publishing: 50 },
-    wav: { streams: null, sales: null, videos: null, live: 'all', radio: null, publishing: 50 },
+    wav: { streams: 500000, sales: 10000, videos: 2, live: 'all', radio: 2, publishing: 50, auto: true },
     trackout: { streams: null, sales: null, videos: null, live: 'all', radio: null, publishing: 0 },
     project: { streams: null, sales: null, videos: null, live: 'all', radio: null, publishing: 0 },
   },
@@ -53,10 +55,20 @@ function normalize(raw) {
       radio: pick(OPTIONS.radio, t.radio, d.radio),
       publishing: pick(OPTIONS.publishing, t.publishing == null ? d.publishing : Number(t.publishing), d.publishing),
     };
+    // WAV: automatic unless the producer saved their own WAV terms without it.
+    if (id === 'wav') tiers[id].auto = typeof t.auto === 'boolean' ? t.auto : !(src.tiers && src.tiers.wav);
   }
   const clauses = (Array.isArray(src.clauses) ? src.clauses : []).map(cleanClause).filter((c) => c.length >= 10).slice(0, MAX_CLAUSES);
   return { tiers, clauses };
 }
+
+const UNLIMITED = { streams: null, sales: null, videos: null, live: 'all', radio: null };
+// The terms that apply to one track: an automatic WAV is Unlimited when the
+// track has no stems.
+const resolve = (id, c, hasStems) => {
+  const t = c.tiers[id];
+  return id === 'wav' && t.auto && !hasStems ? { ...t, ...UNLIMITED } : t;
+};
 
 const n = (x) => Number(x).toLocaleString('en-US');
 const isUnlimited = (t) => t.streams === null && t.sales === null && t.videos === null && t.live === 'all' && t.radio === null;
@@ -86,10 +98,10 @@ function tierView(id, t) {
   };
 }
 // Public view for a track: every tier + the producer's own clauses.
-function storeView(raw) {
+function storeView(raw, hasStems = false) {
   const c = normalize(raw);
   const tiers = {};
-  LICENSES.order.forEach((id) => { tiers[id] = tierView(id, c.tiers[id]); });
+  LICENSES.order.forEach((id) => { tiers[id] = tierView(id, resolve(id, c, hasStems)); });
   return { tiers, clauses: c.clauses };
 }
 
@@ -141,9 +153,12 @@ function contractTerms(id, t, producer, hasClauses) {
 }
 
 // Everything the PDF prints for one sale, frozen at purchase time.
-function snapshot(id, raw, producer) {
+// hasStems: whether the track has stems (decides an automatic WAV). Sales
+// made before this rule (no snapshot) were all on the old terms, where the
+// WAV was always Unlimited: callers pass false for those.
+function snapshot(id, raw, producer, hasStems = false) {
   const c = normalize(raw);
-  const t = c.tiers[id];
+  const t = resolve(id, c, hasStems);
   const view = tierView(id, t);
   return {
     v: 1,

@@ -334,7 +334,7 @@ async function handleProducerLicense(req, res) {
       const pdf = await licensePdf({
         licenseId: 'PREVIEW', beat: { title: 'Your track', producer, bpm: 140, key: 'C min' }, tier,
         buyerName: 'Artist name', buyerEmail: 'artist@example.com', date: new Date().toISOString().slice(0, 10),
-        price: 2999, currency: 'eur', snap: lc.snapshot(tier, config, producer),
+        price: 2999, currency: 'eur', snap: lc.snapshot(tier, config, producer, true),
       });
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="License preview - ${tier}.pdf"`);

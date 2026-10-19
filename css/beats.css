@@ -2442,3 +2442,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Co-producers in the credit line */
 .bt-amp{ font-style:normal; opacity:0.6; }
 .bp-amp{ margin:0 6px; opacity:0.55; }
+.bp-amp.is-comma{ margin:0 6px 0 0; }
+.bt-producer-link{ color:inherit; text-decoration:none; white-space:nowrap; }
+.bt-producer:has(.bt-amp){ flex-wrap:wrap; row-gap:1px; }
+@media (hover:hover) and (pointer:fine){ .bt-producer-link:hover{ color:var(--text); text-decoration:underline; text-underline-offset:2px; } }
+.bt-producer .bt-amp.is-comma{ margin-left:-4px; }

@@ -25,6 +25,9 @@ const trackId = (row) => `t${row.id}-${slug(row.title)}`;
 const submissionIdOf = (id) => { const m = /^t(\d+)-/.exec(String(id)); return m ? Number(m[1]) : null; };
 const isTrackId = (id) => submissionIdOf(id) != null;
 
+// "A & B", "A, B & C"
+const joinNames = (n) => (n.length <= 2 ? n.join(' & ') : `${n.slice(0, -1).join(', ')} & ${n[n.length - 1]}`);
+
 function toBeat(row) {
   const id = trackId(row);
   return {
@@ -36,7 +39,7 @@ function toBeat(row) {
     producerHandle: row.producer_handle || null,
     // Co-producers and the full credit line ("Invisible & Mike").
     coProducers: Array.isArray(row.co_producers) ? row.co_producers : [],
-    credit: [row.producer_name, ...(Array.isArray(row.co_producers) ? row.co_producers : []).map((c) => c.name)].join(' & '),
+    credit: joinNames([row.producer_name, ...(Array.isArray(row.co_producers) ? row.co_producers : []).map((c) => c.name)]),
     // Contact for private requests, only what the producer chose to share.
     contact: row.producer_instagram || row.producer_email ? { instagram: row.producer_instagram || null, email: row.producer_email || null } : null,
     bpm: row.bpm,
@@ -59,7 +62,7 @@ function toBeat(row) {
     cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=sm&v=${fileVersion(row)}` : null,
     preview: `/api/beats/media?id=${id}&kind=preview&v=${fileVersion(row)}`,
     // The producer's license terms (limits, publishing share, own clauses).
-    license: require('./license-config').storeView(row.producer_license),
+    license: require('./license-config').storeView(row.producer_license, !!(row.files && row.files.stems)),
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
     _submissionId: row.id,

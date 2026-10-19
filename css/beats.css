@@ -1382,10 +1382,10 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 @media (max-width:560px){ .bt-toolbar.reveal-up{ transform:none !important; } }
 
 /* Slightly smaller search field */
-.bt-search{ height:40px; padding:0 12px; gap:8px; flex:0 1 270px; align-self:center; }
+.bt-search{ height:40px; padding:0 12px; gap:8px; flex:0 1 330px; min-width:300px; align-self:center; }
 .bt-search svg{ width:15px; height:15px; }
 .bt-search input{ font-size:14px; }
-@media (max-width:560px){ .bt-search{ flex:1 1 100%; } .bt-search input{ font-size:16px; } }
+@media (max-width:560px){ .bt-search{ flex:1 1 100%; min-width:0; } .bt-search input{ font-size:16px; } }
 
 /* Slimmer filter controls: dropdowns match the 40px search; tags, count,
    clear and layout toggle step down with them. */

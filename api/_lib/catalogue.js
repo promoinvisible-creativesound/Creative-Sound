@@ -134,8 +134,22 @@ async function handleMedia(req, res) {
     if (!f || !dropbox.configured()) { res.status(404).json({ error: 'Not found.' }); return; }
     // ?s=sm: the small cover (made once, see _lib/thumb.js); full size otherwise.
     let path = f.path;
+    let size = f.size;
     if (kind === 'artwork' && req.query.s === 'sm') {
-      try { path = (await require('./thumb').ensureThumb(beat._submissionId, files)) || f.path; } catch (err) { console.error('cover thumb failed:', err.message); }
+      try {
+        const thumb = await require('./thumb').ensureThumb(beat._submissionId, files);
+        if (thumb) { path = thumb; size = files.thumb && files.thumb.path === thumb ? files.thumb.size : 0; }
+      } catch (err) { console.error('cover thumb failed:', err.message); }
+    }
+    // Covers: send the image itself so the CDN keeps it. ?v= changes with
+    // the file, so a versioned URL can be cached for good.
+    if (kind === 'artwork' && size && size < 4 * 1024 * 1024) {
+      const buf = await dropbox.readRange(path, 0, size - 1);
+      const ext = (path.match(/\.([a-z0-9]+)$/i) || [])[1] || '';
+      res.setHeader('Content-Type', { png: 'image/png', webp: 'image/webp', gif: 'image/gif' }[ext.toLowerCase()] || 'image/jpeg');
+      res.setHeader('Cache-Control', req.query.v ? 'public, max-age=31536000, immutable' : 'public, max-age=300, s-maxage=600');
+      res.status(200).send(buf);
+      return;
     }
     const link = await dropbox.readLink(path);
     // Dropbox links last 4 hours; caches keep the redirect well inside that.

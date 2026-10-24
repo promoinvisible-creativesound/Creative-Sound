@@ -1,6 +1,6 @@
 // Voice tag for public previews (used by admin-review.js on Approve).
 // Decodes the producer's preview, lays the "Creative Sound" tag over it at
-// 1s and then every 20s (music ducked under the voice so it stays clear),
+// 1s and then every 35s (music ducked under the voice so it stays clear),
 // and encodes the result to a 192 kbps stereo MP3 with lamejs.
 // Only this tagged file is ever played in the store; buyers get clean files.
 (() => {
@@ -8,7 +8,7 @@
   const TAG_URL = 'assets/audio/voice-tag.wav?v=2';
   const LAME_URL = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js';
   const FIRST = 1;       // seconds
-  const EVERY = 20;      // seconds between tags
+  const EVERY = 35;      // seconds between tags
   const DUCK = 0.45;     // music level under the voice
   const TAG_GAIN = 1.15;
   const RATE = 44100;
@@ -31,7 +31,7 @@
   const nextFrame = () => new Promise((r) => setTimeout(r, 0));
 
   // opts.producerTagUrl: the producer's own tag; it plays halfway between
-  // the Creative Sound tags (1s, 21s, … ours; 11s, 31s, … theirs).
+  // the Creative Sound tags (1s, 36s, … ours; 18.5s, 53.5s, … theirs).
   async function tag(sourceUrl, onProgress = () => {}, opts = {}) {
     onProgress('Downloading the preview…');
     const [srcRes, tagRes, ptagRes] = await Promise.all([

@@ -211,7 +211,7 @@
     const box = document.createElement('div');
     box.className = 'rv-tagcheck';
     box.innerHTML = `
-      <div class="rv-tagcheck-head"><b>Check the store preview</b><small>This is what people will hear, with the voice tag every 20 seconds. Publish it?</small></div>
+      <div class="rv-tagcheck-head"><b>Check the store preview</b><small>This is what people will hear, with the voice tag every 35 seconds. Publish it?</small></div>
       <audio controls preload="auto" src="${url}"></audio>
       <div class="rv-tagcheck-actions">
         <button type="button" class="btn btn-ghost" data-tc="cancel">Cancel</button>

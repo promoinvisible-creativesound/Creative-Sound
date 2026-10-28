@@ -1,6 +1,22 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.creativesound.io"
+        }
+      ],
+      "destination": "https://creativesound.io/",
+      "permanent": true
+    },
+    {
+      "source": "/track-shell.html",
+      "destination": "/beats.html",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "has": [
         {
@@ -206,8 +222,12 @@
       "destination": "/api/tickets?action=beats-license"
     },
     {
+      "source": "/track.html",
+      "destination": "/api/tickets?action=seo-page&kind=track"
+    },
+    {
       "source": "/@:handle",
-      "destination": "/artist.html"
+      "destination": "/api/tickets?action=seo-page&kind=profile&handle=:handle"
     }
   ],
   "headers": [
@@ -257,7 +277,7 @@
   "functions": {
     "api/tickets.js": {
       "maxDuration": 60,
-      "includeFiles": "artist.html"
+      "includeFiles": "{artist.html,track-shell.html}"
     }
   },
   "git": {

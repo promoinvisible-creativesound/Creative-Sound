@@ -247,20 +247,29 @@ async function handlePhoto(req, res) {
   }
 }
 
+// Public profile and its tracks by handle (null when there is none); shared by
+// the API below and the server-rendered /@handle page (search engines).
+async function publicProfile(handle) {
+  const u = clean(handle, 30).toLowerCase();
+  if (!u) return null;
+  await ensureColumns();
+  const [row] = await sql`SELECT * FROM users WHERE lower(handle) = ${u}`;
+  if (!row) return null;
+  let tracks = [];
+  if (row.role === 'producer') {
+    const { liveBeats, publicBeat } = require('./catalogue');
+    const h = String(row.handle || '').toLowerCase();
+    tracks = (await liveBeats()).filter((b) => b.source === 'producer' && (b._userId === row.id || (h && (b.coProducers || []).some((c) => c.handle === h)))).map(publicBeat);
+  }
+  return { profile: { ...shape(row), uid: row.id }, tracks };
+}
+
 async function handlePublic(req, res) {
-  const u = clean(req.query && req.query.u, 30).toLowerCase();
   try {
-    await ensureColumns();
-    const [row] = await sql`SELECT * FROM users WHERE lower(handle) = ${u}`;
-    if (!row) { res.status(404).json({ error: 'Profile not found.' }); return; }
-    let tracks = [];
-    if (row.role === 'producer') {
-      const { liveBeats, publicBeat } = require('./catalogue');
-      const h = String(row.handle || '').toLowerCase();
-      tracks = (await liveBeats()).filter((b) => b.source === 'producer' && (b._userId === row.id || (h && (b.coProducers || []).some((c) => c.handle === h)))).map(publicBeat);
-    }
+    const found = await publicProfile(req.query && req.query.u);
+    if (!found) { res.status(404).json({ error: 'Profile not found.' }); return; }
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-    res.status(200).json({ profile: { ...shape(row), uid: row.id }, tracks });
+    res.status(200).json(found);
   } catch (err) {
     console.error('profile public error:', err);
     res.status(500).json({ error: 'Something went wrong.' });
@@ -376,4 +385,4 @@ async function handleProducerLicense(req, res) {
   }
 }
 
-module.exports = { handleProducerLicense, handleStore, handleProducerTag, GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };
+module.exports = { publicProfile, handleProducerLicense, handleStore, handleProducerTag, GENRES, ensureColumns, saveContact, handleMe, handleAvatar, handlePhoto, handlePublic };

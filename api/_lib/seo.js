@@ -6,6 +6,7 @@
 //   /tag/<slug>         "808 Beats" (from the track tags; noindex under 2 tracks)
 //   /type-beats         hub: every type beat and genre with tracks
 //   /sitemap-store.xml  tracks, these pages and producer storefronts
+//   /track.html?id=     one track, and /@handle one profile: see seo-single.js
 // The page shell (header, footer, styles) is artist.html, read at runtime so
 // it always matches the live site; js/seo-page.js plays previews in place.
 const fs = require('fs');
@@ -270,6 +271,10 @@ function notFound(res, all) {
 async function handleSeo(req, res) {
   const kind = String((req.query && req.query.kind) || '');
   const s = slug((req.query && req.query.slug) || '');
+  if (kind === 'track' || kind === 'profile') {
+    await require('./seo-single')({ esc, euro, slug, trackUrl, plural, SITE })(req, res, kind);
+    return;
+  }
   try {
     const all = await tracks();
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400');

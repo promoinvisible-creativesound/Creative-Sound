@@ -85,7 +85,8 @@ for (const b of beats) {
 }
 for (const f of fs.readdirSync(OUT)) if (f.endsWith('.html') && !wanted.has(f)) fs.unlinkSync(path.join(OUT, f));
 
-// track.html: the page for tracks uploaded by producers (track.html?id=...).
+// track-shell.html: the shell for tracks uploaded by producers. /track.html?id=...
+// is rewritten to the server (api/_lib/seo.js), which fills in the head tags.
 // Same template as every beat page; js/beats.js fills <main> from the live
 // catalogue (/api/beats/catalogue) with js/beat-markup.js.
 {
@@ -98,7 +99,7 @@ for (const f of fs.readdirSync(OUT)) if (f.endsWith('.html') && !wanted.has(f)) 
     + `<main class="beat-page" data-track-page>${EOL}  <div class="bp-wrap"><p class="bp-loading">Loading track…</p></div>${EOL}</main>`
     + html.slice(z);
   html = html.replace(/(<script src="js\/beats\.js[^"]*"><\/script>)/,`<script src="js/beat-markup.js?v=19"></script>${EOL}$1`);
-  fs.writeFileSync(path.join(ROOT, 'track.html'), html);
+  fs.writeFileSync(path.join(ROOT, 'track-shell.html'), html);
 }
 
 // Sitemap: beats.html plus every non-demo beat page.

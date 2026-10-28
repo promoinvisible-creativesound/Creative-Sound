@@ -11,7 +11,9 @@
 //       producer's bank weekly.
 //     * PayPal: one PayPal Payout per producer, drawn from the Creative
 //       Sound PayPal balance (it must hold enough funds).
-// - Refunds (charge.refunded) cancel earnings that weren't paid yet.
+// - Refunds (charge.refunded, also partial) and chargebacks (charge.dispute.*): earnings not
+//   paid yet are reduced, cancelled or put on hold; Stripe transfers already sent are reversed;
+//   PayPal ones are flagged to the studio to recover by hand (see takeBack / handleDispute).
 //
 //   GET  /api/producer/payouts           -> balances, method, history
 //   POST /api/producer/payouts           -> { method:'paypal', email } | { method:'stripe', country } -> { url }
@@ -68,6 +70,9 @@ function ensureTables() {
       // the record the fee invoice is issued from (not a tax invoice itself).
       await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS fee_number TEXT`;
       await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS fee_cents INTEGER`;
+      // Partial refunds and lost disputes take part of a sale back: what was cut so far.
+      await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS refund_gross_cents INTEGER NOT NULL DEFAULT 0`;
+      await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS refund_share_cents INTEGER NOT NULL DEFAULT 0`;
       await sql`CREATE SEQUENCE IF NOT EXISTS commission_note_seq`;
       await sql`
         UPDATE producer_earnings e SET fee_number = 'CSF-' || to_char(e.created_at, 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), fee_cents = e.gross_cents - e.share_cents
@@ -134,20 +139,122 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
   }
 }
 
-// Webhook: a fully refunded charge cancels the earnings not paid yet.
-// Already paid ones are flagged for the studio to sort out by hand.
-async function handleRefund(charge, notify) {
-  if (!charge || !charge.refunded || !charge.payment_intent) return;
+// Money taken back from a sale (refund or lost dispute). Webhook, any number of times:
+// every call works out what is still to be taken from the cumulative amount, so a
+// retried or repeated event never cuts twice.
+//   - not paid yet (pending / on hold): the earning is reduced, or cancelled when the whole sale is gone
+//   - paid through Stripe: the transfer is reversed (the producer's balance gives it back)
+//   - paid through PayPal, or a reversal that fails: nothing moves, the studio is told how much to recover
+//   - a payout being sent right now: the webhook fails so Stripe retries a little later
+// "full" = the whole charge is gone. cutTotal = cents taken back so far, out of chargeAmount.
+async function takeBack(paymentIntent, chargeAmount, cutTotal, full, why, notify) {
   await ensureTables();
-  await sql`UPDATE producer_earnings SET status = 'refunded' WHERE payment_intent = ${charge.payment_intent} AND status = 'pending'`;
-  // A fully refunded sale puts a track that it had taken off the store back on sale.
+  const rows = await sql`SELECT * FROM producer_earnings WHERE payment_intent = ${paymentIntent} AND status IN ('pending', 'disputed', 'processing', 'paid') ORDER BY id`;
+  const lines = [];
+  let busy = false;
+  for (const r of rows) {
+    const origGross = r.gross_cents + r.refund_gross_cents;
+    const origShare = r.share_cents + r.refund_share_cents;
+    const ratio = chargeAmount > 0 ? Math.min(1, cutTotal / chargeAmount) : 1;
+    const wantGross = full ? origGross : Math.min(origGross, Math.floor(origGross * ratio));
+    const wantShare = full ? origShare : Math.min(origShare, Math.floor(origShare * ratio));
+    const dGross = wantGross - r.refund_gross_cents;
+    const dShare = wantShare - r.refund_share_cents;
+    // Nothing new to take back (an already adjusted sale), except a full refund still has to close the row.
+    if (dGross <= 0 && dShare <= 0 && !(full && r.status !== 'paid')) continue;
+    const label = `#${r.id} ${r.title} (user ${r.user_id})`;
+    if (r.status === 'processing') { busy = true; continue; }
+    const left = origGross - wantGross;
+    const leftShare = origShare - wantShare;
+    if (r.status === 'pending' || r.status === 'disputed') {
+      const done = await sql`
+        UPDATE producer_earnings SET gross_cents = ${left}, share_cents = ${leftShare}, fee_cents = ${left - leftShare},
+          refund_gross_cents = ${wantGross}, refund_share_cents = ${wantShare}, status = ${full ? 'refunded' : r.status}
+        WHERE id = ${r.id} AND status = ${r.status} RETURNING id`;
+      if (!done.length) busy = true; // it moved on to a payout in between: try again later
+      continue;
+    }
+    // Paid out already.
+    if (r.payout_method === 'stripe' && r.payout_ref && dShare > 0) {
+      try {
+        await stripe().transfers.createReversal(r.payout_ref, { amount: dShare, description: `${why}: ${r.title}`, metadata: { earning_id: String(r.id) } }, { idempotencyKey: `takeback-${r.id}-${wantShare}` });
+        await sql`
+          UPDATE producer_earnings SET gross_cents = ${left}, share_cents = ${leftShare}, fee_cents = ${left - leftShare},
+            refund_gross_cents = ${wantGross}, refund_share_cents = ${wantShare}, status = ${full ? 'refunded' : 'paid'}
+          WHERE id = ${r.id}`;
+        lines.push(`${label}: €${(dShare / 100).toFixed(2)} taken back from the producer's Stripe balance.`);
+      } catch (err) {
+        console.error('transfer reversal failed for earning', r.id, err.message);
+        lines.push(`${label}: could NOT reverse the Stripe transfer (${err.message}). Recover €${(dShare / 100).toFixed(2)} from the producer by hand.`);
+      }
+    } else if (dShare > 0) {
+      lines.push(`${label}: already paid through ${r.payout_method || 'unknown'}. Recover €${(dShare / 100).toFixed(2)} from the producer by hand.`);
+    }
+  }
+  if (lines.length && notify) await notify(`${why} on ${paymentIntent}:<br>${lines.join('<br>')}`, `Producer money to recover: ${why.toLowerCase()}`);
+  if (busy) throw new Error(`payout in progress for ${paymentIntent}, retry`);
+  return rows;
+}
+
+// A track a full-rights sale had taken off the store goes back on sale when the sale is cancelled.
+async function relist(paymentIntent) {
   try {
-    const rows = await sql`SELECT DISTINCT beat_id FROM producer_earnings WHERE payment_intent = ${charge.payment_intent}`;
+    const rows = await sql`SELECT DISTINCT beat_id FROM producer_earnings WHERE payment_intent = ${paymentIntent}`;
     const ids = rows.map((r) => (/^t([0-9]+)-/.exec(String(r.beat_id)) || [])[1]).filter(Boolean).map(Number);
     if (ids.length) await sql`UPDATE beat_submissions SET sold_at = NULL, sold_tier = NULL WHERE id = ANY(${ids}) AND sold_at IS NOT NULL`;
   } catch (err) { console.error('relist after refund failed:', err.message); }
-  const paid = await sql`SELECT id, user_id, title, share_cents FROM producer_earnings WHERE payment_intent = ${charge.payment_intent} AND status = 'paid'`;
-  if (paid.length && notify) await notify(`Refund on ${charge.payment_intent} after the producer was paid: ${paid.map((p) => `#${p.id} ${p.title} €${(p.share_cents / 100).toFixed(2)} (user ${p.user_id})`).join(', ')}`);
+}
+
+// Webhook charge.refunded (fires for partial refunds too; charge.refunded === true when it is all of it).
+async function handleRefund(charge, notify) {
+  if (!charge || !charge.payment_intent || !(charge.amount_refunded > 0)) return;
+  const full = !!charge.refunded || charge.amount_refunded >= charge.amount;
+  await takeBack(charge.payment_intent, charge.amount, charge.amount_refunded, full, full ? 'Refund' : 'Partial refund', notify);
+  if (full) await relist(charge.payment_intent);
+}
+
+// Webhook charge.dispute.created / charge.dispute.closed (a chargeback).
+//   created: earnings not paid yet are put on hold; the studio is told, with the paid ones.
+//   closed, won: the hold is lifted and they are paid on the next run.
+//   closed, lost: the money is taken back like a refund of the disputed amount.
+async function handleDispute(dispute, type, notify) {
+  if (!dispute) return;
+  await ensureTables();
+  let pi = dispute.payment_intent;
+  let charge = null;
+  if (typeof dispute.charge === 'string' && (!pi || type === 'charge.dispute.closed')) {
+    charge = await stripe().charges.retrieve(dispute.charge);
+    pi = pi || charge.payment_intent;
+  }
+  if (!pi) return;
+  const eur = (c) => `€${(c / 100).toFixed(2)} ${String(dispute.currency || 'eur').toUpperCase()}`;
+  if (type === 'charge.dispute.created') {
+    const held = await sql`UPDATE producer_earnings SET status = 'disputed' WHERE payment_intent = ${pi} AND status = 'pending' RETURNING id`;
+    const paid = await sql`SELECT id, title, user_id, share_cents, payout_method FROM producer_earnings WHERE payment_intent = ${pi} AND status = 'paid'`;
+    const processing = await sql`SELECT id FROM producer_earnings WHERE payment_intent = ${pi} AND status = 'processing'`;
+    const due = dispute.evidence_details && dispute.evidence_details.due_by ? new Date(dispute.evidence_details.due_by * 1000).toISOString().slice(0, 10) : 'see Stripe';
+    const paidNote = paid.length
+      ? `Already paid out: ${paid.map((p) => `#${p.id} ${p.title} €${(p.share_cents / 100).toFixed(2)} via ${p.payout_method} (user ${p.user_id})`).join(', ')}. Stripe transfers are taken back automatically only if the dispute is lost.`
+      : 'Nothing was paid out yet.';
+    if (notify) await notify(`Chargeback opened on ${pi}: ${eur(dispute.amount)}, reason "${dispute.reason}". Send your evidence by ${due} in the Stripe dashboard. ${held.length} earning(s) put on hold. ${paidNote}`, 'Chargeback opened');
+    if (processing.length) throw new Error(`payout in progress for ${pi}, retry`);
+    return;
+  }
+  if (type !== 'charge.dispute.closed') return;
+  if (dispute.status === 'won' || dispute.status === 'warning_closed') {
+    const back = await sql`UPDATE producer_earnings SET status = 'pending' WHERE payment_intent = ${pi} AND status = 'disputed' RETURNING id`;
+    if (notify) await notify(`Chargeback on ${pi} closed in your favour (${dispute.status}). ${back.length} earning(s) go back to the next payout run.`, 'Chargeback won');
+    return;
+  }
+  if (dispute.status === 'lost') {
+    charge = charge || await stripe().charges.retrieve(dispute.charge);
+    const cut = Math.min(charge.amount, (charge.amount_refunded || 0) + dispute.amount);
+    const full = cut >= charge.amount;
+    await takeBack(pi, charge.amount, cut, full, 'Lost chargeback', notify);
+    if (full) await relist(pi);
+    // Anything still on hold after a partial loss is released.
+    await sql`UPDATE producer_earnings SET status = 'pending' WHERE payment_intent = ${pi} AND status = 'disputed'`;
+  }
 }
 
 async function producerOnly(req, res) {
@@ -454,4 +561,4 @@ async function handleCheck(req, res) {
   res.status(200).json(out);
 }
 
-module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };
+module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handleDispute, handlePayouts, handleRun };

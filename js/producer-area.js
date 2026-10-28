@@ -201,7 +201,7 @@
   const euro = (c) => `€${((c || 0) / 100).toFixed(2)}`;
   const poSay = (t, bad) => { const el = $('#po-status'); el.textContent = t || ''; el.classList.toggle('is-bad', !!bad); };
   const COUNTRY = { AT: 'Austria', BE: 'Belgium', BG: 'Bulgaria', HR: 'Croatia', CY: 'Cyprus', CZ: 'Czechia', DK: 'Denmark', EE: 'Estonia', FI: 'Finland', FR: 'France', DE: 'Germany', GR: 'Greece', HU: 'Hungary', IE: 'Ireland', IT: 'Italy', LV: 'Latvia', LT: 'Lithuania', LU: 'Luxembourg', MT: 'Malta', NL: 'Netherlands', PL: 'Poland', PT: 'Portugal', RO: 'Romania', SK: 'Slovakia', SI: 'Slovenia', ES: 'Spain', SE: 'Sweden', NO: 'Norway', IS: 'Iceland', LI: 'Liechtenstein', GB: 'United Kingdom', CH: 'Switzerland' };
-  const PO_ST = { pending: ['On hold', 'is-pending'], available: ['Available', 'is-ok'], paid: ['Paid', 'is-ok'], refunded: ['Refunded', 'is-bad'], processing: ['Sending', 'is-pending'] };
+  const PO_ST = { pending: ['On hold', 'is-pending'], available: ['Available', 'is-ok'], paid: ['Paid', 'is-ok'], refunded: ['Refunded', 'is-bad'], processing: ['Sending', 'is-pending'], disputed: ['Under review', 'is-pending'] };
 
   function paintPayouts(d) {
     $('#po-available').textContent = euro(d.totals.available);

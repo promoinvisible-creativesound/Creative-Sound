@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const { handleRefund } = require('./_lib/payouts');
+const { handleRefund, handleDispute } = require('./_lib/payouts');
 const { Resend } = require('resend');
 const { sql } = require('./_lib/db');
 const { generateLicenseKey } = require('./_lib/license');
@@ -121,14 +121,18 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // Refunds cancel producer earnings that weren't paid out yet.
-  if (event.type === 'charge.refunded') {
+  // Refunds (also partial) and chargebacks take money back from producer earnings (_lib/payouts.js).
+  // Needs these events on the webhook endpoint in Stripe: charge.refunded, charge.dispute.created, charge.dispute.closed.
+  if (event.type === 'charge.refunded' || event.type === 'charge.dispute.created' || event.type === 'charge.dispute.closed') {
+    const tell = async (text, subject) => {
+      const { error: sendError } = await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: subject || 'Refund after a producer payout', html: `<p>${text}</p>` });
+      if (sendError) console.error('webhook email rejected by Resend:', sendError);
+    };
     try {
-      await handleRefund(event.data.object, async (text) => {
-        { const { error: sendError } = await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Refund after a producer payout', html: `<p>${text}</p>` }); if (sendError) console.error('webhook email rejected by Resend:', sendError); }
-      });
+      if (event.type === 'charge.refunded') await handleRefund(event.data.object, tell);
+      else await handleDispute(event.data.object, event.type, tell);
     } catch (err) {
-      console.error('Refund handling failed, asking Stripe to retry:', err);
+      console.error('Refund or dispute handling failed, asking Stripe to retry:', err);
       res.status(500).json({ error: 'Temporary error, please retry.' });
       return;
     }

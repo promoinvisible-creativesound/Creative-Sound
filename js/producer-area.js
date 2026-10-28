@@ -174,7 +174,7 @@
   fetch('/api/producer/submissions')
     .then(async (res) => {
       if (res.status === 401) { window.location.href = 'login.html'; return; }
-      if (res.status === 403) { $('#pa-body').hidden = true; $('#pa-gate').hidden = false; $('.pa-upload').hidden = true; return; }
+      if (res.status === 403) { $('#pa-body').hidden = true; $('#pa-gate').hidden = false; return; }
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) throw new Error((data && data.error) || 'Could not load your tracks.');
       all = data.submissions || [];

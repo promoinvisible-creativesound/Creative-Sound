@@ -16,12 +16,12 @@
 
   // Where to send someone once they're signed in. Only ever a Stripe
   // checkout URL (set by the Buy-link gate in main.js when it sends someone
-  // here to create an account first) or the default profile page — never an
+  // here to create an account first) or the Track Store — never an
   // arbitrary redirect target, so a crafted ?next= can't be used to phish.
   function getNextUrl() {
     const next = new URLSearchParams(location.search).get('next');
     if (next && /^https:\/\/buy\.stripe\.com\//.test(next)) return next;
-    return 'profile.html';
+    return 'beats.html';
   }
   // New accounts pick producer / artist / listener first; any pending
   // checkout (?next=) rides along and is honoured once they've chosen.
@@ -288,7 +288,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        window.location.href = 'profile.html';
+        window.location.href = 'beats.html';
       } catch (err) {
         showError(errorEl, err.message);
         btn.textContent = originalLabel;
@@ -779,10 +779,8 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        // A pending checkout wins; otherwise the account page, which opens
-        // on the producer area for producers.
-        const next = getNextUrl();
-        window.location.href = next !== 'profile.html' ? next : (data.role === 'producer' ? 'profile-producer.html' : 'profile.html');
+        // A pending checkout wins; otherwise the Track Store.
+        window.location.href = getNextUrl();
       } catch (err) {
         showError(errorEl, err.message);
         submit.textContent = originalLabel;

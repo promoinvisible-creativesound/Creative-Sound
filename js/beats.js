@@ -904,12 +904,26 @@
   };
 
   /* -------------------------------- Featured ------------------------------- */
-  // Spotlight on one beat with the other featured beats beside it to swap
-  // in. Beats flagged "featured" in data/beats.json; newest beats otherwise.
+  // Top tracks: a spotlight on one track with the other two beside it to swap
+  // in. The three are drawn at random and redrawn every 4 hours; the draw uses the
+  // time slot as its seed, so every visitor sees the same three during a slot.
+  // Different producers first, so the block shows three names when it can.
   let featIndex = 0;
+  const TOP_SLOT = 4 * 36e5;
+  let topCache = null;
   const featuredList = () => {
-    const f = BEATS.filter((b) => b.featured);
-    return (f.length ? f : [...BEATS].sort(sorters.discover)).slice(0, 3);
+    const slot = Math.floor(Date.now() / TOP_SLOT);
+    if (topCache && topCache.slot === slot && topCache.size === BEATS.length) return topCache.list;
+    let a = (slot * 2654435761) >>> 0;
+    const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    // Same starting point whatever order the catalogue arrives in.
+    const pool = [...BEATS].sort((x, y) => (x.id < y.id ? -1 : 1));
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const seen = new Set();
+    const list = pool.filter((b) => { const p = b.producerHandle || b.producer; if (seen.has(p)) return false; seen.add(p); return true; }).slice(0, 3);
+    for (const b of pool) { if (list.length >= 3) break; if (!list.includes(b)) list.push(b); }
+    topCache = { slot, size: BEATS.length, list };
+    return list;
   };
   const spotHtml = (b, rank) => `
     <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.coverSm || b.cover, location.href).href)}')"` : ''}>
@@ -940,7 +954,7 @@
     const list = featuredList();
     if (!list.length) { box.hidden = true; return; }
     const b = list[featIndex];
-    // The frame (header with this week's dates, light running round the
+    // The frame (header, light running round the
     // border, HUD corners, arrows, picks) is built once; only the spotlight swaps.
     if (!$('.bt-top-body', box)) {
       box.innerHTML = `
@@ -950,7 +964,6 @@
           <span class="bt-top-corner bl" aria-hidden="true"></span><span class="bt-top-corner br" aria-hidden="true"></span>
           <header class="bt-top-head">
             <div class="bt-top-titles">
-              <span class="bt-top-live"><span class="bt-feat-dot" aria-hidden="true"></span>This week</span>
               <h2 class="bt-top-title">Top tracks</h2>
             </div>
           </header>
@@ -961,7 +974,7 @@
               <button type="button" class="bt-feat-nav next" data-feat-step="1" aria-label="Next track">${ARROW('M9 5l7 7-7 7')}</button>
               <div class="bt-feat-dots" aria-hidden="true">${list.map(() => '<span></span>').join('')}</div>
             </div>
-            <div class="bt-feat-list" role="group" aria-label="Top tracks this week">
+            <div class="bt-feat-list" role="group" aria-label="Top tracks">
               <div class="bt-feat-list-head"><span>Chart</span><a href="#bt-grid">See all ›</a></div>${list.map((x, i) => `
               <button type="button" class="bt-feat-pick ${tintClass(x)}" data-feat-index="${i}" aria-label="Show ${esc(x.title)}">
                 <span class="bt-feat-rank">${i + 1}</span>

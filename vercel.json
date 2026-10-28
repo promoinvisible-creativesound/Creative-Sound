@@ -215,6 +215,18 @@
       "destination": "/api/tickets?action=payouts-run"
     },
     {
+      "source": "/api/producer/tax",
+      "destination": "/api/tickets?action=producer-tax"
+    },
+    {
+      "source": "/api/producer/statement",
+      "destination": "/api/tickets?action=producer-statement"
+    },
+    {
+      "source": "/api/admin/earnings-export",
+      "destination": "/api/tickets?action=earnings-export"
+    },
+    {
       "source": "/api/payouts/check",
       "destination": "/api/tickets?action=payouts-check"
     },

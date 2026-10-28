@@ -198,6 +198,8 @@
     $('#po-available').textContent = euro(d.totals.available);
     $('#po-pending').textContent = euro(d.totals.pending);
     $('#po-paid').textContent = euro(d.totals.paid);
+    const warn = $('#po-tax-warn');
+    if (warn) warn.hidden = d.taxComplete !== false || !(d.totals.available || d.totals.pending);
     $('#po-note').textContent = `Each sale is on hold for ${d.holdDays} days (refund window), then paid out on the next Monday once your balance reaches ${euro(d.minPayout)}.`;
     po.querySelectorAll('.po-method').forEach((m) => m.classList.toggle('is-on', m.dataset.method === d.method));
     // Stripe

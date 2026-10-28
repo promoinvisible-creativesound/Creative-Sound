@@ -61,6 +61,10 @@ module.exports = async (req, res) => {
     'producer-payouts': payouts.handlePayouts,
     'payouts-run': payouts.handleRun,
     'payouts-check': payouts.handleCheck,
+    // Tax details, monthly statements, accountant export (_lib/producer-tax.js)
+    'producer-tax': require('./_lib/producer-tax').handleTax,
+    'producer-statement': require('./_lib/producer-tax').handleStatement,
+    'earnings-export': require('./_lib/producer-tax').handleExport,
     // Private messages between members (_lib/messages.js)
     messages: handleMessages,
     // Listening extras: free tagged download, waveform, lyrics (_lib/extras.js)

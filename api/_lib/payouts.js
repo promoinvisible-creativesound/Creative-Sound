@@ -64,6 +64,16 @@ function ensureTables() {
         )
       `;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS producer_earnings_sale_idx ON producer_earnings (session_id, beat_id)`;
+      // Commission note: one per sale, with the 20% Creative Sound keeps. It is
+      // the record the fee invoice is issued from (not a tax invoice itself).
+      await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS fee_number TEXT`;
+      await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS fee_cents INTEGER`;
+      await sql`CREATE SEQUENCE IF NOT EXISTS commission_note_seq`;
+      await sql`
+        UPDATE producer_earnings e SET fee_number = 'CSF-' || to_char(e.created_at, 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), fee_cents = e.gross_cents - e.share_cents
+        FROM (SELECT id FROM producer_earnings WHERE fee_number IS NULL ORDER BY id) o WHERE e.id = o.id
+      `;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS producer_earnings_fee_idx ON producer_earnings (fee_number)`
       await sql`CREATE INDEX IF NOT EXISTS producer_earnings_user_idx ON producer_earnings (user_id, status)`;
     })().catch((err) => { ready = null; throw err; });
   }
@@ -79,12 +89,13 @@ async function recordEarnings(session, items) {
   const added = [];
   for (const { beat, tier, price } of own) {
     const rows = await sql`
-      INSERT INTO producer_earnings (user_id, session_id, payment_intent, beat_id, title, tier, gross_cents, share_cents, currency)
-      VALUES (${beat._userId}, ${session.id}, ${session.payment_intent || null}, ${beat.id}, ${beat.title}, ${tier}, ${price}, ${shareOf(price)}, ${currency})
+      INSERT INTO producer_earnings (user_id, session_id, payment_intent, beat_id, title, tier, gross_cents, share_cents, currency, fee_number, fee_cents)
+      VALUES (${beat._userId}, ${session.id}, ${session.payment_intent || null}, ${beat.id}, ${beat.title}, ${tier}, ${price}, ${shareOf(price)}, ${currency},
+        'CSF-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), ${price - shareOf(price)})
       ON CONFLICT (session_id, beat_id) DO NOTHING
-      RETURNING id
+      RETURNING id, fee_number
     `;
-    if (rows.length) added.push({ userId: beat._userId, beatId: beat.id, title: beat.title, tier, gross: price, share: shareOf(price) });
+    if (rows.length) added.push({ userId: beat._userId, beatId: beat.id, title: beat.title, tier, gross: price, share: shareOf(price), fee: price - shareOf(price), feeNumber: rows[0].fee_number });
   }
   // Only the new rows, so a webhook retry never emails the producer twice.
   return added;
@@ -110,6 +121,7 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
           paragraph(`Good news${u.first_name ? `, ${u.first_name}` : ''}: someone just licensed your music.`),
           ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
           ...mine.filter((s) => s.soldOut).map((s) => paragraph(`<b>${s.title}</b> was licensed with ${tierName(s.tier)}, which leaves all rights with the buyer (no usage limits and no publishing share). It is no longer for sale and has been taken off the store.`)),
+          paragraph(`Creative Sound's 20% fee ${mine.length === 1 ? 'is' : 'is recorded'} ${mine.map((s) => (s.feeNumber ? `${euro(s.fee)} on commission note ${s.feeNumber}` : euro(s.fee))).join(', ')}. Your monthly statement is in your producer area.`),
           paragraph(`Each sale is on hold for ${HOLD_DAYS} days (refund window), then paid out on the next Monday to the payout method in your producer area.`),
           button(`${siteUrl}/profile-producer.html#payouts`, 'See your payouts'),
         ].join(''),
@@ -229,6 +241,7 @@ async function handlePayouts(req, res) {
       method: user.payout_method || null,
       stripe: { available: !!process.env.STRIPE_SECRET_KEY, connected: !!user.stripe_account_id, ready: !!user.stripe_payouts_ready, countries: STRIPE_COUNTRIES },
       paypal: { available: paypalOn(), email: user.paypal_email || '' },
+      taxComplete: await require('./producer-tax').taxComplete(session.uid),
       totals: {
         pending: sum((r) => r.status === 'pending' && !r.available),
         available: sum((r) => r.status === 'pending' && r.available),
@@ -275,9 +288,10 @@ async function paypalPayout({ email, cents, currency, ref, note }) {
 /* ---------------------------------- Run ----------------------------------- */
 async function runPayouts() {
   await ensureTables();
+  await require('./producer-tax').ensureTax();
   const due = await sql`
-    SELECT e.*, u.email, u.payout_method AS method, u.stripe_account_id, u.stripe_payouts_ready, u.paypal_email
-    FROM producer_earnings e JOIN users u ON u.id = e.user_id
+    SELECT e.*, u.email, u.payout_method AS method, u.stripe_account_id, u.stripe_payouts_ready, u.paypal_email, t.declared_at AS tax_declared_at, t.declaration_version AS tax_version
+    FROM producer_earnings e JOIN users u ON u.id = e.user_id LEFT JOIN producer_tax t ON t.user_id = e.user_id
     WHERE e.status = 'pending' AND e.created_at <= now() - make_interval(days => ${HOLD_DAYS})
     ORDER BY e.user_id, e.id
   `;
@@ -288,6 +302,8 @@ async function runPayouts() {
     const u = list[0];
     const total = list.reduce((n, r) => n + r.share_cents, 0);
     if (total < MIN_PAYOUT) { report.push(`user ${userId}: €${(total / 100).toFixed(2)} below the minimum, waiting`); continue; }
+    // Nobody is paid before they have confirmed their tax details.
+    if (!u.tax_declared_at || u.tax_version !== require('./producer-tax').VERSION) { report.push(`user ${userId} (${u.email}): €${(total / 100).toFixed(2)} waiting, tax details not confirmed`); continue; }
     const ids = list.map((r) => r.id);
     // Lock the rows so two runs can never pay the same sale twice.
     const locked = await sql`UPDATE producer_earnings SET status = 'processing' WHERE id = ANY(${ids}) AND status = 'pending' RETURNING id`;
@@ -437,4 +453,4 @@ async function handleCheck(req, res) {
   res.status(200).json(out);
 }
 
-module.exports = { handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };
+module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handlePayouts, handleRun };

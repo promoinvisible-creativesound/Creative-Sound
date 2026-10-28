@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=142">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=46">
+<link rel="stylesheet" href="css/upload.css?v=47">
 <link rel="stylesheet" href="css/profile.css?v=19">
 </head>
 <body>
@@ -267,7 +267,53 @@
 
       <p class="pe-group-label po-label">Sales</p>
       <div class="po-list" id="po-list"><p class="po-none">No sales yet. When someone buys one of your tracks it shows here with your 80%.</p></div>
+      <p class="po-tax-warn" id="po-tax-warn" role="status" hidden><b>Your payouts are waiting.</b> Add your tax details below and they go out on the next Monday.</p>
       <p class="po-note" id="po-note">Each sale is on hold for 7 days (refund window), then paid out on the next Monday once your balance reaches €10.</p>
+    </section>
+
+    <section class="up-card tx-card" id="tax" aria-labelledby="tx-title">
+      <div class="po-head">
+        <div>
+          <h2 id="tx-title">Tax details</h2>
+          <p class="po-split">We need these before your first payout. They appear on your statements and are used for tax reporting.</p>
+        </div>
+        <span class="po-badge tx-badge" id="tx-badge" hidden></span>
+      </div>
+      <form class="tx-form" id="tx-form" novalidate>
+        <div class="tx-seg" role="radiogroup" aria-label="Who receives the earnings">
+          <label><input type="radio" name="entityType" value="individual" checked><span>Individual</span></label>
+          <label><input type="radio" name="entityType" value="business"><span>Business</span></label>
+        </div>
+        <div class="up-grid">
+          <label class="up-field up-field-wide"><span id="tx-name-label">Full legal name</span><input name="legalName" maxlength="120" autocomplete="name" required></label>
+          <label class="up-field"><span>Country</span><select name="country" id="tx-country" autocomplete="country" required></select></label>
+          <label class="up-field"><span id="tx-taxid-label">Codice fiscale / tax ID</span><input name="taxId" maxlength="32" autocomplete="off" required></label>
+          <label class="up-field" id="tx-vat-wrap"><span>VAT number <i id="tx-vat-hint">Optional</i></span><input name="vatNumber" maxlength="20" autocomplete="off" placeholder="IT12345678901"></label>
+          <label class="up-field" id="tx-birth-wrap"><span>Date of birth</span><input name="birthDate" type="date" autocomplete="bday"></label>
+          <label class="up-field up-field-wide"><span>Address</span><input name="address" maxlength="160" autocomplete="street-address" required></label>
+          <label class="up-field"><span>City</span><input name="city" maxlength="80" autocomplete="address-level2" required></label>
+          <label class="up-field"><span>Postal code</span><input name="postalCode" maxlength="20" autocomplete="postal-code" required></label>
+        </div>
+        <label class="up-check tx-declare">
+          <input type="checkbox" name="declared">
+          <span class="up-check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7"/></svg></span>
+          <span id="tx-declaration">I confirm that these details are correct and complete.</span>
+        </label>
+        <div class="tx-actions">
+          <button type="submit" class="btn btn-primary" id="tx-save">Save tax details</button>
+          <span class="tx-status" id="tx-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="up-card tx-card" id="statements" aria-labelledby="st-title">
+      <div class="po-head">
+        <div>
+          <h2 id="st-title">Statements</h2>
+          <p class="po-split">One statement per month with every sale, Creative Sound's 20% and your 80%. Use it to invoice your earnings.</p>
+        </div>
+      </div>
+      <div class="tx-statements" id="st-body"><p class="po-none">Statements appear here after your first sale.</p></div>
     </section>
 
     <section class="pa-how" aria-label="How it works">
@@ -345,7 +391,8 @@
 <script src="js/main.js?v=49"></script>
 <script src="js/header-menu.js?v=17"></script>
 <script src="js/auth.js?v=47"></script>
-<script src="js/producer-area.js?v=7"></script>
+<script src="js/producer-area.js?v=8"></script>
+<script src="js/producer-tax.js?v=1"></script>
 <script src="js/storefront-settings.js?v=1"></script>
 <script src="js/license-settings.js?v=3"></script>
 <script defer src="/_vercel/insights/script.js"></script>

@@ -34,7 +34,19 @@
   };
   form.addEventListener('change', adapt);
 
+  // Details of Creative Sound for the producer's own invoice.
+  const paintCompany = (c) => {
+    if (!c) return;
+    const rows = [['Invoice to', `${c.legalName} (${c.tradeName})`], ['Address', c.address], ['VAT number', c.vat], ['PEC', c.pec], ['SDI code', c.sdiCode], ['Send the invoice to', c.invoiceEmail]];
+    $('#iv-body').innerHTML = rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+    const copy = $('#iv-copy');
+    copy.onclick = () => {
+      const text = rows.map(([k, v]) => `${k}: ${v}`).join('\n');
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => { $('#iv-status').textContent = 'Copied.'; $('#iv-status').className = 'tx-status is-ok'; }).catch(() => window.prompt('Copy the details', text));
+    };
+  };
   const paint = (d) => {
+    paintCompany(d.company);
     const t = d.tax;
     $('#tx-declaration').textContent = d.declaration;
     if (t) {
@@ -58,7 +70,7 @@
 
   const load = () => fetch('/api/producer/tax').then(async (r) => {
     const d = await r.json().catch(() => ({}));
-    if (r.status === 401 || r.status === 403) { card.hidden = true; statements.hidden = true; return null; }
+    if (r.status === 401 || r.status === 403) { card.hidden = true; statements.hidden = true; const iv = document.getElementById('invoicing'); if (iv) iv.hidden = true; return null; }
     if (!r.ok) throw new Error(d.error || 'Could not load your tax details.');
     return d;
   }).then((d) => { if (d) paint(d); }).catch((e) => say(e.message, 'bad'));

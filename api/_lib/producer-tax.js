@@ -19,6 +19,7 @@
 const { sql } = require('./db');
 const { getSession } = require('./auth');
 const { roleFor, isAdmin } = require('./account');
+const COMPANY = require('./company');
 
 // Bump when the declaration text changes: producers confirm again before the
 // next payout.
@@ -143,7 +144,7 @@ async function handleTax(req, res) {
       return;
     }
     const [row] = await sql`SELECT * FROM producer_tax WHERE user_id = ${session.uid}`;
-    res.status(200).json({ tax: shape(row), complete: isComplete(row), declaration: DECLARATION, version: VERSION });
+    res.status(200).json({ tax: shape(row), complete: isComplete(row), declaration: DECLARATION, version: VERSION, company: COMPANY });
   } catch (err) {
     console.error('producer tax error:', err);
     res.status(500).json({ error: 'Could not save your tax details, please try again.' });
@@ -199,6 +200,15 @@ async function statementPdf({ no, month, tax, rows, totals, generated }) {
     y -= 12; text(`Tax ID: ${tax.tax_id}${tax.vat_number ? `   VAT: ${tax.vat_number}` : ''}`, M, 9);
   } else {
     text('Tax details not provided yet', M, 10, bold);
+  }
+  // Where to address an invoice for these earnings.
+  page.drawText('INVOICE TO (if you invoice your earnings)', { x: 330, y: H - M - 38, size: 8, font: bold, color: muted });
+  {
+    let yy = H - M - 51;
+    for (const [t, f] of [[COMPANY.legalName + ' (' + COMPANY.tradeName + ')', bold], [COMPANY.address, font], ['VAT ' + COMPANY.vat + '   SDI code ' + COMPANY.sdiCode, font], ['PEC ' + COMPANY.pec, font], ['Send the invoice to ' + COMPANY.invoiceEmail, font]]) {
+      page.drawText(safe(t), { x: 330, y: yy, size: f === bold ? 9 : 8, font: f, color: ink });
+      yy -= 11;
+    }
   }
   y -= 26;
   const cols = [M, 92, 150, 360, 410, 460, 510];
@@ -262,7 +272,8 @@ async function handleStatement(req, res) {
     const no = statementNo(session.uid, month);
     const generated = new Date().toISOString();
     if (String(req.query.format) === 'csv') {
-      const out = [['Statement', no], ['Period', month], ['Producer', tax ? tax.legal_name : ''], ['Tax ID', tax ? tax.tax_id : ''], ['VAT number', tax && tax.vat_number ? tax.vat_number : ''], [],
+      const out = [['Statement', no], ['Period', month], ['Producer', tax ? tax.legal_name : ''], ['Tax ID', tax ? tax.tax_id : ''], ['VAT number', tax && tax.vat_number ? tax.vat_number : ''],
+        ['Invoice to', `${COMPANY.legalName} (${COMPANY.tradeName})`], ['Address', COMPANY.address], ['VAT number (Creative Sound)', COMPANY.vat], ['PEC', COMPANY.pec], ['SDI code', COMPANY.sdiCode], ['Send invoices to', COMPANY.invoiceEmail], [],
         ['Date', 'Commission note', 'Track', 'License', 'Gross', 'Creative Sound fee (20%)', 'Net to you (80%)', 'Currency', 'Status', 'Paid on', 'Payout method'],
         ...rows.map((r) => [new Date(r.created_at).toISOString().slice(0, 10), r.fee_number || '', r.title, r.tier, eur(r.gross_cents), live(r) ? eur(r.fee_cents) : '0.00', live(r) ? eur(r.share_cents) : '0.00', String(r.currency).toUpperCase(), r.status, r.paid_at ? new Date(r.paid_at).toISOString().slice(0, 10) : '', r.payout_method || '']),
         [], ['Total (refunds excluded)', '', '', '', eur(totals.gross), eur(totals.fee), eur(totals.net)]];

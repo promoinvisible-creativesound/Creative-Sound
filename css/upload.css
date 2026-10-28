@@ -1093,3 +1093,9 @@
   .pa-dots{ margin-top:22px; }
   .pa-tab-desc{ margin:16px 8px 26px; padding-bottom:22px; text-align:center; font-size:14.5px; border-bottom:1px solid var(--line); }
 }
+
+.tx-company{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px 22px; margin:18px 0 16px; }
+.tx-company div{ padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,0.02); min-width:0; }
+.tx-company dt{ margin:0 0 3px; font-size:12px; font-weight:600; letter-spacing:0.04em; color:var(--text-muted); text-transform:uppercase; }
+.tx-company dd{ margin:0; font-size:14.5px; color:var(--text); overflow-wrap:anywhere; }
+@media (max-width:640px){ .tx-company{ grid-template-columns:1fr; } }

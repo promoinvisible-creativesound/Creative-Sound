@@ -121,7 +121,7 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
           paragraph(`Good news${u.first_name ? `, ${u.first_name}` : ''}: someone just licensed your music.`),
           ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
           ...mine.filter((s) => s.soldOut).map((s) => paragraph(`<b>${s.title}</b> was licensed with ${tierName(s.tier)}, which leaves all rights with the buyer (no usage limits and no publishing share). It is no longer for sale and has been taken off the store.`)),
-          paragraph(`Creative Sound's 20% fee ${mine.length === 1 ? 'is' : 'is recorded'} ${mine.map((s) => (s.feeNumber ? `${euro(s.fee)} on commission note ${s.feeNumber}` : euro(s.fee))).join(', ')}. Your monthly statement is in your producer area.`),
+          paragraph(`Creative Sound's 20% fee ${mine.length === 1 ? 'is' : 'is recorded'} ${mine.map((s) => (s.feeNumber ? `${euro(s.fee)} on commission note ${s.feeNumber}` : euro(s.fee))).join(', ')}. Your monthly statement and our invoicing details are in your producer area (Tax & statements).`),
           paragraph(`Each sale is on hold for ${HOLD_DAYS} days (refund window), then paid out on the next Monday to the payout method in your producer area.`),
           button(`${siteUrl}/profile-producer.html#payouts`, 'See your payouts'),
         ].join(''),

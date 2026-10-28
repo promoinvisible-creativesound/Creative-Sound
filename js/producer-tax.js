@@ -37,7 +37,7 @@
   // Details of Creative Sound for the producer's own invoice.
   const paintCompany = (c) => {
     if (!c) return;
-    const rows = [['Invoice to', `${c.legalName} (${c.tradeName})`], ['Address', c.address], ['VAT number', c.vat], ['PEC', c.pec], ['SDI code', c.sdiCode], ['Send the invoice to', c.invoiceEmail]];
+    const rows = [['Invoice to', c.legalName], ['Trade name', `${c.tradeName} (brand name: address the invoice to the person above)`], ['Address', c.address], ['VAT number', c.vat], ['PEC', c.pec], ['SDI code', c.sdiCode], ['Send the invoice to', c.invoiceEmail]];
     $('#iv-body').innerHTML = rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
     const copy = $('#iv-copy');
     copy.onclick = () => {

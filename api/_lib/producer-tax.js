@@ -205,7 +205,7 @@ async function statementPdf({ no, month, tax, rows, totals, generated }) {
   page.drawText('INVOICE TO (if you invoice your earnings)', { x: 330, y: H - M - 38, size: 8, font: bold, color: muted });
   {
     let yy = H - M - 51;
-    for (const [t, f] of [[COMPANY.legalName + ' (' + COMPANY.tradeName + ')', bold], [COMPANY.address, font], ['VAT ' + COMPANY.vat + '   SDI code ' + COMPANY.sdiCode, font], ['PEC ' + COMPANY.pec, font], ['Send the invoice to ' + COMPANY.invoiceEmail, font]]) {
+    for (const [t, f] of [[COMPANY.legalName, bold], ['Trade name: ' + COMPANY.tradeName + ' (brand name)', font], [COMPANY.address, font], ['VAT ' + COMPANY.vat + '   SDI code ' + COMPANY.sdiCode, font], ['PEC ' + COMPANY.pec, font], ['Send the invoice to ' + COMPANY.invoiceEmail, font]]) {
       page.drawText(safe(t), { x: 330, y: yy, size: f === bold ? 9 : 8, font: f, color: ink });
       yy -= 11;
     }
@@ -273,7 +273,7 @@ async function handleStatement(req, res) {
     const generated = new Date().toISOString();
     if (String(req.query.format) === 'csv') {
       const out = [['Statement', no], ['Period', month], ['Producer', tax ? tax.legal_name : ''], ['Tax ID', tax ? tax.tax_id : ''], ['VAT number', tax && tax.vat_number ? tax.vat_number : ''],
-        ['Invoice to', `${COMPANY.legalName} (${COMPANY.tradeName})`], ['Address', COMPANY.address], ['VAT number (Creative Sound)', COMPANY.vat], ['PEC', COMPANY.pec], ['SDI code', COMPANY.sdiCode], ['Send invoices to', COMPANY.invoiceEmail], [],
+        ['Invoice to', COMPANY.legalName], ['Trade name', `${COMPANY.tradeName} (brand name, address the invoice to the person above)`], ['Address', COMPANY.address], ['VAT number (Creative Sound)', COMPANY.vat], ['PEC', COMPANY.pec], ['SDI code', COMPANY.sdiCode], ['Send invoices to', COMPANY.invoiceEmail], [],
         ['Date', 'Commission note', 'Track', 'License', 'Gross', 'Creative Sound fee (20%)', 'Net to you (80%)', 'Currency', 'Status', 'Paid on', 'Payout method'],
         ...rows.map((r) => [new Date(r.created_at).toISOString().slice(0, 10), r.fee_number || '', r.title, r.tier, eur(r.gross_cents), live(r) ? eur(r.fee_cents) : '0.00', live(r) ? eur(r.share_cents) : '0.00', String(r.currency).toUpperCase(), r.status, r.paid_at ? new Date(r.paid_at).toISOString().slice(0, 10) : '', r.payout_method || '']),
         [], ['Total (refunds excluded)', '', '', '', eur(totals.gross), eur(totals.fee), eur(totals.net)]];

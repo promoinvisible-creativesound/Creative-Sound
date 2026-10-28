@@ -1157,8 +1157,8 @@
 .pa-act.is-open{ color:var(--amber-text); border-color:rgba(232,134,44,0.55); background:rgba(232,134,44,0.12); }
 
 @media (max-width:760px){
-  .pa-row{ grid-template-columns:56px minmax(0, 1fr); padding:14px 14px 14px 16px; }
-  .pa-row-cover{ width:56px; height:56px; }
-  .pa-row-actions{ grid-column:1 / -1; flex-direction:row; min-width:0; }
-  .pa-act{ flex:1 1 0; justify-content:center; height:44px; padding:0 8px; }
+  .pa-row{ grid-template-columns:48px minmax(0, 1fr); column-gap:12px; padding:14px 12px 14px 16px; }
+  .pa-row-cover{ width:48px; height:48px; border-radius:12px; }
+  .pa-row-actions{ grid-column:1 / -1; flex-direction:row; gap:6px; min-width:0; margin-top:4px; }
+  .pa-act{ flex:1 1 auto; justify-content:center; gap:6px; height:44px; padding:0 8px; white-space:nowrap; }
 }

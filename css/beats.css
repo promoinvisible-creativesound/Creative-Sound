@@ -2455,3 +2455,11 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-test-buy{ display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:10px 12px; border-radius:10px; border:1px dashed rgba(232,134,44,0.45); font-size:12.5px; line-height:1.45; color:var(--text-secondary); cursor:pointer; }
 .bt-test-buy input{ margin-top:2px; accent-color:#e8862c; }
 .bt-test-buy b{ color:var(--amber-text); }
+
+/* Phones and tablets: an invisible touch margin around the small controls
+   (heart, Buy, tags, producer name, arrows, view switch) so they reach about
+   44 px to tap, without changing how they look. */
+@media (pointer:coarse){
+  .bt-buy, .bt-tag, .bt-producer-link, .bt-view-btn{ position:relative; }
+  .bt-save::before, .bt-buy::before, .bt-tag::before, .bt-producer-link::before, .bt-feat-nav::before, .bt-view-btn::before{ content:''; position:absolute; inset:-7px; }
+}

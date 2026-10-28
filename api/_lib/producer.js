@@ -83,6 +83,8 @@ function ensureTables() {
       // Co-producers credited on the track: [{ name, handle }] (handle = a Creative Sound account, optional).
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS co_producers JSONB NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_status TEXT`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_tier TEXT`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_note TEXT`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS changes_at TIMESTAMPTZ`;
     })().catch((err) => { ready = null; throw err; });
@@ -490,7 +492,7 @@ async function handleSubmissions(req, res) {
     await ensureTables();
     const [user] = await sql`SELECT producer_name, producer_verified, verify_requested_at FROM users WHERE id = ${session.uid}`;
     const rows = await sql`
-      SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at, changes_status, changes_note, changes_at,
+      SELECT id, status, title, bpm, musical_key, genre, mood, prices, review_note, submitted_at, reviewed_at, changes_status, changes_note, changes_at, sold_at, sold_tier,
         producer_name, co_producers, tags, type_beat, about, files, rev_files
       FROM beat_submissions
       WHERE user_id = ${session.uid} AND status <> 'draft'
@@ -505,7 +507,8 @@ async function handleSubmissions(req, res) {
       submissions: rows.map((r) => ({
         id: r.id, status: r.status, title: r.title, bpm: r.bpm, key: r.musical_key, genre: r.genre, mood: r.mood,
         prices: r.prices, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
-        storeUrl: r.status === 'approved' ? `track.html?id=${trackId(r)}` : null,
+        storeUrl: r.status === 'approved' && !r.sold_at ? `track.html?id=${trackId(r)}` : null,
+        sold: !!r.sold_at, soldAt: r.sold_at || null, soldTier: r.sold_tier || null,
         changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
         // For the edit page
         producerName: r.producer_name, coProducers: r.co_producers || [], tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '', freeDownload: !!r.free_download,

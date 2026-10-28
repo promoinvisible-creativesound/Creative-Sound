@@ -74,20 +74,21 @@
     $('#pa-empty').hidden = all.length > 0;
     list.hidden = all.length === 0;
     list.innerHTML = rows.length ? rows.map((s) => {
-      const st = STATUS[s.status] || STATUS.pending;
+      const st = s.sold ? { label: 'Sold', cls: 'is-ok' } : (STATUS[s.status] || STATUS.pending);
       const meta = [s.bpm ? `${s.bpm} BPM` : '', s.key, s.genre].filter(Boolean).map(esc).join(' · ');
       return `
         <article class="pa-row">
           <div class="pa-row-main">
             <b class="pa-row-title">${esc(s.title || 'Untitled track')}</b>
             <span class="pa-row-meta">${meta}${minPrice(s.prices) ? ` · from ${minPrice(s.prices)}` : ''}</span>
+            ${s.sold ? '<p class="pa-row-note">Sold with a license that leaves all rights with the buyer, so it is off the store.</p>' : ''}
             ${s.status === 'rejected' && s.reviewNote ? `<p class="pa-row-note"><b>What to fix:</b> ${esc(s.reviewNote)}</p>` : ''}
           </div>
           <div class="pa-row-side">
             <span class="hm-status pa-status ${st.cls}">${st.label}</span>
             <small>${s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`}</small>
             ${s.storeUrl ? `<a class="pa-store-link" href="${esc(s.storeUrl)}">View in store</a>` : ''}
-            ${s.status === 'approved' ? `<a class="pa-edit-link" href="upload-beat.html?edit=${s.id}">Edit</a>` : ''}
+            ${s.status === 'approved' && !s.sold ? `<a class="pa-edit-link" href="upload-beat.html?edit=${s.id}">Edit</a>` : ''}
             ${s.status === 'approved' ? `<button type="button" class="pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
             ${s.changesStatus === 'pending' ? '<span class="pa-change is-pending">Changes in review</span>' : s.changesStatus === 'rejected' ? `<span class="pa-change is-bad" title="${esc(s.changesNote || '')}">Changes not approved</span>` : ''}
           </div>

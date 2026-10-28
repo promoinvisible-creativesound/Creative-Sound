@@ -129,7 +129,7 @@ module.exports = function build(h) {
         const id = String((req.query && req.query.id) || '').slice(0, 80);
         if (!id) { res.statusCode = 302; res.setHeader('Location', '/beats.html'); res.end(); return; }
         const beat = await getBeat(id);
-        if (!beat) { gone(res, shell, 'Track not available | Creative Sound'); return; }
+        if (!beat || beat._sold) { gone(res, shell, 'Track not available | Creative Sound'); return; }
         send(res, 200, renderTrack(publicBeat(beat)), OK_CACHE);
         return;
       }

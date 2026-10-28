@@ -45,7 +45,7 @@ async function validateItems(raw) {
     const id = String((it && it.id) || '');
     const tier = String((it && it.tier) || '');
     const beat = await getBeat(id);
-    if (!beat || beat.status === 'hidden') return { error: 'One of the beats in your cart is no longer available.' };
+    if (!beat || beat.status === 'hidden' || beat._sold) return { error: 'One of the beats in your cart is no longer available.' };
     if (beat.demo && isProduction()) return { error: 'One of the beats in your cart is not for sale yet.' };
     if (!LICENSES.tiers[tier] || !priceOf(beat, tier)) return { error: `The selected license is not available for "${beat.title}".` };
     if (seen.has(id)) return { error: `"${beat.title}" is in your cart twice.` };
@@ -294,7 +294,17 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
   // Test purchases (admin, minimum price): no producer earnings, no sale email.
   if (!test) {
+    // A license that leaves all rights with the buyer takes the track off the
+    // store (test purchases never do).
+    const soldOut = new Set();
+    for (const { beat, tier } of items) {
+      if (beat._submissionId == null || beat._userId == null) continue;
+      if (!require('./license-config').grantsFullRights(beat._license, tier, !!(beat._files && beat._files.stems))) continue;
+      const [taken] = await sql`UPDATE beat_submissions SET sold_at = now(), sold_tier = ${tier} WHERE id = ${beat._submissionId} AND sold_at IS NULL RETURNING id`;
+      if (taken) soldOut.add(beat.id);
+    }
     const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
+    sales.forEach((s) => { s.soldOut = soldOut.has(s.beatId); });
     await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });
   }
 

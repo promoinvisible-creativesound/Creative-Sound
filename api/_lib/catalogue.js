@@ -68,6 +68,7 @@ function toBeat(row) {
     _submissionId: row.id,
     _license: row.producer_license || null,
     _userId: row.user_id,
+    _sold: !!row.sold_at,
   };
 }
 // Short version tag for media URLs: last approved change, or first approval.
@@ -75,10 +76,26 @@ const fileVersion = (row) => new Date(row.changes_at || row.reviewed_at || row.s
 // Strip server-only fields (anything starting with _) before sending.
 const publicBeat = (b) => Object.fromEntries(Object.entries(b).filter(([k]) => !k.startsWith('_')));
 
+// A track sold under a license that leaves all rights with the buyer
+// (license-config.grantsFullRights) is taken off the store: sold_at is set and
+// the store lists skip it. It stays reachable by id so the buyer's files,
+// license PDF and library keep working.
+let soldColumns = null;
+function ensureSoldColumns() {
+  if (!soldColumns) {
+    soldColumns = (async () => {
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_tier TEXT`;
+    })().catch((err) => { soldColumns = null; throw err; });
+  }
+  return soldColumns;
+}
+
 async function approvedRows(id) {
   try {
     // Profile columns (handle, display name) are read below; make sure they exist.
     await require('./profile').ensureColumns();
+    await ensureSoldColumns();
     if (id != null) {
       return await sql`
         SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email, u.license_terms AS producer_license FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
@@ -87,7 +104,7 @@ async function approvedRows(id) {
     }
     return await sql`
       SELECT s.*, u.producer_verified, u.handle AS producer_handle, u.display_name AS producer_display, u.instagram AS producer_instagram, u.contact_email AS producer_email, u.license_terms AS producer_license FROM beat_submissions s LEFT JOIN users u ON u.id = s.user_id
-      WHERE s.status = 'approved' ORDER BY s.reviewed_at DESC LIMIT 1000
+      WHERE s.status = 'approved' AND s.sold_at IS NULL ORDER BY s.reviewed_at DESC LIMIT 1000
     `;
   } catch (err) {
     // Table not created yet (no uploads so far) or DB hiccup: static only.

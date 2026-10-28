@@ -97,6 +97,15 @@ function tierView(id, t) {
     publishing: t.publishing,
   };
 }
+// True when the license a track was sold under leaves everything with the
+// buyer: no cap on any use, no publishing share for the producer and none of
+// the producer's own clauses. Such a sale takes the track off the store.
+function grantsFullRights(raw, tier, hasStems = false) {
+  const c = normalize(raw);
+  if (c.clauses.length || !c.tiers[tier]) return false;
+  const t = resolve(tier, c, hasStems);
+  return isUnlimited(t) && !t.publishing;
+}
 // Public view for a track: every tier + the producer's own clauses.
 function storeView(raw, hasStems = false) {
   const c = normalize(raw);
@@ -179,4 +188,4 @@ function snapshot(id, raw, producer, hasStems = false) {
   };
 }
 
-module.exports = { OPTIONS, DEFAULTS, MAX_CLAUSES, CLAUSE_MAX, normalize, storeView, snapshot };
+module.exports = { OPTIONS, DEFAULTS, MAX_CLAUSES, CLAUSE_MAX, normalize, storeView, snapshot, grantsFullRights };

@@ -84,7 +84,7 @@ async function recordEarnings(session, items) {
       ON CONFLICT (session_id, beat_id) DO NOTHING
       RETURNING id
     `;
-    if (rows.length) added.push({ userId: beat._userId, title: beat.title, tier, gross: price, share: shareOf(price) });
+    if (rows.length) added.push({ userId: beat._userId, beatId: beat.id, title: beat.title, tier, gross: price, share: shareOf(price) });
   }
   // Only the new rows, so a webhook retry never emails the producer twice.
   return added;
@@ -109,6 +109,7 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
         content: [
           paragraph(`Good news${u.first_name ? `, ${u.first_name}` : ''}: someone just licensed your music.`),
           ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
+          ...mine.filter((s) => s.soldOut).map((s) => paragraph(`<b>${s.title}</b> was licensed with ${tierName(s.tier)}, which leaves all rights with the buyer (no usage limits and no publishing share). It is no longer for sale and has been taken off the store.`)),
           paragraph(`Each sale is on hold for ${HOLD_DAYS} days (refund window), then paid out on the next Monday to the payout method in your producer area.`),
           button(`${siteUrl}/profile-producer.html#payouts`, 'See your payouts'),
         ].join(''),
@@ -127,6 +128,12 @@ async function handleRefund(charge, notify) {
   if (!charge || !charge.refunded || !charge.payment_intent) return;
   await ensureTables();
   await sql`UPDATE producer_earnings SET status = 'refunded' WHERE payment_intent = ${charge.payment_intent} AND status = 'pending'`;
+  // A fully refunded sale puts a track that it had taken off the store back on sale.
+  try {
+    const rows = await sql`SELECT DISTINCT beat_id FROM producer_earnings WHERE payment_intent = ${charge.payment_intent}`;
+    const ids = rows.map((r) => (/^t([0-9]+)-/.exec(String(r.beat_id)) || [])[1]).filter(Boolean).map(Number);
+    if (ids.length) await sql`UPDATE beat_submissions SET sold_at = NULL, sold_tier = NULL WHERE id = ANY(${ids}) AND sold_at IS NOT NULL`;
+  } catch (err) { console.error('relist after refund failed:', err.message); }
   const paid = await sql`SELECT id, user_id, title, share_cents FROM producer_earnings WHERE payment_intent = ${charge.payment_intent} AND status = 'paid'`;
   if (paid.length && notify) await notify(`Refund on ${charge.payment_intent} after the producer was paid: ${paid.map((p) => `#${p.id} ${p.title} €${(p.share_cents / 100).toFixed(2)} (user ${p.user_id})`).join(', ')}`);
 }

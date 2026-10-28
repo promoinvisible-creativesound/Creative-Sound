@@ -234,7 +234,7 @@ async function statementPdf({ no, month, tax, rows, totals, generated }) {
   right(eur(totals.gross), cols[4] - 6, 9, bold); right(eur(totals.fee), cols[5] - 6, 9, bold); right(eur(totals.net), cols[6] - 6, 9, bold);
   y -= 30;
   const notes = [
-    'Gross is what the buyer paid. Fee is the 20% Creative Sound keeps (card fees, hosting and the store). Net is the 80% due to you; each sale is held for 7 days, then paid on the next Monday once your balance reaches 10 EUR.',
+    'Gross is what the buyer paid. Fee is the 20% Creative Sound keeps (card fees, hosting and the store). Net is the 80% due to you; each sale is held for 14 days (30 days before your first payout), then paid on the next Monday once your balance reaches 10 EUR.',
     'This statement lists your sales and the amounts due to you. It is not a tax invoice. Creative Sound records its fee for every sale as a commission note (the Ref column); any invoice for that fee that tax law requires is issued separately.',
     'You are responsible for declaring and paying the taxes due on your earnings. Months follow UTC time.',
   ];

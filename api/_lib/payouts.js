@@ -3,7 +3,8 @@
 //
 // - Every paid line of a beat order for a producer track becomes a row in
 //   producer_earnings (recordEarnings, called from the Stripe webhook).
-// - Earnings wait HOLD_DAYS (refund window), then the weekly cron
+// - Earnings wait HOLD_DAYS (HOLD_FIRST_DAYS until the producer has been paid once: refund
+//   and chargeback window), then the weekly cron
 //   (/api/payouts/run, vercel.json "crons") pays what is available:
 //     * Stripe: one transfer per sale to the producer's Stripe Express
 //       account, tied to the original charge (source_transaction), so it
@@ -28,7 +29,8 @@ const { getSession } = require('./auth');
 const { roleFor, isAdmin } = require('./account');
 
 const SHARE = 0.8;
-const HOLD_DAYS = 7;
+const HOLD_DAYS = 14;
+const HOLD_FIRST_DAYS = 30; // until the producer has received a first payout
 const MIN_PAYOUT = 1000; // cents
 // Stripe Connect accounts the Italian platform can pay out to (EEA, UK, CH).
 const STRIPE_COUNTRIES = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'NO', 'IS', 'LI', 'GB', 'CH'];
@@ -117,6 +119,8 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
       const [u] = await sql`SELECT email, first_name FROM users WHERE id = ${userId}`;
       if (!u || !u.email) continue;
       const mine = sales.filter((s) => s.userId === userId);
+      const [{ paid_before: paidBefore }] = await sql`SELECT EXISTS (SELECT 1 FROM producer_earnings WHERE user_id = ${userId} AND paid_at IS NOT NULL) AS paid_before`;
+      const firstPayout = !paidBefore;
       const total = mine.reduce((n, s) => n + s.share, 0);
       const html = renderEmail({
         siteUrl,
@@ -128,7 +132,9 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
           ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
           ...mine.filter((s) => s.soldOut).map((s) => paragraph(`<b>${s.title}</b> was licensed with ${tierName(s.tier)}, which leaves all rights with the buyer (no usage limits and no publishing share). It is no longer for sale and has been taken off the store.`)),
           paragraph(`Creative Sound's 20% fee ${mine.length === 1 ? 'is' : 'is recorded'} ${mine.map((s) => (s.feeNumber ? `${euro(s.fee)} on commission note ${s.feeNumber}` : euro(s.fee))).join(', ')}. Your monthly statement and our invoicing details are in your producer area (Tax & statements).`),
-          paragraph(`Each sale is on hold for ${HOLD_DAYS} days (refund window), then paid out on the next Monday to the payout method in your producer area.`),
+          paragraph(firstPayout
+            ? `Your first payout is on hold for ${HOLD_FIRST_DAYS} days after the sale (refund and chargeback window, for security). After that, each sale is on hold for ${HOLD_DAYS} days. Payouts go out on Mondays to the payout method in your producer area.`
+            : `Each sale is on hold for ${HOLD_DAYS} days (refund and chargeback window), then paid out on the next Monday to the payout method in your producer area.`),
           button(`${siteUrl}/profile-producer.html#payouts`, 'See your payouts'),
         ].join(''),
       });
@@ -360,15 +366,20 @@ async function handlePayouts(req, res) {
     }
 
     user = await refreshStripe(user);
+    // The first payout waits longer; once a producer has been paid the normal hold applies.
+    const [{ paid_before: paidBefore }] = await sql`SELECT EXISTS (SELECT 1 FROM producer_earnings WHERE user_id = ${session.uid} AND paid_at IS NOT NULL) AS paid_before`;
+    const holdDays = paidBefore ? HOLD_DAYS : HOLD_FIRST_DAYS;
     const rows = await sql`
       SELECT id, beat_id, title, tier, gross_cents, share_cents, currency, status, payout_method, created_at, paid_at,
-        (status = 'pending' AND created_at <= now() - make_interval(days => ${HOLD_DAYS})) AS available
+        (status = 'pending' AND created_at <= now() - make_interval(days => ${holdDays}::int)) AS available
       FROM producer_earnings WHERE user_id = ${session.uid} ORDER BY created_at DESC LIMIT 200
     `;
     const sum = (f) => rows.filter(f).reduce((n, r) => n + r.share_cents, 0);
     res.status(200).json({
       share: Math.round(SHARE * 100),
-      holdDays: HOLD_DAYS,
+      holdDays,
+      holdDaysAfter: HOLD_DAYS,
+      firstPayout: !paidBefore,
       minPayout: MIN_PAYOUT,
       currency: 'eur',
       method: user.payout_method || null,
@@ -429,7 +440,7 @@ async function runPayouts(notify) {
   const due = await sql`
     SELECT e.*, u.email, u.payout_method AS method, u.stripe_account_id, u.stripe_payouts_ready, u.paypal_email, t.declared_at AS tax_declared_at, t.declaration_version AS tax_version
     FROM producer_earnings e JOIN users u ON u.id = e.user_id LEFT JOIN producer_tax t ON t.user_id = e.user_id
-    WHERE e.status = 'pending' AND e.created_at <= now() - make_interval(days => ${HOLD_DAYS})
+    WHERE e.status = 'pending' AND e.created_at <= now() - make_interval(days => CASE WHEN EXISTS (SELECT 1 FROM producer_earnings p WHERE p.user_id = e.user_id AND p.paid_at IS NOT NULL) THEN ${HOLD_DAYS}::int ELSE ${HOLD_FIRST_DAYS}::int END)
     ORDER BY e.user_id, e.id
   `;
   const byUser = new Map();
@@ -595,4 +606,4 @@ async function handleCheck(req, res) {
   res.status(200).json(out);
 }
 
-module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handleDispute, syncDisputes, handlePayouts, handleRun };
+module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handleDispute, syncDisputes, handlePayouts, handleRun, runPayouts };

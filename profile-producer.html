@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=142">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=50">
+<link rel="stylesheet" href="css/upload.css?v=54">
 <link rel="stylesheet" href="css/profile.css?v=19">
 </head>
 <body>
@@ -120,6 +120,8 @@
   </section>
 
   <div id="pa-body" data-active="tracks">
+    <div class="pa-tabs-wrap">
+    <button type="button" class="pa-tabs-arrow is-prev" id="pa-tabs-prev" aria-label="Previous section"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
     <nav class="pa-tabs" id="pa-tabs" aria-label="Producer area sections">
       <a href="#tracks" data-tab="tracks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>Tracks</a>
       <a href="#storefront" data-tab="storefront"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a3 3 0 0 0 5.3 1.9A3 3 0 0 0 12 12a3 3 0 0 0 2.7-1.1A3 3 0 0 0 20 9M10 20v-5h4v5"/></svg>Storefront</a>
@@ -127,6 +129,10 @@
       <a href="#payouts" data-tab="payouts"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h4"/></svg>Payouts</a>
       <a href="#tax" data-tab="tax"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18l-2.5-1.7L12 21l-2.5-1.7L7 21zM10 8h4M10 12h4"/></svg>Tax &amp; statements<span class="pa-tab-dot" id="pa-dot-tax" hidden aria-label="Action needed"></span></a>
     </nav>
+    <button type="button" class="pa-tabs-arrow is-next" id="pa-tabs-next" aria-label="Next section"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+    <div class="pa-dots" id="pa-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <p class="pa-tab-desc" id="pa-tab-desc" aria-live="polite"></p>
 
     <div class="pa-verify" id="pa-verify" data-panel="tracks" hidden></div>
     <div class="pa-stats" data-panel="tracks" aria-label="Summary">
@@ -402,7 +408,7 @@
 <script src="js/auth.js?v=47"></script>
 <script src="js/producer-area.js?v=8"></script>
 <script src="js/producer-tax.js?v=1"></script>
-<script src="js/producer-tabs.js?v=3"></script>
+<script src="js/producer-tabs.js?v=6"></script>
 <script src="js/storefront-settings.js?v=1"></script>
 <script src="js/license-settings.js?v=3"></script>
 <script defer src="/_vercel/insights/script.js"></script>

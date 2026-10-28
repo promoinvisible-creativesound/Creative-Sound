@@ -1,5 +1,5 @@
-// Home page (index.html, served on "/"): the latest tracks from
-// data/beats.json, each with a play button so a preview starts without
+// Home page (index.html, served on "/"): four random tracks from
+// the catalogue (redrawn every 4 hours), each with a play button so a preview starts without
 // leaving the page.
 (() => {
   'use strict';
@@ -42,16 +42,27 @@
       </span>
     </a>`;
 
+  // Four tracks drawn at random and redrawn every 4 hours (the time slot is the seed, so
+  // everyone sees the same four during a slot), from different producers when possible.
+  // Same idea as "Top tracks" in the store, with its own draw.
+  const pickRandom = (list, n) => {
+    let a = (Math.floor(Date.now() / (4 * 36e5)) * 2246822519 + 374761393) >>> 0;
+    const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const pool = [...list].sort((x, y) => (x.id < y.id ? -1 : 1));
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const seen = new Set();
+    const out = pool.filter((b) => { const p = b.producerHandle || b.producer; if (seen.has(p)) return false; seen.add(p); return true; }).slice(0, n);
+    for (const b of pool) { if (out.length >= n) break; if (!out.includes(b)) out.push(b); }
+    return out;
+  };
+
   // Live catalogue (approved producer uploads included); static file as fallback.
   fetch('/api/beats/catalogue')
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .catch(() => fetch('/data/beats.json').then((r) => r.json()))
     .then((data) => {
       producers = data.producers || {};
-      const latest = (data.beats || [])
-        .filter((b) => b.status !== 'hidden' && b.preview)
-        .sort((a, b) => new Date(b.released) - new Date(a.released))
-        .slice(0, 4);
+      const latest = pickRandom((data.beats || []).filter((b) => b.status !== 'hidden' && b.preview), 4);
       grid.innerHTML = latest.map(card).join('');
       grid.removeAttribute('aria-busy');
     })

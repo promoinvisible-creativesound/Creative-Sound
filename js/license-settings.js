@@ -36,6 +36,24 @@
       return `<button type="button" role="tab" class="lc-tab${id === tier ? ' is-on' : ''}" data-tier="${id}" aria-selected="${id === tier}"><b>${label}</b><small>${kind}</small></button>`;
     }).join('');
   };
+  // Plain-language summary of the selected license, plus the one-time sale
+  // rule: unlimited use, no publishing share and no terms of your own means the
+  // buyer gets all the rights, so the track is taken off the store after the sale.
+  const fullRights = (t) => unlimited(t) && !t.publishing && !config.clauses.some((c) => c.trim().length >= 10);
+  const paintNotes = () => {
+    const t = config.tiers[tier];
+    const label = (TIERS.find(([id]) => id === tier) || [])[1];
+    const lim = (v, what) => (v === null ? `unlimited ${what}` : `up to ${n(v)} ${what}`);
+    const vids = t.videos === null ? 'unlimited music videos' : t.videos === 0 ? 'no music videos' : `${t.videos} music video${t.videos === 1 ? '' : 's'}`;
+    const live = { none: 'no live shows', nonprofit: 'non-profit live shows', all: 'live shows of any kind' }[t.live];
+    const radio = t.radio === null ? 'unlimited radio' : t.radio === 0 ? 'no radio' : `radio on up to ${t.radio} stations`;
+    const pub = t.publishing ? `you keep ${t.publishing}% of the writer share and ${t.publishing}% of the publishing` : 'you take no publishing share, only the credit';
+    const sum = `<p class="lc-sum">A buyer of <b>${esc(label)}</b> can use the track for ${lim(t.streams, 'streams')}, ${lim(t.sales, 'sales or downloads')}, ${vids}, ${live} and ${radio}. In return, ${pub}.</p>`;
+    const full = fullRights(t) || (tier === 'wav' && t.auto && !t.publishing);
+    const once = full ? `<p class="lc-once"><b>One-time sale.</b> ${tier === 'wav' && t.auto && !fullRights(t) ? 'On tracks without stems, this' : 'This'} license leaves all the rights with the buyer, so the track is <b>taken off the store</b> as soon as it is sold with it. You can see it as "Sold" in your tracks. To keep selling it, give this license a usage limit or a publishing share.</p>` : '';
+    const el = $('#lc-notes');
+    if (el) el.innerHTML = once + sum;
+  };
   const paintFields = () => {
     const t = config.tiers[tier];
     const auto = tier === 'wav' ? `
@@ -55,8 +73,8 @@
     $('#lc-add').hidden = config.clauses.length >= data.maxClauses;
     $('#lc-clauses-n').textContent = `${config.clauses.length} / ${data.maxClauses}`;
   };
-  const paint = () => { paintTabs(); paintFields(); paintClauses(); };
-  const changed = () => { dirty = true; status('Unsaved changes'); };
+  const paint = () => { paintTabs(); paintFields(); paintClauses(); paintNotes(); };
+  const changed = () => { dirty = true; status('Unsaved changes'); paintNotes(); };
 
   const load = () => fetch('/api/producer/license').then((r) => (r.ok ? r.json() : null)).then((d) => {
     if (!d) return;
@@ -70,7 +88,7 @@
 
   box.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-tier]');
-    if (tab) { tier = tab.dataset.tier; paintTabs(); paintFields(); return; }
+    if (tab) { tier = tab.dataset.tier; paintTabs(); paintFields(); paintNotes(); return; }
     const rm = e.target.closest('[data-remove]');
     if (rm) { config.clauses.splice(Number(rm.dataset.remove), 1); paintClauses(); changed(); }
   });

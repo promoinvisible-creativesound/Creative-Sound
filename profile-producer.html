@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=142">
 <link rel="stylesheet" href="css/header-menu.css?v=19">
-<link rel="stylesheet" href="css/upload.css?v=47">
+<link rel="stylesheet" href="css/upload.css?v=50">
 <link rel="stylesheet" href="css/profile.css?v=19">
 </head>
 <body>
@@ -119,15 +119,23 @@
     <a href="profile-settings.html" class="btn btn-primary">Open settings</a>
   </section>
 
-  <div id="pa-body">
-    <div class="pa-verify" id="pa-verify" hidden></div>
-    <div class="pa-stats" aria-label="Summary">
+  <div id="pa-body" data-active="tracks">
+    <nav class="pa-tabs" id="pa-tabs" aria-label="Producer area sections">
+      <a href="#tracks" data-tab="tracks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>Tracks</a>
+      <a href="#storefront" data-tab="storefront"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a3 3 0 0 0 5.3 1.9A3 3 0 0 0 12 12a3 3 0 0 0 2.7-1.1A3 3 0 0 0 20 9M10 20v-5h4v5"/></svg>Storefront</a>
+      <a href="#licenses" data-tab="licenses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg>Licenses</a>
+      <a href="#payouts" data-tab="payouts"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h4"/></svg>Payouts</a>
+      <a href="#tax" data-tab="tax"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18l-2.5-1.7L12 21l-2.5-1.7L7 21zM10 8h4M10 12h4"/></svg>Tax &amp; statements<span class="pa-tab-dot" id="pa-dot-tax" hidden aria-label="Action needed"></span></a>
+    </nav>
+
+    <div class="pa-verify" id="pa-verify" data-panel="tracks" hidden></div>
+    <div class="pa-stats" data-panel="tracks" aria-label="Summary">
       <div class="pa-stat"><b id="pa-n-pending">–</b><span>In review</span></div>
       <div class="pa-stat"><b id="pa-n-approved">–</b><span>Approved</span></div>
       <div class="pa-stat"><b id="pa-n-rejected">–</b><span>Needs changes</span></div>
     </div>
 
-    <section class="up-card pa-list-card" aria-labelledby="pa-list-title">
+    <section class="up-card pa-list-card" id="tracks" data-panel="tracks" aria-labelledby="pa-list-title">
       <div class="pa-list-head">
         <h2 id="pa-list-title">Your tracks</h2>
         <div class="pa-filter" role="group" aria-label="Filter by status">
@@ -149,7 +157,7 @@
       <p class="up-error" id="pa-error" role="alert" hidden></p>
     </section>
 
-    <section class="up-card sf-set" id="storefront" aria-labelledby="sf-set-title" hidden>
+    <section class="up-card sf-set" id="storefront" data-panel="storefront" aria-labelledby="sf-set-title" hidden>
       <div class="sf-set-head">
         <div>
           <h2 id="sf-set-title">Your storefront</h2>
@@ -191,7 +199,7 @@
       </div>
     </section>
 
-    <section class="up-card sf-set lc-set" id="licenses" aria-labelledby="lc-title" hidden>
+    <section class="up-card sf-set lc-set" id="licenses" data-panel="licenses" aria-labelledby="lc-title" hidden>
       <div class="sf-set-head">
         <div>
           <h2 id="lc-title">Your licenses</h2>
@@ -200,6 +208,7 @@
       </div>
 
       <div class="lc-tabs" id="lc-tabs" role="tablist" aria-label="License"></div>
+      <div id="lc-notes"></div>
       <div class="lc-fields" id="lc-fields"></div>
 
       <p class="pe-group-label sf-pins-label"><span>Your own terms</span><b id="lc-clauses-n"></b></p>
@@ -228,7 +237,7 @@
       </div>
     </section>
 
-    <section class="up-card po-card" id="payouts" aria-labelledby="po-title">
+    <section class="up-card po-card" id="payouts" data-panel="payouts" aria-labelledby="po-title">
       <div class="po-head">
         <div>
           <h2 id="po-title">Payouts</h2>
@@ -271,7 +280,7 @@
       <p class="po-note" id="po-note">Each sale is on hold for 7 days (refund window), then paid out on the next Monday once your balance reaches €10.</p>
     </section>
 
-    <section class="up-card tx-card" id="tax" aria-labelledby="tx-title">
+    <section class="up-card tx-card" id="tax" data-panel="tax" aria-labelledby="tx-title">
       <div class="po-head">
         <div>
           <h2 id="tx-title">Tax details</h2>
@@ -306,7 +315,7 @@
       </form>
     </section>
 
-    <section class="up-card tx-card" id="statements" aria-labelledby="st-title">
+    <section class="up-card tx-card" id="statements" data-panel="tax" aria-labelledby="st-title">
       <div class="po-head">
         <div>
           <h2 id="st-title">Statements</h2>
@@ -316,7 +325,7 @@
       <div class="tx-statements" id="st-body"><p class="po-none">Statements appear here after your first sale.</p></div>
     </section>
 
-    <section class="pa-how" aria-label="How it works">
+    <section class="pa-how" data-panel="tracks" aria-label="How it works">
       <div><b>1. Upload</b><span>Cover, preview and the files for each license you want to sell.</span></div>
       <div><b>2. Review</b><span>We check files, rights and details, then email you the result.</span></div>
       <div><b>3. Live</b><span>Approved tracks go on sale under your name. You keep 80% of every sale.</span></div>
@@ -393,6 +402,7 @@
 <script src="js/auth.js?v=47"></script>
 <script src="js/producer-area.js?v=8"></script>
 <script src="js/producer-tax.js?v=1"></script>
+<script src="js/producer-tabs.js?v=3"></script>
 <script src="js/storefront-settings.js?v=1"></script>
 <script src="js/license-settings.js?v=3"></script>
 <script defer src="/_vercel/insights/script.js"></script>

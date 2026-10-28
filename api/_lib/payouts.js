@@ -241,7 +241,8 @@ async function handlePayouts(req, res) {
       method: user.payout_method || null,
       stripe: { available: !!process.env.STRIPE_SECRET_KEY, connected: !!user.stripe_account_id, ready: !!user.stripe_payouts_ready, countries: STRIPE_COUNTRIES },
       paypal: { available: paypalOn(), email: user.paypal_email || '' },
-      taxComplete: await require('./producer-tax').taxComplete(session.uid),
+      // A hiccup here must never hide the balances: unknown means no warning.
+      taxComplete: await require('./producer-tax').taxComplete(session.uid).catch((err) => { console.error('tax status failed:', err.message); return null; }),
       totals: {
         pending: sum((r) => r.status === 'pending' && !r.available),
         available: sum((r) => r.status === 'pending' && r.available),

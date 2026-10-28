@@ -1035,5 +1035,33 @@
 .tx-st-links a{ display:inline-flex; align-items:center; height:36px; padding:0 14px; border-radius:10px; border:1px solid var(--border-strong); font-size:13px; font-weight:600; color:var(--text); }
 .tx-st-links a:hover{ border-color:var(--accent); color:var(--amber-text); }
 @media (max-width:640px){ .tx-seg{ align-self:stretch; } .tx-seg span{ text-align:center; padding:11px 10px; } .tx-st-links{ width:100%; } .tx-st-links a{ flex:1; justify-content:center; height:44px; } }
-.tx-card .po-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.tx-card .po-head{ display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+@media (max-width:640px){ .tx-card .po-head > div{ flex:1 1 100%; } }
 .tx-card .tx-badge{ flex-shrink:0; margin-top:4px; }
+
+/* ------------------------------ Producer area tabs ----------------------------- */
+.pa-tabs{ scroll-margin-top:108px; display:flex; gap:6px; margin:0 0 20px; padding:5px; border-radius:14px; border:1px solid var(--line); background:#0a0a09; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.pa-tabs::-webkit-scrollbar{ display:none; }
+.pa-tabs a{ position:relative; flex:1 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:42px; padding:0 16px; border-radius:10px; font-size:14px; font-weight:600; color:var(--text-muted); white-space:nowrap; transition:background-color 150ms ease, color 150ms ease; }
+.pa-tabs a svg{ width:17px; height:17px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+@media (hover:hover){ .pa-tabs a:hover{ color:var(--text); background:rgba(255,255,255,0.04); } }
+.pa-tabs a.is-on{ color:#0a0a09; background:var(--accent); }
+.pa-tabs a:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.pa-tab-dot{ position:absolute; top:7px; right:8px; width:9px; height:9px; border-radius:50%; background:#ff5b5b; box-shadow:0 0 0 2px #0a0a09; }
+.pa-tabs a.is-on .pa-tab-dot{ box-shadow:0 0 0 2px var(--accent); }
+/* one section at a time (the scripts of each section keep their own hidden state) */
+#pa-body[data-active="tracks"] [data-panel]:not([data-panel="tracks"]),
+#pa-body[data-active="storefront"] [data-panel]:not([data-panel="storefront"]),
+#pa-body[data-active="licenses"] [data-panel]:not([data-panel="licenses"]),
+#pa-body[data-active="payouts"] [data-panel]:not([data-panel="payouts"]),
+#pa-body[data-active="tax"] [data-panel]:not([data-panel="tax"]){ display:none !important; }
+#pa-body [data-panel]{ animation:paPanelIn 260ms ease both; }
+@keyframes paPanelIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ #pa-body [data-panel]{ animation:none; } }
+@media (max-width:640px){ .pa-tabs{ margin-inline:-4px; } .pa-tabs a{ padding:0 14px; } }
+
+/* Licenses: what the selected license means, and the one-time sale rule */
+.lc-sum{ margin:0 0 14px; padding:14px 16px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,0.02); font-size:14px; line-height:1.6; color:var(--text-secondary); }
+.lc-sum b{ color:var(--text); }
+.lc-once{ margin:0 0 14px; padding:14px 16px; border-radius:12px; border:1px solid rgba(232,134,44,0.5); background:rgba(232,134,44,0.08); font-size:14px; line-height:1.6; color:var(--text); }
+.lc-once b{ color:var(--amber-text); }

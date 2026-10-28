@@ -1123,18 +1123,18 @@
 
 .pa-row-main{ display:flex; flex-direction:column; align-items:flex-start; gap:7px; min-width:0; }
 .pa-row-top{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; min-width:0; }
-.pa-row-title{ font-family:var(--font-display); font-size:16px; font-weight:600; letter-spacing:0.02em; line-height:1.25; color:#fff; overflow-wrap:anywhere; }
+.pa-row-title{ font-family:var(--font-display); font-size:18px; font-weight:600; letter-spacing:0.02em; line-height:1.25; color:#fff; overflow-wrap:anywhere; }
 .pa-row-chips{ display:flex; flex-wrap:wrap; gap:6px; }
-.pa-row-chips span{ padding:4px 9px; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; line-height:1.2; color:var(--text-secondary); background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:999px; }
-.pa-row-chips .is-price{ color:var(--amber-text); background:rgba(232,134,44,0.1); border-color:rgba(232,134,44,0.38); }
-.pa-row-date{ font-family:var(--mono); font-size:11px; letter-spacing:0.06em; color:var(--text-muted); }
-.pa-row-note{ margin:4px 0 0; padding:10px 14px; border-radius:14px; border:1px solid rgba(255,107,87,0.35); background:rgba(255,107,87,0.08); font-size:13px; line-height:1.55; color:#ffb7a8; max-width:62ch; }
-.pa-row-note b{ display:block; margin-bottom:2px; font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:#ff8d79; }
-.pa-row-note.is-info{ border-color:rgba(110,198,255,0.35); background:rgba(110,198,255,0.08); color:#bfe4ff; }
+.pa-row-chips span{ padding:5px 11px; font-family:var(--font-sans); font-size:13px; font-weight:600; letter-spacing:0.01em; line-height:1.2; color:var(--text); background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); border-radius:999px; }
+.pa-row-chips .is-price{ font-weight:700; color:var(--amber-text); background:rgba(232,134,44,0.1); border-color:rgba(232,134,44,0.38); }
+.pa-row-date{ font-family:var(--font-sans); font-size:13.5px; color:var(--text-secondary); }
+.pa-row-note{ margin:4px 0 0; padding:10px 14px; border-radius:14px; border:1px solid rgba(255,107,87,0.35); background:rgba(255,107,87,0.08); font-size:14.5px; line-height:1.55; color:#ffd2c8; max-width:62ch; }
+.pa-row-note b{ display:block; margin-bottom:2px; font-family:var(--font-sans); font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ff8d79; }
+.pa-row-note.is-info{ border-color:rgba(110,198,255,0.35); background:rgba(110,198,255,0.08); color:#d6eeff; }
 .pa-row-note.is-info b{ color:#8fd2ff; }
 
 /* status: a pill with an LED */
-.pa-status{ display:inline-flex; align-items:center; gap:7px; height:26px; padding:0 11px 0 9px; border-radius:13px; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; border:1px solid transparent; }
+.pa-status{ display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 12px 0 10px; border-radius:14px; font-family:var(--font-sans); font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border:1px solid transparent; }
 .pa-status i{ width:7px; height:7px; border-radius:50%; background:currentColor; box-shadow:0 0 8px currentColor; }
 .pa-status.is-ok{ color:#7fe0a4; background:rgba(76,201,122,0.12); border-color:rgba(76,201,122,0.35); }
 .pa-status.is-pending{ color:#f5b06a; background:rgba(232,134,44,0.12); border-color:rgba(232,134,44,0.38); }
@@ -1148,7 +1148,7 @@
 .pa-row-actions{ display:flex; flex-direction:column; align-items:stretch; gap:8px; min-width:116px; }
 .pa-act{
   display:inline-flex; align-items:center; justify-content:flex-start; gap:9px; height:36px; padding:0 14px; cursor:pointer;
-  font-family:var(--font-sans); font-size:13px; font-weight:600; color:var(--text); background:rgba(255,255,255,0.03); border:1px solid var(--border-strong); border-radius:999px;
+  font-family:var(--font-sans); font-size:14px; font-weight:600; color:var(--text); background:rgba(255,255,255,0.03); border:1px solid var(--border-strong); border-radius:999px;
   text-decoration:none; transition:border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 .pa-act svg{ width:15px; height:15px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }

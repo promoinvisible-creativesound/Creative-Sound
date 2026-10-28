@@ -406,61 +406,6 @@
     `).join('');
   }
 
-  /* Account hub (profile.html) — card counts */
-  const accountHub = document.getElementById('account-hub');
-  if (accountHub) {
-    (async () => {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.status === 401) {
-          window.location.href = 'login.html';
-          return;
-        }
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
-        const packCount = new Set((data.packs || []).map((p) => p.pack_id)).size;
-        const licenseParts = [];
-        if (data.licenses.length) licenseParts.push(`${data.licenses.length} license${data.licenses.length > 1 ? 's' : ''}`);
-        if (packCount) licenseParts.push(`${packCount} pack${packCount > 1 ? 's' : ''}`);
-        const beatCount = (data.beats || []).length;
-        if (beatCount) licenseParts.push(`${beatCount} track${beatCount > 1 ? 's' : ''}`);
-        const savedEl = document.getElementById('hub-saved-sub');
-        if (savedEl) {
-          const n = (data.savedBeats || []).length;
-          savedEl.textContent = n ? `${n} saved track${n > 1 ? 's' : ''}` : 'Nothing saved yet';
-        }
-        // Producers get their area first; accounts without a type are asked once.
-        const producerCard = document.getElementById('hub-producer');
-        if (producerCard) producerCard.hidden = !(data.preview && data.role === 'producer');
-        const reviewCard = document.getElementById('hub-review');
-        if (reviewCard) reviewCard.hidden = !data.isAdmin;
-        const roleCard = document.getElementById('hub-role');
-        if (roleCard) roleCard.hidden = !data.preview || !!data.role;
-        document.getElementById('hub-license-sub').textContent = licenseParts.length ? licenseParts.join(' · ') : 'No license yet';
-        const orderCount = data.orders.length + (data.packs || []).length;
-        document.getElementById('hub-orders-sub').textContent = orderCount
-          ? `${orderCount} order${orderCount > 1 ? 's' : ''}`
-          : 'No orders yet';
-      } catch (err) {
-        // Cards still work as plain navigation even if the counts fail to load.
-      }
-    })();
-
-    (async () => {
-      try {
-        const res = await fetch('/api/tickets');
-        const data = await res.json();
-        if (!res.ok) return;
-        const openCount = data.tickets.filter((t) => t.status === 'open').length;
-        document.getElementById('hub-tickets-sub').textContent = data.tickets.length
-          ? `${openCount} open · ${data.tickets.length} total`
-          : 'No tickets yet';
-      } catch (err) {
-        // Non-critical.
-      }
-    })();
-  }
-
   /* License & Download page */
   const licenseRoot = document.getElementById('license-root');
   if (licenseRoot) {

@@ -17,6 +17,16 @@
       "permanent": true
     },
     {
+      "source": "/profile.html",
+      "destination": "/beats.html",
+      "permanent": false
+    },
+    {
+      "source": "/profile",
+      "destination": "/beats.html",
+      "permanent": false
+    },
+    {
       "source": "/track-shell.html",
       "destination": "/beats.html",
       "permanent": false

@@ -427,7 +427,7 @@
     window.csMe
       .then((data) => {
         if (data) {
-          headerAccountLink.href = 'profile.html';
+          headerAccountLink.href = 'profile-settings.html';
           headerAccountLink.setAttribute('aria-label', data.firstName ? `Account — ${data.firstName}` : 'My Account');
           headerAccountLink.title = data.firstName || 'My Account';
         }
@@ -532,7 +532,6 @@
     { name: 'Contact', desc: 'Get in touch', url: 'contact.html', group: 'Help', icon: 'mail' },
     { name: 'Refund policy', desc: 'How refunds work', url: 'refund.html', group: 'Help', icon: 'doc' },
     { name: 'Privacy policy', desc: 'How we handle your data', url: 'privacy.html', group: 'Help', icon: 'doc' },
-    { name: 'Your account', desc: 'Profile, orders, downloads, settings', url: 'profile.html', group: 'Account', icon: 'user' },
     { name: 'Licenses & downloads', desc: 'Your license keys and files', url: 'profile-license.html', group: 'Account', icon: 'key' },
     { name: 'Orders', desc: 'Everything you bought', url: 'profile-orders.html', group: 'Account', icon: 'box' },
     { name: 'Saved tracks', desc: 'Tracks you saved with the heart', url: 'profile-saved.html', group: 'Account', icon: 'heart' },

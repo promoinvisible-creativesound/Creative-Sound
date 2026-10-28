@@ -71,10 +71,11 @@
   };
   // Catalogue beats have static pages; approved producer uploads use track.html.
   const beatUrl = (b) => (b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`);
-  const art = (b) => `
+  // o.hero: the big first spot (full small cover, loaded first); the rest use the extra-small cover.
+  const art = (b, o = {}) => `
     <div class="bt-art">
       ${b.cover
-        ? `<img src="${esc(b.cover)}" alt="" loading="lazy">`
+        ? `<img src="${esc(o.hero ? b.cover : (b.coverSm || b.cover))}" alt="" ${o.hero ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"'}>`
         : '<div class="bt-art-gen" aria-hidden="true"></div>'}
     </div>`;
   const VERIFIED = '<svg class="bt-verified" viewBox="0 0 24 24" role="img" aria-label="Verified producer"><title>Verified producer</title><path class="bt-verified-seal" d="M12.0 1.0L12.9 1.4L13.7 2.3L14.4 2.9L15.4 2.8L16.5 2.4L17.5 2.5L18.1 3.3L18.3 4.5L18.6 5.4L19.5 5.7L20.7 5.9L21.5 6.5L21.6 7.5L21.2 8.6L21.1 9.6L21.7 10.3L22.6 11.1L23.0 12.0L22.6 12.9L21.7 13.7L21.1 14.4L21.2 15.4L21.6 16.5L21.5 17.5L20.7 18.1L19.5 18.3L18.6 18.6L18.3 19.5L18.1 20.7L17.5 21.5L16.5 21.6L15.4 21.2L14.4 21.1L13.7 21.7L12.9 22.6L12.0 23.0L11.1 22.6L10.3 21.7L9.6 21.1L8.6 21.2L7.5 21.6L6.5 21.5L5.9 20.7L5.7 19.5L5.4 18.6L4.5 18.3L3.3 18.1L2.5 17.5L2.4 16.5L2.8 15.4L2.9 14.4L2.3 13.7L1.4 12.9L1.0 12.0L1.4 11.1L2.3 10.3L2.9 9.6L2.8 8.6L2.4 7.5L2.5 6.5L3.3 5.9L4.5 5.7L5.4 5.4L5.7 4.5L5.9 3.3L6.5 2.5L7.5 2.4L8.6 2.8L9.6 2.9L10.3 2.3L11.1 1.4Z"/><path class="bt-verified-tick" d="M7.6 12.4l3 3 5.8-6.2"/></svg>';
@@ -846,12 +847,12 @@
     return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 3);
   };
   const spotHtml = (b, rank) => `
-    <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.cover, location.href).href)}')"` : ''}>
+    <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.coverSm || b.cover, location.href).href)}')"` : ''}>
       <span class="bt-feat-ambient" aria-hidden="true"></span>
       <div class="bt-feat-art">
       <span class="bt-feat-vinyl" aria-hidden="true"><span class="bt-feat-disc"><span class="bt-feat-label"></span></span></span>
       <div class="bt-feat-cover">
-        ${art(b)}
+        ${art(b, { hero: rank === 1 })}
         <button type="button" class="bt-feat-play" data-feat-play aria-label="Play ${esc(b.title)}">
           <svg class="bt-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
           <svg class="bt-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>

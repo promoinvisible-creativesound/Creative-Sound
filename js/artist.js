@@ -104,7 +104,7 @@
   const card = (b, i) => `
     <article class="sf-card" style="--i:${i}${b.accent ? `; --c:${b.accent}` : ''}">
       <div class="sf-card-art">
-        ${b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy">` : ''}
+        ${b.cover ? `<img src="${esc(b.coverSm || b.cover)}" alt="" loading="lazy" decoding="async">` : ''}
         <button type="button" class="sf-play" data-play="${esc(b.id)}" aria-label="Play ${esc(b.title)}">${ICON_PLAY}</button>
       </div>
       <a class="sf-card-body" href="${trackUrl(b)}">
@@ -116,7 +116,7 @@
   const feat = (b, i) => `
     <article class="sf-feat" style="--i:${i}${b.accent ? `; --c:${b.accent}` : ''}">
       <div class="sf-feat-art">
-        ${b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy">` : ''}
+        ${b.cover ? `<img src="${esc(b.coverSm || b.cover)}" alt="" loading="lazy" decoding="async">` : ''}
         <button type="button" class="sf-play sf-play-lg" data-play="${esc(b.id)}" aria-label="Play ${esc(b.title)}">${ICON_PLAY}</button>
       </div>
       <div class="sf-feat-body">

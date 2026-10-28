@@ -18,9 +18,9 @@
 <meta name="twitter:description" content="Creative Dist 2.0: a modular distortion plugin with 4 reorderable slots (Saturation, Noise, Bode Shifter, Flux), a 5-band EQ and Auto Gain. VST3 / AU for macOS and Windows. Free demo.">
 <meta name="twitter:image" content="https://creativesound.io/assets/img/gui-flux.png">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<link rel="preload" href="css/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="css/fonts/orbitron-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css?v=1">
 
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png?v=5">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png?v=5">
@@ -465,49 +465,49 @@
       <div class="stories-track">
         <div class="stories-set">
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-2.jpg" data-src="assets/video/stories/story-2.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-2.webp" data-src="assets/video/stories/story-2.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-3.jpg" data-src="assets/video/stories/story-3.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-3.webp" data-src="assets/video/stories/story-3.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-4.jpg" data-src="assets/video/stories/story-4.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-4.webp" data-src="assets/video/stories/story-4.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-5.jpg" data-src="assets/video/stories/story-5.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-5.webp" data-src="assets/video/stories/story-5.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-6.jpg" data-src="assets/video/stories/story-6.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-6.webp" data-src="assets/video/stories/story-6.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-7.jpg" data-src="assets/video/stories/story-7.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-7.webp" data-src="assets/video/stories/story-7.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-8.jpg" data-src="assets/video/stories/story-8.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-8.webp" data-src="assets/video/stories/story-8.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -516,49 +516,49 @@
         </div>
         <div class="stories-set" aria-hidden="true">
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-2.jpg" data-src="assets/video/stories/story-2.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-2.webp" data-src="assets/video/stories/story-2.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-3.jpg" data-src="assets/video/stories/story-3.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-3.webp" data-src="assets/video/stories/story-3.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-4.jpg" data-src="assets/video/stories/story-4.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-4.webp" data-src="assets/video/stories/story-4.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-5.jpg" data-src="assets/video/stories/story-5.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-5.webp" data-src="assets/video/stories/story-5.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-6.jpg" data-src="assets/video/stories/story-6.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-6.webp" data-src="assets/video/stories/story-6.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-7.jpg" data-src="assets/video/stories/story-7.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-7.webp" data-src="assets/video/stories/story-7.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </button>
           </div>
           <div class="story-card">
-            <video class="story-video" poster="assets/video/stories/poster-8.jpg" data-src="assets/video/stories/story-8.mp4" muted loop playsinline preload="none"></video>
+            <video class="story-video" poster="assets/video/stories/poster-8.webp" data-src="assets/video/stories/story-8.mp4" muted loop playsinline preload="none"></video>
             <button type="button" class="story-sound" aria-label="Toggle sound">
               <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
               <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -850,9 +850,9 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="js/vendor/gsap-3.12.5.min.js"></script>
+<script src="js/vendor/ScrollTrigger-3.12.5.min.js"></script>
+<script src="js/vendor/lenis-1.0.42.min.js"></script>
 <script src="js/plexus.js?v=1"></script>
 <script src="js/main.js?v=48"></script>
 <script src="js/header-menu.js?v=17"></script>

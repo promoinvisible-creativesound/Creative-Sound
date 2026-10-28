@@ -59,7 +59,9 @@ function toBeat(row) {
     peaks: Array.isArray(row.peaks) ? row.peaks : null,
     // v changes whenever the files change (approved edits), so browsers and
     // the CDN fetch the new cover/preview instead of a cached redirect.
-    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=sm&v=${fileVersion(row)}` : null,
+    cover: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=sm&v=${fileVersion(row)}b` : null,
+    // Cards, lists, the player and the cart use the small one.
+    coverSm: row.files && row.files.artwork ? `/api/beats/media?id=${id}&kind=artwork&s=xs&v=${fileVersion(row)}` : null,
     preview: `/api/beats/media?id=${id}&kind=preview&v=${fileVersion(row)}`,
     // The producer's license terms (limits, publishing share, own clauses).
     license: require('./license-config').storeView(row.producer_license, !!(row.files && row.files.stems)),
@@ -157,10 +159,10 @@ async function handleMedia(req, res) {
     // ?s=sm: the small cover (made once, see _lib/thumb.js); full size otherwise.
     let path = f.path;
     let size = f.size;
-    if (kind === 'artwork' && req.query.s === 'sm') {
+    if (kind === 'artwork' && (req.query.s === 'sm' || req.query.s === 'xs')) {
       try {
-        const thumb = await require('./thumb').ensureThumb(beat._submissionId, files);
-        if (thumb) { path = thumb; size = files.thumb && files.thumb.path === thumb ? files.thumb.size : 0; }
+        const thumb = await require('./thumb').ensureThumb(beat._submissionId, files, req.query.s);
+        if (thumb) { path = thumb.path; size = thumb.size; }
       } catch (err) { console.error('cover thumb failed:', err.message); }
     }
     // Covers: send the image itself so the CDN keeps it. ?v= changes with

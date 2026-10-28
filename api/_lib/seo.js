@@ -62,7 +62,7 @@ const meta = (b) => [b.bpm ? `${b.bpm} BPM` : '', b.key, b.genre].filter(Boolean
 const card = (b, i) => `
       <article class="sf-card" style="--i:${i}${b.accent ? `; --c:${b.accent}` : ''}">
         <div class="sf-card-art">
-          ${b.cover ? `<img src="${esc(b.cover)}" alt="${esc(b.title)} cover" loading="lazy">` : ''}
+          ${b.cover ? `<img src="${esc(b.coverSm || b.cover)}" alt="${esc(b.title)} cover" loading="lazy" decoding="async">` : ''}
           <button type="button" class="sf-play" data-play="${esc(b.id)}" data-src="${esc(b.preview)}" data-title="${esc(b.title)}" data-meta="${esc(meta(b))}" data-cover="${esc(b.cover || '')}" data-href="${trackUrl(b)}" aria-label="Play ${esc(b.title)}">${PLAY}</button>
         </div>
         <div class="sf-card-body">

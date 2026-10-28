@@ -28,7 +28,7 @@
   const card = (b, i) => `
     <a class="ho-track t-${TINTS.includes(b.tint) ? b.tint : 'amber'}" href="${b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`}" style="--i:${i};${accentStyle(b)}">
       <span class="ho-track-art">
-        ${b.cover ? `<img class="ho-cover-img" src="${esc(b.cover)}" alt="" loading="lazy">` : '<span class="ho-cover"></span>'}
+        ${b.cover ? `<img class="ho-cover-img" src="${esc(b.coverSm || b.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="ho-cover"></span>'}
         <button type="button" class="ho-play" data-src="${esc(b.preview)}" aria-label="Play ${esc(b.title)}">
           <svg class="ho-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
           <svg class="ho-ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>

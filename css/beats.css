@@ -450,7 +450,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-cats-clip::before{ left:0; background:linear-gradient(90deg, var(--bg), transparent); }
 .bt-cats-clip::after{ right:0; background:linear-gradient(-90deg, var(--bg), transparent); }
 .bt-cats-clip.fade-l::before, .bt-cats-clip.fade-r::after{ opacity:1; }
-.bt-cats{ display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; padding:14px 2px 16px; }
+/* min-height = the row once the collections are drawn (175px), so the page below does not jump when they appear. */
+.bt-cats{ display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; padding:14px 2px 16px; min-height:175px; }
 .bt-cats::-webkit-scrollbar{ display:none; }
 
 .bt-col{

@@ -12,6 +12,11 @@
       "permanent": true
     },
     {
+      "source": "/sell-beats.html",
+      "destination": "/sell-beats",
+      "permanent": true
+    },
+    {
       "source": "/track-shell.html",
       "destination": "/beats.html",
       "permanent": false
@@ -220,6 +225,10 @@
     {
       "source": "/api/beats/license",
       "destination": "/api/tickets?action=beats-license"
+    },
+    {
+      "source": "/sell-beats",
+      "destination": "/sell-beats.html"
     },
     {
       "source": "/track.html",

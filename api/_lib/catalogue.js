@@ -69,6 +69,7 @@ function toBeat(row) {
     _license: row.producer_license || null,
     _userId: row.user_id,
     _sold: !!row.sold_at,
+    _soldSession: row.sold_session || null,
   };
 }
 // Short version tag for media URLs: last approved change, or first approval.
@@ -86,6 +87,10 @@ function ensureSoldColumns() {
     soldColumns = (async () => {
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_tier TEXT`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_session TEXT`;
+      // A checkout in progress that would take the track off the store holds it.
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS reserved_by INTEGER`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS reserved_until TIMESTAMPTZ`;
     })().catch((err) => { soldColumns = null; throw err; });
   }
   return soldColumns;
@@ -222,6 +227,7 @@ async function handleBoughtFile(req, res) {
 }
 
 module.exports = {
+  ensureSoldColumns,
   getBeat, liveBeats, isTrackId, trackId, producerFiles, publicBeat,
   handleCatalogue, handleMedia, handleBoughtFile,
 };

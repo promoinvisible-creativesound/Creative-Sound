@@ -29,6 +29,11 @@ const isProduction = () => process.env.VERCEL_ENV === 'production';
 // redeploy; the admin can always buy, to test the whole flow.
 const salesOpen = () => process.env.BEAT_SALES_OPEN !== '0';
 
+// Does selling this beat under this tier hand all rights to the buyer (so the
+// track leaves the store)? Only producer uploads can.
+const takesOffStore = (beat, tier) => beat._submissionId != null && beat._userId != null
+  && require('./license-config').grantsFullRights(beat._license, tier, !!(beat._files && beat._files.stems));
+
 function priceOf(beat, tier) {
   const p = beat && beat.prices && beat.prices[tier];
   return Number.isInteger(p) && p > 0 ? p : null;
@@ -81,6 +86,37 @@ async function handleCheckout(req, res) {
   const test = isAdmin(session) && req.body && req.body.test === true;
   if (test) items.forEach((it) => { it.price = TEST_PRICE; });
 
+  // A track whose license leaves all rights with the buyer can be sold once.
+  // While someone is paying for it, nobody else can start buying it (the hold
+  // matches the checkout's own expiry), so a second buyer is stopped even if
+  // they click two seconds later.
+  const held = [];
+  const release = () => Promise.all(held.map((id) => sql`UPDATE beat_submissions SET reserved_until = NULL, reserved_by = NULL WHERE id = ${id} AND reserved_by = ${session.uid}`)).catch(() => {});
+  if (!test) {
+    try {
+      await require('./catalogue').ensureSoldColumns();
+      for (const { beat, tier } of items) {
+        if (!takesOffStore(beat, tier)) continue;
+        const [got] = await sql`
+          UPDATE beat_submissions SET reserved_by = ${session.uid}, reserved_until = now() + interval '32 minutes'
+          WHERE id = ${beat._submissionId} AND sold_at IS NULL AND (reserved_until IS NULL OR reserved_until < now() OR reserved_by = ${session.uid})
+          RETURNING id
+        `;
+        if (!got) {
+          await release();
+          res.status(409).json({ error: `Someone else is buying "${beat.title}" right now. If they don't finish, it will be available again in a few minutes.` });
+          return;
+        }
+        held.push(beat._submissionId);
+      }
+    } catch (err) {
+      await release();
+      console.error('beats hold error:', err);
+      res.status(500).json({ error: 'Checkout is not available right now. Please try again.' });
+      return;
+    }
+  }
+
   const siteUrl = (process.env.SITE_URL || `https://${req.headers.host}`).replace(/\/$/, '');
   try {
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -105,12 +141,15 @@ async function handleCheckout(req, res) {
         ...(test ? { test: '1' } : {}),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
       },
+      // Stripe needs at least 30 minutes; the hold above lasts a little longer.
+      ...(held.length ? { expires_at: Math.floor(Date.now() / 1000) + 31 * 60 } : {}),
       success_url: `${siteUrl}/beats-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/beats.html?cart=1`,
     });
     res.status(200).json({ url: checkout.url });
   } catch (err) {
     console.error('beats checkout error:', err);
+    await release();
     res.status(500).json({ error: 'Checkout is not available right now. Please try again.' });
   }
 }
@@ -270,13 +309,66 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
 // Throws when something must be retried (DB down, delivery files missing),
 // so Stripe retries the webhook; the inserts are idempotent per session.
 async function handleBeatPurchase({ session, email, resend, renderEmail, button, paragraph, steps, accountLine }) {
-  const items = await parseItems(session.metadata && session.metadata.items);
+  let items = await parseItems(session.metadata && session.metadata.items);
   const test = !!(session.metadata && session.metadata.test === '1');
   const paid = (beat, tier) => (test ? TEST_PRICE : priceOf(beat, tier));
   if (!items.length) throw new Error(`Beat checkout ${session.id} has no readable items.`);
   const buyerName = (session.customer_details && session.customer_details.name) || '';
   const currency = session.currency || CATALOGUE.currency || 'eur';
   await ensureTables();
+
+  // Claim tracks that this sale takes off the store; a track already claimed
+  // by another payment (or sold before this one was paid) is not delivered
+  // and that item is refunded. A webhook retry for the same session passes.
+  if (!test) {
+    const blocked = [];
+    const kept = [];
+    for (const it of items) {
+      const { beat, tier } = it;
+      if (takesOffStore(beat, tier)) {
+        const [mine] = await sql`
+          UPDATE beat_submissions SET sold_at = COALESCE(sold_at, now()), sold_tier = COALESCE(sold_tier, ${tier}), sold_session = COALESCE(sold_session, ${session.id}), reserved_until = NULL
+          WHERE id = ${beat._submissionId} AND (sold_at IS NULL OR sold_session = ${session.id})
+          RETURNING id
+        `;
+        (mine ? kept : blocked).push(it);
+      } else {
+        (beat._sold && beat._soldSession !== session.id ? blocked : kept).push(it);
+      }
+    }
+    if (blocked.length) {
+      const amount = blocked.reduce((n, { beat, tier }) => n + (priceOf(beat, tier) || 0), 0);
+      try {
+        if (amount > 0 && session.payment_intent) {
+          await Stripe(process.env.STRIPE_SECRET_KEY).refunds.create(
+            { payment_intent: session.payment_intent, amount, metadata: { reason: 'track already sold', session: session.id } },
+            { idempotencyKey: `beat-sold-refund-${session.id}` },
+          );
+        }
+      } catch (err) {
+        console.error('refund of a track sold to someone else failed:', session.id, err);
+        throw err;
+      }
+      const titles = blocked.map(({ beat }) => beat.title).join(', ');
+      try {
+        const { error: e1 } = await resend.emails.send({
+          from: process.env.FROM_EMAIL, to: email, subject: 'Your order was refunded',
+          html: renderEmail({
+            siteUrl: process.env.SITE_URL || '', preheader: 'The track was sold a moment before your payment.', kicker: 'Refund', title: 'Sorry, this track was just sold',
+            content: [
+              paragraph(`<b>${titles}</b> was bought by someone else a moment before your payment went through, and a license that leaves all rights with the buyer can only be sold once.`),
+              paragraph(`We have refunded <b>${(amount / 100).toFixed(2)} ${String(currency).toUpperCase()}</b> to the card you used. It usually shows within 5 to 10 days.`),
+              button(`${process.env.SITE_URL || ''}/beats.html`, 'Browse more tracks'),
+            ].join(''),
+          }),
+        });
+        if (e1) console.error('refund email rejected by Resend:', e1);
+        await resend.emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: 'Beat sale refunded: track already sold', html: `<p>Order ${session.id} from ${email}: ${titles} had already been sold, so ${(amount / 100).toFixed(2)} ${currency} was refunded automatically.</p>` });
+      } catch (err) { console.error('refund emails failed:', err); }
+    }
+    items = kept;
+    if (!items.length) return;
+  }
 
   const delivered = [];
   for (let i = 0; i < items.length; i++) {
@@ -294,17 +386,8 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
   // Test purchases (admin, minimum price): no producer earnings, no sale email.
   if (!test) {
-    // A license that leaves all rights with the buyer takes the track off the
-    // store (test purchases never do).
-    const soldOut = new Set();
-    for (const { beat, tier } of items) {
-      if (beat._submissionId == null || beat._userId == null) continue;
-      if (!require('./license-config').grantsFullRights(beat._license, tier, !!(beat._files && beat._files.stems))) continue;
-      const [taken] = await sql`UPDATE beat_submissions SET sold_at = now(), sold_tier = ${tier} WHERE id = ${beat._submissionId} AND sold_at IS NULL RETURNING id`;
-      if (taken) soldOut.add(beat.id);
-    }
     const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: priceOf(beat, tier) })));
-    sales.forEach((s) => { s.soldOut = soldOut.has(s.beatId); });
+    sales.forEach((s) => { s.soldOut = items.some((it) => it.beat.id === s.beatId && takesOffStore(it.beat, it.tier)); });
     await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });
   }
 

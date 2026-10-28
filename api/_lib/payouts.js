@@ -73,6 +73,7 @@ function ensureTables() {
       // Partial refunds and lost disputes take part of a sale back: what was cut so far.
       await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS refund_gross_cents INTEGER NOT NULL DEFAULT 0`;
       await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS refund_share_cents INTEGER NOT NULL DEFAULT 0`;
+      await sql`CREATE TABLE IF NOT EXISTS producer_dispute_events (key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
       await sql`CREATE SEQUENCE IF NOT EXISTS commission_note_seq`;
       await sql`
         UPDATE producer_earnings e SET fee_number = 'CSF-' || to_char(e.created_at, 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), fee_cents = e.gross_cents - e.share_cents
@@ -227,6 +228,11 @@ async function handleDispute(dispute, type, notify) {
     pi = pi || charge.payment_intent;
   }
   if (!pi) return;
+  // The webhook and the weekly check can both see the same dispute: handle each step once.
+  const key = type === 'charge.dispute.created' ? `${dispute.id}:created` : `${dispute.id}:closed:${dispute.status}`;
+  const [seen] = await sql`SELECT key FROM producer_dispute_events WHERE key = ${key}`;
+  if (seen) return;
+  const remember = () => sql`INSERT INTO producer_dispute_events (key) VALUES (${key}) ON CONFLICT DO NOTHING`;
   const eur = (c) => `€${(c / 100).toFixed(2)} ${String(dispute.currency || 'eur').toUpperCase()}`;
   if (type === 'charge.dispute.created') {
     const held = await sql`UPDATE producer_earnings SET status = 'disputed' WHERE payment_intent = ${pi} AND status = 'pending' RETURNING id`;
@@ -238,12 +244,14 @@ async function handleDispute(dispute, type, notify) {
       : 'Nothing was paid out yet.';
     if (notify) await notify(`Chargeback opened on ${pi}: ${eur(dispute.amount)}, reason "${dispute.reason}". Send your evidence by ${due} in the Stripe dashboard. ${held.length} earning(s) put on hold. ${paidNote}`, 'Chargeback opened');
     if (processing.length) throw new Error(`payout in progress for ${pi}, retry`);
+    await remember();
     return;
   }
   if (type !== 'charge.dispute.closed') return;
   if (dispute.status === 'won' || dispute.status === 'warning_closed') {
     const back = await sql`UPDATE producer_earnings SET status = 'pending' WHERE payment_intent = ${pi} AND status = 'disputed' RETURNING id`;
     if (notify) await notify(`Chargeback on ${pi} closed in your favour (${dispute.status}). ${back.length} earning(s) go back to the next payout run.`, 'Chargeback won');
+    await remember();
     return;
   }
   if (dispute.status === 'lost') {
@@ -254,6 +262,24 @@ async function handleDispute(dispute, type, notify) {
     if (full) await relist(pi);
     // Anything still on hold after a partial loss is released.
     await sql`UPDATE producer_earnings SET status = 'pending' WHERE payment_intent = ${pi} AND status = 'disputed'`;
+  }
+  await remember();
+}
+
+// Weekly safety net, right before the payouts: the chargebacks of the last 4 months are read
+// from Stripe, so a dispute is never missed even if the webhook does not send those events.
+const OPEN_DISPUTE = ['needs_response', 'under_review', 'warning_needs_response', 'warning_under_review'];
+async function syncDisputes(notify) {
+  const since = Math.floor(Date.now() / 1000) - 120 * 86400;
+  let after;
+  for (let page = 0; page < 5; page++) {
+    const list = await stripe().disputes.list({ limit: 100, created: { gte: since }, ...(after ? { starting_after: after } : {}) });
+    for (const d of list.data) {
+      await handleDispute(d, 'charge.dispute.created', notify);
+      if (!OPEN_DISPUTE.includes(d.status)) await handleDispute(d, 'charge.dispute.closed', notify);
+    }
+    if (!list.has_more || !list.data.length) break;
+    after = list.data[list.data.length - 1].id;
   }
 }
 
@@ -394,9 +420,12 @@ async function paypalPayout({ email, cents, currency, ref, note }) {
 }
 
 /* ---------------------------------- Run ----------------------------------- */
-async function runPayouts() {
+async function runPayouts(notify) {
   await ensureTables();
   await require('./producer-tax').ensureTax();
+  // Hold anything under dispute first. If Stripe cannot be read the run goes on: the webhook has the same events.
+  const report = [];
+  try { await syncDisputes(notify); } catch (err) { console.error('dispute check failed:', err.message); report.push(`dispute check failed: ${err.message}`); }
   const due = await sql`
     SELECT e.*, u.email, u.payout_method AS method, u.stripe_account_id, u.stripe_payouts_ready, u.paypal_email, t.declared_at AS tax_declared_at, t.declaration_version AS tax_version
     FROM producer_earnings e JOIN users u ON u.id = e.user_id LEFT JOIN producer_tax t ON t.user_id = e.user_id
@@ -405,7 +434,6 @@ async function runPayouts() {
   `;
   const byUser = new Map();
   for (const r of due) byUser.set(r.user_id, [...(byUser.get(r.user_id) || []), r]);
-  const report = [];
   for (const [userId, list] of byUser) {
     const u = list[0];
     const total = list.reduce((n, r) => n + r.share_cents, 0);
@@ -456,7 +484,13 @@ async function handleRun(req, res) {
   const session = getSession(req);
   if (!cron && !(session && isAdmin(session))) { res.status(401).json({ error: 'Not allowed.' }); return; }
   try {
-    const report = await runPayouts();
+    const tell = async (text, subject) => {
+      if (!process.env.RESEND_API_KEY) return;
+      const { Resend } = require('resend');
+      const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({ from: process.env.FROM_EMAIL, to: 'hello@creativesound.io', subject: subject || 'Producer payouts', html: `<p>${text}</p>` });
+      if (error) console.error('dispute email rejected by Resend:', error);
+    };
+    const report = await runPayouts(tell);
     if (report.length && process.env.RESEND_API_KEY) {
       try {
         const { Resend } = require('resend');
@@ -561,4 +595,4 @@ async function handleCheck(req, res) {
   res.status(200).json(out);
 }
 
-module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handleDispute, handlePayouts, handleRun };
+module.exports = { ensureTables, handleCheck, SHARE, recordEarnings, emailProducers, handleRefund, handleDispute, syncDisputes, handlePayouts, handleRun };

@@ -100,6 +100,23 @@
   const tierOf = (b, id) => ({ ...LIC.tiers[id], ...((b && b.license && b.license.tiers && b.license.tiers[id]) || {}) });
   const pubLabel = (t) => (t.publishing == null ? '' : t.publishing ? `${t.publishing}% to the producer` : 'None, credit only');
   const clausesOf = (b) => (b && b.license && b.license.clauses) || [];
+  // A license that leaves all rights with the buyer is a one-time sale: the track
+  // leaves the store afterwards. The buyer is told what was licensed before.
+  const isFullRights = (b, id) => { const t = b && b.source === 'producer' && tierOf(b, id); return !!(t && t.unlimited && !t.publishing && !clausesOf(b).length); };
+  const priorOf = (b) => (b && b.licensed && b.licensed.total) || 0;
+  const priorList = (b) => Object.entries((b.licensed && b.licensed.tiers) || {}).map(([id, n]) => `${(LIC.tiers[id] || { name: id }).name} × ${n}`).join(', ');
+  const onceHtml = (b, id) => {
+    if (!isFullRights(b, id)) return '';
+    const n = priorOf(b);
+    return `<div class="bt-once" role="note"><b>One-time sale.</b> Buying this license gives you all the rights and takes the track off the store, so nobody else can buy it. ${n
+      ? `It has already been licensed <b>${n} time${n === 1 ? '' : 's'}</b> with lesser licenses (${esc(priorList(b))}). Those licenses stay valid: you cannot take down, claim or remove songs released by people who bought before you.`
+      : 'Nobody has licensed it before.'}</div>`;
+  };
+  const onceShort = (b, id) => {
+    if (!isFullRights(b, id)) return '';
+    const n = priorOf(b);
+    return `<p class="bt-cart-once">One-time license: all rights, and the track leaves the store.${n ? ` Already licensed ${n}× before; those licenses stay valid and you cannot take down songs by earlier buyers.` : ''}</p>`;
+  };
 
   /* ------------------------------ Producer stats ---------------------------- */
   // Views, plays, saves and cart adds on producer tracks, with where the
@@ -773,6 +790,10 @@
       });
       const t = tierOf(beat, tier);
       $('#bp-total').textContent = euro(beat.prices[tier]);
+      const once = $('#bp-once');
+      if (once) once.innerHTML = onceHtml(beat, tier);
+      const excl = $('#bp-excl');
+      if (excl) excl.textContent = isFullRights(beat, tier) ? 'One-time sale.' : 'Non-exclusive.';
       $('#bp-usage-title').innerHTML = `${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? ' <span class="bt-tier-pill">Unlimited</span>' : ''}`;
       $('#bp-usage').innerHTML = usageRows(t).map(([icon, text]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true">${USAGE_ICONS[icon]}</svg><span>${esc(text)}</span></li>`).join('')
         + (clausesOf(beat).length ? `<li class="bp-usage-clauses"><b>Producer's terms</b><ol>${clausesOf(beat).map((c) => `<li>${esc(c)}</li>`).join('')}</ol></li>` : '');
@@ -2041,6 +2062,8 @@
     modalTier = id;
     $$('.bt-tier', modal).forEach((el) => { const on = el.dataset.tier === id; el.classList.toggle('is-selected', on); $('input', el).checked = on; });
     $('#bt-license-total').textContent = euro(modalBeat.prices[id]);
+    const onceEl = $('#bt-license-once');
+    if (onceEl) onceEl.innerHTML = onceHtml(modalBeat, id);
     const inCart = cart.find((c) => c.id === modalBeat.id);
     $('#bt-license-add').textContent = !canBuy ? SOON : inCart ? (inCart.tier === id ? 'In cart · View cart' : 'Update cart') : 'Add to cart';
     $('#bt-license-add').disabled = !canBuy;
@@ -2064,7 +2087,7 @@
           </span>
           <span class="bt-tier-price">${euro(beat.prices[id])}</span>
         </label>`;
-    }).join('');
+    }).join('') + '<div id="bt-license-once"></div>';
     $('#bt-license-terms').innerHTML = termsTable(beat);
     const inCart = cart.find((c) => c.id === beat.id);
     const tiers = tiersOf(beat);
@@ -2126,6 +2149,7 @@
           ${art(b)}
           <span><a class="bt-cart-name" href="${beatUrl(b)}">${esc(b.title)}</a><span class="bt-cart-tier">${esc(LIC.tiers[c.tier].name)} · ${esc(b.producer)}</span></span>
           <span class="bt-cart-side"><span class="bt-cart-price">${euro(b.prices[c.tier])}</span><button type="button" class="bt-cart-remove" aria-label="Remove ${esc(b.title)} from cart">Remove</button></span>
+          ${onceShort(b, c.tier)}
         </li>`;
     }).join('');
     $$('.bt-card').forEach((c) => { const b = $('.bt-buy', c); if (b) b.classList.toggle('in-cart', cart.some((x) => x.id === c.dataset.id)); });

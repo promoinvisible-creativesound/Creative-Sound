@@ -128,12 +128,40 @@ async function getBeat(id) {
   const [row] = await approvedRows(sub);
   if (!row) return null;
   const beat = toBeat(row);
-  return beat.id === id ? beat : null;
+  if (beat.id !== id) return null;
+  beat.licensed = (await licensedCounts(beat.id)).get(beat.id) || EMPTY_LICENSED();
+  return beat;
 }
+
+// How many licenses each producer track has already sold, by tier (admin test
+// purchases at the minimum price do not count). Shown to buyers of a full-rights
+// license before they pay, and written into its PDF.
+async function licensedCounts(beatId) {
+  try {
+    const rows = beatId
+      ? await sql`SELECT beat_id, tier, count(*)::int AS n FROM beat_purchases WHERE beat_id = ${beatId} AND price_cents IS DISTINCT FROM 50 GROUP BY beat_id, tier`
+      : await sql`SELECT beat_id, tier, count(*)::int AS n FROM beat_purchases WHERE price_cents IS DISTINCT FROM 50 GROUP BY beat_id, tier`;
+    const out = new Map();
+    rows.forEach((r) => {
+      const e = out.get(r.beat_id) || { total: 0, tiers: {} };
+      e.total += r.n; e.tiers[r.tier] = r.n;
+      out.set(r.beat_id, e);
+    });
+    return out;
+  } catch (err) {
+    // The table does not exist before the first sale.
+    if (!/does not exist/.test(String(err && err.message))) console.error('licensed counts error:', err);
+    return new Map();
+  }
+}
+const EMPTY_LICENSED = () => ({ total: 0, tiers: {} });
 
 async function liveBeats() {
   const rows = await approvedRows();
-  return [...(CATALOGUE.beats || []), ...rows.map(toBeat)];
+  const beats = rows.map(toBeat);
+  const counts = beats.length ? await licensedCounts() : new Map();
+  beats.forEach((b) => { b.licensed = counts.get(b.id) || EMPTY_LICENSED(); });
+  return [...(CATALOGUE.beats || []), ...beats];
 }
 
 async function handleCatalogue(req, res) {
@@ -230,7 +258,7 @@ async function handleBoughtFile(req, res) {
 }
 
 module.exports = {
-  ensureSoldColumns,
+  ensureSoldColumns, licensedCounts,
   getBeat, liveBeats, isTrackId, trackId, producerFiles, publicBeat,
   handleCatalogue, handleMedia, handleBoughtFile,
 };

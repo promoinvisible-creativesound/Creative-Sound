@@ -93,7 +93,8 @@
           </div>
           <div class="bp-usage-box" aria-live="polite">
             <h3 id="bp-usage-title"></h3>
-            <p>Non-exclusive. Credit "${esc(b.credit || b.producer)}". Full terms in the license PDF you receive by email.</p>
+            <p><span id="bp-excl">Non-exclusive.</span> Credit "${esc(b.credit || b.producer)}". Full terms in the license PDF you receive by email.</p>
+            <div id="bp-once"></div>
             <ul class="bp-usage" id="bp-usage"></ul>
           </div>
         </div>

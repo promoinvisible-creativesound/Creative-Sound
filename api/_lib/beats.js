@@ -117,6 +117,11 @@ async function handleCheckout(req, res) {
     }
   }
 
+  // Said again next to the pay button on Stripe's page.
+  const onceNotes = items.filter(({ beat, tier }) => takesOffStore(beat, tier)).map(({ beat }) => {
+    const n = (beat.licensed && beat.licensed.total) || 0;
+    return `"${beat.title}" is a one-time license: all rights go to you and the track leaves the store. ${n ? `It was already licensed ${n} time${n === 1 ? '' : 's'} with lesser licenses that stay valid: you cannot take down or claim songs released by earlier buyers.` : 'No one has licensed it before.'}`;
+  });
   const siteUrl = (process.env.SITE_URL || `https://${req.headers.host}`).replace(/\/$/, '');
   try {
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -141,6 +146,7 @@ async function handleCheckout(req, res) {
         ...(test ? { test: '1' } : {}),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
       },
+      ...(onceNotes.length ? { custom_text: { submit: { message: onceNotes.join(' ').slice(0, 1100) } } } : {}),
       // Stripe needs at least 30 minutes; the hold above lasts a little longer.
       ...(held.length ? { expires_at: Math.floor(Date.now() / 1000) + 31 * 60 } : {}),
       success_url: `${siteUrl}/beats-success.html?session_id={CHECKOUT_SESSION_ID}`,
@@ -292,6 +298,15 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
   write('USAGE RIGHTS', { f: bold, size: 9, color: accent, gap: 6 });
   s.usage.forEach((l) => write(`•  ${l}`, { gap: 5 }));
   space(8);
+  if (s.prior) {
+    const names = Object.entries(s.prior.tiers || {}).map(([id, n]) => `${(LICENSES.tiers[id] || { name: id }).name} x ${n}`).join(', ');
+    write('ONE-TIME SALE AND EARLIER LICENSES', { f: bold, size: 9, color: accent, gap: 6 });
+    write('This license leaves all rights in the Beat with the Licensee and was sold once: the Beat was taken off the store when it was sold.', { gap: 5 });
+    write(s.prior.total > 0
+      ? `Before this sale the Beat had already been licensed ${s.prior.total} time${s.prior.total === 1 ? '' : 's'} with lesser licenses (${names}). Those licenses stay valid under their own terms. The Licensee may not take down, claim, strike or require the removal of any song released by those earlier licensees, nor register the Beat for content identification against them.`
+      : 'No other license had been sold for the Beat before this sale.', { gap: 5 });
+    space(8);
+  }
   write('TERMS', { f: bold, size: 9, color: accent, gap: 6 });
   s.terms.forEach((p, i) => write(`${i + 1}. ${p}`, { gap: 6 }));
   if (s.clauses && s.clauses.length) {
@@ -374,9 +389,15 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   for (let i = 0; i < items.length; i++) {
     const { beat, tier } = items[i];
     const licenseId = licenseIdFor(session.id, i);
+    // A full-rights license records which lesser licenses were sold before it.
+    const snap = require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer, !!(beat._files && beat._files.stems));
+    if (!test && takesOffStore(beat, tier)) {
+      const rows = await sql`SELECT tier, count(*)::int AS n FROM beat_purchases WHERE beat_id = ${beat.id} AND stripe_session_id <> ${session.id} AND price_cents IS DISTINCT FROM 50 GROUP BY tier`;
+      snap.prior = { total: rows.reduce((n, r) => n + r.n, 0), tiers: Object.fromEntries(rows.map((r) => [r.tier, r.n])) };
+    }
     await sql`
       INSERT INTO beat_purchases (email, beat_id, tier, license_id, price_cents, currency, buyer_name, stripe_session_id, license_snapshot)
-      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${paid(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(require('./license-config').snapshot(tier, beat._license, beat.credit || beat.producer, !!(beat._files && beat._files.stems)))}::jsonb)
+      VALUES (${email}, ${beat.id}, ${tier}, ${licenseId}, ${paid(beat, tier)}, ${currency}, ${buyerName || null}, ${session.id}, ${JSON.stringify(snap)}::jsonb)
       ON CONFLICT (stripe_session_id, beat_id) DO NOTHING
     `;
     // The snapshot actually stored (a retried webhook keeps the first one).

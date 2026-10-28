@@ -153,3 +153,144 @@
 .role-seg-status{ min-height:20px; margin:10px 0 0; font-size:13.5px; color:var(--amber-text); }
 @media (max-width:420px){ .role-seg-opt span{ font-size:13px; } }
 @media (prefers-reduced-motion: reduce){ .role-seg::before{ transition:opacity 150ms ease; } }
+
+/* ============================ Large cards v3 ===============================
+   Three big cards side by side (down to tablet width): icon, name, one line
+   and what you get, so the choice is made right there. Phones stack them,
+   still roomy. */
+.welcome-page{ max-width:1140px; }
+.welcome-hero{ padding-bottom:6px; }
+.role-form{ margin-top:38px; }
+.role-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); gap:22px; max-width:none; margin:0; }
+.role-card{
+  display:flex; flex-direction:column; align-items:flex-start; gap:10px; min-height:360px;
+  padding:34px 28px 28px; border-radius:24px;
+}
+.role-icon{ width:68px; height:68px; border-radius:20px; grid-row:auto; }
+.role-icon svg{ width:34px; height:34px; stroke-width:1.5; }
+.role-name{ margin:14px 0 0; padding-right:0; font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:0.01em; }
+.role-desc{ grid-column:auto; padding-right:0; font-size:16.5px; line-height:1.5; color:var(--text); }
+.role-perks{ display:flex; gap:10px; margin-top:auto; padding-top:20px; }
+.role-perks span{ padding-left:20px; font-size:15px; line-height:1.45; }
+.role-perks span::before{ top:0.55em; width:6px; height:6px; }
+.role-check{ top:24px; right:24px; width:26px; height:26px; margin-top:0; border-width:2px; }
+.role-check svg{ width:14px; height:14px; }
+.role-card:has(.role-input:checked){ box-shadow:0 0 0 2px var(--accent), 0 30px 70px -34px rgba(232,134,44,0.65); }
+.role-submit{ min-width:260px; height:56px; font-size:16px; }
+
+/* Tablet: still three across, tighter */
+@media (max-width:860px){
+  .role-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; max-width:none; margin:0; }
+  .role-card{ display:flex; min-height:330px; padding:26px 18px 22px; border-radius:20px; }
+  .role-icon{ width:56px; height:56px; border-radius:16px; }
+  .role-icon svg{ width:28px; height:28px; }
+  .role-name{ margin-top:10px; padding-right:0; font-size:21px; }
+  .role-desc{ padding-right:0; font-size:15px; }
+  .role-perks{ display:flex; padding-top:16px; }
+  .role-perks span{ font-size:13.5px; }
+  .role-check{ top:18px; right:16px; margin-top:0; }
+  .role-submit{ width:auto; max-width:none; }
+}
+/* Phone: one column of big cards */
+@media (max-width:640px){
+  .role-grid{ grid-template-columns:1fr; gap:14px; max-width:520px; margin:0 auto; }
+  .role-card{ min-height:0; padding:22px 20px; border-radius:20px; }
+  .role-icon{ width:58px; height:58px; }
+  .role-name{ font-size:22px; padding-right:34px; }
+  .role-desc{ font-size:15.5px; }
+  .role-perks{ margin-top:6px; padding-top:14px; }
+  .role-submit{ width:100%; max-width:520px; }
+}
+
+/* ============================== Motion (v4) ================================
+   Cards rise in one after another, the icon pops in, the chosen card springs
+   up and pings, the tick draws itself, and each icon plays a small loop while
+   hovered or chosen: faders slide, the mic pulses, the headphones bob.
+   Entrances use "backwards" fill so hover lift still works afterwards. */
+.welcome-page{ --spring: cubic-bezier(0.34, 1.56, 0.64, 1); }
+.welcome-hero > *{ animation:wFade 600ms var(--ease-out) backwards; }
+.welcome-hero > :nth-child(2){ animation-delay:90ms; }
+.welcome-hero > :nth-child(3){ animation-delay:170ms; }
+@keyframes wFade{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+
+.role-card{
+  animation:roleRise 760ms var(--ease-out) backwards; animation-delay:calc(var(--k, 0) * 120ms + 220ms);
+  transition:border-color 200ms ease, transform 200ms var(--ease-out), box-shadow 200ms ease, scale 380ms var(--spring);
+}
+@keyframes roleRise{ from{ opacity:0; transform:translateY(40px) scale(0.93); filter:blur(6px); } to{ opacity:1; transform:none; filter:none; } }
+.role-icon{ position:relative; animation:iconPop 620ms var(--spring) backwards; animation-delay:calc(var(--k, 0) * 120ms + 560ms); }
+@keyframes iconPop{ from{ opacity:0; transform:scale(0.4) rotate(-14deg); } to{ opacity:1; transform:none; } }
+.role-card .role-name, .role-card .role-desc, .role-card .role-perks{ animation:wFade 520ms var(--ease-out) backwards; }
+.role-card .role-name{ animation-delay:calc(var(--k, 0) * 120ms + 620ms); }
+.role-card .role-desc{ animation-delay:calc(var(--k, 0) * 120ms + 700ms); }
+.role-card .role-perks{ animation-delay:calc(var(--k, 0) * 120ms + 780ms); }
+.role-actions{ animation:wFade 600ms var(--ease-out) backwards; animation-delay:1100ms; }
+
+/* Chosen: springs up and pings; the tick draws itself */
+.role-card:has(.role-input:checked){ scale:1.025; }
+.role-icon::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; border:2px solid var(--accent); opacity:0; pointer-events:none;
+}
+.role-card:has(.role-input:checked) .role-icon::after{ animation:rolePing 1.9s ease-out infinite; }
+@keyframes rolePing{ 0%{ opacity:0.65; transform:scale(1); } 70%,100%{ opacity:0; transform:scale(1.7); } }
+.role-check svg path{ stroke-dasharray:16; stroke-dashoffset:16; }
+.role-card:has(.role-input:checked) .role-check svg path{ stroke-dashoffset:0; transition:stroke-dashoffset 340ms ease 90ms; }
+.role-card:has(.role-input:checked) .role-check{ animation:checkPop 420ms var(--spring); }
+@keyframes checkPop{ 0%{ transform:scale(0.5); } 100%{ transform:scale(1); } }
+
+/* Icon loops (hovered or chosen) */
+.role-icon svg *{ transform-box:fill-box; transform-origin:center; }
+@keyframes faderA{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
+@keyframes faderB{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(7px); } }
+@keyframes micBeat{ 0%,100%{ transform:scaleY(1); } 50%{ transform:scaleY(0.78); } }
+@keyframes micWave{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+@keyframes hpBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-2px); } }
+@keyframes hpCup{ 0%,100%{ transform:scaleY(1); } 50%{ transform:scaleY(0.82); } }
+.role-card:has(.role-input:checked) .role-icon svg rect:nth-of-type(1),
+.role-card:has(.role-input:checked) .role-icon svg rect:nth-of-type(3){ animation:faderA 1.5s ease-in-out infinite; }
+.role-card:has(.role-input:checked) .role-icon svg rect:nth-of-type(2){ animation:faderB 1.5s ease-in-out infinite; }
+@media (hover:hover) and (pointer:fine){
+  .role-card:hover .role-icon svg rect:nth-of-type(1),
+  .role-card:hover .role-icon svg rect:nth-of-type(3){ animation:faderA 1.5s ease-in-out infinite; }
+  .role-card:hover .role-icon svg rect:nth-of-type(2){ animation:faderB 1.5s ease-in-out infinite; }
+}
+/* Artist: capsule beats, arc breathes */
+.role-card:has(.role-input[value="artist"]:checked) .role-icon svg rect{ animation:micBeat 0.9s ease-in-out infinite; }
+.role-card:has(.role-input[value="artist"]:checked) .role-icon svg path:first-of-type{ animation:micWave 0.9s ease-in-out infinite; }
+/* Listener: headphones bob, cups pulse */
+.role-card:has(.role-input[value="listener"]:checked) .role-icon svg{ animation:hpBob 1.4s ease-in-out infinite; }
+.role-card:has(.role-input[value="listener"]:checked) .role-icon svg rect{ animation:hpCup 0.7s ease-in-out infinite; }
+@media (hover:hover) and (pointer:fine){
+  .role-card:hover .role-icon svg rect:only-of-type{ animation:micBeat 0.9s ease-in-out infinite; }
+  .role-card:has(.role-input[value="listener"]):hover .role-icon svg{ animation:hpBob 1.4s ease-in-out infinite; }
+  .role-card:has(.role-input[value="listener"]):hover .role-icon svg rect{ animation:hpCup 0.7s ease-in-out infinite; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .welcome-hero > *, .role-card, .role-icon, .role-card .role-name, .role-card .role-desc, .role-card .role-perks, .role-actions{ animation:wFade 200ms ease backwards !important; animation-delay:0ms !important; }
+  .role-card:has(.role-input:checked){ scale:1; }
+  .role-icon::after, .role-icon svg, .role-icon svg *{ animation:none !important; }
+  .role-check svg path{ stroke-dashoffset:0; }
+}
+
+/* --------------------- Settings: "are you sure?" window -------------------- */
+.st-confirm{
+  width:min(440px, calc(100vw - 32px)); padding:0; border:1px solid rgba(255,255,255,0.14); border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)) #121211; background-color:#121211; color:var(--text, #f5f5f7);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,0.9), 0 0 0 1px rgba(232,134,44,0.12);
+  animation:stConfirmIn 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.st-confirm::backdrop{ background:rgba(6,6,5,0.66); backdrop-filter:blur(4px); animation:stFade 200ms ease; }
+@keyframes stConfirmIn{ from{ opacity:0; transform:translateY(14px) scale(0.96); } to{ opacity:1; transform:none; } }
+@keyframes stFade{ from{ opacity:0; } to{ opacity:1; } }
+.st-confirm form{ padding:26px 26px 22px; }
+.st-confirm h2{ margin:0; font-family:var(--font-display); font-size:21px; font-weight:700; }
+.st-confirm-move{ display:flex; align-items:center; gap:10px; margin:16px 0 0; font-size:16px; }
+.st-confirm-move span{ color:var(--text-secondary); }
+.st-confirm-move b{ color:var(--amber-text, #f5b06a); }
+.st-confirm-move svg{ width:18px; height:18px; fill:none; stroke:var(--text-secondary); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.st-confirm-note{ margin:12px 0 0; font-size:15px; line-height:1.55; color:var(--text-secondary); }
+.st-confirm-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+.st-confirm-actions .btn{ min-height:46px; }
+@media (max-width:480px){ .st-confirm-actions{ flex-direction:column-reverse; } .st-confirm-actions .btn{ width:100%; } }
+@media (prefers-reduced-motion: reduce){ .st-confirm, .st-confirm::backdrop{ animation:none; } }

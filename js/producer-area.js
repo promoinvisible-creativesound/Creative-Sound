@@ -209,9 +209,11 @@
     $('#po-paid').textContent = euro(d.totals.paid);
     const warn = $('#po-tax-warn');
     if (warn) warn.hidden = d.taxComplete !== false || !(d.totals.available || d.totals.pending);
-    $('#po-note').textContent = d.firstPayout
+    $('#po-note').textContent = d.holdReason === 'first'
       ? `Your first payout is on hold for ${d.holdDays} days (refund and chargeback window, for security). After that each sale is on hold for ${d.holdDaysAfter} days, then paid out on the next Monday once your balance reaches ${euro(d.minPayout)}.`
-      : `Each sale is on hold for ${d.holdDays} days (refund and chargeback window), then paid out on the next Monday once your balance reaches ${euro(d.minPayout)}.`;
+      : d.holdReason === 'chargeback'
+        ? `A chargeback on one of your sales was lost, so sales are on hold for ${d.holdDays} days until your next payout. After that it goes back to ${d.holdDaysAfter} days. Payouts go out on the next Monday once your balance reaches ${euro(d.minPayout)}.`
+        : `Each sale is on hold for ${d.holdDays} days (refund and chargeback window), then paid out on the next Monday once your balance reaches ${euro(d.minPayout)}.`;
     po.querySelectorAll('.po-method').forEach((m) => m.classList.toggle('is-on', m.dataset.method === d.method));
     // Stripe
     const sb = $('#po-stripe-badge');

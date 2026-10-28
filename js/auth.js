@@ -702,7 +702,8 @@
   }
 
   /* ------------------------- Account type in Settings ----------------------- */
-  // Saves as soon as another option is picked; goes back on failure.
+  // Picking another option asks "are you sure?" first; it is saved only after a yes,
+  // and goes back to the saved one on a no or on failure.
   const roleSettings = document.getElementById('role-settings');
   if (roleSettings) {
     const status = document.getElementById('role-settings-status');
@@ -716,9 +717,42 @@
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => { if (data && data.role) { saved = data.role; select(saved); } })
       .catch(() => {});
+    const SWITCH_NOTE = {
+      producer: 'You will get the Producer area to upload tracks, set up your storefront and get paid for your sales.',
+      leaveProducer: 'The Producer area and Upload tracks leave your menu until you switch back. Your tracks stay in the store and your earnings are kept.',
+      other: 'This only changes what your menu and account page show first. You can change it back any time.',
+    };
+    // A small confirmation window; resolves true only on "Yes, switch".
+    const confirmSwitch = (from, to) => new Promise((resolve) => {
+      const dlg = document.createElement('dialog');
+      dlg.className = 'st-confirm';
+      dlg.setAttribute('aria-labelledby', 'st-confirm-title');
+      const note = to === 'producer' ? SWITCH_NOTE.producer : from === 'producer' ? SWITCH_NOTE.leaveProducer : SWITCH_NOTE.other;
+      dlg.innerHTML = `
+        <form method="dialog">
+          <h2 id="st-confirm-title">Change your account type?</h2>
+          <p class="st-confirm-move"><span>${escapeHtml(LABELS[from] || from)}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><b>${escapeHtml(LABELS[to] || to)}</b></p>
+          <p class="st-confirm-note">${escapeHtml(note)}</p>
+          <div class="st-confirm-actions">
+            <button type="submit" value="no" class="btn btn-ghost">Keep ${escapeHtml(LABELS[from] || from)}</button>
+            <button type="submit" value="yes" class="btn btn-primary">Yes, switch</button>
+          </div>
+        </form>`;
+      document.body.appendChild(dlg);
+      dlg.addEventListener('click', (ev) => { if (ev.target === dlg) dlg.close('no'); });
+      dlg.addEventListener('close', () => { const yes = dlg.returnValue === 'yes'; dlg.remove(); resolve(yes); });
+      dlg.showModal();
+      dlg.querySelector('[value="no"]').focus();
+    });
     roleSettings.addEventListener('change', async (e) => {
       const role = e.target.value;
       status.textContent = '';
+      if (saved && saved !== role) {
+        // Show the saved option until the answer is yes.
+        select(saved);
+        if (!(await confirmSwitch(saved, role))) return;
+        select(role);
+      }
       try {
         const res = await fetch('/api/account/role', {
           method: 'POST',

@@ -2478,3 +2478,6 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-grid.bt-fy-grid{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(220px, 240px); gap:18px; overflow-x:auto; padding:2px 2px 14px; scroll-snap-type:x proximity; scrollbar-width:thin; }
 .bt-fy-grid .bt-card{ scroll-snap-align:start; }
 @media (max-width:640px){ .bt-grid.bt-fy-grid{ grid-auto-columns:minmax(150px, 44%); gap:10px; } }
+
+/* Phones: the four license cards are left out (the license window lists them per track) */
+@media (max-width:640px){ .bt-licenses{ display:none; } }

@@ -156,11 +156,28 @@ async function licensedCounts(beatId) {
 }
 const EMPTY_LICENSED = () => ({ total: 0, tiers: {} });
 
+// Last 30 days of views, plays, saves and cart adds per producer track
+// ([views, plays, saves, carts]); the store uses them to give every track a fair
+// turn (js/taste.js). Empty before the first event is recorded.
+async function recentSignals() {
+  try {
+    const rows = await sql`
+      SELECT submission_id,
+             count(*) FILTER (WHERE kind = 'view')::int AS v, count(*) FILTER (WHERE kind = 'play')::int AS p,
+             count(*) FILTER (WHERE kind = 'save')::int AS s, count(*) FILTER (WHERE kind = 'cart')::int AS c
+      FROM beat_events WHERE created_at > now() - interval '30 days' GROUP BY 1`;
+    return new Map(rows.map((r) => [r.submission_id, [r.v, r.p, r.s, r.c]]));
+  } catch (err) {
+    if (!/does not exist/.test(String(err && err.message))) console.error('signals error:', err);
+    return new Map();
+  }
+}
+
 async function liveBeats() {
   const rows = await approvedRows();
   const beats = rows.map(toBeat);
-  const counts = beats.length ? await licensedCounts() : new Map();
-  beats.forEach((b) => { b.licensed = counts.get(b.id) || EMPTY_LICENSED(); });
+  const [counts, signals] = beats.length ? await Promise.all([licensedCounts(), recentSignals()]) : [new Map(), new Map()];
+  beats.forEach((b) => { b.licensed = counts.get(b.id) || EMPTY_LICENSED(); b.sig = signals.get(b._submissionId) || [0, 0, 0, 0]; });
   return [...(CATALOGUE.beats || []), ...beats];
 }
 

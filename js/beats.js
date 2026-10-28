@@ -142,10 +142,13 @@
   })();
   const logged = new Set();
   const logEvent = (beat, kind) => {
-    if (!beat || beat.source !== 'producer' || !/^t\d+-/.test(beat.id)) return;
+    if (!beat) return;
     const key = kind + beat.id;
     if (logged.has(key)) return;
     logged.add(key);
+    // Feeds the visitor's taste profile (js/taste.js), for every track.
+    if (window.CSTaste) CSTaste.record(beat, kind);
+    if (beat.source !== 'producer' || !/^t\d+-/.test(beat.id)) return;
     const body = JSON.stringify({ beatId: beat.id, kind, source: visitSource });
     try {
       if (navigator.sendBeacon && navigator.sendBeacon('/api/beats/event', new Blob([body], { type: 'application/json' }))) return;
@@ -201,6 +204,10 @@
       if (label) label.textContent = on ? 'Saved' : 'Save';
     });
   };
+  let tasteTimer = 0;
+  const pushTaste = () => {
+    fetch('/api/beats/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taste: CSTaste.snapshot() }), keepalive: true }).catch(() => {});
+  };
   async function syncSaved() {
     try {
       const res = await fetch('/api/beats/saved');
@@ -209,7 +216,14 @@
         return;
       }
       if (!res.ok) return;
-      let { ids } = await res.json();
+      let { ids, taste } = await res.json();
+      // Taste profile: the newer of this browser's and the account's wins.
+      if (window.CSTaste) {
+        const upload = CSTaste.adopt(taste);
+        if (upload) pushTaste();
+        CSTaste.onChange(() => { clearTimeout(tasteTimer); tasteTimer = setTimeout(pushTaste, 5000); });
+        if (catalogueRoot && !upload) renderForYou();
+      }
       const localOnly = [...saved].filter((id) => !ids.includes(id) && byId.has(id));
       if (localOnly.length) {
         const merged = await fetch('/api/beats/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ merge: localOnly }) });
@@ -478,7 +492,7 @@
   /* ------------------------------ Catalogue page --------------------------- */
   const grid = $('#bt-grid');
   const state = {
-    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '', sort: 'new',
+    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '', sort: 'discover',
     tags: new Set(), view: store.get('bt-view', 'grid'),
   };
   let visible = [];
@@ -520,7 +534,17 @@
     }
     return true;
   };
+  // Discover: a fair shuffle (js/taste.js), the same for the whole visit.
+  let discoverRank = null;
+  const discoverOrder = () => {
+    if (!discoverRank || discoverRank.size !== BEATS.length) {
+      const list = window.CSTaste ? CSTaste.order(BEATS) : [...BEATS];
+      discoverRank = new Map(list.map((b, i) => [b.id, i]));
+    }
+    return discoverRank;
+  };
   const sorters = {
+    discover: (a, b) => discoverOrder().get(a.id) - discoverOrder().get(b.id),
     new: (a, b) => new Date(b.released) - new Date(a.released),
     'price-asc': (a, b) => minPrice(a) - minPrice(b),
     'price-desc': (a, b) => minPrice(b) - minPrice(a),
@@ -537,6 +561,7 @@
       : 'No tracks match these filters.';
     $('#bt-count').textContent = `${visible.length} track${visible.length === 1 ? '' : 's'}`;
     $('#bt-reset').hidden = !isFiltered();
+    renderForYou();
     syncCards();
     renderCart();
   };
@@ -662,6 +687,7 @@
     add('key', 'Key', [{ value: '', label: 'Any key', short: 'Any' }, ...countOptions('key', uniq('key'))]);
     add('added', 'Added', ADDED_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => addedWithin(b, r.value)).length } : r)));
     add('sort', 'Sort', [
+      { value: 'discover', label: 'Discover', short: 'Discover' },
       { value: 'new', label: 'Newest first', short: 'Newest' },
       { value: 'price-asc', label: 'Price: low to high', short: 'Price ↑' },
       { value: 'price-desc', label: 'Price: high to low', short: 'Price ↓' },
@@ -721,7 +747,25 @@
     setupFeatured();
     renderTierGrid();
     render();
+    const fy = $('#bt-fy-grid');
+    if (fy) bindCardClicks(fy);
   };
+
+  // "Picked for you": the closest tracks to this visitor's taste profile; hidden
+  // until there is one (a few plays or saves) and while filters are on.
+  function renderForYou() {
+    const box = $('#bt-foryou');
+    const fyGrid = $('#bt-fy-grid');
+    if (!box || !fyGrid || !window.CSTaste) return;
+    const list = isFiltered() ? [] : CSTaste.forYou(BEATS, { exclude: saved });
+    const sig = list.map((b) => b.id).join();
+    box.hidden = !list.length;
+    if (sig === fyShown) return;
+    fyShown = sig;
+    fyGrid.innerHTML = list.map(cardHtml).join('');
+    syncCards();
+  }
+  let fyShown = '';
 
   const renderTierGrid = () => {
     const el = $('#bt-tier-grid');
@@ -865,7 +909,7 @@
   let featIndex = 0;
   const featuredList = () => {
     const f = BEATS.filter((b) => b.featured);
-    return (f.length ? f : [...BEATS].sort(sorters.new)).slice(0, 3);
+    return (f.length ? f : [...BEATS].sort(sorters.discover)).slice(0, 3);
   };
   const spotHtml = (b, rank) => `
     <div class="bt-feat-spot ${tintClass(b)}" data-id="${esc(b.id)}"${b.cover ? ` style="--cover:url('${esc(new URL(b.coverSm || b.cover, location.href).href)}')"` : ''}>

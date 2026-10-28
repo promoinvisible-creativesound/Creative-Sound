@@ -2469,3 +2469,12 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-once b{ color:var(--amber-text); }
 .bp-usage-box .bt-once{ margin:0 0 16px; }
 .bt-cart-once{ grid-column:1 / -1; margin:2px 0 0; padding:9px 11px; border-radius:10px; border:1px solid rgba(232,134,44,0.4); background:rgba(232,134,44,0.07); font-size:12.5px; line-height:1.5; color:var(--text-secondary); }
+
+/* ------------------------------ Picked for you ------------------------------ */
+.bt-foryou{ max-width:1180px; margin:0 auto 34px; }
+.bt-foryou[hidden]{ display:none; }
+.bt-foryou-head{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 14px; margin-bottom:14px; }
+.bt-foryou-sub{ margin:0; font-size:14px; color:var(--text-secondary); }
+.bt-grid.bt-fy-grid{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(220px, 240px); gap:18px; overflow-x:auto; padding:2px 2px 14px; scroll-snap-type:x proximity; scrollbar-width:thin; }
+.bt-fy-grid .bt-card{ scroll-snap-align:start; }
+@media (max-width:640px){ .bt-grid.bt-fy-grid{ grid-auto-columns:minmax(150px, 44%); gap:10px; } }

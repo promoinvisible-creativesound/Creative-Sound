@@ -192,6 +192,14 @@ function ensureTables() {
           PRIMARY KEY (email, beat_id)
         )
       `;
+      // Taste profile behind "For you" (js/taste.js): a few small tables, newest wins.
+      await sql`
+        CREATE TABLE IF NOT EXISTS beat_taste (
+          email TEXT PRIMARY KEY,
+          profile JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
       await sql`
         CREATE TABLE IF NOT EXISTS beat_files (
           beat_id TEXT NOT NULL,
@@ -552,6 +560,22 @@ async function savedForAccount(email) {
   return rows.map((r) => r.beat_id).filter((id) => known.has(id));
 }
 
+// Keep only what js/taste.js writes: five tables of short names to small numbers.
+const TASTE_DIMS = ['g', 'm', 't', 'b', 'k'];
+function cleanTaste(p) {
+  if (!p || p.v !== 1 || !p.w || typeof p.w !== 'object' || !Number.isFinite(p.at) || !Number.isFinite(p.n)) return null;
+  const w = {};
+  for (const d of TASTE_DIMS) {
+    const src = p.w[d] && typeof p.w[d] === 'object' ? p.w[d] : {};
+    w[d] = Object.fromEntries(Object.entries(src).filter(([k, v]) => k.length <= 40 && Number.isFinite(v) && v >= 0 && v < 1e6).slice(0, 24));
+  }
+  return { v: 1, at: Math.min(p.at, Date.now()), n: Math.max(0, Math.min(p.n, 1e6)), w };
+}
+async function tasteFor(email) {
+  const [row] = await sql`SELECT profile FROM beat_taste WHERE email = ${email}`;
+  return row ? row.profile : null;
+}
+
 async function handleSaved(req, res) {
   const session = getSession(req);
   if (!session) {
@@ -564,7 +588,7 @@ async function handleSaved(req, res) {
   }
   try {
     if (req.method === 'GET') {
-      res.status(200).json({ ids: await savedForAccount(session.email) });
+      res.status(200).json({ ids: await savedForAccount(session.email), taste: await tasteFor(session.email) });
       return;
     }
     if (req.method !== 'POST') {
@@ -573,6 +597,18 @@ async function handleSaved(req, res) {
     }
     await ensureTables();
     const body = req.body && typeof req.body === 'object' ? req.body : {};
+    if (body.taste !== undefined) {
+      // The browser uploads its profile; an older one never overwrites a newer one.
+      const taste = cleanTaste(body.taste);
+      if (!taste) { res.status(400).json({ error: 'Invalid profile.' }); return; }
+      await sql`
+        INSERT INTO beat_taste (email, profile) VALUES (${session.email}, ${JSON.stringify(taste)}::jsonb)
+        ON CONFLICT (email) DO UPDATE SET profile = EXCLUDED.profile, updated_at = now()
+        WHERE (beat_taste.profile->>'at')::numeric <= (EXCLUDED.profile->>'at')::numeric
+      `;
+      res.status(204).end();
+      return;
+    }
     const known = new Set((await liveBeats()).map((b) => b.id));
     if (Array.isArray(body.merge)) {
       const ids = [...new Set(body.merge.map(String))].filter((id) => known.has(id)).slice(0, 200);

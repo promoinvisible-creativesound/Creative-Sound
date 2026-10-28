@@ -171,7 +171,8 @@ async function handleMedia(req, res) {
       const buf = await dropbox.readRange(path, 0, size - 1);
       const ext = (path.match(/\.([a-z0-9]+)$/i) || [])[1] || '';
       res.setHeader('Content-Type', { png: 'image/png', webp: 'image/webp', gif: 'image/gif' }[ext.toLowerCase()] || 'image/jpeg');
-      res.setHeader('Cache-Control', req.query.v ? 'public, max-age=31536000, immutable' : 'public, max-age=300, s-maxage=600');
+      // s-maxage: the CDN keeps a versioned cover too, so it is not read from Dropbox again.
+      res.setHeader('Cache-Control', req.query.v ? 'public, max-age=31536000, s-maxage=31536000, immutable' : 'public, max-age=300, s-maxage=600');
       res.status(200).send(buf);
       return;
     }

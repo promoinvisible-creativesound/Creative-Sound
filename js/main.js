@@ -524,7 +524,7 @@
     { name: 'Pricing', desc: 'Buy Creative Dist 2.0 or get the free demo', url: 'creative-dist-2#pricing', group: 'Plugin', icon: 'plugin' },
     { name: 'Tutorial', desc: 'Learn Creative Dist step by step', url: 'tutorial.html', group: 'Plugin', icon: 'play' },
     { name: 'Home', desc: 'Plugins, sound packs and tracks', url: '/', group: 'Pages', icon: 'home' },
-    { name: 'Tracks', desc: 'License tracks: MP3, WAV, stems, project files', url: 'beats.html', group: 'Pages', icon: 'music' },
+    { name: 'Track Store', desc: 'License tracks: MP3, WAV, stems, project files', url: 'beats.html', group: 'Pages', icon: 'music' },
     { name: 'Sound packs', desc: 'Free Serum preset packs', url: 'packs.html', group: 'Pages', icon: 'box' },
     { name: 'Sell your tracks', desc: 'Upload as a producer and keep 80% of each sale', url: 'signup.html?role=producer', group: 'Pages', icon: 'upload' },
     { name: 'FAQ', desc: 'Answers to common questions', url: 'faq.html', group: 'Help', icon: 'help' },
@@ -545,11 +545,11 @@
   ];
   const QUICK = [
     { name: 'Creative Dist 2.0', url: 'creative-dist-2' },
-    { name: 'Tracks', url: 'beats.html' },
+    { name: 'Track Store', url: 'beats.html' },
     { name: 'Sound packs', url: 'packs.html' },
     { name: 'Support', url: 'profile-tickets.html' },
   ];
-  const GROUP_ORDER = ['Tracks', 'Plugin', 'Pages', 'Help', 'Account'];
+  const GROUP_ORDER = ['Track Store', 'Plugin', 'Pages', 'Help', 'Account'];
   const SI = {
     plugin: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="12" r="2.2"/><circle cx="15.5" cy="12" r="2.2"/>',
     play: '<circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/>',
@@ -600,7 +600,7 @@
         desc: [b.producer, b.genre, b.bpm ? `${b.bpm} BPM` : '', b.key].filter(Boolean).join(' · '),
         hay: [b.title, b.producer, b.genre, b.mood, b.key, b.typeBeat, ...(b.tags || [])].join(' ').toLowerCase(),
         url: b.source === 'producer' ? `track.html?id=${encodeURIComponent(b.id)}` : `beats/${encodeURIComponent(b.id)}.html`,
-        cover: b.cover || '', group: 'Tracks', icon: 'music',
+        cover: b.cover || '', group: 'Track Store', icon: 'music',
       }));
       fetch('/api/beats/catalogue').then((r) => (r.ok ? r.json() : Promise.reject()))
         .catch(() => fetch('data/beats.json').then((r) => r.json()))
@@ -629,7 +629,7 @@
     }
 
     function renderHome() {
-      currentResults = SEARCH_INDEX.filter((it) => ['Home', 'Tracks', 'Creative Dist 2.0', 'Support'].includes(it.name));
+      currentResults = SEARCH_INDEX.filter((it) => ['Home', 'Track Store', 'Creative Dist 2.0', 'Support'].includes(it.name));
       activeIndex = -1;
       resultsEl.innerHTML = `
         <p class="ss-group">Quick links</p>

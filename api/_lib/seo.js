@@ -150,7 +150,7 @@ function renderType(g, all) {
   const title = `${name} Type Beats`;
   const desc = `${plural(g.tracks.length, `${name} type beat`)} for sale${f.bpm ? `, ${f.bpm}` : ''}. Preview every track and license it instantly${f.from ? ` from ${f.from}` : ''}: MP3, WAV, stems or project files.`;
   const canonical = `${SITE}/type-beat/${g.slug}`;
-  const crumbs = [['Tracks', '/beats.html'], ['Type beats', '/type-beats'], [name, `/type-beat/${g.slug}`]];
+  const crumbs = [['Track Store', '/beats.html'], ['Type beats', '/type-beats'], [name, `/type-beat/${g.slug}`]];
   const faq = [
     [`Are these beats made by ${name}?`, `No. "Type beat" means the track is made in the style of ${esc(name)}. Each one is an original instrumental by an independent producer on Creative Sound, not affiliated with or endorsed by ${esc(name)}.`],
     [`Can I use a ${name} type beat for my own song?`, LICENSE_A],
@@ -171,7 +171,7 @@ function renderGenre(g, all) {
   const title = `${name} Beats for Sale`;
   const desc = `${plural(g.tracks.length, `${name.toLowerCase()} beat`)} from independent producers${f.bpm ? `, ${f.bpm}` : ''}. Preview and license instantly${f.from ? ` from ${f.from}` : ''}: MP3, WAV, stems or project files.`;
   const canonical = `${SITE}/genre/${g.slug}`;
-  const crumbs = [['Tracks', '/beats.html'], ['Genres', '/type-beats'], [name, `/genre/${g.slug}`]];
+  const crumbs = [['Track Store', '/beats.html'], ['Genres', '/type-beats'], [name, `/genre/${g.slug}`]];
   const faq = [
     [`Can I use these ${name.toLowerCase()} beats commercially?`, LICENSE_A],
     ['Can I listen before buying?', PREVIEW_A],
@@ -195,7 +195,7 @@ function renderFacet(kind, g, all) {
   // A tag that is also a genre or mood (trap, dark…) points search engines to that page.
   const main = kind === 'tag' ? (genreGroups(all).has(g.slug) ? 'genre' : moodGroups(all).has(g.slug) ? 'mood' : null) : null;
   const canonical = `${SITE}/${main || kind}/${g.slug}`;
-  const crumbs = [['Tracks', '/beats.html'], [kind === 'tag' ? 'Tags' : 'Moods', '/type-beats'], [name, `/${kind}/${g.slug}`]];
+  const crumbs = [['Track Store', '/beats.html'], [kind === 'tag' ? 'Tags' : 'Moods', '/type-beats'], [name, `/${kind}/${g.slug}`]];
   const faq = [
     [`Can I use these ${name.toLowerCase()} beats commercially?`, LICENSE_A],
     ['Can I listen before buying?', PREVIEW_A],
@@ -220,7 +220,7 @@ function renderHub(all) {
   const tagsList = [...tagGroups(all).values()].filter((x) => x.tracks.length >= THIN).sort((a, b) => b.tracks.length - a.tracks.length).slice(0, 80).map((x) => ({ ...x, name: tagName(x.name) }));
   const latest = all.slice().sort((a, b) => String(b.released).localeCompare(String(a.released))).slice(0, 12);
   const canonical = `${SITE}/type-beats`;
-  const crumbs = [['Tracks', '/beats.html'], ['Type beats and genres', '/type-beats']];
+  const crumbs = [['Track Store', '/beats.html'], ['Type beats and genres', '/type-beats']];
   const desc = `Browse type beats and genres on Creative Sound: ${genres.slice(0, 5).map((g) => g.name).join(', ')} and more. Preview every track and license it instantly.`;
   return page({
     title: 'Type Beats and Genres', desc, canonical, h1: 'Type beats and genres', kicker: '', crumbs,
@@ -260,7 +260,7 @@ function notFound(res, all) {
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
   const html = page({
     title: 'Not found', desc: 'This page has no tracks yet.', canonical: `${SITE}/type-beats`, h1: 'No tracks here yet', kicker: '',
-    crumbs: [['Tracks', '/beats.html'], ['Type beats and genres', '/type-beats']],
+    crumbs: [['Track Store', '/beats.html'], ['Type beats and genres', '/type-beats']],
     intro: 'There are no tracks with this style right now. Have a look at the other styles.',
     body: `<section class="pf-section"><div class="seo-chips">${chips([...genreGroups(all).values()], 'genre')}</div></section>`,
     ld: {},

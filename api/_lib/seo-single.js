@@ -60,7 +60,7 @@ module.exports = function build(h) {
     const desc = clip(b.about && lead.length < 110 ? `${lead} ${b.about}` : lead, 160);
     const canonical = `${SITE}${trackUrl(b)}`;
     const image = absolute(b.cover) || `${SITE}/assets/img/gui-full.png`;
-    const crumbs = [['Tracks', '/beats.html'], ...(b.genre ? [[b.genre, `/genre/${slug(b.genre)}`]] : []), [b.title, trackUrl(b)]];
+    const crumbs = [['Track Store', '/beats.html'], ...(b.genre ? [[b.genre, `/genre/${slug(b.genre)}`]] : []), [b.title, trackUrl(b)]];
     const ld = [
       {
         '@context': 'https://schema.org', '@type': 'Product', name: `${b.title} by ${by}`, description: desc, image, url: canonical,

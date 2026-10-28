@@ -65,6 +65,9 @@
         <p class="pa-st-tip">Tip: add <code>?utm_source=youtube</code> (or instagram, tiktok…) to the links you share, so every visit is counted to the right place.</p>
       </div>`;
   }
+  const NOTE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>';
+  const OPEN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  const EDIT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg>';
   let filter = 'all';
   const list = $('#pa-list');
 
@@ -74,23 +77,29 @@
     $('#pa-empty').hidden = all.length > 0;
     list.hidden = all.length === 0;
     list.innerHTML = rows.length ? rows.map((s) => {
-      const st = s.sold ? { label: 'Sold', cls: 'is-ok' } : (STATUS[s.status] || STATUS.pending);
-      const meta = [s.bpm ? `${s.bpm} BPM` : '', s.key, s.genre].filter(Boolean).map(esc).join(' · ');
+      const state = s.sold ? 'sold' : s.status;
+      const st = s.sold ? { label: 'Sold', cls: 'is-sold' } : (STATUS[s.status] || STATUS.pending);
+      const price = minPrice(s.prices);
+      const chips = [s.bpm ? `${s.bpm} BPM` : '', s.key, s.genre].filter(Boolean).map((c) => `<span>${esc(c)}</span>`).join('') + (price ? `<span class="is-price">from ${price}</span>` : '');
+      const when = s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : s.sold ? `Sold · reviewed ${date(s.reviewedAt || s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`;
       return `
-        <article class="pa-row">
+        <article class="pa-row is-${state}">
+          <div class="pa-row-cover">${s.cover ? `<img src="${esc(s.cover)}" alt="" loading="lazy" decoding="async">` : NOTE_ICON}</div>
           <div class="pa-row-main">
-            <b class="pa-row-title">${esc(s.title || 'Untitled track')}</b>
-            <span class="pa-row-meta">${meta}${minPrice(s.prices) ? ` · from ${minPrice(s.prices)}` : ''}</span>
-            ${s.sold ? '<p class="pa-row-note">Sold with a license that leaves all rights with the buyer, so it is off the store.</p>' : ''}
-            ${s.status === 'rejected' && s.reviewNote ? `<p class="pa-row-note"><b>What to fix:</b> ${esc(s.reviewNote)}</p>` : ''}
+            <div class="pa-row-top">
+              <b class="pa-row-title">${esc(s.title || 'Untitled track')}</b>
+              <span class="pa-status ${st.cls}"><i aria-hidden="true"></i>${st.label}</span>
+              ${s.changesStatus === 'pending' ? '<span class="pa-change is-pending">Changes in review</span>' : s.changesStatus === 'rejected' ? `<span class="pa-change is-bad" title="${esc(s.changesNote || '')}">Changes not approved</span>` : ''}
+            </div>
+            <div class="pa-row-chips">${chips}</div>
+            <small class="pa-row-date">${when}</small>
+            ${s.sold ? '<p class="pa-row-note is-info"><b>Sold with full rights.</b> The license leaves all rights with the buyer, so the track is off the store.</p>' : ''}
+            ${s.status === 'rejected' && s.reviewNote ? `<p class="pa-row-note"><b>What to fix</b>${esc(s.reviewNote)}</p>` : ''}
           </div>
-          <div class="pa-row-side">
-            <span class="hm-status pa-status ${st.cls}">${st.label}</span>
-            <small>${s.status === 'pending' ? `Sent ${date(s.submittedAt)}` : `Reviewed ${date(s.reviewedAt || s.submittedAt)}`}</small>
-            ${s.storeUrl ? `<a class="pa-store-link" href="${esc(s.storeUrl)}">View in store</a>` : ''}
-            ${s.status === 'approved' && !s.sold ? `<a class="pa-edit-link" href="upload-beat.html?edit=${s.id}">Edit</a>` : ''}
-            ${s.status === 'approved' ? `<button type="button" class="pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
-            ${s.changesStatus === 'pending' ? '<span class="pa-change is-pending">Changes in review</span>' : s.changesStatus === 'rejected' ? `<span class="pa-change is-bad" title="${esc(s.changesNote || '')}">Changes not approved</span>` : ''}
+          <div class="pa-row-actions">
+            ${s.storeUrl ? `<a class="pa-act" href="${esc(s.storeUrl)}">${OPEN_ICON}<span>View</span></a>` : ''}
+            ${s.status === 'approved' && !s.sold ? `<a class="pa-act" href="upload-beat.html?edit=${s.id}">${EDIT_ICON}<span>Edit</span></a>` : ''}
+            ${s.status === 'approved' ? `<button type="button" class="pa-act pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
           </div>
         </article>${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';

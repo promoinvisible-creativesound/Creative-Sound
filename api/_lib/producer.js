@@ -509,6 +509,7 @@ async function handleSubmissions(req, res) {
         prices: r.prices, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         storeUrl: r.status === 'approved' && !r.sold_at ? `track.html?id=${trackId(r)}` : null,
         sold: !!r.sold_at, soldAt: r.sold_at || null, soldTier: r.sold_tier || null,
+        cover: r.status === 'approved' && r.files && r.files.artwork ? `/api/beats/media?id=${trackId(r)}&kind=artwork&s=xs` : null,
         changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
         // For the edit page
         producerName: r.producer_name, coProducers: r.co_producers || [], tags: r.tags || [], typeBeat: r.type_beat || [], about: r.about || '', freeDownload: !!r.free_download,

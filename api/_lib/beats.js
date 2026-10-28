@@ -16,6 +16,7 @@ const { getSession } = require('./auth');
 const { previewAllowed, isAdmin } = require('./account');
 const { getBeat, liveBeats, producerFiles } = require('./catalogue');
 const { recordEarnings, emailProducers } = require('./payouts');
+const COMPANY = require('./company');
 const CATALOGUE = require('../../data/beats.json');
 const LICENSES = require('../../data/beat-licenses.json');
 
@@ -287,6 +288,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
     ['Licensee', `${buyerName ? `${buyerName}, ` : ''}${buyerEmail}`],
     ['Beat', `"${beat.title}" · ${beat.bpm} BPM · ${beat.key}`],
     ['License', `${s.name} (non-exclusive)`],
+    ['Sold through', `${COMPANY.tradeName}, operated by ${COMPANY.legalName} (VAT ${COMPANY.vat}), ${COMPANY.address}`],
     ['Files', s.files],
     ['Price paid', `${(price / 100).toFixed(2)} ${String(currency || 'eur').toUpperCase()}`],
   ];
@@ -315,6 +317,7 @@ async function licensePdf({ licenseId, beat, tier, buyerName, buyerEmail, date, 
     s.clauses.forEach((c, i) => write(`${String.fromCharCode(65 + i)}. ${c}`, { gap: 6 }));
   }
   space(10);
+  write('This license is an agreement between the Producer and the Licensee. It was sold through the Creative Sound store, which processes the payment and delivers the files.', { size: 8.5, color: muted, gap: 4 });
   write('This document was issued automatically at purchase and is valid without signature.', { size: 8.5, color: muted });
   return Buffer.from(await doc.save());
 }

@@ -250,3 +250,13 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
 .hm-msg .hm-update-text small{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px; }
 .hm-msg.is-unread .hm-update-text small{ color:#f5f5f7; font-weight:500; }
 .hm-msg-loading{ padding:18px 12px; font-size:13.5px; color:#bcbcc1; }
+
+/* Track review (admin only): a lit row so it reads apart from the rest of the menu */
+.hm-item.is-admin{
+  position:relative; margin:2px 4px; padding:0 8px; border-radius:10px; color:#fff3e3;
+  background:linear-gradient(90deg, rgba(232,134,44,0.2), rgba(232,134,44,0.05) 75%);
+  box-shadow:inset 0 0 0 1px rgba(232,134,44,0.34), 0 8px 20px -14px rgba(232,134,44,0.8);
+}
+.hm-item.is-admin .hm-tile{ border-radius:50%; --t1:#3a2410; --t2:#1d1209; color:#ffc58a; box-shadow:inset 0 0 0 1px rgba(245,176,106,0.6), 0 0 12px rgba(232,134,44,0.35); }
+.hm-item.is-admin .hm-new{ background:var(--accent); color:#140b02; letter-spacing:0.02em; }
+@media (hover:hover){ .hm-item.is-admin:hover{ background:linear-gradient(90deg, rgba(232,134,44,0.3), rgba(232,134,44,0.09) 75%); color:#fff; } }

@@ -2761,3 +2761,7 @@ html::-webkit-scrollbar-track{ background:#0a0a09; }
 .footer-social-link:active{ transform:scale(0.95); }
 @media (hover:hover) and (pointer:fine){ .footer-social-link:hover{ border-color:rgba(232,134,44,0.5); background:rgba(232,134,44,0.12); color:#f5b06a; } }
 @media (max-width:760px){ .footer-col-brand{ flex-direction:column; align-items:flex-start; gap:6px; } .footer-brand-sub{ max-width:none; } }
+
+/* TikTok's note is narrow and thin at 19px: draw it larger and heavier */
+.footer-social-link[aria-label*="TikTok"] svg{ width:23px; height:23px; stroke-width:2.1; }
+.footer-social-link[aria-label*="TikTok"]{ color:#f0f0f3; }

@@ -294,3 +294,8 @@
 .st-confirm-actions .btn{ min-height:46px; }
 @media (max-width:480px){ .st-confirm-actions{ flex-direction:column-reverse; } .st-confirm-actions .btn{ width:100%; } }
 @media (prefers-reduced-motion: reduce){ .st-confirm, .st-confirm::backdrop{ animation:none; } }
+
+/* Continue: a compact button */
+.role-submit{ min-width:0; width:auto; height:44px; padding:0 30px; font-size:15px; }
+.role-actions{ margin-top:24px; }
+@media (max-width:640px){ .role-submit{ width:100%; max-width:340px; height:46px; } }

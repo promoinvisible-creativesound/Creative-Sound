@@ -108,7 +108,7 @@
         ${me.role ? `<span class="hm-role">${ROLE[me.role]}</span>` : ''}
       </div>
       ${me.isAdmin ? `<div class="hm-group">
-        ${item('admin-review.html', 'seal', 'Track review', '<span class="hm-new">Admin</span>')}
+        <a href="admin-review.html" class="hm-item is-admin" role="menuitem">${tile('seal')}<span>Track review</span><span class="hm-new">Admin</span></a>
       </div>` : ''}
       ${producer ? `<div class="hm-group">
         ${item('profile-producer.html', 'studio', 'Producer area')}

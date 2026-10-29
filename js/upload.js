@@ -55,7 +55,6 @@
   const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, ''), share: Math.max(0, Math.min(99, Math.round(Number($('[data-co="share"]', row).value) || 0))) })).filter((c) => c.name);
   const coSync = () => {
     $('#up-co-add').hidden = $$('.up-co', coBox).length >= MAX_CO;
-    $('#up-split-help').hidden = !$$('.up-co', coBox).length;
     $$('.up-co', coBox).forEach((row, i) => { $('.up-co-n', row).textContent = `Co-producer${MAX_CO > 1 ? ` ${i + 1}` : ''}`; });
   };
   function addCo(c = {}) {

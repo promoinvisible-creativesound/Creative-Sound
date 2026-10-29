@@ -135,7 +135,8 @@
             <p class="up-error rv-card-error" role="alert" hidden></p>
           </div>`
         : `<p class="rv-result ${s.status === 'approved' ? 'is-ok' : 'is-bad'}">${s.status === 'approved' ? 'Approved' : 'Sent back'} ${esc(when(s.reviewedAt))}${s.reviewNote ? ` · “${esc(s.reviewNote)}”` : ''}${s.storeUrl ? ` · <a href="${esc(s.storeUrl)}" target="_blank" rel="noopener">View in store</a>` : ''}</p>
-          <div class="rv-reopen"><button type="button" class="btn btn-ghost" data-reopen="${s.id}">Move back to review</button><small>Takes it off the store until you approve it again (new voice tag, new check).</small></div>`}
+          <div class="rv-reopen"><button type="button" class="btn btn-ghost" data-reopen="${s.id}">Move back to review</button><small>Takes it off the store until you approve it again (new voice tag, new check).</small></div>${s.status === 'approved' && s.files && s.files.preview ? `
+          <div class="rv-reopen"><button type="button" class="btn btn-ghost" data-retag="${s.id}">Rebuild store preview</button><small>New voice tag and peak limiter on the preview. The track stays on sale, you listen to it first.</small></div>` : ''}`}
       </article>`;
   }
 
@@ -217,7 +218,7 @@
         <button type="button" class="btn btn-ghost" data-tc="cancel">Cancel</button>
         <button type="button" class="btn btn-primary" data-tc="ok">Confirm &amp; publish</button>
       </div>`;
-    const decide = cardEl.querySelector('.rv-decide') || cardEl;
+    const decide = cardEl.querySelector('.rv-decide') || (cardEl.querySelector('[data-retag]') && cardEl.querySelector('[data-retag]').closest('.rv-reopen')) || cardEl;
     decide.parentNode.insertBefore(box, decide.nextSibling);
     box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return new Promise((resolve) => {
@@ -289,6 +290,41 @@
       err.hidden = false;
       btn.textContent = label;
       cardEl.querySelectorAll('[data-decision]').forEach((b) => { b.disabled = false; });
+    }
+  });
+
+  // Rebuild the voice-tagged preview of a track that is already on sale (same mix as on approval).
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-retag]');
+    if (!btn) return;
+    const cardEl = btn.closest('.rv-card');
+    const small = btn.nextElementSibling;
+    const say = (t) => { if (small) small.textContent = t; };
+    const label = btn.textContent;
+    btn.disabled = true;
+    try {
+      if (!window.CSVoiceTag) throw new Error('Voice tag tool not loaded. Reload the page.');
+      btn.textContent = 'Preparing…';
+      const urls = await tagUrls(cardEl);
+      const mp3 = await window.CSVoiceTag.tag(urls.sourceUrl, (msg) => say(msg), { producerTagUrl: urls.producerTagUrl });
+      btn.textContent = label;
+      say('Listen to the new preview below, then confirm.');
+      const ok = await confirmTagged(cardEl, mp3);
+      if (!ok) { btn.disabled = false; say('Nothing changed.'); return; }
+      btn.textContent = 'Uploading…';
+      const upload = (url) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: mp3 });
+      let up = await upload(urls.uploadUrl);
+      if (!up.ok) up = await upload((await tagUrls(cardEl)).uploadUrl);
+      if (!up.ok) throw new Error('Could not upload the new preview. Try again.');
+      const res = await fetch('/api/review/decide', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: Number(btn.dataset.retag), decision: 'retag' }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not save the new preview.');
+      btn.textContent = 'Done';
+      say('The new preview is live (it can take a minute to show everywhere).');
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = label;
+      say(err.message);
     }
   });
 

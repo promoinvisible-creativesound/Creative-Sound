@@ -651,6 +651,23 @@ async function handleAdminReview(req, res) {
       res.status(200).json({ ok: true, id: cur.id });
       return;
     }
+    if (body.decision === 'retag') {
+      // A new voice-tagged preview for a track already on sale: it stays in the store, the new
+      // file (uploaded by the admin page to the same Dropbox path) replaces the old one. The
+      // version tag changes so browsers and the CDN fetch it, and the stored waveform is dropped
+      // so the next listener's browser measures the new file.
+      const [cur] = await sql`SELECT files FROM beat_submissions WHERE id = ${id} AND status = 'approved'`;
+      if (!cur) { res.status(404).json({ error: 'Track not found, or not on sale.' }); return; }
+      const tagPath = `/submissions/${id}/preview-tagged.mp3`;
+      let size = 0;
+      try { size = await dropbox.fileSize(tagPath); } catch (err) { size = 0; }
+      if (!size) { res.status(400).json({ error: 'The new voice-tagged preview is missing. Try again.' }); return; }
+      const files = { ...(cur.files || {}), tagged: { path: tagPath, name: 'preview-tagged.mp3', size } };
+      await sql`UPDATE beat_submissions SET files = ${JSON.stringify(files)}::jsonb, changes_at = now(), updated_at = now() WHERE id = ${id}`;
+      try { await sql`UPDATE beat_submissions SET peaks = NULL WHERE id = ${id}`; } catch (err) { /* no waveform column yet */ }
+      res.status(200).json({ ok: true, id });
+      return;
+    }
     if (body.decision === 'reopen') {
       const [back] = await sql`UPDATE beat_submissions SET status = 'pending', reviewed_at = NULL, updated_at = now() WHERE id = ${Number(body.id)} AND status IN ('approved', 'rejected') RETURNING id`;
       if (!back) { res.status(404).json({ error: 'Submission not found.' }); return; }

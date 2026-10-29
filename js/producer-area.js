@@ -241,7 +241,7 @@
     $('#po-list').innerHTML = d.earnings.length ? d.earnings.map((r) => {
       const st = PO_ST[r.status] || PO_ST.pending;
       return `<div class="po-row">
-        <div class="po-row-main"><b>${esc(r.title)}</b><small>${esc((r.tier || '').toUpperCase())} · ${date(r.date)} · sold for ${euro(r.gross)}</small></div>
+        <div class="po-row-main"><b>${esc(r.title)}</b><small>${esc((r.tier || '').toUpperCase())} · ${date(r.date)} · ${r.split ? `your ${r.split}% of the producers' share` : `sold for ${euro(r.gross)}`}</small></div>
         <div class="po-row-side"><b>${euro(r.share)}</b><span class="hm-status pa-status ${st[1]}">${st[0]}</span></div>
       </div>`;
     }).join('') : '<p class="po-none">No sales yet. When someone buys one of your tracks it shows here with your 80%.</p>';

@@ -1,4 +1,4 @@
-// Live catalogue: the tracks in data/beats.json plus every producer upload
+﻿// Live catalogue: the tracks in data/beats.json plus every producer upload
 // approved on the review page, so an approval goes on sale on its own.
 //
 //   GET /api/beats/catalogue            -> { currency, producers, beats }
@@ -38,7 +38,7 @@ function toBeat(row) {
     verified: !!row.producer_verified,
     producerHandle: row.producer_handle || null,
     // Co-producers and the full credit line ("Invisible & Mike").
-    coProducers: Array.isArray(row.co_producers) ? row.co_producers : [],
+    coProducers: (Array.isArray(row.co_producers) ? row.co_producers : []).map((c) => ({ name: c.name, handle: c.handle || null })),
     credit: joinNames([row.producer_name, ...(Array.isArray(row.co_producers) ? row.co_producers : []).map((c) => c.name)]),
     // Contact for private requests, only what the producer chose to share.
     contact: row.producer_instagram || row.producer_email ? { instagram: row.producer_instagram || null, email: row.producer_email || null } : null,
@@ -68,6 +68,8 @@ function toBeat(row) {
     // Server only (stripped before anything is sent to the browser)
     _files: row.files || {},
     _submissionId: row.id,
+    // Who gets what of the producer's 80% (percent); never sent to browsers (the underscore).
+    _split: (Array.isArray(row.co_producers) ? row.co_producers : []).filter((c) => c.handle && c.share > 0).map((c) => ({ handle: String(c.handle).toLowerCase(), share: c.share })),
     _license: row.producer_license || null,
     _userId: row.user_id,
     _sold: !!row.sold_at,
@@ -275,7 +277,7 @@ async function handleBoughtFile(req, res) {
 }
 
 module.exports = {
-  ensureSoldColumns, licensedCounts,
+  ensureSoldColumns, licensedCounts, toBeat,
   getBeat, liveBeats, isTrackId, trackId, producerFiles, publicBeat,
   handleCatalogue, handleMedia, handleBoughtFile,
 };

@@ -1,4 +1,4 @@
-// Producer area: producers upload beats from their account; every beat is
+﻿// Producer area: producers upload beats from their account; every beat is
 // a "submission" that waits for the site owner's review before it can go
 // on sale. Files go straight into the owner's Dropbox (see dropbox.js).
 //
@@ -257,9 +257,11 @@ function validateDetails(body, files) {
   const tags = [...new Set(list(body.tags, require('../../data/tags.json').maxTotal || 12, 24).map((t) => t.toLowerCase()))];
   const typeBeat = list(body.typeBeat, 3, 40);
   // Up to 5 co-producers: a name, and optionally their @username here.
+  // Each co-producer can also get a share of the producer's 80% of every sale (share = whole percent).
   const coProducers = (Array.isArray(body.coProducers) ? body.coProducers : []).map((c) => ({
     name: clean(c && c.name, 60),
     handle: clean(c && c.handle, 31).toLowerCase().replace(/^@/, '') || null,
+    share: Math.round(Number(c && c.share) || 0),
   })).filter((c) => c.name).slice(0, 5);
   const about = String(body.about || '').trim().slice(0, 600);
 
@@ -273,6 +275,11 @@ function validateDetails(body, files) {
   if (!producerName) return { error: 'Add your producer name.' };
   if (coProducers.some((c) => c.handle && !/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$/.test(c.handle))) return { error: 'Co-producer username: letters, numbers, dots, dashes or underscores.' };
   if (coProducers.some((c) => c.name.toLowerCase() === producerName.toLowerCase())) return { error: 'The co-producer can\'t be you. Add the other producer\'s name.' };
+  if (coProducers.some((c) => !Number.isFinite(c.share) || c.share < 0 || c.share > 99)) return { error: 'A co-producer share is a whole percent between 1 and 99.' };
+  const splitTotal = coProducers.reduce((n, c) => n + c.share, 0);
+  if (splitTotal > 99) return { error: 'The shares you give away add up to more than 99%: you keep at least 1% of your earnings.' };
+  if (coProducers.some((c) => c.share > 0 && !c.handle)) return { error: 'To give a co-producer a share, add their Creative Sound username: the money goes to their account.' };
+  if (new Set(coProducers.filter((c) => c.handle).map((c) => c.handle)).size !== coProducers.filter((c) => c.handle).length) return { error: 'The same username appears twice in the co-producers.' };
   if (!title) return { error: 'Give the beat a title.' };
   if (!Number.isInteger(bpm) || bpm < 40 || bpm > 250) return { error: 'BPM must be a whole number between 40 and 250.' };
   if (!key) return { error: 'Choose the key.' };
@@ -304,14 +311,22 @@ function validateDetails(body, files) {
 const joinNames = (n) => (n.length <= 2 ? n.join(' & ') : `${n.slice(0, -1).join(', ')} & ${n[n.length - 1]}`);
 
 // Co-producer usernames must be real accounts (their storefront lists the track).
-async function coProducerError(list) {
+async function coProducerError(list, ownerId) {
   const handles = (list || []).map((c) => c.handle).filter(Boolean);
   if (!handles.length) return '';
   await require('./profile').ensureColumns();
-  const rows = await sql`SELECT lower(handle) AS h FROM users WHERE lower(handle) = ANY(${handles})`;
-  const found = new Set(rows.map((r) => r.h));
+  const rows = await sql`SELECT id, lower(handle) AS h, role FROM users WHERE lower(handle) = ANY(${handles})`;
+  const found = new Map(rows.map((r) => [r.h, r]));
   const missing = handles.filter((h) => !found.has(h));
-  return missing.length ? `No Creative Sound account is called @${missing[0]}. Check the username or leave it empty.` : '';
+  if (missing.length) return `No Creative Sound account is called @${missing[0]}. Check the username or leave it empty.`;
+  // A share is paid to that account, so it has to be a producer account (it is the one with payouts), and not yours.
+  for (const c of list || []) {
+    if (!(c.share > 0)) continue;
+    const u = found.get(c.handle);
+    if (ownerId != null && u.id === ownerId) return 'You are the owner of this track: give the share to the other producer, yours is what is left.';
+    if (u.role !== 'producer') return `@${c.handle} is not a producer account yet. They need to switch their account type to Producer (Settings) to receive a share.`;
+  }
+  return '';
 }
 
 // POST the details: the draft becomes "pending" and the owner gets an email.
@@ -328,7 +343,7 @@ async function submitChanges(session, body, res) {
   const merged = { ...(live.files || {}), ...revFiles };
   const { data, error } = validateDetails(body, merged);
   if (error) { res.status(400).json({ error }); return; }
-  const coError = await coProducerError(data.coProducers);
+  const coError = await coProducerError(data.coProducers, session.uid);
   if (coError) { res.status(400).json({ error: coError }); return; }
   const sizes = await Promise.all(Object.entries(revFiles).map(async ([kind, f]) => [kind, await dropbox.fileSize(f.path)]));
   for (const [kind, size] of sizes) {
@@ -402,7 +417,7 @@ async function handleSubmit(req, res) {
       const contactError = await require('./profile').saveContact(session.uid, body.contactInstagram, body.contactEmail);
       if (contactError) { res.status(400).json({ error: contactError }); return; }
     }
-    const coError = await coProducerError(data.coProducers);
+    const coError = await coProducerError(data.coProducers, session.uid);
     if (coError) { res.status(400).json({ error: coError }); return; }
     await sql`UPDATE users SET producer_name = ${data.producerName} WHERE id = ${session.uid}`;
     await sql`
@@ -917,6 +932,6 @@ async function handleAdminTag(req, res) {
 }
 
 module.exports = {
-  FILE_KINDS, TIER_NEEDS, validateDetails, ensureTables, isAdmin,
+  FILE_KINDS, TIER_NEEDS, validateDetails, coProducerError, ensureTables, isAdmin,
   handleFile, handleChunk, handleSubmit, handleSubmissions, handleAdminList, handleAdminReview, handleAdminInspect, handleAdminVerify, handleVerifyRequest, handleAdminProducers, handleAdminTag, handleAdminFile,
 };

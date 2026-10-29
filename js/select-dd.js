@@ -41,6 +41,8 @@
 
     let opts = [];
     let active = -1;
+    let typed = '';
+    let typedTimer = 0;
     const build = () => {
       const items = [...select.options].filter((o) => o.value !== '');
       panel.innerHTML = '<span class="sd-glide" aria-hidden="true"></span>' + items.map((o, i) => `
@@ -114,13 +116,17 @@
       else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
       else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
       else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1); }
-      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Enter' || (e.key === ' ' && !typed)) { e.preventDefault(); choose(active); }
       else if (e.key === 'Escape') { e.preventDefault(); close(); }
       else if (e.key === 'Tab') close(true);
-      else if (e.key.length === 1) {
-        // Type a letter to jump to the first option starting with it.
-        const k = e.key.toLowerCase();
-        const i = opts.findIndex((el) => el.textContent.trim().toLowerCase().startsWith(k));
+      else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Type to jump to the first option that starts with what you typed ("deep h" -> Deep House).
+        e.preventDefault();
+        typed += e.key.toLowerCase();
+        clearTimeout(typedTimer);
+        typedTimer = setTimeout(() => { typed = ''; }, 900);
+        let i = opts.findIndex((el) => el.textContent.trim().toLowerCase().startsWith(typed));
+        if (i < 0 && typed.length > 1) { typed = e.key.toLowerCase(); i = opts.findIndex((el) => el.textContent.trim().toLowerCase().startsWith(typed)); }
         if (i >= 0) setActive(i);
       }
     });

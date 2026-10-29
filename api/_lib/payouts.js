@@ -77,7 +77,10 @@ function ensureTables() {
           paid_at TIMESTAMPTZ
         )
       `;
-      await sql`CREATE UNIQUE INDEX IF NOT EXISTS producer_earnings_sale_idx ON producer_earnings (session_id, beat_id)`;
+      // One row per producer of a sale: the track's owner and each co-producer with a share.
+      await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS split_pct INTEGER NOT NULL DEFAULT 100`;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS producer_earnings_sale_user_idx ON producer_earnings (session_id, beat_id, user_id)`;
+      await sql`DROP INDEX IF EXISTS producer_earnings_sale_idx`;
       // Commission note: one per sale, with the 20% Creative Sound keeps. It is
       // the record the fee invoice is issued from (not a tax invoice itself).
       await sql`ALTER TABLE producer_earnings ADD COLUMN IF NOT EXISTS fee_number TEXT`;
@@ -100,7 +103,35 @@ function ensureTables() {
   return ready;
 }
 
-// Webhook: one earning per producer track in a paid beat order.
+// Splits whole cents by percentages (largest remainder, ties to the first), so the parts add up exactly.
+function divide(total, pcts) {
+  const exact = pcts.map((p) => (total * p) / 100);
+  const parts = exact.map((x) => Math.floor(x));
+  let left = total - parts.reduce((n, x) => n + x, 0);
+  const order = exact.map((x, i) => [x - Math.floor(x), i]).sort((p, q) => q[0] - p[0] || p[1] - q[1]);
+  for (let k = 0; left > 0; k = (k + 1) % order.length, left--) parts[order[k][1]] += 1;
+  return parts;
+}
+
+// Who gets paid for a sale of one track: its owner and the co-producers who were given a share of the
+// producers' 80% (the 20% is Creative Sound's either way). Returns [{ userId, pct }] adding up to 100.
+async function recipientsOf(beat) {
+  const split = Array.isArray(beat._split) ? beat._split : [];
+  if (!split.length) return [{ userId: beat._userId, pct: 100 }];
+  const rows = await sql`SELECT id, lower(handle) AS h FROM users WHERE lower(handle) = ANY(${split.map((c) => c.handle)})`;
+  const ids = new Map(rows.map((r) => [r.h, r.id]));
+  const out = []; let given = 0;
+  for (const c of split) {
+    const id = ids.get(c.handle);
+    // An account that no longer exists, or the owner's own handle, keeps its share with the owner.
+    if (!id || id === beat._userId) continue;
+    out.push({ userId: id, pct: c.share });
+    given += c.share;
+  }
+  return [{ userId: beat._userId, pct: 100 - given }, ...out];
+}
+
+// Webhook: one earning per producer of a producer track in a paid beat order.
 async function recordEarnings(session, items) {
   const own = items.filter(({ beat }) => beat.source === 'producer' && beat._userId);
   if (!own.length) return [];
@@ -108,14 +139,23 @@ async function recordEarnings(session, items) {
   const currency = session.currency || 'eur';
   const added = [];
   for (const { beat, tier, price } of own) {
-    const rows = await sql`
-      INSERT INTO producer_earnings (user_id, session_id, payment_intent, beat_id, title, tier, gross_cents, share_cents, currency, fee_number, fee_cents)
-      VALUES (${beat._userId}, ${session.id}, ${session.payment_intent || null}, ${beat.id}, ${beat.title}, ${tier}, ${price}, ${shareOf(price)}, ${currency},
-        'CSF-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), ${price - shareOf(price)})
-      ON CONFLICT (session_id, beat_id) DO NOTHING
-      RETURNING id, fee_number
-    `;
-    if (rows.length) added.push({ userId: beat._userId, beatId: beat.id, title: beat.title, tier, gross: price, share: shareOf(price), fee: price - shareOf(price), feeNumber: rows[0].fee_number });
+    const pool = shareOf(price); // the producers' 80%
+    const fee = price - pool;    // Creative Sound's 20%
+    const who = await recipientsOf(beat);
+    const pcts = who.map((w) => w.pct);
+    const shares = divide(pool, pcts);
+    const fees = divide(fee, pcts);
+    for (let i = 0; i < who.length; i++) {
+      const gross = shares[i] + fees[i];
+      const rows = await sql`
+        INSERT INTO producer_earnings (user_id, session_id, payment_intent, beat_id, title, tier, gross_cents, share_cents, currency, fee_number, fee_cents, split_pct)
+        VALUES (${who[i].userId}, ${session.id}, ${session.payment_intent || null}, ${beat.id}, ${beat.title}, ${tier}, ${gross}, ${shares[i]}, ${currency},
+          'CSF-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('commission_note_seq')::text, 6, '0'), ${fees[i]}, ${who[i].pct})
+        ON CONFLICT (session_id, beat_id, user_id) DO NOTHING
+        RETURNING id, fee_number
+      `;
+      if (rows.length) added.push({ userId: who[i].userId, beatId: beat.id, title: beat.title, tier, gross, sale: price, pct: who[i].pct, share: shares[i], fee: fees[i], feeNumber: rows[0].fee_number });
+    }
   }
   // Only the new rows, so a webhook retry never emails the producer twice.
   return added;
@@ -140,7 +180,9 @@ async function emailProducers(sales, { resend, renderEmail, paragraph, button, t
         title: mine.length === 1 ? `You sold ${mine[0].title}` : `You sold ${mine.length} licenses`,
         content: [
           paragraph(`Good news${u.first_name ? `, ${u.first_name}` : ''}: someone just licensed your music.`),
-          ...mine.map((s) => paragraph(`<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.gross)}, your 80% is <b>${euro(s.share)}</b>.`)),
+          ...mine.map((s) => paragraph(s.pct < 100
+            ? `<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.sale)}. Your ${s.pct}% of the producers' share is <b>${euro(s.share)}</b>.`
+            : `<b>${s.title}</b> (${tierName(s.tier)}): sold for ${euro(s.sale)}, your 80% is <b>${euro(s.share)}</b>.`)),
           ...mine.filter((s) => s.soldOut).map((s) => paragraph(`<b>${s.title}</b> was licensed with ${tierName(s.tier)}, which leaves all rights with the buyer (no usage limits and no publishing share). It is no longer for sale and has been taken off the store.`)),
           paragraph(`Creative Sound's 20% fee ${mine.length === 1 ? 'is' : 'is recorded'} ${mine.map((s) => (s.feeNumber ? `${euro(s.fee)} on commission note ${s.feeNumber}` : euro(s.fee))).join(', ')}. Your monthly statement and our invoicing details are in your producer area (Tax & statements).`),
           paragraph(hold.reason === 'first'
@@ -383,7 +425,7 @@ async function handlePayouts(req, res) {
     // The first payout waits longer; once a producer has been paid the normal hold applies.
     const { days: holdDays, reason: holdReason } = await holdFor(session.uid);
     const rows = await sql`
-      SELECT id, beat_id, title, tier, gross_cents, share_cents, currency, status, payout_method, created_at, paid_at,
+      SELECT id, beat_id, title, tier, gross_cents, share_cents, split_pct, currency, status, payout_method, created_at, paid_at,
         (status = 'pending' AND created_at <= now() - make_interval(days => ${holdDays}::int)) AS available
       FROM producer_earnings WHERE user_id = ${session.uid} ORDER BY created_at DESC LIMIT 200
     `;
@@ -407,7 +449,7 @@ async function handlePayouts(req, res) {
         sales: rows.filter((r) => r.status !== 'refunded').length,
       },
       earnings: rows.slice(0, 50).map((r) => ({
-        title: r.title, tier: r.tier, gross: r.gross_cents, share: r.share_cents, currency: r.currency,
+        title: r.title, tier: r.tier, gross: r.gross_cents, share: r.share_cents, split: r.split_pct < 100 ? r.split_pct : null, currency: r.currency,
         status: r.status === 'pending' ? (r.available ? 'available' : 'pending') : r.status,
         method: r.payout_method, date: r.created_at, paidAt: r.paid_at,
       })),

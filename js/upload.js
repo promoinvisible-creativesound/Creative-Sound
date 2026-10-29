@@ -31,7 +31,7 @@
   const FILE_NAMES = { mp3: 'untagged MP3', wav: 'WAV', stems: 'stems', project: 'project file' };
   const PRICE_HINTS = { mp3: '29.99', wav: '49.99', trackout: '99.99', project: '199.99' };
   const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const GENRES = ['Trap', 'Hip Hop', 'Drill', 'UK Drill', 'R&B', 'Boom Bap', 'Pop', 'Afrobeat', 'Amapiano', 'Reggaeton', 'Latin', 'Dancehall', 'Lo-fi', 'Phonk', 'Rage', 'Plugg', 'Jersey Club', 'Hyperpop', 'Cloud Rap', 'Emo Rap', 'UK Garage', 'Grime', 'House', 'Deep House', 'Tech House', 'Afro House', 'Techno', 'Drum & Bass', 'Dubstep', 'Future Bass', 'EDM', 'Synthwave', 'Disco', 'Funk', 'Brazilian Funk', 'Soul', 'Neo Soul', 'Gospel', 'Jazz', 'Rock', 'Indie', 'Ambient', 'Cinematic', 'Reggae', 'Country', 'Other'];
+  const GENRES = ['2-Step', 'Acid Jazz', 'Acoustic', 'Afro Fusion', 'Afro House', 'Afro Trap', 'Afrobeat', 'Afrobeats', 'Afropop', 'Afroswing', 'Alte', 'Alternative R&B', 'Alternative Rock', 'Amapiano', 'Ambient', 'Americana', 'Arabic Trap', 'Bachata', 'Balkan Trap', 'Bashment', 'Bass House', 'Bassline', 'Bedroom Pop', 'Big Room', 'Blues', 'Bollywood', 'Bongo Flava', 'Boom Bap', 'Bossa Nova', 'Brazilian Funk', 'Breakbeat', 'Breakcore', 'Brooklyn Drill', 'Brostep', 'Chicago Drill', 'Chillout', 'Chillwave', 'Chiptune', 'Chopped & Screwed', 'Christian', 'Cinematic', 'City Pop', 'Classical', 'Cloud Rap', 'Club', 'Conscious Rap', 'Corridos Tumbados', 'Country', 'Crunk', 'Cumbia', 'Dance', 'Dance Pop', 'Dancehall', 'Dark Ambient', 'Darkwave', 'Deep House', 'Dembow', 'Desi Hip Hop', 'Dirty South', 'Disco', 'Downtempo', 'Dream Pop', 'Drill', 'Drum & Bass', 'Dub', 'Dubstep', 'East Coast', 'EDM', 'Electro', 'Electro House', 'Electropop', 'Emo', 'Emo Rap', 'Epic', 'Eurobeat', 'Eurodance', 'Experimental', 'Flamenco', 'Folk', 'French Rap', 'Funk', 'Future Bass', 'Future Garage', 'Future House', 'G-Funk', 'Gabber', 'Gangsta Rap', 'Garage House', 'German Rap', 'Glitch Hop', 'Gospel', 'Gqom', 'Grime', 'Grunge', 'Hard Dance', 'Hard Rock', 'Hardcore', 'Hardstyle', 'Highlife', 'Hip Hop', 'Horrorcore', 'House', 'Hyperpop', 'Hyphy', 'IDM', 'Indie', 'Indie Pop', 'Indie Rock', 'Industrial', 'Italian Drill', 'Italian Pop', 'Italian Rap', 'Italian Trap', 'Italo Disco', 'J-Pop', 'Jazz', 'Jazz Rap', 'Jersey Club', 'Jungle', 'K-Pop', 'Latin', 'Latin Jazz', 'Latin Pop', 'Latin Trap', 'Liquid Drum & Bass', 'Lo-fi', 'Lo-fi Hip Hop', 'Lo-fi House', 'Meditation', 'Melodic House', 'Melodic Rap', 'Melodic Techno', 'Memphis Rap', 'Merengue', 'Metal', 'Minimal Techno', 'Moombahton', 'Neo Soul', 'Neurofunk', 'New Age', 'New Jack Swing', 'Nu Disco', 'Old School', 'Orchestral', 'Organic House', 'Pagode', 'Perreo', 'Phonk', 'Plugg', 'Pluggnb', 'Pop', 'Pop Punk', 'Post-Punk', 'Progressive House', 'Psytrance', 'Punjabi', 'Punk', 'Quiet Storm', 'R&B', 'Rage', 'Ragga', 'Raï', 'Rap Rock', 'Reggae', 'Reggaeton', 'Regional Mexican', 'Retrowave', 'Rock', 'Salsa', 'Samba', 'Sertanejo', 'Shoegaze', 'Singer-Songwriter', 'Smooth Jazz', 'Soca', 'Soul', 'Soundtrack', 'Spanish Rap', 'Synthpop', 'Synthwave', 'Tech House', 'Techno', 'Teen Pop', 'Trailer', 'Trance', 'Trap', 'Trap Soul', 'Tropical House', 'Turkish Trap', 'UK Drill', 'UK Funky', 'UK Garage', 'UK Hip Hop', 'Underground Hip Hop', 'Vaporwave', 'Video Game', 'West Coast', 'World', 'Zouk', 'Other'];
   const MOODS = ['Aggressive', 'Angry', 'Anxious', 'Bouncy', 'Calm', 'Chill', 'Cold', 'Confident', 'Dark', 'Dramatic', 'Dreamy', 'Eerie', 'Emotional', 'Energetic', 'Epic', 'Euphoric', 'Groovy', 'Happy', 'Heartbroken', 'Hopeful', 'Hype', 'Hypnotic', 'Inspiring', 'Intense', 'Lonely', 'Melancholic', 'Motivational', 'Mysterious', 'Nostalgic', 'Party', 'Peaceful', 'Playful', 'Powerful', 'Relaxed', 'Romantic', 'Sad', 'Sexy', 'Smooth', 'Spiritual', 'Triumphant', 'Uplifting', 'Warm'];
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -52,9 +52,10 @@
   // their storefront too).
   const MAX_CO = 5;
   const coBox = $('#up-co-list');
-  const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, '') })).filter((c) => c.name);
+  const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, ''), share: Math.max(0, Math.min(99, Math.round(Number($('[data-co="share"]', row).value) || 0))) })).filter((c) => c.name);
   const coSync = () => {
     $('#up-co-add').hidden = $$('.up-co', coBox).length >= MAX_CO;
+    $('#up-split-help').hidden = !$$('.up-co', coBox).length;
     $$('.up-co', coBox).forEach((row, i) => { $('.up-co-n', row).textContent = `Co-producer${MAX_CO > 1 ? ` ${i + 1}` : ''}`; });
   };
   function addCo(c = {}) {
@@ -65,6 +66,7 @@
       <span class="up-co-n"></span>
       <input data-co="name" maxlength="60" placeholder="Their producer name" aria-label="Co-producer name" value="${esc(c.name || '')}">
       <span class="up-co-at"><i>@</i><input data-co="handle" maxlength="31" placeholder="username (optional)" aria-label="Co-producer username on Creative Sound" autocapitalize="off" spellcheck="false" value="${esc(c.handle || '')}"></span>
+      <span class="up-co-pct"><input data-co="share" type="number" inputmode="numeric" min="0" max="99" step="1" placeholder="0" aria-label="Share of your 80%, in percent" value="${c.share ? esc(c.share) : ''}"><i>%</i></span>
       <button type="button" class="up-co-x" aria-label="Remove co-producer">×</button>`;
     coBox.appendChild(row);
     coSync();
@@ -635,6 +637,36 @@
     });
   }
 
+  /* ------------------------ Split of the 80% (co-producers) --------------------- */
+  // Each co-producer can get a share (whole percent) of the producer's 80%; the owner keeps the rest.
+  // The money goes to the co-producer's own Creative Sound account (their @username).
+  function splitState() {
+    const list = coList();
+    const total = list.reduce((n, c) => n + c.share, 0);
+    let error = '';
+    if (list.some((c) => c.share > 0 && !c.handle)) error = 'To give someone a share, add their Creative Sound username: the money goes to their account.';
+    else if (total > 99) error = `The shares add up to ${total}%. You keep at least 1% of your earnings.`;
+    return { list: list.filter((c) => c.share > 0), total, mine: 100 - total, error };
+  }
+  function paintSplit(prices) {
+    const el = $('#up-split');
+    if (!el) return;
+    const st = splitState();
+    el.classList.toggle('is-bad', !!st.error);
+    if (!st.list.length && !st.error) { el.hidden = true; return; }
+    el.hidden = false;
+    if (st.error) { el.textContent = st.error; return; }
+    const euro = (c) => `€${(c / 100).toFixed(2)}`;
+    const parts = [`You ${st.mine}%`, ...st.list.map((c) => `@${c.handle} ${c.share}%`)];
+    const p = Math.min(...Object.values(prices || {}).filter((x) => x >= 5), Infinity);
+    let example = '';
+    if (Number.isFinite(p)) {
+      const pool = Math.floor(Math.round(p * 100) * 0.8);
+      example = ` On a ${euro(Math.round(p * 100))} sale the producers get ${euro(pool)}: you ${euro(Math.floor(pool * st.mine / 100))}, ${st.list.map((c) => `@${c.handle} ${euro(Math.floor(pool * c.share / 100))}`).join(', ')}.`;
+    }
+    el.textContent = `Split of your 80%: ${parts.join(' · ')}.${example}`;
+  }
+
   /* --------------------------- Preview + checklist ------------------------ */
   const val = (n) => String(form.elements[n].value || '').trim();
   function pricesInEuros() {
@@ -656,7 +688,7 @@
     const checks = {
       artwork: !!done.artwork,
       preview: !!done.preview,
-      details: !!(val('producerName') && val('title') && Number.isInteger(bpm) && bpm >= 40 && bpm <= 250 && val('key') && val('genre') && val('mood') && picked.size >= TAG_RULES.min),
+      details: !!(val('producerName') && val('title') && Number.isInteger(bpm) && bpm >= 40 && bpm <= 250 && val('key') && val('genre') && val('mood') && picked.size >= TAG_RULES.min && !splitState().error),
       license: valid.length > 0 && Object.keys(prices).length === valid.length,
       agree: form.elements.agree.checked,
       mastered: form.elements.mastered.checked,
@@ -666,6 +698,7 @@
     const steps = { files: checks.artwork && checks.preview, details: checks.details, license: checks.license, agree: checks.agree && checks.mastered };
     $$('#up-steps li').forEach((li) => li.classList.toggle('is-ok', !!steps[li.dataset.step]));
 
+    paintSplit(prices);
     $('#up-pv-title').textContent = val('title') || 'Untitled track';
     const names = [val('producerName') || 'Your producer name', ...coList().map((c) => c.name)];
     $('#up-pv-producer').textContent = names.length <= 2 ? names.join(' & ') : `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
@@ -674,7 +707,11 @@
     licenses && licenses.order.forEach((t) => {
       const el = $(`[data-earn="${t}"]`);
       const p = prices[t];
-      if (el) el.textContent = p >= 5 ? `You earn €${(Math.floor(p * 80) / 100).toFixed(2)}` : '';
+      if (el) {
+        const pool = Math.floor(Math.round(p * 100) * 0.8);
+        const mine = Math.floor(pool * splitState().mine / 100);
+        el.textContent = p >= 5 ? (splitState().mine < 100 ? `You earn €${(mine / 100).toFixed(2)} (of €${(pool / 100).toFixed(2)})` : `You earn €${(pool / 100).toFixed(2)}`) : '';
+      }
     });
     $('#up-pv-price').textContent = valid.length ? `€${Math.min(...valid).toFixed(2)}` : '—';
 

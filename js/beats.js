@@ -1086,6 +1086,11 @@
   // it and plays with the visualizer off (noViz), never silent.
   audio.crossOrigin = 'anonymous';
   let noViz = false;
+  // Phones: the preview plays straight from the media element. The Web Audio graph (visualizer,
+  // key change) is only built when the key is changed, because routing a stream through it can
+  // cause crackles and speed or pitch glitches on weaker phones and Bluetooth outputs.
+  const touchUI = window.matchMedia('(pointer: coarse)').matches;
+  audio.defaultPlaybackRate = 1;
   let currentId = null;
   let actx = null;
   let analyser = null;
@@ -1169,7 +1174,7 @@
     if (srcNode) return true;
     if (noViz || !(window.AudioContext || window.webkitAudioContext)) return false;
     try {
-      actx = new (window.AudioContext || window.webkitAudioContext)();
+      actx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
       srcNode = actx.createMediaElementSource(audio);
       if (!reduceMotion) {
         analyser = actx.createAnalyser();
@@ -1183,7 +1188,7 @@
       return true;
     } catch (e) { analyser = null; srcNode = null; return false; }
   };
-  const ensureAnalyser = async () => { if (!reduceMotion) ensureGraph(); };
+  const ensureAnalyser = async () => { if (!reduceMotion && !touchUI) ensureGraph(); };
 
   const play = async (id) => {
     const beat = byId.get(id);
@@ -1658,8 +1663,38 @@
       tr.value = String(bpm);
       tr.style.setProperty('--p', `${((bpm - Number(tr.min)) / (Number(tr.max) - Number(tr.min))) * 100}%`);
       $('.bt-tool[data-tool="edit"]', tools).classList.toggle('is-on', fx.tempo !== 1 || fx.semi !== 0);
+      paintChips();
     };
     const applyTempo = () => { audio.preservesPitch = true; audio.mozPreservesPitch = true; audio.webkitPreservesPitch = true; audio.playbackRate = fx.tempo; };
+    // The speed only ever changes from the Edit panel: if the browser or the system moves it
+    // (a reload of the stream, an audio route change), put it back to what the panel shows.
+    audio.addEventListener('ratechange', () => { if (Math.abs(audio.playbackRate - fx.tempo) > 0.001) audio.playbackRate = fx.tempo; });
+    // What is changed is always visible, with one tap to undo: the loop, tempo and key chips.
+    const chips = document.createElement('div');
+    chips.className = 'bt-chips';
+    chips.hidden = true;
+    $('.bt-player-inner', player).appendChild(chips);
+    const paintChips = () => {
+      const items = [];
+      if (loop.mode === 'track') items.push(['loop', 'Loop: whole track']);
+      else if (loop.mode === 'section') items.push(['loop', `Loop: ${fmtTime(loop.a)}–${fmtTime(loop.b)}`]);
+      const b = beat();
+      if (b && (fx.tempo !== 1 || fx.semi !== 0)) {
+        const parts = [];
+        if (fx.tempo !== 1) parts.push(`${Math.round(b.bpm * fx.tempo)} BPM`);
+        if (fx.semi) parts.push(`Key ${fx.semi > 0 ? '+' : ''}${fx.semi}`);
+        items.push(['fx', parts.join(' · ')]);
+      }
+      chips.hidden = !items.length;
+      chips.innerHTML = items.map(([k, t]) => `<span class="bt-chip is-${k}">${esc(t)}<button type="button" data-chip-off="${k}" aria-label="${k === 'loop' ? 'Turn off the loop' : 'Back to the original tempo and key'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>`).join('');
+    };
+    chips.addEventListener('click', async (e) => {
+      const off = e.target.closest('[data-chip-off]');
+      if (!off) return;
+      if (off.dataset.chipOff === 'loop') setLoopMode('off');
+      else { lastSemi = fx.semi; fx.tempo = 1; fx.semi = 0; applyTempo(); await setKeyShift(0); paintEdit(); paintMeter(); }
+      paintChips();
+    });
     const panels = {
       edit: () => {
         const b = beat();
@@ -1756,6 +1791,7 @@
       const lbtn = $('.bt-tool[data-tool="loop"]', tools);
       lbtn.classList.toggle('is-on', loop.mode !== 'off');
       $('span', lbtn).textContent = loop.mode === 'section' ? `${fmtTime(loop.a)}–${fmtTime(loop.b)}` : 'Loop';
+      paintChips();
     };
     const setLoopMode = (m) => {
       loop.mode = m;
@@ -2002,7 +2038,8 @@
         fx.id = b.id;
         if (fx.tempo !== 1 || fx.semi !== 0) { fx.tempo = 1; fx.semi = 0; applyTempo(); setKeyShift(0); }
         $('.bt-tool[data-tool="edit"]', tools).classList.remove('is-on');
-        if (loop.mode === 'section') { loop.mode = 'off'; loop.a = 0; loop.b = 0; loop.bars = 0; paintLoopBtn(); }
+        if (loop.mode !== 'off') { loop.mode = 'off'; loop.a = 0; loop.b = 0; loop.bars = 0; audio.loop = false; paintLoopBtn(); }
+        paintChips();
         if (openTool) panels[openTool]();
       },
     };
@@ -2060,7 +2097,8 @@
         return;
       }
       try { bar.setPointerCapture(e.pointerId); } catch (err) {}
-      if (wv.peaks && audio.duration) { drag = { x: e.clientX, f: frac(e), moved: false }; return; }
+      // Mouse: a drag picks a loop section. Touch: a drag only scrubs (loops come from the Loop button).
+      if (wv.peaks && audio.duration && !touchUI) { drag = { x: e.clientX, f: frac(e), moved: false }; return; }
       seek(e);
     });
     bar.addEventListener('pointermove', (e) => {

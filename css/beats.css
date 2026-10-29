@@ -2158,7 +2158,7 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Narrower screens: icons only; phones keep Edit and More */
 @media (max-width:1180px){ .bt-tool span{ display:none; } .bt-tool{ width:36px; padding:0; justify-content:center; } }
 @media (max-width:760px){
-  .bt-tool[data-tool="loop"], .bt-tool[data-tool="lyrics"], .bt-tool[data-tool="vol"]{ display:none; }
+  .bt-tool[data-tool="lyrics"], .bt-tool[data-tool="vol"]{ display:none; }
   .bt-player-right{ gap:4px; }
   .bt-pop, .bt-pop.is-lyrics{ position:fixed; left:12px; right:12px; width:auto; bottom:calc(var(--bt-player-h, 120px) + 10px); transform-origin:bottom center; }
 }
@@ -2481,3 +2481,12 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 
 /* Phones: the four license cards are left out (the license window lists them per track) */
 @media (max-width:640px){ .bt-licenses{ display:none; } }
+
+/* What is changed in the player (loop, tempo, key), with a one-tap undo */
+.bt-chips{ grid-column:1 / -1; order:6; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:-2px 0 0; }
+.bt-chips[hidden]{ display:none; }
+.bt-chip{ display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 4px 0 13px; border-radius:16px; border:1px solid rgba(var(--fx, 232,134,44), 0.45); background:rgba(var(--fx, 232,134,44), 0.16); color:rgb(var(--fx-hi, 245,176,106)); font-size:13px; font-weight:600; white-space:nowrap; }
+.bt-chip button{ position:relative; width:26px; height:26px; padding:0; border:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.14); color:#fff; cursor:pointer; }
+.bt-chip button svg{ width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
+.bt-chip button::before{ content:''; position:absolute; inset:-9px; }
+@media (hover:hover) and (pointer:fine){ .bt-chip button:hover{ background:rgba(255,255,255,0.26); } }

@@ -1455,7 +1455,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 }
 .bt-art-gen, .bt-art img{ transition:transform 600ms var(--ease-out), filter 900ms var(--ease-out); }
 
-@keyframes btFocus{ from{ filter:blur(10px) brightness(0.6); transform:scale(1.08); } to{ filter:none; transform:none; } }
+/* opacity and transform only: animating a blur filter on every cover repaints them each frame */
+@keyframes btFocus{ from{ opacity:0.5; transform:scale(1.06); } to{ opacity:1; transform:none; } }
 .bt-card.bt-in{ animation:btFade 400ms ease both; animation-delay:calc(var(--i, 0) * 60ms); }
 .bt-card.bt-in .bt-art{ animation:btFocus 900ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 110ms + 120ms); }
 @keyframes btFade{ from{ opacity:0; } to{ opacity:1; } }
@@ -2490,3 +2491,12 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .bt-chip button svg{ width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
 .bt-chip button::before{ content:''; position:absolute; inset:-9px; }
 @media (hover:hover) and (pointer:fine){ .bt-chip button:hover{ background:rgba(255,255,255,0.26); } }
+
+/* Performance: the play, save and arrow buttons repeat on every card of the Track Store; blurring
+   what is behind each of them is what made scrolling there heavy. Same translucent buttons,
+   no backdrop blur (the player, menus and dialogs keep theirs). */
+.bt-play, .bt-card .bt-play, .bt-grid .bt-play, .bt-grid[data-view="grid"] .bt-play, .bp-row .bt-play,
+.bt-save, .bt-feat-nav, .bt-feat-play, .bt-feat-spot .bt-feat-play, .bp-cover-play, .bt-free-badge, .bt-cart-fab{
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+}
+.bt-play, .bt-save, .bt-feat-nav{ background-color:rgba(14,14,13,0.62); }

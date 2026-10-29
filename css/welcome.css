@@ -217,7 +217,7 @@
   animation:roleRise 760ms var(--ease-out) backwards; animation-delay:calc(var(--k, 0) * 120ms + 220ms);
   transition:border-color 200ms ease, transform 200ms var(--ease-out), box-shadow 200ms ease, scale 380ms var(--spring);
 }
-@keyframes roleRise{ from{ opacity:0; transform:translateY(40px) scale(0.93); filter:blur(6px); } to{ opacity:1; transform:none; filter:none; } }
+@keyframes roleRise{ from{ opacity:0; transform:translateY(40px) scale(0.93); } to{ opacity:1; transform:none; } }
 .role-icon{ position:relative; animation:iconPop 620ms var(--spring) backwards; animation-delay:calc(var(--k, 0) * 120ms + 560ms); }
 @keyframes iconPop{ from{ opacity:0; transform:scale(0.4) rotate(-14deg); } to{ opacity:1; transform:none; } }
 .role-card .role-name, .role-card .role-desc, .role-card .role-perks{ animation:wFade 520ms var(--ease-out) backwards; }

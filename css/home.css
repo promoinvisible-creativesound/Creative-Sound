@@ -157,7 +157,7 @@
 .ho-track{ --rx:0deg; --ry:0deg; transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)); transition:border-color 250ms ease, background-color 250ms ease, transform 600ms var(--ease-out); }
 .ho-track.is-tilting{ transition:border-color 250ms ease, background-color 250ms ease, transform 120ms linear; }
 .ho-cover{ transition:transform 600ms var(--ease-out); }
-@keyframes hoFocus{ from{ filter:blur(10px) brightness(0.6); transform:scale(1.08); } to{ filter:none; transform:none; } }
+@keyframes hoFocus{ from{ opacity:0.5; transform:scale(1.06); } to{ opacity:1; transform:none; } }
 .ho-track .ho-cover{ animation:hoFocus 900ms var(--ease-out) both; animation-delay:calc(var(--i, 0) * 110ms + 200ms); }
 @media (hover:hover) and (pointer:fine){ .ho-track:hover .ho-cover{ transform:scale(1.04); } }
 @media (prefers-reduced-motion: reduce){ .ho-track .ho-cover{ animation:none; } .ho-track{ transform:none !important; } }

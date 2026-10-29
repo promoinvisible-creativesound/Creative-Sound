@@ -41,16 +41,7 @@
     window.addEventListener('resize', fill);
   });
 
-  /* ------------------------------ Smooth scroll -------------------------- */
-  let lenis = null;
-  if (!prefersReducedMotion && window.Lenis) {
-    lenis = new Lenis({ duration: 1.1, smoothWheel: true });
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-  }
+  /* Scrolling is the browser's own: no smooth-scroll library, nothing runs on every frame. */
 
   /* --------------------------------- Header ------------------------------- */
   const header = document.getElementById('site-header');
@@ -58,11 +49,19 @@
   const siteNav = document.getElementById('site-nav');
 
   if (header) {
-    const onScroll = () => {
-      header.classList.toggle('scrolled', window.scrollY > 20);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+    // The header gets its 'scrolled' look once the page is 20px down. A 20px marker at the top of the
+    // page is watched instead of listening to every scroll event (nothing runs while scrolling).
+    if ('IntersectionObserver' in window) {
+      const marker = document.createElement('div');
+      marker.setAttribute('aria-hidden', 'true');
+      marker.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:20px;pointer-events:none;visibility:hidden';
+      document.body.insertBefore(marker, document.body.firstChild);
+      new IntersectionObserver((entries) => {
+        header.classList.toggle('scrolled', !entries[entries.length - 1].isIntersecting);
+      }).observe(marker);
+    } else {
+      window.addEventListener('scroll', () => { header.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+    }
   }
 
   if (navToggle && siteNav) {
@@ -70,14 +69,12 @@
       const isOpen = siteNav.classList.toggle('open');
       navToggle.setAttribute('aria-expanded', String(isOpen));
       document.body.classList.toggle('nav-open', isOpen);
-      if (lenis) { if (isOpen) lenis.stop(); else lenis.start(); }
     });
     siteNav.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
         siteNav.classList.remove('open');
         navToggle.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('nav-open');
-        if (lenis) lenis.start();
       });
     });
   }
@@ -283,11 +280,17 @@
   };
   if (storyCards.length) {
     if (window.IntersectionObserver) {
+      // Loads a clip as it nears the screen and keeps it playing only while it is near: a clip that
+      // has moved away is paused, so at most a few decode at once (14 playing together is heavy).
       const lazyLoad = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          loadStory(entry.target);
-          lazyLoad.unobserve(entry.target);
+          const video = entry.target.querySelector('.story-video');
+          if (entry.isIntersecting) {
+            loadStory(entry.target);
+            if (video && video.src && video.paused) video.play().catch(() => {});
+          } else if (video && video.src && !video.paused) {
+            video.pause();
+          }
         });
       }, { rootMargin: '400px 200px' });
       storyCards.forEach((card) => lazyLoad.observe(card));
@@ -316,51 +319,42 @@
   }
 
   /* ------------------------------ Scroll reveals -------------------------- */
-  if (window.gsap && window.ScrollTrigger) {
-    gsap.registerPlugin(ScrollTrigger);
-    if (lenis) {
-      lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add((time) => lenis.raf(time * 1000));
-      gsap.ticker.lagSmoothing(0);
-    }
-
-    const groups = new Map();
-    document.querySelectorAll('.reveal-up').forEach((el) => {
+  // Elements marked .reveal-up rise in when their section comes into view. Plain
+  // IntersectionObserver and CSS (.reveal-up / .is-in in css/style.css): no animation
+  // library, and nothing runs while the page is just being scrolled.
+  const revealEls = [...document.querySelectorAll('.reveal-up')];
+  const showReveal = (el) => el.classList.add('is-in');
+  const sectionReveals = new Map();
+  if (!('IntersectionObserver' in window) || prefersReducedMotion) {
+    revealEls.forEach(showReveal);
+  } else {
+    revealEls.forEach((el) => {
       if (el.closest('#hero')) return; // the hero has its own entrance below
       const section = el.closest('section') || document.body;
-      if (!groups.has(section)) groups.set(section, []);
-      groups.get(section).push(el);
+      if (!sectionReveals.has(section)) sectionReveals.set(section, []);
+      sectionReveals.get(section).push(el);
     });
-
-    // Short and small on purpose: ~10 sections reveal on the way down, so a
-    // long rise turns into waiting. 0.6s / 16px reads as "arriving", not
-    // as a performance.
-    const sectionReveals = new Map();
-    groups.forEach((els, section) => {
-      gsap.set(els, { opacity: 0, y: 16 });
-      const tween = gsap.to(els, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power3.out',
-        stagger: 0.06,
-        scrollTrigger: {
-          trigger: els[0].closest('section') || els[0],
-          start: 'top 82%',
-          once: true,
-        },
+    // A section's elements come in one after the other (60 ms apart, at most 8 steps).
+    const play = (els, step) => els.forEach((el, i) => {
+      el.style.setProperty('--rv-d', `${Math.min(i, 8) * step}ms`);
+      showReveal(el);
+    });
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        play(sectionReveals.get(en.target) || [], 60);
       });
-      sectionReveals.set(section, tween);
-    });
+    }, { rootMargin: '0px 0px -18% 0px' });
+    sectionReveals.forEach((els, section) => io.observe(section));
 
-    // Landing on a section through a link ("Free demo" -> #pricing, a #demo
-    // URL, the nav) shows it at once instead of leaving it blank until the
-    // next scroll event wakes ScrollTrigger up.
+    // Landing on a section through a link ("Free demo" -> #pricing, a #demo URL, the nav)
+    // shows it at once.
     const revealNow = (hash) => {
       const target = hash && hash.length > 1 && document.getElementById(hash.slice(1));
       const section = target && (target.closest('section') || target);
-      const tween = section && sectionReveals.get(section);
-      if (tween) tween.progress(1);
+      const els = section && sectionReveals.get(section);
+      if (els) { io.unobserve(section); els.forEach(showReveal); }
     };
     revealNow(location.hash === '#demo' ? '#pricing' : location.hash);
     document.addEventListener('click', (e) => {
@@ -368,45 +362,20 @@
       if (link) revealNow(link.getAttribute('href'));
     });
 
-    // Hero always plays on load, not on scroll — only on pages that actually
-    // have the full hero. On the home page it waits for the boot intro to
-    // clear (inline script in index.html fires "boot:done"), otherwise it
-    // would play underneath the overlay and nobody would ever see it.
+    // Hero always plays on load, not on scroll: only on pages with the full hero. On the home
+    // page and the Creative Dist page it waits for the boot intro to clear (their inline
+    // script fires "boot:done"), otherwise it would play underneath the overlay.
     if (document.getElementById('hero')) {
-      const heroEls = document.querySelectorAll('#hero .reveal-up');
-      gsap.set(heroEls, { opacity: 0, y: 16 });
-      const heroIn = gsap.to(heroEls, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        ease: 'power3.out',
-        stagger: 0.07,
-        paused: true,
-      });
+      const heroEls = [...document.querySelectorAll('#hero .reveal-up')];
+      const heroIn = () => { if (!heroEls.length || heroEls[0].classList.contains('is-in')) return; play(heroEls, 70); };
       const bootOverlay = document.getElementById('boot-overlay');
-      if (!bootOverlay || prefersReducedMotion || window.__bootDone) {
-        heroIn.play();
+      if (!bootOverlay || window.__bootDone) {
+        heroIn();
       } else {
-        // Starts while the overlay is still fading (0.5s), so the two overlap.
-        document.addEventListener('boot:done', () => gsap.delayedCall(0.15, () => heroIn.play()), { once: true });
-        setTimeout(() => { if (!heroIn.isActive() && heroIn.progress() === 0) heroIn.play(); }, 7000);
+        document.addEventListener('boot:done', () => setTimeout(heroIn, 150), { once: true });
+        setTimeout(heroIn, 7000);
       }
     }
-
-    // Subtle parallax drift on the hero glow.
-    if (document.querySelector('.hero-glow')) {
-      gsap.to('.hero-glow', {
-        yPercent: 12,
-        ease: 'none',
-        scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
-      });
-    }
-  } else {
-    // Fallback: no animation library loaded, just show everything.
-    document.querySelectorAll('.reveal-up').forEach((el) => {
-      el.style.opacity = '1';
-      el.style.transform = 'none';
-    });
   }
 
   /* --------------------------- Header account status ------------------------ */

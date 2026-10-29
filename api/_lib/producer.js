@@ -278,6 +278,7 @@ function validateDetails(body, files) {
   if (coProducers.some((c) => !Number.isFinite(c.share) || c.share < 0 || c.share > 99)) return { error: 'A co-producer share is a whole percent between 1 and 99.' };
   const splitTotal = coProducers.reduce((n, c) => n + c.share, 0);
   if (splitTotal > 99) return { error: 'The shares you give away add up to more than 99%: you keep at least 1% of your earnings.' };
+  if (body.ownerShare != null && body.ownerShare !== '' && Math.round(Number(body.ownerShare)) !== 100 - splitTotal) return { error: 'Your share and the co-producer shares must add up to 100%.' };
   if (coProducers.some((c) => c.share > 0 && !c.handle)) return { error: 'To give a co-producer a share, add their Creative Sound username: the money goes to their account.' };
   if (new Set(coProducers.filter((c) => c.handle).map((c) => c.handle)).size !== coProducers.filter((c) => c.handle).length) return { error: 'The same username appears twice in the co-producers.' };
   if (!title) return { error: 'Give the beat a title.' };

@@ -29,7 +29,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=5">
 <link rel="stylesheet" href="css/style.css?v=146">
 <link rel="stylesheet" href="css/header-menu.css?v=21">
-<link rel="stylesheet" href="css/upload.css?v=47">
+<link rel="stylesheet" href="css/upload.css?v=48">
 </head>
 <body>
 <div id="grain"></div>
@@ -202,7 +202,7 @@
           <div><h2 id="up-s2">Details</h2><p>How the track shows up in the store and in search.</p></div>
         </div>
         <div class="up-grid">
-          <div class="up-field up-producers"><label for="up-producer-name"><span>Producer name</span></label><input id="up-producer-name" name="producerName" maxlength="60" autocomplete="nickname" required><div class="up-co-list" id="up-co-list"></div><p class="up-split" id="up-split" role="status" aria-live="polite" hidden></p><button type="button" class="up-co-add" id="up-co-add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add co-producer</button></div>
+          <div class="up-field up-producers"><label for="up-producer-name"><span>Producer name</span></label><input id="up-producer-name" name="producerName" maxlength="60" autocomplete="nickname" required><div class="up-owner" id="up-owner" hidden><label for="up-owner-share">Your share of the 80%</label><span class="up-co-pct"><input id="up-owner-share" type="number" inputmode="numeric" min="1" max="100" step="1" placeholder="auto" aria-label="Your share of the 80%, in percent"><i>%</i></span></div><div class="up-co-list" id="up-co-list"></div><p class="up-split" id="up-split" role="status" aria-live="polite" hidden></p><button type="button" class="up-co-add" id="up-co-add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add co-producer</button></div>
           <label class="up-field"><span>Track title</span><input name="title" maxlength="80" required></label>
           <label class="up-field up-field-s"><span>BPM</span><input name="bpm" type="number" inputmode="numeric" min="40" max="250" required></label>
           <label class="up-field up-field-s"><span>Key</span><select name="key" required></select></label>
@@ -347,7 +347,7 @@
 <script src="js/cover-crop.js?v=2"></script>
 <script src="js/select-dd.js?v=2"></script>
 <script src="js/producer-tag.js?v=1"></script>
-<script src="js/upload.js?v=27"></script>
+<script src="js/upload.js?v=28"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

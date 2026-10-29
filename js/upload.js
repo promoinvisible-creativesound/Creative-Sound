@@ -55,6 +55,7 @@
   const coList = () => $$('.up-co', coBox).map((row) => ({ name: $('[data-co="name"]', row).value.trim(), handle: $('[data-co="handle"]', row).value.trim().replace(/^@/, ''), share: Math.max(0, Math.min(99, Math.round(Number($('[data-co="share"]', row).value) || 0))) })).filter((c) => c.name);
   const coSync = () => {
     $('#up-co-add').hidden = $$('.up-co', coBox).length >= MAX_CO;
+    $('#up-owner').hidden = !$$('.up-co', coBox).length;
     $$('.up-co', coBox).forEach((row, i) => { $('.up-co-n', row).textContent = `Co-producer${MAX_CO > 1 ? ` ${i + 1}` : ''}`; });
   };
   function addCo(c = {}) {
@@ -642,10 +643,13 @@
   function splitState() {
     const list = coList();
     const total = list.reduce((n, c) => n + c.share, 0);
+    const ownerEl = $('#up-owner-share');
+    const typed = ownerEl && ownerEl.value !== '' ? Math.round(Number(ownerEl.value)) : null;
     let error = '';
     if (list.some((c) => c.share > 0 && !c.handle)) error = 'To give someone a share, add their Creative Sound username: the money goes to their account.';
     else if (total > 99) error = `The shares add up to ${total}%. You keep at least 1% of your earnings.`;
-    return { list: list.filter((c) => c.share > 0), total, mine: 100 - total, error };
+    else if (typed != null && typed + total !== 100) error = `Your ${typed}% and the co-producers' ${total}% add up to ${typed + total}%: they must make 100%.`;
+    return { list: list.filter((c) => c.share > 0), total, mine: 100 - total, owner: typed, error };
   }
   function paintSplit(prices) {
     const el = $('#up-split');
@@ -736,6 +740,7 @@
           editId,
           producerName: val('producerName'),
           coProducers: coList(),
+          ownerShare: splitState().owner,
           title: val('title'),
           bpm: Number(val('bpm')),
           key: val('key'),

@@ -909,6 +909,7 @@
   // time slot as its seed, so every visitor sees the same three during a slot.
   // Different producers first, so the block shows three names when it can.
   let featIndex = 0;
+  let featToken = 0;
   const TOP_SLOT = 4 * 36e5;
   let topCache = null;
   const featuredList = () => {
@@ -953,7 +954,9 @@
     if (!box) return;
     const list = featuredList();
     if (!list.length) { box.hidden = true; return; }
-    const b = list[featIndex];
+    const token = ++featToken;
+    const idx = featIndex;
+    const b = list[idx];
     // The frame (header, light running round the
     // border, HUD corners, arrows, picks) is built once; only the spotlight swaps.
     if (!$('.bt-top-body', box)) {
@@ -990,7 +993,9 @@
     const slot = $('.bt-feat-slot', box);
     const old = $('.bt-feat-spot', slot);
     const swap = () => {
-      slot.innerHTML = spotHtml(b, featIndex + 1);
+      // Several quick clicks start several swaps: only the latest one may draw, so the spotlight always matches the highlighted pick.
+      if (token !== featToken) return;
+      slot.innerHTML = spotHtml(b, idx + 1);
       syncCards();
       if (dir && !reduceMotion) {
         $('.bt-feat-spot', slot).animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE_OUT });

@@ -16,6 +16,9 @@
   const catalogueRoot = document.querySelector('.beats-page');
   let beatRoot = document.querySelector('[data-beat-id]');
   const savedRoot = document.querySelector('[data-saved-page]');
+  // playlist.html reuses the saved page: the same grid and player, filled from a playlist (js/playlists.js).
+  const playlistMode = !!(savedRoot && savedRoot.hasAttribute('data-playlist'));
+  let playlistIds = [];
   // track.html: the page for producer uploads, built from the live catalogue.
   const trackPage = document.querySelector('[data-track-page]');
   if (!catalogueRoot && !beatRoot && !savedRoot && !trackPage) return;
@@ -212,7 +215,7 @@
     try {
       const res = await fetch('/api/beats/saved');
       if (res.status === 401) {
-        if (savedRoot) location.href = '/login.html';
+        if (savedRoot && !playlistMode) location.href = '/login.html';
         return;
       }
       if (!res.ok) return;
@@ -238,7 +241,8 @@
       if (savedRoot) renderSavedPage();
     } catch (e) { /* offline or no API locally: browser saves keep working */ }
   }
-  const savedList = () => [...saved].map((id) => byId.get(id)).filter(Boolean);
+  const savedList = () => (playlistMode ? playlistIds : [...saved]).map((id) => byId.get(id)).filter(Boolean);
+  window.csPlaylistView = { set(ids) { playlistIds = ids || []; if (playlistMode && byId.size) renderSavedPage(); } };
 
   // profile-saved.html: the wishlist inside the account.
   function renderSavedPage() {
@@ -246,7 +250,7 @@
     if (!grid) return;
     const list = savedList();
     $('#bt-saved-empty').hidden = list.length > 0;
-    $('#bt-saved-count').textContent = `${list.length} saved track${list.length === 1 ? '' : 's'}`;
+    $('#bt-saved-count').textContent = `${list.length} ${playlistMode ? '' : 'saved '}track${list.length === 1 ? '' : 's'}`;
     grid.hidden = !list.length;
     // "Play all": starts the first saved track; the player then follows the saved list.
     const playAll = $('#sv-play');

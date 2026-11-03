@@ -78,6 +78,8 @@ module.exports = async (req, res) => {
     'beats-code': require('./_lib/discounts').handleCode,
     // Follow a producer (_lib/follows.js)
     'profile-follow': require('./_lib/follows').handleFollow,
+    // Playlists (_lib/playlists.js)
+    'beats-playlists': require('./_lib/playlists').handlePlaylists,
     'review-discounts': require('./_lib/discounts').handleAdmin,
   };
   if (req.query && catalogueRoutes[req.query.action]) {

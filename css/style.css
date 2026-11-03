@@ -5,8 +5,8 @@
    =================================================================== */
 
 :root{
-  --bg:#080807;
-  --bg-alt:#0a0a09;
+  --bg:#060605;
+  --bg-alt:#090908;
   --panel:#0d0d0c;
   --deep-black:#1a1a1a;
 
@@ -2796,3 +2796,6 @@ html::-webkit-scrollbar-track{ background:#0a0a09; }
    sound buttons) is switched off; their translucent dark background stays. One-off surfaces
    (header, menus, dialogs) keep their blur. */
 .btn-ghost, .story-sound, .artist-ig, .pk-play{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+
+/* Soft black page (not pure #000) with a faint warm amber wash at the top; the dotted plexus is gone. */
+body{ background:var(--bg) radial-gradient(120% 520px at 50% 0, rgba(232,134,44,0.035), transparent 70%) no-repeat; }

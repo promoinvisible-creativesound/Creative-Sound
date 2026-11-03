@@ -1173,3 +1173,28 @@
 .up-owner{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; padding:8px 8px 8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); font-size:13.5px; color:#d2d2d7; }
 .up-owner[hidden]{ display:none; }
 .up-owner .up-co-pct{ grid-column:auto; grid-row:auto; }
+
+/* Track review on phones: tidier tabs, header, file rows and buttons */
+@media (max-width:600px){
+  .rv-tabs{ display:grid; grid-template-columns:repeat(4, auto); width:100%; gap:2px; padding:4px; }
+  .rv-tabs button{ padding:0 4px !important; font-size:13px !important; white-space:nowrap; justify-content:center; }
+  .rv-tabs span{ margin-left:3px; padding:0 6px; }
+  .rv-card{ padding:16px 14px; }
+  .rv-top{ grid-template-columns:72px minmax(0, 1fr); gap:12px; }
+  .rv-by{ overflow-wrap:anywhere; font-size:13px; }
+  .rv-info h2{ font-size:17px; line-height:1.25; overflow-wrap:anywhere; }
+  .rv-verify{ gap:6px; }
+  .rv-verify-btn{ height:30px; }
+  .rv-prices{ gap:4px; }
+  .rv-fhead{ display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:4px 10px; align-items:center; }
+  .rv-fhead b{ grid-column:1; }
+  .rv-fhead .rv-dl{ grid-column:2; grid-row:1 / span 2; height:36px; padding:0 14px; }
+  .rv-fmeta{ grid-column:1; min-width:0; }
+  .rv-frow{ padding:12px; }
+  .rv-peek{ height:38px; }
+  .rv-actions{ flex-direction:column-reverse; }
+  .rv-actions .btn{ width:100%; height:46px; }
+  .rv-tagcheck-actions{ flex-direction:column-reverse; }
+  .rv-tagcheck-actions .btn{ width:100%; height:46px; }
+  .rv-reopen .btn{ width:100%; }
+}

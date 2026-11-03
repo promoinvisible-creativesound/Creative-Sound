@@ -1242,3 +1242,9 @@
 .pa-search input::placeholder{ color:#8d8a82; }
 .pa-search input:focus{ outline:none; border-color:var(--accent); }
 .pa-search input::-webkit-search-cancel-button{ filter:invert(1); opacity:0.6; }
+
+/* Status filter on phones: an even 2 x 2 grid, same size cells, soft corners that match the group */
+@media (max-width:640px){
+  .pa-filter:not(.rv-tabs){ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:22px; overflow:visible; }
+  .pa-filter:not(.rv-tabs) button{ flex:none; width:100%; height:40px; padding:0 8px; border-radius:18px; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; }
+}

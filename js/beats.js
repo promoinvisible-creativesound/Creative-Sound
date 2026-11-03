@@ -2292,7 +2292,7 @@
   // A line with an accepted offer (c.offer) keeps the offered price: no other discount on it.
   const regularCount = () => cart.filter((c) => !c.offer).length;
   const linePrice = (c) => (c.offer && c.price ? c.price : byId.get(c.id).prices[c.tier]);
-  const cartPct = () => Math.min(70, Math.round(100 - [bundlePct(regularCount()), siteSale && siteSale.pct, codeApplied && codeApplied.pct].reduce((k, p) => k * (100 - (p || 0)) / 100, 100)));
+  const cartPct = () => Math.min(95, Math.round(100 - [bundlePct(regularCount()), siteSale && siteSale.pct, codeApplied && codeApplied.pct].reduce((k, p) => k * (100 - (p || 0)) / 100, 100)));
   const cartSub = () => cart.reduce((s, c) => s + linePrice(c), 0);
   const cartTotal = () => cart.reduce((s, c) => s + (c.offer ? linePrice(c) : Math.max(50, Math.round(linePrice(c) * (100 - cartPct()) / 100))), 0);
   function renderCart() {

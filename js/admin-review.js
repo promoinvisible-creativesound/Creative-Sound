@@ -194,7 +194,7 @@
         <h2>General sale</h2>
         <p class="rv-disc-info">${s ? `<b>-${s.pct}% on every track${s.label ? ` (${esc(s.label)})` : ''}</b> until ${when(s.until)}.` : 'No general sale right now.'} It stacks with the bundle discount and codes. Producers earn their 80% of the lower price.</p>
         <div class="rv-disc-row">
-          <label><span>Discount</span><select data-site="pct">${opts([10, 15, 20, 25, 30, 40, 50], (v) => `${v}% off`, s ? s.pct : 20)}</select></label>
+          <label><span>Discount</span><select data-site="pct">${opts([10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 95], (v) => `${v}% off`, s ? s.pct : 20)}</select></label>
           <label><span>Lasts</span><select data-site="days">${opts([1, 2, 3, 5, 7, 14, 30], dDays, 3)}</select></label>
           <label class="rv-disc-wide"><span>Name (optional)</span><input type="text" data-site="label" maxlength="40" placeholder="Black Friday" value="${s ? esc(s.label) : ''}"></label>
           <button type="button" class="btn btn-primary" data-site-go>${s ? 'Update sale' : 'Start sale'}</button>
@@ -206,7 +206,7 @@
         <p class="rv-disc-info">Buyers type the code in the cart. The discount comes off the price they pay.</p>
         <div class="rv-disc-row">
           <label class="rv-disc-wide"><span>Code</span><input type="text" data-code="code" maxlength="24" placeholder="LAUNCH20" autocapitalize="characters" spellcheck="false"></label>
-          <label><span>Discount</span><select data-code="pct">${opts([5, 10, 15, 20, 25, 30, 40, 50], (v) => `${v}% off`, 20)}</select></label>
+          <label><span>Discount</span><select data-code="pct">${opts([5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 95], (v) => `${v}% off`, 20)}</select></label>
           <label><span>Valid for</span><select data-code="days">${opts([0, 1, 3, 7, 14, 30, 90], (v) => (v ? dDays(v) : 'No end date'), 0)}</select></label>
           <label><span>Max uses</span><input type="number" data-code="maxUses" min="1" inputmode="numeric" placeholder="No limit"></label>
           <button type="button" class="btn btn-primary" data-code-go>Create code</button>

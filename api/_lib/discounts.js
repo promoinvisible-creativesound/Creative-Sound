@@ -76,7 +76,7 @@ async function handleAdmin(req, res) {
         const code = clean(b.code);
         const maxUses = b.maxUses === '' || b.maxUses == null ? null : Math.round(Number(b.maxUses));
         if (code.length < 3) { res.status(400).json({ error: 'The code needs at least 3 letters or numbers.' }); return; }
-        if (pct < 1 || pct > 70) { res.status(400).json({ error: 'A code takes 1% to 70% off.' }); return; }
+        if (pct < 1 || pct > 95) { res.status(400).json({ error: 'A code takes 1% to 95% off.' }); return; }
         if (days < 0 || days > 365) { res.status(400).json({ error: 'Days must be 0 to 365 (0 = no end date).' }); return; }
         if (maxUses != null && (!(maxUses >= 1) || maxUses > 100000)) { res.status(400).json({ error: 'Uses must be at least 1.' }); return; }
         await sql`INSERT INTO discount_codes (code, pct, expires_at, max_uses, active) VALUES (${code}, ${pct}, ${days ? new Date(Date.now() + days * 864e5).toISOString() : null}, ${maxUses}, true)
@@ -86,7 +86,7 @@ async function handleAdmin(req, res) {
       } else if (b.do === 'site') {
         if (pct === 0) await sql`DELETE FROM site_sale WHERE id = 1`;
         else {
-          if (pct < 5 || pct > 70) { res.status(400).json({ error: 'A general sale takes 5% to 70% off.' }); return; }
+          if (pct < 5 || pct > 95) { res.status(400).json({ error: 'A general sale takes 5% to 95% off.' }); return; }
           if (days < 1 || days > 60) { res.status(400).json({ error: 'A general sale lasts 1 to 60 days.' }); return; }
           const label = String(b.label || '').trim().slice(0, 40);
           await sql`INSERT INTO site_sale (id, pct, until, label) VALUES (1, ${pct}, ${new Date(Date.now() + days * 864e5).toISOString()}, ${label})

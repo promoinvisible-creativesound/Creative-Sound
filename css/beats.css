@@ -2556,3 +2556,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
   .bp-actions .bp-pl span{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 }
 @media (max-width:560px){ .bp-actions{ grid-template-columns:1fr 38px 38px 38px; } }
+
+/* Key filter: "mixes well" chip */
+.bt-keymix{ height:40px; padding:0 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04); color:#d8d5ca; font:inherit; font-size:13.5px; font-weight:600; white-space:nowrap; cursor:pointer; }
+.bt-keymix.is-active{ border-color:rgba(232,134,44,0.6); background:rgba(232,134,44,0.14); color:#ffd9a8; }
+@media (hover:hover) and (pointer:fine){ .bt-keymix:not(.is-active):hover{ border-color:rgba(255,255,255,0.3); color:#fff; } }

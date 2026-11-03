@@ -320,11 +320,13 @@
     cluster.className = 'hm-cluster';
     if (data && data.email) {
       document.documentElement.classList.add('is-signed-in');
+      try { localStorage.setItem('cs-auth', '1'); } catch (e) { /* private mode */ }
       cluster.append(messagesMenu().wrap, updatesMenu(data).wrap, cartMenu().wrap, accountMenu(data).wrap);
     } else {
       // Signed out: support and account menus in the same style, the cart
       // only when it has something in it.
       document.documentElement.classList.add('is-signed-out');
+      try { localStorage.setItem('cs-auth', '0'); } catch (e) { /* private mode */ }
       const cart = cartMenu();
       cluster.append(guestSupportMenu().wrap);
       if (cart.paintCount()) cluster.append(cart.wrap);

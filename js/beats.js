@@ -496,7 +496,7 @@
   /* ------------------------------ Catalogue page --------------------------- */
   const grid = $('#bt-grid');
   const state = {
-    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '', sort: 'discover',
+    col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', keyMix: false, price: '', added: '', sort: 'discover',
     tags: new Set(), view: store.get('bt-view', 'grid'),
   };
   let visible = [];
@@ -520,6 +520,37 @@
     { value: '90', label: 'Last 3 months', short: '3 months' },
     { value: '365', label: 'Last year', short: '1 year' },
   ];
+  // Price and deals: the cheapest license of the track, on sale, or free to download.
+  const PRICE_RANGES = [
+    { value: '', label: 'Any price', short: 'Any' },
+    { value: 'sale', label: 'On sale' },
+    { value: 'free', label: 'Free download', short: 'Free' },
+    { value: '0-19.99', label: 'Under €20', short: '< €20' },
+    { value: '20-39.99', label: '€20 to €40', short: '€20–40' },
+    { value: '40-9999', label: '€40 and up', short: '€40+' },
+  ];
+  const fromPrice = (b) => Math.min(...Object.values(b.prices || {}).filter((c) => c > 0)) / 100;
+  const inPrice = (b, v) => {
+    if (v === 'sale') return !!b.sale;
+    if (v === 'free') return !!b.freeDownload;
+    const [lo, hi] = v.split('-').map(Number);
+    const p = fromPrice(b);
+    return p >= lo && p <= hi;
+  };
+  // Keys that mix well: the same key, its relative major/minor, and the keys a fifth up or down.
+  const PC = { c: 0, 'c#': 1, db: 1, d: 2, 'd#': 3, eb: 3, e: 4, f: 5, 'f#': 6, gb: 6, g: 7, 'g#': 8, ab: 8, a: 9, 'a#': 10, bb: 10, b: 11 };
+  const parseKey = (k) => {
+    const m = String(k || '').trim().toLowerCase().match(/^([a-g][#b]?)\s*(minor|min|major|maj|m)?/);
+    if (!m || PC[m[1]] == null) return null;
+    return { pc: PC[m[1]], minor: /^(min|minor|m)$/.test(m[2] || '') };
+  };
+  const keysMix = (a, b) => {
+    const x = parseKey(a), y = parseKey(b);
+    if (!x || !y) return a === b;
+    const d = (y.pc - x.pc + 12) % 12;
+    if (x.minor === y.minor) return d === 0 || d === 7 || d === 5;
+    return x.minor ? d === 3 : d === 9;
+  };
   const addedWithin = (b, days) => (Date.now() - new Date(b.released).getTime()) / 864e5 <= Number(days);
   const inBpm = (b, range) => { const [lo, hi] = range.split('-').map(Number); return b.bpm >= lo && b.bpm <= hi; };
 
@@ -528,7 +559,8 @@
     if (col && !col.test(b)) return false;
     if (skip !== 'genre' && state.genre && b.genre !== state.genre) return false;
     if (skip !== 'mood' && state.mood && b.mood !== state.mood) return false;
-    if (skip !== 'key' && state.key && b.key !== state.key) return false;
+    if (skip !== 'key' && state.key && (state.keyMix ? !keysMix(state.key, b.key) : b.key !== state.key)) return false;
+    if (skip !== 'price' && state.price && !inPrice(b, state.price)) return false;
     if (skip !== 'bpm' && state.bpm && !inBpm(b, state.bpm)) return false;
     if (skip !== 'added' && state.added && !addedWithin(b, state.added)) return false;
     for (const t of state.tags) if (!(b.tags || []).includes(t)) return false;
@@ -554,7 +586,7 @@
     'price-desc': (a, b) => minPrice(b) - minPrice(a),
     'bpm-asc': (a, b) => a.bpm - b.bpm,
   };
-  const isFiltered = () => state.col !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.added || state.tags.size;
+  const isFiltered = () => state.col !== 'all' || state.q || state.genre || state.mood || state.bpm || state.key || state.price || state.added || state.tags.size;
 
   const paint = () => {
     grid.innerHTML = visible.map(cardHtml).join('');
@@ -666,11 +698,19 @@
 
   const countOptions = (key, values) => values.map((v) => ({ value: v, label: v, count: BEATS.filter((b) => b[key] === v && matches(b, key)).length }));
 
+  // "Mixes well" chip next to the key filter: also show the relative key and the keys a fifth away.
+  const paintKeyMix = () => {
+    const chip = $('#bt-keymix');
+    if (!chip) return;
+    chip.hidden = !state.key;
+    chip.classList.toggle('is-active', state.keyMix);
+    chip.setAttribute('aria-pressed', String(state.keyMix));
+  };
   const setupDropdowns = () => {
     const box = $('#bt-dds');
     const uniq = (k) => [...new Set(BEATS.map((b) => b[k]).filter(Boolean))].sort();
     const add = (key, label, options, extra = {}) => {
-      const dd = makeDropdown({ key, label, options, value: state[key], onChange: (v) => { state[key] = v; render(); }, ...extra });
+      const dd = makeDropdown({ key, label, options, value: state[key], onChange: (v) => { state[key] = v; if (key === 'key') { if (!v) state.keyMix = false; paintKeyMix(); } render(); }, ...extra });
       dropdowns[key] = dd;
       box.appendChild(dd.el);
     };
@@ -689,6 +729,13 @@
       },
     });
     add('key', 'Key', [{ value: '', label: 'Any key', short: 'Any' }, ...countOptions('key', uniq('key'))]);
+    const mix = document.createElement('button');
+    mix.type = 'button'; mix.id = 'bt-keymix'; mix.className = 'bt-keymix'; mix.hidden = true; mix.setAttribute('aria-pressed', 'false');
+    mix.title = 'Also show the relative key and the keys a fifth above and below';
+    mix.textContent = '+ related keys';
+    mix.addEventListener('click', () => { state.keyMix = !state.keyMix; paintKeyMix(); render(); });
+    box.appendChild(mix);
+    add('price', 'Price', PRICE_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => inPrice(b, r.value)).length } : r)));
     add('added', 'Added', ADDED_RANGES.map((r, i) => (i ? { ...r, count: BEATS.filter((b) => addedWithin(b, r.value)).length } : r)));
     add('sort', 'Sort', [
       { value: 'discover', label: 'Discover', short: 'Discover' },
@@ -724,10 +771,11 @@
     });
 
     const reset = () => {
-      Object.assign(state, { col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', added: '' });
+      Object.assign(state, { col: 'all', q: '', genre: '', mood: '', bpm: '', key: '', keyMix: false, price: '', added: '' });
       state.tags.clear();
       $('#bt-q').value = '';
-      ['genre', 'mood', 'bpm', 'key', 'added'].forEach((k) => dropdowns[k].reset());
+      ['genre', 'mood', 'bpm', 'key', 'price', 'added'].forEach((k) => dropdowns[k].reset());
+      paintKeyMix();
       $$('.bt-col').forEach((t) => { const on = t.dataset.col === 'all'; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); });
       $$('.bt-tag').forEach((b) => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
       render();

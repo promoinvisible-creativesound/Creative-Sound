@@ -141,7 +141,7 @@
   if (!document.querySelector('link[href*="css/select-dd.css"]') && !getComputedStyle(document.documentElement).getPropertyValue('--sd-css')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'css/select-dd.css?v=1';
+    link.href = 'css/select-dd.css?v=2';
     document.head.appendChild(link);
   }
   const all = (root) => root.querySelectorAll && root.querySelectorAll('select:not([data-dd]):not([data-native]):not([multiple])').forEach(enhance);

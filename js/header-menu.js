@@ -229,19 +229,45 @@
       },
     });
     const badge = m.btn.querySelector('.hm-count');
-    // Phones: the inbox is a round button at the bottom right instead of an icon in the crowded header.
-    const fab = document.createElement('a');
-    fab.className = 'hm-inbox-fab';
-    fab.href = 'messages.html';
-    fab.setAttribute('aria-label', 'Messages');
-    fab.innerHTML = `${icon('chat')}<span class="hm-count" hidden></span>`;
-    if (!/messages\.html$/.test(location.pathname)) document.body.appendChild(fab);
-    const fabBadge = fab.querySelector('.hm-count');
+    // Phones: one small round button at the bottom right opens a short list (messages, cart, saved,
+    // orders, support) instead of crowding the header with icons.
+    const cartCount = () => { try { const c = JSON.parse(localStorage.getItem('bt-cart') || '[]'); return Array.isArray(c) ? c.length : 0; } catch (e) { return 0; } };
+    const hub = document.createElement('div');
+    hub.className = 'hm-hub';
+    const GRID = '<path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/>';
+    hub.innerHTML = `
+      <div class="hm-hub-panel" id="hm-hub-panel" role="menu" aria-label="Quick links" hidden>
+        <a href="messages.html" role="menuitem" data-hub="messages">${tile('chat')}<span>Messages</span><i class="hm-count" hidden></i></a>
+        <a href="beats.html?cart=1" role="menuitem" data-hub="cart">${tile('bag')}<span>Cart</span><i class="hm-count" hidden></i></a>
+        <a href="profile-saved.html" role="menuitem">${tile('heart')}<span>Saved tracks</span></a>
+        <a href="profile-orders.html" role="menuitem">${tile('box')}<span>My orders</span></a>
+        <a href="profile-tickets.html" role="menuitem">${tile('help')}<span>Support</span></a>
+      </div>
+      <button type="button" class="hm-hub-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="hm-hub-panel" aria-label="Quick links">
+        <svg class="hm-hub-ic" viewBox="0 0 24 24" aria-hidden="true">${GRID}</svg><svg class="hm-hub-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="hm-count" hidden></span>
+      </button>`;
+    if (!/messages\.html$/.test(location.pathname)) document.body.appendChild(hub);
+    const hubBtn = hub.querySelector('.hm-hub-btn'), hubPanel = hub.querySelector('.hm-hub-panel');
+    const setBadge = (el, n) => { el.hidden = !n; el.textContent = n > 9 ? '9+' : String(n); };
+    const paintCart = () => setBadge(hub.querySelector('[data-hub="cart"] .hm-count'), cartCount());
+    const closeHub = () => { hubPanel.hidden = true; hubBtn.setAttribute('aria-expanded', 'false'); hub.classList.remove('is-open'); };
+    hubBtn.addEventListener('click', () => {
+      const open = hubPanel.hidden;
+      if (open) paintCart();
+      hubPanel.hidden = !open; hubBtn.setAttribute('aria-expanded', String(open)); hub.classList.toggle('is-open', open);
+    });
+    document.addEventListener('pointerdown', (e) => { if (!hubPanel.hidden && !hub.contains(e.target)) closeHub(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHub(); });
+    // On the store the cart opens in place.
+    hub.querySelector('[data-hub="cart"]').addEventListener('click', (e) => {
+      const open = document.getElementById('bt-cart-open');
+      if (open) { e.preventDefault(); closeHub(); open.hidden = false; open.click(); }
+    });
     const paint = (n) => {
       badge.hidden = !n; badge.textContent = n > 9 ? '9+' : String(n);
-      fabBadge.hidden = !n; fabBadge.textContent = n > 9 ? '9+' : String(n);
-      const label = n ? `Messages, ${n} unread` : 'Messages';
-      m.btn.setAttribute('aria-label', label); fab.setAttribute('aria-label', label);
+      setBadge(hubBtn.querySelector('.hm-count'), n); setBadge(hub.querySelector('[data-hub="messages"] .hm-count'), n);
+      m.btn.setAttribute('aria-label', n ? `Messages, ${n} unread` : 'Messages');
+      hubBtn.setAttribute('aria-label', n ? `Quick links, ${n} unread message${n === 1 ? '' : 's'}` : 'Quick links');
     };
     const check = () => { if (document.hidden) return; fetch('/api/messages?op=unread').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) paint(d.unread); }).catch(() => {}); };
     check();

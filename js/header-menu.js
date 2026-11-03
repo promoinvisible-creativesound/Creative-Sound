@@ -229,7 +229,20 @@
       },
     });
     const badge = m.btn.querySelector('.hm-count');
-    const paint = (n) => { badge.hidden = !n; badge.textContent = n > 9 ? '9+' : String(n); m.btn.setAttribute('aria-label', n ? `Messages, ${n} unread` : 'Messages'); };
+    // Phones: the inbox is a round button at the bottom right instead of an icon in the crowded header.
+    const fab = document.createElement('a');
+    fab.className = 'hm-inbox-fab';
+    fab.href = 'messages.html';
+    fab.setAttribute('aria-label', 'Messages');
+    fab.innerHTML = `${icon('chat')}<span class="hm-count" hidden></span>`;
+    if (!/messages\.html$/.test(location.pathname)) document.body.appendChild(fab);
+    const fabBadge = fab.querySelector('.hm-count');
+    const paint = (n) => {
+      badge.hidden = !n; badge.textContent = n > 9 ? '9+' : String(n);
+      fabBadge.hidden = !n; fabBadge.textContent = n > 9 ? '9+' : String(n);
+      const label = n ? `Messages, ${n} unread` : 'Messages';
+      m.btn.setAttribute('aria-label', label); fab.setAttribute('aria-label', label);
+    };
     const check = () => { if (document.hidden) return; fetch('/api/messages?op=unread').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) paint(d.unread); }).catch(() => {}); };
     check();
     setInterval(check, 60000);

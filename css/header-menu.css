@@ -300,11 +300,12 @@ html.is-preview .header-utils #header-search-btn svg{ width:20px; height:20px; s
 @media (max-width:820px){
   .hm-hub-panel{ animation:hmHubIn 260ms cubic-bezier(0.34, 1.4, 0.5, 1) both; }
   .hm-hub-panel a{ animation:hmHubRow 280ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-  .hm-hub-panel a:nth-child(5){ animation-delay:50ms; }
-  .hm-hub-panel a:nth-child(4){ animation-delay:90ms; }
-  .hm-hub-panel a:nth-child(3){ animation-delay:130ms; }
+  .hm-hub-panel a:nth-child(6){ animation-delay:30ms; }
+  .hm-hub-panel a:nth-child(5){ animation-delay:65ms; }
+  .hm-hub-panel a:nth-child(4){ animation-delay:100ms; }
+  .hm-hub-panel a:nth-child(3){ animation-delay:135ms; }
   .hm-hub-panel a:nth-child(2){ animation-delay:170ms; }
-  .hm-hub-panel a:nth-child(1){ animation-delay:210ms; }
+  .hm-hub-panel a:nth-child(1){ animation-delay:205ms; }
   .hm-hub-ic, .hm-hub-x{ animation:hmHubTurn 260ms cubic-bezier(0.23, 1, 0.32, 1); }
   .hm-hub.is-open .hm-hub-btn{ border-color:rgba(232,134,44,0.85); box-shadow:0 12px 32px rgba(0,0,0,0.55), 0 0 28px rgba(232,134,44,0.35); }
 }

@@ -240,6 +240,7 @@
         <a href="messages.html" role="menuitem" data-hub="messages">${tile('chat')}<span>Messages</span><i class="hm-count" hidden></i></a>
         <a href="beats.html?cart=1" role="menuitem" data-hub="cart">${tile('bag')}<span>Cart</span><i class="hm-count" hidden></i></a>
         <a href="profile-saved.html" role="menuitem">${tile('heart')}<span>Saved tracks</span></a>
+        <a href="profile-offers.html" role="menuitem">${tile('receipt')}<span>Offers</span></a>
         <a href="profile-orders.html" role="menuitem">${tile('box')}<span>My orders</span></a>
         <a href="profile-tickets.html" role="menuitem">${tile('help')}<span>Support</span></a>
       </div>

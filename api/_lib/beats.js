@@ -44,7 +44,7 @@ function priceOf(beat, tier) {
 
 // Validates the cart sent by the browser against the live catalogue
 // (data/beats.json plus approved producer uploads).
-async function validateItems(raw) {
+async function validateItems(raw, session) {
   if (!Array.isArray(raw) || !raw.length) return { error: 'Your cart is empty.' };
   if (raw.length > MAX_ITEMS) return { error: `Up to ${MAX_ITEMS} beats per order.` };
   const seen = new Set();
@@ -58,6 +58,13 @@ async function validateItems(raw) {
     if (!LICENSES.tiers[tier] || !priceOf(beat, tier)) return { error: `The selected license is not available for "${beat.title}".` };
     if (seen.has(id)) return { error: `"${beat.title}" is in your cart twice.` };
     seen.add(id);
+    // An accepted offer (see _lib/offers.js) sets the price of this line.
+    if (it && it.offer) {
+      const offer = session ? await require('./offers').redeemable(it.offer, session.uid, id, tier) : null;
+      if (!offer) return { error: `The offer on "${beat.title}" is no longer valid. Remove it from the cart to buy at the listed price.` };
+      items.push({ beat, tier, price: offer.offer_cents, offerId: offer.id });
+      continue;
+    }
     items.push({ beat, tier, price: priceOf(beat, tier) });
   }
   return { items };
@@ -81,7 +88,7 @@ async function handleCheckout(req, res) {
     res.status(403).json({ error: 'Track licensing opens soon. You can save tracks with the heart in the meantime.' });
     return;
   }
-  const { items, error } = await validateItems(req.body && req.body.items);
+  const { items, error } = await validateItems(req.body && req.body.items, session);
   if (error) {
     res.status(400).json({ error });
     return;
@@ -96,8 +103,10 @@ async function handleCheckout(req, res) {
     if (codeUsed.error) { res.status(400).json({ error: codeUsed.error }); return; }
   }
   const site = test ? null : await discounts.getSiteSale();
-  const disc = test ? 0 : combine(bundlePct(items.length), site && site.pct, codeUsed && codeUsed.pct);
-  if (disc) items.forEach((it) => { it.price = discounted(it.price, disc); });
+  // Offer prices are final: no other discount on those lines.
+  const regular = items.filter((it) => !it.offerId);
+  const disc = test ? 0 : combine(bundlePct(regular.length), site && site.pct, codeUsed && codeUsed.pct);
+  if (disc) regular.forEach((it) => { it.price = discounted(it.price, disc); });
 
   // A track whose license leaves all rights with the buyer can be sold once.
   // While someone is paying for it, nobody else can start buying it (the hold
@@ -142,14 +151,14 @@ async function handleCheckout(req, res) {
       mode: 'payment',
       customer_email: session.email,
       client_reference_id: 'beats',
-      line_items: items.map(({ beat, tier, price }) => ({
+      line_items: items.map(({ beat, tier, price, offerId }) => ({
         quantity: 1,
         price_data: {
           currency: CATALOGUE.currency || 'eur',
           unit_amount: price,
           product_data: {
             name: `${test ? '[TEST] ' : ''}${beat.title} — ${LICENSES.tiers[tier].name}`,
-            description: `${disc ? `Discount -${disc}% · ` : ''}${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
+            description: `${offerId ? 'Accepted offer · ' : disc ? `Discount -${disc}% · ` : ''}${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
             metadata: { beat_id: beat.id, tier },
           },
         },
@@ -159,6 +168,7 @@ async function handleCheckout(req, res) {
         ...(test ? { test: '1' } : {}),
         ...(disc ? { disc: String(disc) } : {}),
         ...(codeUsed ? { code: codeUsed.code } : {}),
+        ...(items.some((it) => it.offerId) ? { offers: items.filter((it) => it.offerId).map((it) => it.offerId).join(',') } : {}),
         // What each line was charged (sales and bundle included), so earnings use the real price even if a sale ends meanwhile.
         paid: items.map(({ beat, tier, price }) => `${beat.id}:${tier}:${price}`).join(',').slice(0, 480),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
@@ -436,6 +446,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
   // Test purchases (admin, minimum price): no producer earnings, no sale email.
   if (!test) {
+    try { await require('./offers').markPaid(String((session.metadata && session.metadata.offers) || '').split(',')); } catch (err) { console.error('offer paid error:', err); }
     try { await discounts.recordUse(session.id, session.metadata && session.metadata.code); } catch (err) { console.error('code use error:', err); }
     const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: paid(beat, tier) })));
     sales.forEach((s) => { s.soldOut = items.some((it) => it.beat.id === s.beatId && takesOffStore(it.beat, it.tier)); });

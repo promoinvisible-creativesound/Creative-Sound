@@ -2282,16 +2282,19 @@
   const addToCart = (id, tier) => {
     if (!canBuy) return;
     const i = cart.findIndex((c) => c.id === id);
-    if (i >= 0) cart[i].tier = tier; else { cart.push({ id, tier }); logEvent(byId.get(id), 'cart'); }
+    if (i >= 0) { cart[i].tier = tier; delete cart[i].offer; delete cart[i].price; } else { cart.push({ id, tier }); logEvent(byId.get(id), 'cart'); }
     saveCart();
   };
   // Bundle discount, same table as api/_lib/bundle.js (the server is what charges).
   const bundlePct = (n) => (n >= 5 ? 15 : n >= 3 ? 10 : 0);
   // The team's general sale (from the catalogue) and a code typed in the cart stack with the bundle, capped at 70% off.
   let siteSale = null, codeApplied = null;
-  const cartPct = () => Math.min(70, Math.round(100 - [bundlePct(cart.length), siteSale && siteSale.pct, codeApplied && codeApplied.pct].reduce((k, p) => k * (100 - (p || 0)) / 100, 100)));
-  const cartSub = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);
-  const cartTotal = () => cart.reduce((s, c) => s + Math.max(50, Math.round(byId.get(c.id).prices[c.tier] * (100 - cartPct()) / 100)), 0);
+  // A line with an accepted offer (c.offer) keeps the offered price: no other discount on it.
+  const regularCount = () => cart.filter((c) => !c.offer).length;
+  const linePrice = (c) => (c.offer && c.price ? c.price : byId.get(c.id).prices[c.tier]);
+  const cartPct = () => Math.min(70, Math.round(100 - [bundlePct(regularCount()), siteSale && siteSale.pct, codeApplied && codeApplied.pct].reduce((k, p) => k * (100 - (p || 0)) / 100, 100)));
+  const cartSub = () => cart.reduce((s, c) => s + linePrice(c), 0);
+  const cartTotal = () => cart.reduce((s, c) => s + (c.offer ? linePrice(c) : Math.max(50, Math.round(linePrice(c) * (100 - cartPct()) / 100))), 0);
   function renderCart() {
     const n = cart.length;
     $('#bt-cart-count').textContent = String(n);
@@ -2300,14 +2303,14 @@
     $('#bt-cart-empty').hidden = n > 0;
     $('#bt-checkout').disabled = n === 0;
     $('#bt-cart-total').textContent = euro(cartTotal());
-    const pct = cartPct(), nextAt = n < 3 ? 3 : n < 5 ? 5 : 0, bundle = $('#bt-cart-bundle');
+    const reg = regularCount(), pct = cartPct(), nextAt = reg < 3 ? 3 : reg < 5 ? 5 : 0, bundle = $('#bt-cart-bundle');
     if (bundle) {
-      const parts = [bundlePct(n) ? `bundle -${bundlePct(n)}%` : '', siteSale ? `${siteSale.label || 'sale'} -${siteSale.pct}%` : '', codeApplied ? `code ${codeApplied.code} -${codeApplied.pct}%` : ''].filter(Boolean);
+      const parts = [bundlePct(reg) ? `bundle -${bundlePct(reg)}%` : '', siteSale ? `${siteSale.label || 'sale'} -${siteSale.pct}%` : '', codeApplied ? `code ${codeApplied.code} -${codeApplied.pct}%` : ''].filter(Boolean);
       bundle.hidden = n === 0 || (!pct && n < 2);
       bundle.classList.toggle('is-on', !!pct);
       bundle.textContent = pct
-        ? `${parts.join(' + ')}: you save ${euro(cartSub() - cartTotal())}${nextAt ? ` · add ${nextAt - n} more for a bigger bundle discount` : ''}`
-        : `Add ${3 - n} more track${3 - n === 1 ? '' : 's'} and get 10% off the whole order`;
+        ? `${parts.join(' + ')}: you save ${euro(cartSub() - cartTotal())}${nextAt ? ` · add ${nextAt - reg} more for a bigger bundle discount` : ''}`
+        : `Add ${3 - reg} more track${3 - reg === 1 ? '' : 's'} and get 10% off the whole order`;
     }
     const codeBox = $('#bt-code');
     if (codeBox) codeBox.hidden = n === 0;
@@ -2316,8 +2319,8 @@
       return `
         <li class="bt-cart-item ${tintClass(b)}" data-id="${esc(b.id)}">
           ${art(b)}
-          <span><a class="bt-cart-name" href="${beatUrl(b)}">${esc(b.title)}</a><span class="bt-cart-tier">${esc(LIC.tiers[c.tier].name)} · ${esc(b.producer)}</span></span>
-          <span class="bt-cart-side"><span class="bt-cart-price">${euro(b.prices[c.tier])}</span><button type="button" class="bt-cart-remove" aria-label="Remove ${esc(b.title)} from cart">Remove</button></span>
+          <span><a class="bt-cart-name" href="${beatUrl(b)}">${esc(b.title)}</a><span class="bt-cart-tier">${esc(LIC.tiers[c.tier].name)} · ${esc(b.producer)}${c.offer ? ' · your offer' : ''}</span></span>
+          <span class="bt-cart-side"><span class="bt-cart-price">${euro(linePrice(c))}</span><button type="button" class="bt-cart-remove" aria-label="Remove ${esc(b.title)} from cart">Remove</button></span>
           ${onceShort(b, c.tier)}
         </li>`;
     }).join('');

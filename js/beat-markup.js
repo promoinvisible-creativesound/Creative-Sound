@@ -91,6 +91,7 @@
               </label>`;
               }).join(`${EOL}            `)}
             </div>
+            ${b.source === 'producer' ? `<button type="button" class="bp-offer" data-offer-make="${esc(b.id)}" data-offer-title="${esc(b.title)}" data-offer-tiers="${esc(JSON.stringify(tiers.map((id) => ({ id, name: LIC.tiers[id].name, cents: b.prices[id] }))))}">Make an offer</button>` : ''}
           </div>
           <div class="bp-usage-box" aria-live="polite">
             <h3 id="bp-usage-title"></h3>

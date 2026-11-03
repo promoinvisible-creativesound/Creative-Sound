@@ -2233,7 +2233,10 @@
     if (i >= 0) cart[i].tier = tier; else { cart.push({ id, tier }); logEvent(byId.get(id), 'cart'); }
     saveCart();
   };
-  const cartTotal = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);
+  // Bundle discount, same table as api/_lib/bundle.js (the server is what charges).
+  const bundlePct = (n) => (n >= 5 ? 15 : n >= 3 ? 10 : 0);
+  const cartSub = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);
+  const cartTotal = () => cart.reduce((s, c) => s + Math.round(byId.get(c.id).prices[c.tier] * (100 - bundlePct(cart.length)) / 100), 0);
   function renderCart() {
     const n = cart.length;
     $('#bt-cart-count').textContent = String(n);
@@ -2242,6 +2245,14 @@
     $('#bt-cart-empty').hidden = n > 0;
     $('#bt-checkout').disabled = n === 0;
     $('#bt-cart-total').textContent = euro(cartTotal());
+    const pct = bundlePct(n), nextAt = n < 3 ? 3 : n < 5 ? 5 : 0, bundle = $('#bt-cart-bundle');
+    if (bundle) {
+      bundle.hidden = n === 0 || (!pct && n < 2);
+      bundle.classList.toggle('is-on', !!pct);
+      bundle.textContent = pct
+        ? `Bundle -${pct}%: you save ${euro(cartSub() - cartTotal())}${nextAt ? ` · add ${nextAt - n} more for -${bundlePct(nextAt)}%` : ''}`
+        : `Add ${3 - n} more track${3 - n === 1 ? '' : 's'} and get 10% off the whole order`;
+    }
     $('#bt-cart-list').innerHTML = cart.map((c) => {
       const b = byId.get(c.id);
       return `

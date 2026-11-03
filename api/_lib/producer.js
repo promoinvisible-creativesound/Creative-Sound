@@ -742,10 +742,42 @@ async function handleAdminReview(req, res) {
     } catch (err) {
       console.error('review email error:', err);
     }
+    if (decision === 'approved') await mailFollowers(sub);
     res.status(200).json({ ok: true, id: sub.id, status: sub.status });
   } catch (err) {
     console.error('admin review error:', err);
     res.status(500).json({ error: 'Something went wrong.' });
+  }
+}
+
+// People who follow the producer get an email about the new track (errors never block the approval).
+async function mailFollowers(sub) {
+  try {
+    const follows = require('./follows');
+    const emails = (await follows.followerEmails(sub.user_id)).filter((e) => e && e !== sub.email);
+    if (!emails.length) return;
+    const [u] = await sql`SELECT handle FROM users WHERE id = ${sub.user_id}`;
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const site = process.env.SITE_URL || 'https://creativesound.io';
+    const trackUrl = `${site}/track.html?id=${encodeURIComponent(trackId(sub))}`;
+    const html = tpl.renderEmail({
+      siteUrl: site,
+      preheader: `${sub.producer_name} just put ${sub.title} in the store.`,
+      kicker: 'New track',
+      title: `${sub.title} is out`,
+      content: [
+        tpl.paragraph(`${tpl.esc(sub.producer_name)}, a producer you follow, has a new track in the Creative Sound store.`),
+        `<div style="margin-top:22px;">${tpl.button(trackUrl, 'Listen now')}${u && u.handle ? tpl.button(`${site}/@${u.handle}`, 'See all their tracks', { primary: false }) : ''}</div>`,
+        tpl.paragraph('You get this because you follow this producer. Unfollow any time from their page.'),
+      ].join(''),
+    });
+    for (let i = 0; i < emails.length; i += 100) {
+      const batch = emails.slice(i, i + 100).map((to) => ({ from: process.env.FROM_EMAIL, to, subject: `New track from ${sub.producer_name}: ${sub.title}`, html }));
+      const { error } = await resend.batch.send(batch);
+      if (error) console.error('follower email error:', error);
+    }
+  } catch (err) {
+    console.error('follower email error:', err);
   }
 }
 

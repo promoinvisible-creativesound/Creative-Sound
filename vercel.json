@@ -105,6 +105,10 @@
       "destination": "/api/tickets?action=profile-store"
     },
     {
+      "source": "/api/profile/follow",
+      "destination": "/api/tickets?action=profile-follow"
+    },
+    {
       "source": "/api/beats/code",
       "destination": "/api/tickets?action=beats-code"
     },

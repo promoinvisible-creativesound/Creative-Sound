@@ -16,6 +16,7 @@
   const ROLE = { producer: 'Producer', artist: 'Artist', listener: 'Member' };
   const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  const ICON_FOLLOW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   const ICON_SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
   const ICON_MSG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
   const ICON_EDIT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
@@ -156,7 +157,7 @@
             ${store.headline ? `<p class="sf-headline">${esc(store.headline)}</p>` : ''}
             ${p.bio ? `<p class="pf-bio">${esc(p.bio)}</p>` : ''}
             <div class="pf-meta">
-              <span class="sf-actions" data-actions><button type="button" class="sf-act" data-share>${ICON_SHARE}<span>Share</span></button></span>
+              <span class="sf-actions" data-actions>${isProducer ? `<button type="button" class="sf-act sf-follow" data-follow aria-pressed="false">${ICON_FOLLOW}<span>Follow</span></button>` : ''}<button type="button" class="sf-act" data-share>${ICON_SHARE}<span>Share</span></button></span>
               ${p.instagram ? `<a class="pf-social" href="https://instagram.com/${encodeURIComponent(p.instagram)}" target="_blank" rel="noopener noreferrer">${ICON_IG}Instagram</a>` : ''}
               ${p.tiktok ? `<a class="pf-social" href="https://www.tiktok.com/@${encodeURIComponent(p.tiktok)}" target="_blank" rel="noopener noreferrer">${ICON_TT}TikTok</a>` : ''}
               ${p.youtube ? `<a class="pf-social" href="${esc(p.youtube)}" target="_blank" rel="noopener noreferrer">${ICON_YT}YouTube</a>` : ''}
@@ -221,6 +222,28 @@
           }).catch(() => { window.prompt('Copy your link', link); });
         }
       });
+      // Follow: an email when this producer has a new track.
+      const followBtn = root.querySelector('[data-follow]');
+      if (followBtn) {
+        const paintFollow = (st) => {
+          followBtn.classList.toggle('is-on', !!st.following);
+          followBtn.setAttribute('aria-pressed', String(!!st.following));
+          followBtn.querySelector('span').textContent = st.following ? 'Following' : 'Follow';
+          followBtn.title = st.count ? `${st.count} follower${st.count === 1 ? '' : 's'}` : '';
+        };
+        fetch(`/api/profile/follow?u=${encodeURIComponent(p.handle)}`).then((r) => (r.ok ? r.json() : null)).then((st) => { if (st) { followBtn._st = st; paintFollow(st); } }).catch(() => {});
+        followBtn.addEventListener('click', async () => {
+          const now = followBtn._st || { following: false, count: 0 };
+          followBtn.disabled = true;
+          try {
+            const res = await fetch('/api/profile/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ handle: p.handle, follow: !now.following }) });
+            if (res.status === 401) { window.location.href = `login.html?next=${encodeURIComponent(location.pathname)}`; return; }
+            const st = await res.json().catch(() => null);
+            if (res.ok && st) { followBtn._st = st; paintFollow(st); }
+          } finally { followBtn.disabled = false; }
+        });
+        Promise.resolve(window.csMe).then((me) => { if (me && me.handle && me.handle.toLowerCase() === p.handle.toLowerCase()) followBtn.hidden = true; });
+      }
       const sel = root.querySelector('[data-sort]');
       if (sel) sel.addEventListener('change', () => { sort = sel.value; paint(); });
 

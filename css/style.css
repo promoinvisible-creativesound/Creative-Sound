@@ -2799,3 +2799,12 @@ html::-webkit-scrollbar-track{ background:#0a0a09; }
 
 /* Soft black page (not pure #000) with a faint warm amber wash at the top; the dotted plexus is gone. */
 body{ background:var(--bg) radial-gradient(120% 520px at 50% 0, rgba(232,134,44,0.035), transparent 70%) no-repeat; }
+
+/* Smoothness on touch screens and small viewports: no live blur of what's behind (the costliest thing
+   to repaint while scrolling) and no always-running decorative loops. Layout and colours are unchanged. */
+@media (pointer:coarse), (max-width:820px){
+  *, *::before, *::after, ::backdrop{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  .bt-card::before, .bt-feat-ring, .bt-feat-rank-big, .beat-page .bp-cover .bt-art img, #site-footer::before, .pack-hub-art::after, .pack-hero-art-portrait::before,
+  .bt-feat-dot{ animation:none !important; }
+  .bt-feat-ambient{ filter:none !important; }
+}

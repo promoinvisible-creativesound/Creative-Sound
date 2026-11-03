@@ -105,6 +105,10 @@
       "destination": "/api/tickets?action=profile-store"
     },
     {
+      "source": "/api/producer/sale",
+      "destination": "/api/tickets?action=producer-sale"
+    },
+    {
       "source": "/api/producer/stats",
       "destination": "/api/tickets?action=producer-stats"
     },

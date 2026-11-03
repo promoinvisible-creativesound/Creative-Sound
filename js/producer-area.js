@@ -23,6 +23,23 @@
   const open = new Set();
   const num = (n) => (n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n || 0));
   const SRC = { direct: 'Direct', youtube: 'YouTube', instagram: 'Instagram', tiktok: 'TikTok', google: 'Google', facebook: 'Facebook', x: 'X', reddit: 'Reddit', bing: 'Bing', duckduckgo: 'DuckDuckGo' };
+  const saleOpen = new Set();
+  const SALE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12l-8 8-9-9V4h7l10 8zM7.5 8.5h.01"/></svg>';
+  const left = (until) => { const d = Math.max(0, Math.ceil((new Date(until) - Date.now()) / 864e5)); return d <= 1 ? 'ends today' : `${d} days left`; };
+  // Sale panel: percent off every price of the track for a few days.
+  function salePanel(s) {
+    const opt = (vals, cur, fmt) => vals.map((v) => `<option value="${v}"${v === cur ? ' selected' : ''}>${fmt(v)}</option>`).join('');
+    return `<div class="pa-sale" id="pa-sale-${s.id}" data-sale-panel="${s.id}">
+      <p class="pa-sale-info">${s.sale ? `<b>-${s.sale.pct}% is on</b> · ${left(s.sale.until)}. The store, the cart and your earnings use the sale price.` : 'Put this track on sale: every price goes down by the percent you pick, for the days you pick.'}</p>
+      <div class="pa-sale-row">
+        <label>Discount<select data-sale="pct">${opt([10, 15, 20, 25, 30, 40, 50], s.sale ? s.sale.pct : 20, (v) => `${v}% off`)}</select></label>
+        <label>Lasts<select data-sale="days">${opt([1, 3, 7, 14, 30], 7, (v) => (v === 1 ? '1 day' : `${v} days`))}</select></label>
+        <button type="button" class="btn btn-primary" data-sale-go="${s.id}">${s.sale ? 'Update sale' : 'Start sale'}</button>
+        ${s.sale ? `<button type="button" class="btn btn-ghost" data-sale-end="${s.id}">End sale</button>` : ''}
+      </div>
+      <p class="up-error" data-sale-err hidden></p>
+    </div>`;
+  }
   const STATS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>';
 
   // Per-track stats: last 30 days in the tiles (all time underneath),
@@ -99,9 +116,10 @@
           <div class="pa-row-actions">
             ${s.storeUrl ? `<a class="pa-act" href="${esc(s.storeUrl)}">${OPEN_ICON}<span>View</span></a>` : ''}
             ${s.status === 'approved' && !s.sold ? `<a class="pa-act" href="upload-beat.html?edit=${s.id}">${EDIT_ICON}<span>Edit</span></a>` : ''}
+            ${s.status === 'approved' && !s.sold ? `<button type="button" class="pa-act${s.sale ? ' is-sale' : ''}" data-sale-toggle="${s.id}" aria-expanded="${saleOpen.has(s.id)}" aria-controls="pa-sale-${s.id}">${SALE_ICON}<span>${s.sale ? `-${s.sale.pct}%` : 'Sale'}</span></button>` : ''}
             ${s.status === 'approved' ? `<button type="button" class="pa-act pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
           </div>
-        </article>${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
+        </article>${s.status === 'approved' && saleOpen.has(s.id) ? salePanel(s) : ''}${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';
   }
 
@@ -111,7 +129,24 @@
     });
   }
 
-  list.addEventListener('click', (e) => {
+  list.addEventListener('click', async (e) => {
+    const tg = e.target.closest('[data-sale-toggle]');
+    if (tg) { const id = Number(tg.dataset.saleToggle); if (saleOpen.has(id)) saleOpen.delete(id); else saleOpen.add(id); render(); return; }
+    const go = e.target.closest('[data-sale-go], [data-sale-end]');
+    if (go) {
+      const id = Number(go.dataset.saleGo || go.dataset.saleEnd);
+      const box = go.closest('[data-sale-panel]'), err = box.querySelector('[data-sale-err]');
+      const end = go.hasAttribute('data-sale-end');
+      go.disabled = true; err.hidden = true;
+      try {
+        const res = await fetch('/api/producer/sale', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, pct: end ? 0 : Number(box.querySelector('[data-sale="pct"]').value), days: Number(box.querySelector('[data-sale="days"]').value) }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save the sale.');
+        const row = all.find((x) => x.id === id); if (row) row.sale = data.sale;
+        render();
+      } catch (ex) { err.textContent = ex.message; err.hidden = false; go.disabled = false; }
+      return;
+    }
     const btn = e.target.closest('[data-stats]');
     if (!btn) return;
     const id = Number(btn.dataset.stats);

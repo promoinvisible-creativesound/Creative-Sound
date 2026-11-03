@@ -525,6 +525,7 @@ async function handleSubmissions(req, res) {
         prices: r.prices, reviewNote: r.review_note, submittedAt: r.submitted_at, reviewedAt: r.reviewed_at,
         storeUrl: r.status === 'approved' && !r.sold_at ? `track.html?id=${trackId(r)}` : null,
         sold: !!r.sold_at, soldAt: r.sold_at || null, soldTier: r.sold_tier || null,
+        sale: Number(r.sale_pct) > 0 && r.sale_until && new Date(r.sale_until) > new Date() ? { pct: Number(r.sale_pct), until: r.sale_until } : null,
         cover: r.status === 'approved' && r.files && r.files.artwork ? `/api/beats/media?id=${trackId(r)}&kind=artwork&s=xs` : null,
         changesStatus: r.changes_status || null, changesNote: r.changes_note || null, changesAt: r.changes_at || null,
         // For the edit page

@@ -20,6 +20,8 @@ function ensureColumns() {
     ready = (async () => {
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS free_download BOOLEAN NOT NULL DEFAULT false`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS peaks JSONB`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sale_pct INTEGER`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sale_until TIMESTAMPTZ`;
       await sql`CREATE TABLE IF NOT EXISTS beat_free_downloads (id SERIAL PRIMARY KEY, submission_id INTEGER NOT NULL, user_id INTEGER, email TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
       await sql`ALTER TABLE beat_free_downloads ADD COLUMN IF NOT EXISTS terms_version TEXT`;
       await sql`CREATE TABLE IF NOT EXISTS beat_lyrics (user_id INTEGER NOT NULL, beat_id TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (user_id, beat_id))`;
@@ -169,4 +171,34 @@ async function handleStats(req, res) {
   }
 }
 
-module.exports = { handleFree, handlePeaks, handleLyrics, ensureColumns, handleEvent, handleStats };
+/* ---------------------------------- Sales ---------------------------------- */
+// A producer puts one of their approved tracks on sale for a few days:
+// POST /api/producer/sale { id, pct, days }   (pct 0 ends the sale now)
+// The catalogue applies it to every price (catalogue.js toBeat), so the
+// store, the cart, Stripe and the producer's earnings all use the sale price.
+async function handleSale(req, res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'Please sign in.' }); return; }
+  const body = req.body || {};
+  const id = Number(body.id), pct = Math.round(Number(body.pct) || 0), days = Math.round(Number(body.days) || 0);
+  if (!Number.isInteger(id)) { res.status(400).json({ error: 'Unknown track.' }); return; }
+  if (pct !== 0 && (pct < 5 || pct > 50)) { res.status(400).json({ error: 'A sale takes 5% to 50% off.' }); return; }
+  if (pct !== 0 && (days < 1 || days > 30)) { res.status(400).json({ error: 'A sale lasts 1 to 30 days.' }); return; }
+  try {
+    await ensureColumns();
+    const rows = pct
+      ? await sql`UPDATE beat_submissions SET sale_pct = ${pct}, sale_until = now() + (${days} * interval '1 day')
+          WHERE id = ${id} AND user_id = ${session.uid} AND status = 'approved' RETURNING id, sale_pct, sale_until`
+      : await sql`UPDATE beat_submissions SET sale_pct = NULL, sale_until = NULL
+          WHERE id = ${id} AND user_id = ${session.uid} RETURNING id, sale_pct, sale_until`;
+    if (!rows.length) { res.status(404).json({ error: 'Track not found.' }); return; }
+    res.status(200).json({ ok: true, sale: pct ? { pct: rows[0].sale_pct, until: rows[0].sale_until } : null });
+  } catch (err) {
+    console.error('producer sale error:', err);
+    res.status(500).json({ error: 'Could not save the sale.' });
+  }
+}
+
+module.exports = { handleSale, handleFree, handlePeaks, handleLyrics, ensureColumns, handleEvent, handleStats };

@@ -86,7 +86,7 @@
                 <input type="radio" name="bp-tier" value="${id}">
                 <span class="bt-tier-radio" aria-hidden="true"></span>
                 <span><span class="bp-tier-name">${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}</span><span class="bp-tier-files">${esc(t.files.map((f) => LIC.fileLabels[f]).join(' + '))}</span></span>
-                <span class="bp-tier-price">${euro(b.prices[id])}</span>
+                <span class="bp-tier-price">${b.listPrices ? `<s class="bt-was">${euro(b.listPrices[id])}</s>` : ''}${euro(b.prices[id])}</span>
               </label>`;
               }).join(`${EOL}            `)}
             </div>

@@ -28,9 +28,21 @@ const isTrackId = (id) => submissionIdOf(id) != null;
 // "A & B", "A, B & C"
 const joinNames = (n) => (n.length <= 2 ? n.join(' & ') : `${n.slice(0, -1).join(', ')} & ${n[n.length - 1]}`);
 
+// A producer sale that is still running: percent off every price until its end date.
+function activeSale(row) {
+  const pct = Number(row.sale_pct) || 0;
+  const until = row.sale_until ? new Date(row.sale_until) : null;
+  return pct > 0 && until && until.getTime() > Date.now() ? { pct, until: until.toISOString() } : null;
+}
+
 function toBeat(row) {
   const id = trackId(row);
+  const sale = activeSale(row);
+  const list = row.prices || {};
+  const prices = sale ? Object.fromEntries(Object.entries(list).map(([t, c]) => [t, Math.max(50, Math.round(c * (100 - sale.pct) / 100))])) : list;
   return {
+    sale,
+    listPrices: sale ? list : null,
     id,
     source: 'producer',
     title: row.title,
@@ -50,7 +62,7 @@ function toBeat(row) {
     typeBeat: row.type_beat || [],
     about: row.about || '',
     released: new Date(row.reviewed_at || row.submitted_at || Date.now()).toISOString().slice(0, 10),
-    prices: row.prices || {},
+    prices,
     tint: TINTS[row.id % TINTS.length],
     // Colour from the cover (borders, glows); the tint is the fallback.
     accent: /^#[0-9a-f]{6}$/i.test(row.accent || '') ? row.accent : null,
@@ -91,6 +103,8 @@ function ensureSoldColumns() {
     soldColumns = (async () => {
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_tier TEXT`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sale_pct INTEGER`;
+      await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sale_until TIMESTAMPTZ`;
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS sold_session TEXT`;
       // A checkout in progress that would take the track off the store holds it.
       await sql`ALTER TABLE beat_submissions ADD COLUMN IF NOT EXISTS reserved_by INTEGER`;

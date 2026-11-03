@@ -278,7 +278,7 @@
         </button>
         <span class="bt-glare" aria-hidden="true"></span>
         <span class="bt-eq" aria-hidden="true"><i></i><i></i><i></i></span>
-        ${b.freeDownload ? '<span class="bt-free-badge">Free download</span>' : ''}
+        ${b.sale ? `<span class="bt-free-badge bt-sale-badge">-${b.sale.pct}%</span>` : b.freeDownload ? '<span class="bt-free-badge">Free download</span>' : ''}
         ${saveButton(b)}
       </div>
       <div class="bt-body">
@@ -2185,7 +2185,7 @@
             <span class="bt-tier-name">${esc(t.unlimited ? t.name.replace(/\s*unlimited$/i, '') : t.name)}${t.unlimited ? '<span class="bt-tier-pill">Unlimited</span>' : ''}</span>
             <span class="bt-tier-files">${esc(t.files.map((f) => LIC.fileLabels[f]).join(' + '))}</span>
           </span>
-          <span class="bt-tier-price">${euro(beat.prices[id])}</span>
+          <span class="bt-tier-price">${beat.listPrices ? `<s class="bt-was">${euro(beat.listPrices[id])}</s>` : ''}${euro(beat.prices[id])}</span>
         </label>`;
     }).join('') + '<div id="bt-license-once"></div>';
     $('#bt-license-terms').innerHTML = termsTable(beat);

@@ -150,6 +150,8 @@ async function handleCheckout(req, res) {
         kind: 'beats',
         ...(test ? { test: '1' } : {}),
         ...(disc ? { disc: String(disc) } : {}),
+        // What each line was charged (sales and bundle included), so earnings use the real price even if a sale ends meanwhile.
+        paid: items.map(({ beat, tier, price }) => `${beat.id}:${tier}:${price}`).join(',').slice(0, 480),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
       },
       ...(onceNotes.length ? { custom_text: { submit: { message: onceNotes.join(' ').slice(0, 1100) } } } : {}),
@@ -343,7 +345,8 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   let items = await parseItems(session.metadata && session.metadata.items);
   const test = !!(session.metadata && session.metadata.test === '1');
   const disc = Number(session.metadata && session.metadata.disc) || 0;
-  const paid = (beat, tier) => (test ? TEST_PRICE : discounted(priceOf(beat, tier), disc));
+  const charged = new Map(String((session.metadata && session.metadata.paid) || '').split(',').map((x) => x.split(':')).filter((p) => p.length === 3).map(([id, t, c]) => [`${id}:${t}`, Number(c)]));
+  const paid = (beat, tier) => (test ? TEST_PRICE : (charged.get(`${beat.id}:${tier}`) || discounted(priceOf(beat, tier), disc)));
   if (!items.length) throw new Error(`Beat checkout ${session.id} has no readable items.`);
   const buyerName = (session.customer_details && session.customer_details.name) || '';
   const currency = session.currency || CATALOGUE.currency || 'eur';

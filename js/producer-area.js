@@ -86,10 +86,16 @@
   const OPEN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
   const EDIT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg>';
   let filter = 'all';
+  let query = '';
+  // Title, genre, mood, key, BPM, tags and co-producers, every word must match.
+  const matches = (s) => {
+    const hay = [s.title, s.genre, s.mood, s.key, s.bpm, s.producerName, ...(s.tags || []), ...(s.typeBeat || []), ...(s.coProducers || []).map((c) => c.name)].join(' ').toLowerCase();
+    return query.split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
+  };
   const list = $('#pa-list');
 
   function render() {
-    const rows = filter === 'all' ? all : all.filter((s) => s.status === filter);
+    const rows = (filter === 'all' ? all : all.filter((s) => s.status === filter)).filter(matches);
     list.removeAttribute('aria-busy');
     $('#pa-empty').hidden = all.length > 0;
     list.hidden = all.length === 0;
@@ -120,7 +126,7 @@
             ${s.status === 'approved' ? `<button type="button" class="pa-act pa-st-btn${open.has(s.id) ? ' is-open' : ''}" data-stats="${s.id}" aria-expanded="${open.has(s.id)}" aria-controls="pa-st-${s.id}">${STATS_ICON}<span>${num((stats[s.id] && stats[s.id].d30.play) || 0)} plays</span></button>` : ''}
           </div>
         </article>${s.status === 'approved' && saleOpen.has(s.id) ? salePanel(s) : ''}${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
-    }).join('') : '<p class="pa-none">No tracks with this status.</p>';
+    }).join('') : `<p class="pa-none">${query ? 'No track matches your search.' : 'No tracks with this status.'}</p>`;
     if (window.CSSelect) list.querySelectorAll('.pa-sale select').forEach((el) => window.CSSelect.enhance(el));
   }
 
@@ -159,6 +165,9 @@
     stats = d.tracks;
     render();
   }).catch(() => {});
+
+  const searchBox = $('#pa-search');
+  if (searchBox) searchBox.addEventListener('input', () => { query = searchBox.value.trim().toLowerCase(); render(); });
 
   page.querySelector('.pa-filter').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filter]');

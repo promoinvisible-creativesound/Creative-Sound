@@ -1234,3 +1234,11 @@
 .rv-code span{ font-size:12.5px; color:#aeaba2; }
 .rv-code.is-off{ opacity:0.55; }
 @media (max-width:600px){ .rv-disc-row label{ flex:1 1 40%; min-width:0; } .rv-disc-row .rv-disc-wide{ flex:1 1 100%; } .rv-disc-row .btn{ flex:1 1 100%; height:46px; } }
+
+/* Search your tracks */
+.pa-search{ position:relative; display:block; margin:0 0 14px; }
+.pa-search svg{ position:absolute; left:14px; top:50%; width:18px; height:18px; margin-top:-9px; fill:none; stroke:#9d9da3; stroke-width:2; stroke-linecap:round; pointer-events:none; }
+.pa-search input{ width:100%; height:46px; padding:0 14px 0 42px; border-radius:999px; border:1px solid rgba(255,255,255,0.14); background:#0d0d0c; color:#f5f3ee; font:inherit; font-size:15px; }
+.pa-search input::placeholder{ color:#8d8a82; }
+.pa-search input:focus{ outline:none; border-color:var(--accent); }
+.pa-search input::-webkit-search-cancel-button{ filter:invert(1); opacity:0.6; }

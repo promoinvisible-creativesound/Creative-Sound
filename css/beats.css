@@ -2603,3 +2603,8 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 .of-actions .btn{ flex:1; height:46px; }
 .of-left{ margin:8px 0 0; font-size:12.5px; color:#ffd9a8; }
 @media (max-width:560px){ .of-wrap{ padding:0 16px 40px; } .of-actions{ flex-direction:column-reverse; } }
+/* Top tracks on phones: the arrows sit as far from the card's edge as the cover does from its top (16px) */
+@media (max-width:640px){
+  .bt-feat-nav.prev{ left:16px; right:auto; }
+  .bt-feat-nav.next{ right:16px; left:auto; }
+}

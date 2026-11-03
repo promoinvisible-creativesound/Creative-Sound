@@ -86,6 +86,16 @@
     };
   }
 
+  // Reasons used again and again when sending a track back: one tap adds the sentence to the note.
+  const QUICK = [
+    ['Voice tag', 'The MP3 and WAV must be untagged: a voice tag or watermark is still in the file.'],
+    ['Clipping', 'The audio is clipping or too loud. Re-export with more headroom (peaks under -1 dBFS).'],
+    ['Cover', 'The cover must be square and at least 1000 × 1000 px.'],
+    ['WAV format', 'The WAV must be 24-bit (16-bit is accepted) and untagged.'],
+    ['Stems', 'The stems are missing tracks, or are not labelled. Name each file after its instrument.'],
+    ['BPM / key', 'The BPM or key on the form does not match the audio. Please check them.'],
+    ['Not original', 'We could not confirm that this track is fully yours (samples, loops or beats from others).'],
+  ];
   function card(s) {
     s = proposed(s);
     const reviewable = s.status === 'pending' || s.isChange;
@@ -128,6 +138,7 @@
             <label class="up-field up-field-wide"><span>Note to the producer <i>Required to send back, optional to approve</i></span>
               <textarea rows="2" maxlength="1000" placeholder="E.g. the WAV still has the voice tag at 0:12."></textarea>
             </label>
+            <div class="rv-quick" role="group" aria-label="Quick notes">${QUICK.map(([k, t]) => `<button type="button" data-quick="${esc(t)}">${esc(k)}</button>`).join('')}</div>
             <div class="rv-actions">
               <button type="button" class="btn btn-ghost rv-reject" data-decision="reject">Send back</button>
               <button type="button" class="btn btn-primary rv-approve" data-decision="approve">${s.isChange ? 'Approve changes' : 'Approve'}</button>
@@ -241,6 +252,7 @@
     // The list is rebuilt, so stop whatever preview was playing.
     audio.pause();
     current = null;
+    if (status !== 'pending') { const old = $('#rv-bar'); if (old) old.remove(); }
     list.setAttribute('aria-busy', 'true');
     $('#rv-error').hidden = true;
     if (status === 'discounts') {
@@ -260,6 +272,8 @@
       $('#rv-n').textContent = data.pendingCount ? String(data.pendingCount) : '';
       list.innerHTML = data.submissions.length ? data.submissions.map(card).join('')
         : `<p class="pa-none">${status === 'pending' ? 'Nothing to review. All caught up.' : 'Nothing here yet.'}</p>`;
+      focusIdx = -1;
+      paintBar();
       runChecks();
       autoPrepare();
     } catch (err) {
@@ -356,7 +370,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not save the decision.');
       // Fold the card away, then refresh the counts.
-      const done = () => load();
+      const done = () => load().then(() => { const next = list.querySelector('.rv-card'); if (next && next.getBoundingClientRect().top < 0) next.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) done();
       else cardEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(24px)' }], { duration: 220, easing: 'cubic-bezier(0.23, 1, 0.32, 1)', fill: 'forwards' }).finished.then(done, done);
     } catch (e2) {
@@ -489,6 +503,65 @@
   // Every check of a card (cover, audio formats, archives). On cards to
   // review they run at once and end in a summary; history cards check their
   // files only when opened.
+  /* Queue bar: how many passed the automatic checks, and a filter. */
+  let qfilter = 'all';
+  function paintBar() {
+    let bar = $('#rv-bar');
+    const cards = [...list.querySelectorAll('.rv-card[data-state], .rv-card')].filter((c) => c.querySelector('[data-auto]'));
+    if (status !== 'pending' || !cards.length) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'rv-bar'; bar.className = 'rv-bar';
+      list.parentNode.insertBefore(bar, list);
+    }
+    const clean = cards.filter((c) => c.dataset.state === 'clean').length;
+    const bad = cards.filter((c) => c.dataset.state === 'problem').length;
+    const wait = cards.length - clean - bad;
+    bar.innerHTML = `<div class="rv-bar-row" role="group" aria-label="Show">
+      <button type="button" data-qf="all" class="${qfilter === 'all' ? 'is-on' : ''}">All <b>${cards.length}</b></button>
+      <button type="button" data-qf="clean" class="${qfilter === 'clean' ? 'is-on' : ''}">Checks passed <b>${clean}</b></button>
+      <button type="button" data-qf="problem" class="${qfilter === 'problem' ? 'is-on' : ''}">Problems <b>${bad}</b></button>
+      ${wait ? `<span class="rv-bar-wait">${wait} checking…</span>` : ''}</div>
+      <p class="rv-keys">Keys: <kbd>J</kbd> <kbd>K</kbd> next / previous · <kbd>A</kbd> approve · <kbd>N</kbd> write a note</p>`;
+    cards.forEach((c) => { c.hidden = qfilter !== 'all' && c.dataset.state !== qfilter; });
+  }
+  page.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-qf]');
+    if (!b) return;
+    qfilter = b.dataset.qf;
+    paintBar();
+  });
+  list.addEventListener('click', (e) => {
+    const q = e.target.closest('[data-quick]');
+    if (!q) return;
+    const ta = $('textarea', q.closest('.rv-card'));
+    ta.value = ta.value.trim() ? `${ta.value.trim()}\n${q.dataset.quick}` : q.dataset.quick;
+    ta.focus();
+  });
+  // Keyboard: J/K move between tracks, A approves the highlighted one, N jumps to its note.
+  let focusIdx = -1;
+  const visibleCards = () => [...list.querySelectorAll('.rv-card')].filter((c) => !c.hidden && c.querySelector('[data-auto]'));
+  const focusCard = (i) => {
+    const cs = visibleCards();
+    if (!cs.length) return;
+    focusIdx = Math.max(0, Math.min(cs.length - 1, i));
+    list.querySelectorAll('.rv-card.is-focus').forEach((c) => c.classList.remove('is-focus'));
+    cs[focusIdx].classList.add('is-focus');
+    cs[focusIdx].scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+  document.addEventListener('keydown', (e) => {
+    if (status !== 'pending' || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) || e.target.isContentEditable) return;
+    const k = e.key.toLowerCase();
+    if (k === 'j') { e.preventDefault(); focusCard(focusIdx + 1); }
+    else if (k === 'k') { e.preventDefault(); focusCard(focusIdx - 1); }
+    else if (k === 'a' || k === 'n') {
+      const c = list.querySelector('.rv-card.is-focus');
+      if (!c) return;
+      e.preventDefault();
+      if (k === 'a') { const btn = $('[data-decision="approve"]', c); if (btn && !btn.disabled) btn.click(); } else $('textarea', c).focus();
+    }
+  });
+
   function runChecks(root = list) {
     root.querySelectorAll('.rv-card').forEach((cardEl) => {
       if (cardEl.dataset.checked) return;
@@ -536,6 +609,8 @@
   function paintAuto(cardEl, problems) {
     const box = cardEl.querySelector('[data-auto]');
     if (!box) return;
+    cardEl.dataset.state = problems.length ? 'problem' : 'clean';
+    paintBar();
     if (!problems.length) {
       box.className = 'rv-auto is-ok';
       box.innerHTML = '<span class="rv-auto-dot"></span><span><b>All automatic checks passed.</b> Cover, audio formats and archives meet the file rules. Give it a listen and approve.</span>';

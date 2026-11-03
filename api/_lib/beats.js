@@ -24,7 +24,8 @@ const MAX_ITEMS = 15; // keeps the Stripe metadata under its 500-char limit
 // Admin test purchases: the whole real flow (Stripe, email, files, PDF) at
 // Stripe's minimum charge, with no producer earnings recorded.
 const TEST_PRICE = 50;
-const { bundlePct, discounted } = require('./bundle');
+const { bundlePct, discounted, combine } = require('./bundle');
+const discounts = require('./discounts');
 
 const isProduction = () => process.env.VERCEL_ENV === 'production';
 // Track sales are open. To pause them, set BEAT_SALES_OPEN=0 on Vercel and
@@ -88,7 +89,14 @@ async function handleCheckout(req, res) {
   const test = isAdmin(session) && req.body && req.body.test === true;
   if (test) items.forEach((it) => { it.price = TEST_PRICE; });
   // 3 or more tracks in one order: a lower price on each (see _lib/bundle.js).
-  const disc = test ? 0 : bundlePct(items.length);
+  // Bundle + the team's general sale + a code the buyer typed: all lower the price actually paid.
+  let codeUsed = null;
+  if (!test && req.body && req.body.code) {
+    try { codeUsed = await discounts.checkCode(req.body.code); } catch (err) { console.error('code check error:', err); codeUsed = { error: 'Could not check the code.' }; }
+    if (codeUsed.error) { res.status(400).json({ error: codeUsed.error }); return; }
+  }
+  const site = test ? null : await discounts.getSiteSale();
+  const disc = test ? 0 : combine(bundlePct(items.length), site && site.pct, codeUsed && codeUsed.pct);
   if (disc) items.forEach((it) => { it.price = discounted(it.price, disc); });
 
   // A track whose license leaves all rights with the buyer can be sold once.
@@ -141,7 +149,7 @@ async function handleCheckout(req, res) {
           unit_amount: price,
           product_data: {
             name: `${test ? '[TEST] ' : ''}${beat.title} — ${LICENSES.tiers[tier].name}`,
-            description: `${disc ? `Bundle -${disc}% · ` : ''}${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
+            description: `${disc ? `Discount -${disc}% · ` : ''}${beat.producer} · Non-exclusive license · ${LICENSES.tiers[tier].files.map((f) => LICENSES.fileLabels[f]).join(' + ')}`,
             metadata: { beat_id: beat.id, tier },
           },
         },
@@ -150,6 +158,7 @@ async function handleCheckout(req, res) {
         kind: 'beats',
         ...(test ? { test: '1' } : {}),
         ...(disc ? { disc: String(disc) } : {}),
+        ...(codeUsed ? { code: codeUsed.code } : {}),
         // What each line was charged (sales and bundle included), so earnings use the real price even if a sale ends meanwhile.
         paid: items.map(({ beat, tier, price }) => `${beat.id}:${tier}:${price}`).join(',').slice(0, 480),
         items: items.map(({ beat, tier }) => `${beat.id}:${tier}`).join(','),
@@ -427,6 +436,7 @@ async function handleBeatPurchase({ session, email, resend, renderEmail, button,
   // Producer tracks: 80% goes to the producer (_lib/payouts.js).
   // Test purchases (admin, minimum price): no producer earnings, no sale email.
   if (!test) {
+    try { await discounts.recordUse(session.id, session.metadata && session.metadata.code); } catch (err) { console.error('code use error:', err); }
     const sales = await recordEarnings(session, items.map(({ beat, tier }) => ({ beat, tier, price: paid(beat, tier) })));
     sales.forEach((s) => { s.soldOut = items.some((it) => it.beat.id === s.beatId && takesOffStore(it.beat, it.tier)); });
     await emailProducers(sales, { resend, renderEmail, paragraph, button, tierName: (t) => (LICENSES.tiers[t] || { name: t }).name });

@@ -2235,8 +2235,11 @@
   };
   // Bundle discount, same table as api/_lib/bundle.js (the server is what charges).
   const bundlePct = (n) => (n >= 5 ? 15 : n >= 3 ? 10 : 0);
+  // The team's general sale (from the catalogue) and a code typed in the cart stack with the bundle, capped at 70% off.
+  let siteSale = null, codeApplied = null;
+  const cartPct = () => Math.min(70, Math.round(100 - [bundlePct(cart.length), siteSale && siteSale.pct, codeApplied && codeApplied.pct].reduce((k, p) => k * (100 - (p || 0)) / 100, 100)));
   const cartSub = () => cart.reduce((s, c) => s + byId.get(c.id).prices[c.tier], 0);
-  const cartTotal = () => cart.reduce((s, c) => s + Math.round(byId.get(c.id).prices[c.tier] * (100 - bundlePct(cart.length)) / 100), 0);
+  const cartTotal = () => cart.reduce((s, c) => s + Math.max(50, Math.round(byId.get(c.id).prices[c.tier] * (100 - cartPct()) / 100)), 0);
   function renderCart() {
     const n = cart.length;
     $('#bt-cart-count').textContent = String(n);
@@ -2245,14 +2248,17 @@
     $('#bt-cart-empty').hidden = n > 0;
     $('#bt-checkout').disabled = n === 0;
     $('#bt-cart-total').textContent = euro(cartTotal());
-    const pct = bundlePct(n), nextAt = n < 3 ? 3 : n < 5 ? 5 : 0, bundle = $('#bt-cart-bundle');
+    const pct = cartPct(), nextAt = n < 3 ? 3 : n < 5 ? 5 : 0, bundle = $('#bt-cart-bundle');
     if (bundle) {
+      const parts = [bundlePct(n) ? `bundle -${bundlePct(n)}%` : '', siteSale ? `${siteSale.label || 'sale'} -${siteSale.pct}%` : '', codeApplied ? `code ${codeApplied.code} -${codeApplied.pct}%` : ''].filter(Boolean);
       bundle.hidden = n === 0 || (!pct && n < 2);
       bundle.classList.toggle('is-on', !!pct);
       bundle.textContent = pct
-        ? `Bundle -${pct}%: you save ${euro(cartSub() - cartTotal())}${nextAt ? ` · add ${nextAt - n} more for -${bundlePct(nextAt)}%` : ''}`
+        ? `${parts.join(' + ')}: you save ${euro(cartSub() - cartTotal())}${nextAt ? ` · add ${nextAt - n} more for a bigger bundle discount` : ''}`
         : `Add ${3 - n} more track${3 - n === 1 ? '' : 's'} and get 10% off the whole order`;
     }
+    const codeBox = $('#bt-code');
+    if (codeBox) codeBox.hidden = n === 0;
     $('#bt-cart-list').innerHTML = cart.map((c) => {
       const b = byId.get(c.id);
       return `
@@ -2265,6 +2271,25 @@
     }).join('');
     $$('.bt-card').forEach((c) => { const b = $('.bt-buy', c); if (b) b.classList.toggle('in-cart', cart.some((x) => x.id === c.dataset.id)); });
   }
+  // Discount code typed in the cart
+  document.addEventListener('submit', async (e) => {
+    const form = e.target.closest && e.target.closest('#bt-code');
+    if (!form) return;
+    e.preventDefault();
+    const input = $('input', form), msg = $('.bt-code-msg', form), btn = $('button', form);
+    if (codeApplied) { codeApplied = null; input.value = ''; input.disabled = false; btn.textContent = 'Apply'; msg.textContent = ''; renderCart(); return; }
+    if (!input.value.trim()) return;
+    btn.disabled = true; msg.textContent = '';
+    try {
+      const res = await fetch('/api/beats/code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: input.value }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'This code is not valid.');
+      codeApplied = { code: data.code, pct: data.pct };
+      input.value = data.code; input.disabled = true; btn.textContent = 'Remove';
+      msg.textContent = `Code applied: ${data.pct}% off`;
+      renderCart();
+    } catch (err) { msg.textContent = err.message; } finally { btn.disabled = false; }
+  });
   const openCart = () => {
     drawerReturn = document.activeElement;
     drawer.inert = false;
@@ -2341,7 +2366,7 @@
       const res = await fetch('/api/beats/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart, test: !!($('#bt-test-buy') && $('#bt-test-buy').checked) }),
+        body: JSON.stringify({ items: cart, code: codeApplied ? codeApplied.code : undefined, test: !!($('#bt-test-buy') && $('#bt-test-buy').checked) }),
       });
       if (res.status === 401) {
         location.href = `/signup.html?next=${encodeURIComponent('/beats.html?cart=1')}`;
@@ -2375,6 +2400,7 @@
     byId = new Map(BEATS.map((b) => [b.id, b]));
     paintAccents(BEATS);
     canBuy = catalogue.salesOpen !== false;
+    siteSale = catalogue.siteSale || null;
     document.documentElement.classList.toggle('bt-sales-closed', !canBuy);
     if (!canBuy && window.csMe) {
       Promise.resolve(window.csMe).then((me) => {

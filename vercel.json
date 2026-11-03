@@ -105,6 +105,14 @@
       "destination": "/api/tickets?action=profile-store"
     },
     {
+      "source": "/api/beats/code",
+      "destination": "/api/tickets?action=beats-code"
+    },
+    {
+      "source": "/api/review/discounts",
+      "destination": "/api/tickets?action=review-discounts"
+    },
+    {
       "source": "/api/producer/sale",
       "destination": "/api/tickets?action=producer-sale"
     },

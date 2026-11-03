@@ -74,6 +74,9 @@ module.exports = async (req, res) => {
     'beats-event': extras.handleEvent,
     'producer-stats': extras.handleStats,
     'producer-sale': extras.handleSale,
+    // Store-wide discounts: codes and general sale (_lib/discounts.js)
+    'beats-code': require('./_lib/discounts').handleCode,
+    'review-discounts': require('./_lib/discounts').handleAdmin,
   };
   if (req.query && catalogueRoutes[req.query.action]) {
     await catalogueRoutes[req.query.action](req, res);

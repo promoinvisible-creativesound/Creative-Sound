@@ -136,4 +136,18 @@
     return api;
   }
   window.CSSelect = { enhance };
+
+  // Every <select> on the page gets it (also the ones a script adds later), unless it says data-native.
+  if (!document.querySelector('link[href*="css/select-dd.css"]') && !getComputedStyle(document.documentElement).getPropertyValue('--sd-css')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'css/select-dd.css?v=1';
+    document.head.appendChild(link);
+  }
+  const all = (root) => root.querySelectorAll && root.querySelectorAll('select:not([data-dd]):not([data-native]):not([multiple])').forEach(enhance);
+  const start = () => {
+    all(document);
+    new MutationObserver((list) => list.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) { if (n.matches && n.matches('select')) { if (!n.dataset.dd && !n.hasAttribute('data-native') && !n.multiple) enhance(n); } else all(n); } }))).observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

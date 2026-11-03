@@ -2508,3 +2508,15 @@ body.bt-has-player #site-footer{ padding-bottom:calc(var(--bt-player-h, 84px) + 
 /* Producer sale: percent badge on the card, old price struck through */
 .bt-sale-badge{ background:rgba(232,134,44,0.92) !important; color:#1a0f05 !important; font-weight:700 !important; }
 .bt-was{ margin-right:6px; font-size:0.85em; font-weight:400; color:var(--text-muted); text-decoration:line-through; }
+/* No live blur on touch screens (see style.css), so these panels are solid instead of see-through */
+@media (pointer:coarse), (max-width:820px){ .bt-dd-panel, .bt-pop{ background:#121110 !important; } }
+
+/* Discount code field in the cart */
+.bt-code{ margin:0 0 12px; }
+.bt-code-row{ display:flex; gap:8px; }
+.bt-code input{ flex:1; min-width:0; height:42px; padding:0 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:#0d0d0c; color:#f5f3ee; font:inherit; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; }
+.bt-code input::placeholder{ text-transform:none; letter-spacing:0; color:#8d8a82; }
+.bt-code input:focus{ outline:none; border-color:var(--accent); }
+.bt-code .btn{ height:42px; padding:0 16px; }
+.bt-code-msg{ margin:6px 2px 0; min-height:0; font-size:12.5px; color:#f3d9bd; }
+.bt-code-msg:empty{ display:none; }

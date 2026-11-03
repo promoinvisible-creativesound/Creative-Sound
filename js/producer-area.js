@@ -121,6 +121,7 @@
           </div>
         </article>${s.status === 'approved' && saleOpen.has(s.id) ? salePanel(s) : ''}${s.status === 'approved' && open.has(s.id) ? statsPanel(s.id) : ''}`;
     }).join('') : '<p class="pa-none">No tracks with this status.</p>';
+    if (window.CSSelect) list.querySelectorAll('.pa-sale select').forEach((el) => window.CSSelect.enhance(el));
   }
 
   function counts() {

@@ -167,12 +167,86 @@
     list.innerHTML = data.producers.length ? data.producers.map(producerRow).join('') : '<p class="pa-none">No producer accounts yet.</p>';
   }
 
+  // Discounts tab: a general sale for every track, and discount codes.
+  const opts = (vals, fmt, cur) => vals.map((v) => `<option value="${v}"${v === cur ? ' selected' : ''}>${fmt(v)}</option>`).join('');
+  const dDays = (v) => (v === 1 ? '1 day' : `${v} days`);
+  function discountsHtml(d) {
+    const s = d.siteSale;
+    const codes = d.codes.map((c) => {
+      const ends = c.expires_at ? `until ${when(c.expires_at)}` : 'no end date';
+      const uses = c.max_uses != null ? `${c.used}/${c.max_uses} used` : `${c.used} used`;
+      return `<div class="rv-code${c.active ? '' : ' is-off'}"><div><b>${esc(c.code)}</b><span>-${c.pct}% · ${ends} · ${uses}</span></div>
+        <button type="button" class="rv-verify-btn" data-code-toggle="${esc(c.code)}" data-active="${c.active ? '0' : '1'}">${c.active ? 'Turn off' : 'Turn on'}</button></div>`;
+    }).join('') || '<p class="pa-none">No codes yet.</p>';
+    return `
+      <article class="up-card rv-disc" data-disc>
+        <h2>General sale</h2>
+        <p class="rv-disc-info">${s ? `<b>-${s.pct}% on every track${s.label ? ` (${esc(s.label)})` : ''}</b> until ${when(s.until)}.` : 'No general sale right now.'} It stacks with the bundle discount and codes. Producers earn their 80% of the lower price.</p>
+        <div class="rv-disc-row">
+          <label><span>Discount</span><select data-site="pct">${opts([10, 15, 20, 25, 30, 40, 50], (v) => `${v}% off`, s ? s.pct : 20)}</select></label>
+          <label><span>Lasts</span><select data-site="days">${opts([1, 2, 3, 5, 7, 14, 30], dDays, 3)}</select></label>
+          <label class="rv-disc-wide"><span>Name (optional)</span><input type="text" data-site="label" maxlength="40" placeholder="Black Friday" value="${s ? esc(s.label) : ''}"></label>
+          <button type="button" class="btn btn-primary" data-site-go>${s ? 'Update sale' : 'Start sale'}</button>
+          ${s ? '<button type="button" class="btn btn-ghost" data-site-end>End sale</button>' : ''}
+        </div>
+      </article>
+      <article class="up-card rv-disc" data-disc>
+        <h2>Discount codes</h2>
+        <p class="rv-disc-info">Buyers type the code in the cart. The discount comes off the price they pay.</p>
+        <div class="rv-disc-row">
+          <label class="rv-disc-wide"><span>Code</span><input type="text" data-code="code" maxlength="24" placeholder="LAUNCH20" autocapitalize="characters" spellcheck="false"></label>
+          <label><span>Discount</span><select data-code="pct">${opts([5, 10, 15, 20, 25, 30, 40, 50], (v) => `${v}% off`, 20)}</select></label>
+          <label><span>Valid for</span><select data-code="days">${opts([0, 1, 3, 7, 14, 30, 90], (v) => (v ? dDays(v) : 'No end date'), 0)}</select></label>
+          <label><span>Max uses</span><input type="number" data-code="maxUses" min="1" inputmode="numeric" placeholder="No limit"></label>
+          <button type="button" class="btn btn-primary" data-code-go>Create code</button>
+        </div>
+        <div class="rv-codes">${codes}</div>
+        <p class="up-error" data-disc-err role="alert" hidden></p>
+      </article>`;
+  }
+  async function discountsCall(body) {
+    const res = await fetch('/api/review/discounts', body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+    if (res.status === 401) { window.location.href = 'login.html'; return null; }
+    if (res.status === 403) { $('#rv-body').hidden = true; $('#rv-gate').hidden = false; return null; }
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error((data && data.error) || 'Could not load the discounts.');
+    return data;
+  }
+  async function loadDiscounts() {
+    const d = await discountsCall();
+    if (d) list.innerHTML = discountsHtml(d);
+  }
+  list.addEventListener('click', async (e) => {
+    const t = e.target.closest('[data-site-go], [data-site-end], [data-code-go], [data-code-toggle]');
+    if (!t) return;
+    const box = t.closest('[data-disc]') || list;
+    const val = (sel) => { const el = list.querySelector(sel); return el ? el.value : ''; };
+    let body;
+    if (t.hasAttribute('data-site-go')) body = { do: 'site', pct: Number(val('[data-site="pct"]')), days: Number(val('[data-site="days"]')), label: val('[data-site="label"]') };
+    else if (t.hasAttribute('data-site-end')) body = { do: 'site', pct: 0 };
+    else if (t.hasAttribute('data-code-go')) body = { do: 'code', code: val('[data-code="code"]'), pct: Number(val('[data-code="pct"]')), days: Number(val('[data-code="days"]')), maxUses: val('[data-code="maxUses"]') };
+    else body = { do: 'toggle', code: t.dataset.codeToggle, active: t.dataset.active === '1' };
+    t.disabled = true;
+    try {
+      const d = await discountsCall(body);
+      if (d) list.innerHTML = discountsHtml(d);
+    } catch (err) {
+      const msg = list.querySelector('[data-disc-err]') || box.querySelector('.up-error');
+      if (msg) { msg.textContent = err.message; msg.hidden = false; }
+      t.disabled = false;
+    }
+  });
+
   async function load() {
     // The list is rebuilt, so stop whatever preview was playing.
     audio.pause();
     current = null;
     list.setAttribute('aria-busy', 'true');
     $('#rv-error').hidden = true;
+    if (status === 'discounts') {
+      try { await loadDiscounts(); } catch (err) { list.innerHTML = ''; $('#rv-error').textContent = err.message; $('#rv-error').hidden = false; } finally { list.removeAttribute('aria-busy'); }
+      return;
+    }
     if (status === 'producers') {
       try { await loadProducers(); } catch (err) { list.innerHTML = ''; $('#rv-error').textContent = err.message; $('#rv-error').hidden = false; } finally { list.removeAttribute('aria-busy'); }
       return;

@@ -200,9 +200,10 @@ async function liveBeats() {
 async function handleCatalogue(req, res) {
   if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
   const beats = (await liveBeats()).map(publicBeat);
+  const siteSale = await require('./discounts').getSiteSale();
   // Shared cache at the edge: an approval shows within about a minute.
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-  res.status(200).json({ currency: CATALOGUE.currency, producers: CATALOGUE.producers || {}, beats, salesOpen: process.env.BEAT_SALES_OPEN !== '0' });
+  res.status(200).json({ currency: CATALOGUE.currency, producers: CATALOGUE.producers || {}, beats, salesOpen: process.env.BEAT_SALES_OPEN !== '0', siteSale });
 }
 
 // Cover and tagged preview of an approved producer track.
